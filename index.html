@@ -4560,7 +4560,7 @@ function updateStores(dt){
 
 // ================= CUTSCENE SYSTEM =================
 activeCutscene=null; cutsceneTime=0; currentShotIndex=0; cutsceneCallback=null; // declared above (hoisted)
-let dialogueTypeTimer=null, dialogueCursorTimer=null;
+let dialogueTypeTimer=null, dialogueCursorTimer=null, dialogueHideTimer=null;
 const CUTSCENES={
   deb_confrontation:{
     onStart(){ sfx.mission(); blip(200,100,0.6,0.18,'sine'); },
@@ -4722,7 +4722,7 @@ function showDialogue(speaker, text, duration){
   box.style.display='block';
   nameEl.textContent=speaker;
   textEl.innerHTML='';
-  clearTimeout(dialogueTypeTimer); clearInterval(dialogueCursorTimer);
+  clearTimeout(dialogueTypeTimer); clearInterval(dialogueCursorTimer); clearTimeout(dialogueHideTimer);
 
   let i=0;
   const cursorSpan='<span class="cursor"></span>';
@@ -4734,18 +4734,20 @@ function showDialogue(speaker, text, duration){
     i++;
   }, 38);
 
-  // Auto-hide after duration minus buffer
-  const hideDelay=Math.max(800, (duration||3)*1000 - 400);
+  // Keep the subtitle up for the whole spoken line, then hold a moment.
+  // Track the hide timer so the NEXT line can cancel it — otherwise a stale
+  // hide fires mid-sentence and blanks the caption while Turbo is still talking.
+  const hideDelay=Math.max(800, (duration||3)*1000 - 200);
   dialogueCursorTimer=setTimeout(()=>{
     clearInterval(dialogueTypeTimer);
     textEl.textContent=text;
-    setTimeout(()=>{ if(!activeCutscene) box.style.display='none'; }, 1200);
+    dialogueHideTimer=setTimeout(()=>{ if(!activeCutscene) box.style.display='none'; }, 1400);
   }, hideDelay);
 }
 
 function hideDialogue(){
   $('dialogueBox').style.display='none';
-  clearTimeout(dialogueTypeTimer); clearInterval(dialogueCursorTimer);
+  clearTimeout(dialogueTypeTimer); clearInterval(dialogueCursorTimer); clearTimeout(dialogueHideTimer);
 }
 
 // ================= END CUTSCENE SYSTEM =================
@@ -4937,7 +4939,11 @@ function updateIntroNarration(dt){
     if(introT>=line.t){
       introLinesSpoken[i]=true;
       if(!playVOLine(i)) speak(line.text,'male',{pitch:0.8,rate:0.9}); // fallback if mp3 not loaded
-      _origShowDialogue('TURBO JONES',line.text,line.dur); // subtitles, no robot voice
+      // Hold the subtitle until the next line starts (or the intro ends) so it
+      // never disappears mid-sentence — covers both the mp3 and slower TTS.
+      const nextT=(i+1<INTRO_LINES.length)?INTRO_LINES[i+1].t:INTRO_DUR;
+      const holdDur=Math.max(line.dur,nextT-line.t);
+      _origShowDialogue('TURBO JONES',line.text,holdDur); // subtitles, no robot voice
     }
   });
 }
