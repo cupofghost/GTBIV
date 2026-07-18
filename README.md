@@ -63,7 +63,8 @@ plain relative paths.
 | `three.min.js` | Vendored three.js r128 (see note below) |
 | `manifest.json` | PWA manifest — name, icons, fullscreen/landscape |
 | `icon-512.png`, `apple-touch-icon.png` | App / home-screen icons |
-| `panel1.jpg`, `panel2.jpg`, `panel3.jpg` | Intro cinematic key-art panels |
+| `title-bg.jpg` | Title-screen background art |
+| `panel1.jpg`, `panel2.jpg`, `panel3.jpg` | Legacy key-art panels (no longer referenced) |
 | `vo1.mp3` – `vo4.mp3` | Turbo Jones intro narration (with subtitles) |
 | `t_run1.mp3` – `t_run3.mp3` | "Run someone over" catchphrases |
 | `t_shoot1.mp3` | Shooting catchphrase |

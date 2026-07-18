@@ -101,7 +101,7 @@
 
   .overlay { position:fixed; inset:0; z-index:30; display:flex; flex-direction:column;
     align-items:center; justify-content:center; text-align:center; }
-  #start { background:#0b0616; pointer-events:auto; }
+  #start { background:#0b0616 url('title-bg.jpg') center/cover no-repeat; pointer-events:auto; }
   #start::after { content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
     background:linear-gradient(180deg, rgba(11,6,22,.3) 0%, rgba(11,6,22,.04) 38%, rgba(11,6,22,.78) 100%); }
   #artCanvas { position:absolute; inset:0; width:100%; height:100%; }
@@ -124,10 +124,6 @@
     filter:drop-shadow(0 6px 0 #000) drop-shadow(0 0 30px currentColor); }
   #bigEventSub { color:#fff; font-size:18px; margin-top:10px; text-shadow:0 2px 6px #000; }
   #fpsWarn { position:fixed; bottom:2px; left:6px; color:#ffffff55; font-size:10px; z-index:5; font-family:monospace; }
-  /* loading screen art panels */
-  .artPanel { position:absolute; inset:0; width:100%; height:100%; opacity:0;
-    transition:opacity 1.1s ease; background-size:cover; background-position:center; }
-  .artPanel.show { opacity:1; }
   #loadWrap { width:min(62vw,360px); height:12px; border-radius:8px; margin-top:14px;
     border:2px solid #ffd23e; background:rgba(0,0,0,.55); overflow:hidden;
     box-shadow:0 0 14px #ff3ea066; }
@@ -349,9 +345,6 @@
   <div id="bigEventSub"></div>
 </div>
 <div id="start" class="overlay">
-  <div class="artPanel" id="panel0" style="background-image:url('panel1.jpg')"></div>
-  <div class="artPanel" id="panel1" style="background-image:url('panel2.jpg')"></div>
-  <div class="artPanel" id="panel2" style="background-image:url('panel3.jpg')"></div>
   <div id="startInner">
     <div id="title">GRAND&nbsp;TURBO&nbsp;BOOST&nbsp;IV</div>
     <div id="subtitle">SAN&nbsp;CHAOS</div>
@@ -4280,13 +4273,7 @@ bootSpawns();
 var activeCutscene=null, cutsceneTime=0, currentShotIndex=0, cutsceneCallback=null; // hoisted: loop() reads these before the cutscene section
 loop();
 
-// panel slideshow + fake-but-pretty loading bar, then reveal TAP TO PLAY
-let panelIdx=0;
-function showPanel(i){
-  for(let p=0;p<3;p++) $('panel'+p).classList.toggle('show',p===i);
-}
-showPanel(0);
-setInterval(()=>{ if(!G.started){ panelIdx=(panelIdx+1)%3; showPanel(panelIdx); } },4200);
+// fake-but-pretty loading bar, then reveal TAP TO PLAY over the title art
 (function runLoader(){
   const tips=['<b>TIP:</b> Stick up pedestrians with your pistol for quick cash.','<b>TIP:</b> Rob glowing stores to pay Deb faster.','<b>TIP:</b> Pizza delivery drivers carry hot tips.','<b>TIP:</b> Use boost on straightaways for max speed.','<b>TIP:</b> Land helicopters gently or you crash.','<b>TIP:</b> Drifting builds style points in stunt missions.','<b>TIP:</b> The ocean is not a shortcut.','<b>TIP:</b> Cops ram harder at 5 stars. Watch out.'];
   let pct=0, tipIdx=0;
