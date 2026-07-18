@@ -2657,7 +2657,7 @@ function updateHeliMode(dt){
   h.x+=h.vel.x*dt; h.z+=h.vel.z*dt;
   h.y+=h.vy*dt;
   // ditched in the ocean
-  if(overWater(h.x,h.z)&&h.y<0.9){
+  if(overWater(h.x,h.z)&&h.y<0.9&&!DEV_STATE.god){
     burst(h.x,0.4,h.z,40,COL_WATER,8,1.1,3);
     sfx.bigCrash(); shake(0.8);
     player._shore={x:clamp(h.x,-(WATER_R-7),WATER_R-7),z:clamp(h.z,-(WATER_R-7),WATER_R-7)};
@@ -3016,9 +3016,9 @@ function doAttack(){
     }
     return;
   }
-  if(G.weapon==='rpg'&&G.rockets>0){
+  if(G.weapon==='rpg'&&(G.rockets>0||DEV_STATE.inf)){
     p.punchT=0.8;
-    G.rockets--;
+    if(!DEV_STATE.inf) G.rockets--;
     if(G.rockets<=0) G.weapon='pistol';
     sfx.rocket();
     addHeat(20);
@@ -3076,7 +3076,7 @@ function damageArea(x,z,rad,dmg){
     const d=Math.hypot(h.x-x,h.z-z);
     if(d<rad&&h.y<3) damageHeli(h,dmg*(1-d/rad));
   }
-  if(G.mode==='foot'&&Math.hypot(player.x-x,player.z-z)<3) wasted();
+  if(G.mode==='foot'&&Math.hypot(player.x-x,player.z-z)<3&&!DEV_STATE.god) wasted();
   addHeat(25);
 }
 
@@ -3198,6 +3198,7 @@ document.addEventListener('keydown',e=>{
   if(e.code==='KeyC') toggleCrouch();
   if(e.code==='KeyN') toggleNight();
   if(e.code==='KeyM'&&G.mode==='foot'&&!pizzaWars) startPizzaWars();
+  if(DEV&&e.code==='Backquote') toggleDevMenu();
 });
 document.addEventListener('keyup',e=>{ keys[e.code]=false; });
 function pollKeys(){
@@ -3374,6 +3375,7 @@ function carPhysics(car,dt,ctl){
 }
 function damageCar(car,amt,why){
   if(car.dead) return;
+  if(DEV_STATE.god&&car===player.car) return;
   car.hp-=amt;
   if(car===player.car){
     G.carHP=Math.max(0,car.hp/car.maxhp*100);
@@ -3522,8 +3524,8 @@ function updateCarMode(dt){
   // BOOST / DRIFT buttons also feed gas, so one thumb does the whole move
   const ctl={steer,throttle:(input.gas||input.boost||input.drift?1:0)-(input.brake?1:0),
     drift:input.drift,boost:input.boost};
-  if(input.boost&&G.boost>0&&Math.abs(c.speed)>2){
-    G.boost=Math.max(0,G.boost-32*dt);
+  if(input.boost&&(G.boost>0||DEV_STATE.inf)&&Math.abs(c.speed)>2){
+    if(!DEV_STATE.inf) G.boost=Math.max(0,G.boost-32*dt);
     const dir=new THREE.Vector3(Math.sin(c.heading),0,Math.cos(c.heading));
     const rear=c.mesh.position.clone().addScaledVector(dir,2.2);
     burst(rear.x,0.5,rear.z,2,COL_FIRE,1.5,0.25,0);
@@ -3532,7 +3534,7 @@ function updateCarMode(dt){
   }
   carPhysics(c,dt,ctl);
   // --- drove into the ocean: splash, dead engine, slow sink, then WASTED
-  if(!c.sinking&&overWater(c.x,c.z)&&c.y<=0.01){
+  if(!c.sinking&&overWater(c.x,c.z)&&c.y<=0.01&&!DEV_STATE.god){
     c.sinking=true; c.sinkT=0; c.airborne=false; c.vy=0;
     burst(c.x,0.4,c.z,36,COL_WATER,7,1,3);
     burst(c.x,0.4,c.z,18,COL_WATER,4,0.7,2);
@@ -3872,7 +3874,7 @@ function updateCops(dt){
         if(mission&&mission.type==='rampage') mission.value+=80;
       }
     }
-    if(G.mode==='foot'&&Math.hypot(player.x-c.x,player.z-c.z)<3.2){
+    if(G.mode==='foot'&&Math.hypot(player.x-c.x,player.z-c.z)<3.2&&!DEV_STATE.god){
       G.bustT+=dt;
       if(G.bustT>1.1) busted();
     }
@@ -4973,6 +4975,59 @@ showDialogue=function(speaker,text,duration){
 };
 
 // ================= END VOICEOVER SYSTEM =================
+
+// ================= DEV TOOLS =================
+(function initDevTools(){
+  if(!DEV) return;
+  const panel=$('devPanel');
+  const hint=$('devHint'); if(hint) hint.style.display='block';
+  const row=(lbl,...btns)=>{
+    const d=document.createElement('div'); d.className='devRow';
+    if(lbl){ const l=document.createElement('div'); l.className='devLbl'; l.textContent=lbl; d.appendChild(l); }
+    btns.forEach(b=>d.appendChild(b)); panel.appendChild(d);
+  };
+  const btn=(txt,cls,on)=>{ const e=document.createElement('button'); e.textContent=txt; e.className=cls||''; e.addEventListener('click',on); return e; };
+  const tog=(txt,key)=>{
+    const e=btn(txt,'devTog');
+    e.addEventListener('click',()=>{ DEV_STATE[key]=!DEV_STATE[key]; e.classList.toggle('on',DEV_STATE[key]); toast('DEV: '+txt+' '+(DEV_STATE[key]?'ON':'OFF'),'gold'); });
+    return e;
+  };
+  // Money / story
+  row('MONEY', btn('+ $100','devAct',()=>addMoney(100)), btn('+ $1000','devAct',()=>addMoney(1000)), btn('Clear Debt','devAct',()=>{ story.debtPaid=800; addMoney(0); toast('DEBT CLEARED','gold'); }));
+  // Heat
+  row('WANTED', btn('Stars +1','devBad',()=>addHeat(20)), btn('Stars 6','devBad',()=>{G.heat=100; addHeat(0);}), btn('Clear Heat','devAct',()=>clearHeat(false)));
+  // Vehicles
+  row('SPAWN', btn('Sedan','devAct',()=>spawnCarAtPlayer('sedan')), btn('Sports','devAct',()=>spawnCarAtPlayer('sports')), btn('Moto','devAct',()=>spawnCarAtPlayer('moto')), btn('Heli','devAct',()=>spawnHeliAtPlayer()));
+  // Cheats
+  row('CHEATS', tog('God Mode','god'), tog('Infinite Boost/Ammo','inf'));
+  // Teleport
+  row('TELEPORT', btn('Deb','devAct',()=>teleport(deb?deb.x:0,deb?deb.z:0)), btn('Pizza','devAct',()=>teleport(PIZZA.doorX,PIZZA.doorZ)), btn('Corner','devAct',()=>teleport(WORLD.half,WORLD.half)), btn('Random','devAct',()=>{const p=randomRoadPoint(); teleport(p.x,p.z);}));
+  // Time
+  row('TIME', btn('Day','devAct',()=>{if(G.night)toggleNight();}), btn('Night','devAct',()=>{if(!G.night)toggleNight();}));
+  // Mission / cutscene
+  row('MISSION', btn('Trigger','devAct',()=>{ if(!mission){ missionCooldown=0; lastType=''; } }), btn('Complete','devAct',()=>{ if(mission) completeMission(500); }), btn('Fail','devBad',()=>{ if(mission) failMission(); }));
+  row('CUTSCENE', btn('Deb Confront','devAct',()=>playCutscene('deb_confrontation',player.x,player.z)), btn('Deb Payoff','devAct',()=>playCutscene('deb_payoff',player.x,player.z)), btn('Pizza Wars','devAct',()=>startPizzaWars()));
+  row('SAVE', btn('Wipe Save','devBad',()=>{ localStorage.removeItem('gtb4.save'); toast('SAVE WIPED','bad'); }));
+  row('', btn('Close','',()=>toggleDevMenu()));
+
+  function spawnCarAtPlayer(type){
+    if(!G.started) return;
+    const c=makeCar(type,player.x+2,player.z+2,player.heading+Math.PI/2,{parked:true});
+    c.driver=null;
+  }
+  function spawnHeliAtPlayer(){
+    if(!G.started) return;
+    const h=makeHeli(player.x+3,player.z+3,player.heading); h.landed=true; h.parked=true;
+  }
+  function teleport(x,z){
+    if(!G.started) return;
+    if(G.mode==='car'&&player.car){ player.car.x=x; player.car.z=z; player.car.mesh.position.set(x,player.car.y||0,z); }
+    else if(G.mode==='heli'&&player.heli){ player.heli.x=x; player.heli.z=z; player.heli.mesh.position.set(x,player.heli.y||0,z); }
+    else { player.x=x; player.z=z; if(player.mesh) player.mesh.position.set(x,player.y||0,z); }
+  }
+  window.toggleDevMenu=()=>{ DEV_STATE.open=!DEV_STATE.open; panel.style.display=DEV_STATE.open?'block':'none'; };
+})();
+// ================= END DEV TOOLS =================
 
 // ================= START / RESIZE =================
 $('startBtn').addEventListener('click',()=>{
