@@ -434,6 +434,8 @@ const G={ mode:'foot', money:0, heat:0, stars:0, carHP:100, boost:100,
   escapeT:0, bustT:0, missionsDone:0, over:false, started:false, paused:false,
   station:0, weapon:'fists', rockets:0 };
 const WORLD={ blocks:10, block:50, road:16 };
+const DEV=location.search.includes('dev=1');
+const DEV_STATE={ open:false, god:false, inf:false };
 WORLD.pitch=WORLD.block+WORLD.road;
 WORLD.half=(WORLD.blocks*WORLD.pitch+WORLD.road)/2;
 WORLD.size=WORLD.half*2+40;
