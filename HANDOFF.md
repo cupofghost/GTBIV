@@ -738,9 +738,10 @@ X1  (only if approved) modular split
 ```
 
 **Character / cutscene track** (see `CHARACTERS.md`) runs in parallel and shares
-tooling with Phase 0. Rough order there: `D6` viewer → `C1` spec refactor →
-`C2` hero specs → `C4` creator → `C5` cutscene actors/animation → `C3`/`C6`
-fidelity & faces. `C4` depends on `F1` (to save the chosen character).
+tooling with Phase 0. Critical path there: `D6` viewer → `C1` spec refactor →
+`C2` body/shoulder overhaul → `C3` paintable UV textures → `C5` paint/edit page →
+`C6` character creator → `C8` cutscene actors/animation. `C6` depends on `F1` (to
+save the painted character). See `CHARACTERS.md §5` for the full order.
 
 Pick the top unclaimed task, read its card, check the acceptance criteria, build
 it small, verify (§9), commit. When in doubt about a design decision, ask.
