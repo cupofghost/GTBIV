@@ -2914,6 +2914,7 @@ function doTalk(){
   player.heading=Math.atan2(ped.x-player.x,ped.z-player.z);
   showBubble(ped,pick(TALK_LINES),3200);
   wahVoice(ped.mesh.userData.gender==='girl'?rand(175,235):rand(95,140),ped.x,ped.z);
+  turboSay('approach');   // Turbo greets them his own charming way
 }
 
 // ================= WEAPONS =================
@@ -3223,7 +3224,10 @@ function updateWanted(dt){
       G.escapeT+=dt;
       if(G.escapeT>4) clearHeat(true);
     } else G.escapeT=0;
-  }
+    // Turbo taunts the law while they're on his tail
+    copVOT-=dt;
+    if(copVOT<=0 && nearest<70){ turboSay('cops'); copVOT=rand(6,11); }
+  } else copVOT=0;
   for(let i=cops.length-1;i>=0;i--){
     const c=cops[i];
     if(c.dead||(c.driver==='leaving'&&Math.hypot(c.x-px0(),c.z-pz0())>180)){
@@ -3503,6 +3507,26 @@ function updateCarMode(dt){
     G.boost=Math.min(100,G.boost+9*dt);
   }
   carPhysics(c,dt,ctl);
+
+  // --- Turbo's driving commentary ---
+  const spd=Math.abs(c.speed);
+  // crawling along (but actually trying to drive, and not fleeing cops)
+  if(G.stars===0 && ctl.throttle>0 && spd>1.2 && spd<7){
+    slowVOT+=dt;
+    if(slowVOT>4){ turboSay('slow'); slowVOT=-rand(4,8); }
+  } else if(spd>=7){ slowVOT=0; }
+  // blowing through an intersection on a red/yellow
+  if(spd>9){
+    let bi=null,bd=1e9;
+    for(const p of intersections){ const dd=Math.hypot(p.x-c.x,p.z-c.z); if(dd<bd){ bd=dd; bi=p; } }
+    if(bd<6 && redLightArmed){
+      const movingNS=Math.abs(c.vel.z)>Math.abs(c.vel.x);
+      const green=(movingNS?LIGHTS.ns:!LIGHTS.ns)&&!LIGHTS.yel;
+      if(!green) turboSay('stopsign');
+      redLightArmed=false;            // one quip per crossing
+    } else if(bd>10){ redLightArmed=true; }
+  }
+
   // --- drove into the ocean: splash, dead engine, slow sink, then WASTED
   if(!c.sinking&&overWater(c.x,c.z)&&c.y<=0.01){
     c.sinking=true; c.sinkT=0; c.airborne=false; c.vy=0;
@@ -3602,6 +3626,7 @@ function doPunch(){
   if(!G.started||G.over||G.mode!=='foot'||player.punchT>0) return;
   player.punchT=0.55;
   sfx.punch();
+  turboSay('punch');
   const p=player;
   burst(p.x+Math.sin(p.heading)*0.8,1.2,p.z+Math.cos(p.heading)*0.8,4,COL_SPARK,2,0.25,4);
   for(const ped of peds){
@@ -4875,24 +4900,104 @@ function playVOFile(src,rate,gain){
 }
 
 // ---- TURBO JONES CATCHPHRASES ----
+// Lines with an `src` play the recorded mp3; the rest use Turbo's text-to-speech.
 const TURBO_LINES={
+  // walking up to a pedestrian (Talk button)
+  approach:[
+    {src:null, text:"Oh, honey."},
+    {src:null, text:"That shirt was already litter."},
+    {src:null, text:"Oops, sorry about that."},
+    {src:null, text:"Hey. You got the time? No? Cool."},
+    {src:null, text:"Nice face. Be a shame if something happened to it."},
+    {src:null, text:"You look like you owe me money."},
+    {src:null, text:"Move along, citizen. Nothing to see. Yet."},
+    {src:null, text:"I love what you've done with your whole situation."},
+    {src:null, text:"Beautiful day to ruin, isn't it?"},
+    {src:null, text:"Don't mind me. I'm just a guy. A very dangerous guy."},
+    {src:null, text:"Spare a dollar? I'm eight hundred short."},
+    {src:null, text:"You smell like a parking garage."},
+  ],
+  // throwing a punch
+  punch:[
+    {src:null, text:"Hi-yah!"},
+    {src:null, text:"My fingers are powerful."},
+    {src:null, text:"Don't make me fist you!"},
+    {src:null, text:"Knuckle sandwich, extra mustard!"},
+    {src:null, text:"That's for looking at me."},
+    {src:null, text:"Pow! Right in the kisser."},
+    {src:null, text:"These hands are registered weapons."},
+    {src:null, text:"You just got Turbo'd."},
+    {src:null, text:"Sit down, you were leaving anyway."},
+    {src:null, text:"Free chiropractic adjustment!"},
+    {src:null, text:"I learned that one in the yard."},
+  ],
+  // crawling along in a car
+  slow:[
+    {src:null, text:"What am I, a grandma?"},
+    {src:null, text:"Taking my time, because I'm worth it."},
+    {src:null, text:"This is a getaway, not a funeral procession."},
+    {src:null, text:"Any day now, engine."},
+    {src:null, text:"I've seen glaciers move faster."},
+    {src:null, text:"We're basically parked."},
+    {src:null, text:"A snail just lapped us."},
+    {src:null, text:"Sunday drive in the middle of a crime spree."},
+    {src:null, text:"Step on it... me!"},
+  ],
+  // blowing through an intersection on a red
+  stopsign:[
+    {src:null, text:"No cops, no stops!"},
+    {src:null, text:"Weeee!"},
+    {src:null, text:"Red light's just a suggestion."},
+    {src:null, text:"Stop signs are for quitters."},
+    {src:null, text:"Yellow means floor it!"},
+    {src:null, text:"I'll stop when I'm dead. And I'm not."},
+    {src:null, text:"Whoops, was that red?"},
+    {src:null, text:"Traffic laws are more like guidelines."},
+    {src:null, text:"Outta the way, I'm improvising!"},
+  ],
+  // being chased by the cops
+  cops:[
+    {src:null, text:"I'm Turbo — you'll never catch me!"},
+    {src:null, text:"I pay your taxes!"},
+    {src:null, text:"Catch me if you can, badge boys!"},
+    {src:null, text:"This is police harassment! And I love it."},
+    {src:null, text:"You'll never take me alive! Or at all!"},
+    {src:null, text:"Donut break's over, boys!"},
+    {src:null, text:"I'm not speeding, I'm auditioning!"},
+    {src:null, text:"Tell the chief I said hi!"},
+    {src:null, text:"Wanted level? More like wanted TALENT."},
+    {src:null, text:"Eat my exhaust!"},
+    {src:null, text:"My ex hits harder than you!"},
+  ],
   runover:[
     {src:'t_run1.mp3', text:"Oops. Should've looked both ways, pal."},
     {src:'t_run2.mp3', text:"That's gonna leave a mark."},
     {src:'t_run3.mp3', text:"Outta the way! I'm late for a court hearing."},
+    {src:null, text:"Walk it off, champ!"},
+    {src:null, text:"Jaywalking's a crime, ya know."},
+    {src:null, text:"Insurance covers that. Probably."},
+    {src:null, text:"That's on you, honestly."},
   ],
   shoot:[
     {src:'t_shoot1.mp3', text:"Say goodnight."},
     {src:null, text:"That's how we settle things in San Chaos."},
     {src:null, text:"You picked the wrong block, buddy."},
+    {src:null, text:"Should've stayed home today."},
+    {src:null, text:"Bang. You're it."},
+    {src:null, text:"Consider this your eviction notice."},
   ],
   car:[
     {src:null, text:"Borrowing this. Permanently."},
     {src:null, text:"Nice ride. It's mine now."},
     {src:null, text:"Keys in the ignition. How thoughtful."},
+    {src:null, text:"Finders keepers, pal."},
+    {src:null, text:"This is a citizen's requisition."},
+    {src:null, text:"Ooh, leather seats!"},
   ],
 };
 let turboCool=0;
+// pacing for the ambient (non-event) quips so they don't spam
+let slowVOT=0, copVOT=0, redLightArmed=true;
 function turboSay(cat){
   if(!G.started||G.over||turboCool>0) return;
   turboCool=2.2;
