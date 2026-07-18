@@ -261,6 +261,15 @@ Grab elements with `$('id')`. Key ids you'll touch:
   Reward + a `+$500` "chapter bonus" every 5 missions. This is the main target
   for depth work (task **P1**).
 
+### 6.9 Characters & cutscenes → see `CHARACTERS.md`
+Every human — **including the player** — is built by one function,
+`makePerson(shirt, gender)`, from primitives with a real articulated rig exposed
+on `mesh.userData` (`legL, legR, armL, armR, torso, head`). Animation is a
+`phase` counter driving `Math.sin(phase)` into those joints. Cutscenes
+(`CUTSCENES`, `playCutscene`) currently **only fly the camera** around whatever's
+standing at an anchor point — actors don't act. The character-model, character-
+creator, and cutscene-rendering plan lives in its own doc, **`CHARACTERS.md`**.
+
 ---
 
 ## 7. Coding Conventions (match the existing style)
@@ -298,6 +307,103 @@ order** — Phase 1 items are foundations that later tasks lean on. Each card:
 
 Pick up a task by ID. If a task's scope balloons or you hit an ambiguous design
 call, stop and ask rather than guessing.
+
+---
+
+### Phase 0 — Dev & Test Tooling (build these first — they make every other task faster to test)
+
+> These exist purely to make **iterating and test-playing** fast. Gate all of
+> them so they never ship to players: enable only when the URL has `?dev=1` (or a
+> `localStorage['gtb4.dev']` flag). None of this should be reachable in a normal
+> session.
+
+#### D1 — Dev menu / cheat console `P0 · Risk: Low`
+**Why:** Today you can only reach a state by *playing* to it — grind money,
+commit crimes for stars, drive to Deb. That makes every test slow. One hidden
+panel fixes it.
+**Where:** new `DEV TOOLS` section, gated on `?dev=1`; a DOM overlay toggled by a
+key (backtick `` ` ``). Calls existing functions/state directly (`addMoney`,
+`addHeat`/`clearHeat`, `makeCar`, `spawnCopHeli`, `playCutscene`, `startMission`,
+`G.*`).
+**Approach:** A toggleable panel with quick actions: **+$100 / +$1000 / clear
+debt**; **set stars 0–6 / clear heat**; **spawn** each vehicle (sedan/sports/
+moto/heli) at the player; **god mode** (skip damage in `damageCar`/`damageArea`),
+**infinite boost/ammo**; **teleport** (Deb, pizza place, mission beacon, map
+corners); **force day/night & freeze time**; **trigger/skip/complete mission**;
+**play any cutscene by id**; **wipe save**. Keep it a thin set of buttons wired to
+existing functions — don't duplicate game logic.
+**Acceptance:** With `?dev=1`, backtick opens the panel; each action has the
+obvious immediate effect; god mode makes you unkillable; without `?dev=1` the
+panel and keybind do nothing. No dev code runs in a normal session.
+
+#### D2 — Fast-boot & scene-jump flags `P0 · Risk: Low`
+**Why:** Sitting through the loader + intro cinematic + story card on **every
+reload** is the biggest single time sink when testing.
+**Where:** boot/`START / RESIZE` flow, intro + story-card gating.
+**Approach:** `?dev=1` (or `?skipintro`) skips the loading screen, animated
+intro, and Chapter-1 story card straight into gameplay. Optional
+`?scene=heist|pizzawars|deb` and `?cutscene=<id>` jump directly into that state/
+cutscene on load. Optional `?mode=car|heli` to start already driving/flying.
+**Acceptance:** `?dev=1` lands you controllable in the city in a second or two;
+`?cutscene=deb_confrontation` plays that scene immediately; normal load
+(no flag) is unchanged.
+
+#### D3 — Debug HUD overlay `P1 · Risk: Low`
+**Why:** The lone `fps` readout isn't enough to diagnose behaviour.
+**Where:** extend the fps block in `MAIN LOOP`; gated on `?dev=1` or a toggle.
+**Approach:** A corner overlay showing player pos/heading, `G.mode`, money/heat/
+stars, live entity counts (`cars`/`peds`/`cops`/`traffic`/particles), active
+mission + heist phase, camera pos, and frame time. Cheap string build, toggle
+with a key.
+**Acceptance:** Numbers update live and match reality; toggling off removes it;
+no measurable fps cost.
+
+#### D4 — Free-fly / spectator camera `P1 · Risk: Med`
+**Why:** You can't currently inspect the world, a character model, or frame a
+cutscene from an arbitrary angle.
+**Where:** `CAMERA`; gated dev toggle that suspends normal `updateCamera`.
+**Approach:** A detached camera flown with `WASD`+drag (and up/down keys), with
+gameplay frozen or continuing (your call via a toggle). Reuse existing look
+math. Great for composing cutscene shots (feeds D-work in CHARACTERS.md).
+**Acceptance:** Toggle → camera detaches and flies smoothly anywhere; toggle back
+→ returns to normal follow-cam exactly.
+
+#### D5 — Time controls (pause-step / slow-mo / fast-forward) `P2 · Risk: Low`
+**Why:** Inspecting animations, physics, and cutscene timing needs sub-real-time
+control.
+**Where:** `MAIN LOOP` — introduce a `timeScale` applied to `dt` for simulation
+(not for the render/UI).
+**Approach:** Dev keys for `0.25×`, `1×`, `4×`, and **step one frame** while
+paused. Apply `timeScale` only to the gameplay substep `dt`, never to real-time
+UI. Ties into the pause menu (F2) later.
+**Acceptance:** Slow-mo visibly slows cars/peds/particles without breaking
+collision; step advances exactly one sim frame; `1×` is identical to today.
+
+#### D6 — Character / model viewer (turntable) `P1 · Risk: Low`
+**Why:** The **workbench** for finishing character models and building the
+creator — iterate on a model in isolation instead of hunting for one in-game.
+Directly serves the character-model + creator + cutscene goals.
+**Where:** a dev mode (`?viewer=1`) — or a tiny separate `viewer.html` that loads
+`three.min.js` and the shared person/vehicle builders — rendering one model on a
+lit turntable. **Depends on / pairs with `C1`** (the spec refactor in
+CHARACTERS.md).
+**Approach:** Show a single `makePerson(spec)` (or a vehicle) rotating on a
+platform with the game's lighting. Add live controls for every spec field once
+C1 lands, plus buttons to cycle canned **poses/animations** (idle, walk, talk,
+point) so you can eyeball the rig. This *is* the creator's preview surface.
+**Acceptance:** `?viewer=1` shows a character turntable; changing a spec value
+updates the model live; poses play correctly. Uses the same builder the game
+uses (no forked model code).
+
+#### D7 — Deterministic seed (optional) `P2 · Risk: Med`
+**Why:** `Math.random()` is used everywhere, so bugs aren't reproducible.
+**Where:** central RNG; city/traffic/ped/mission spawns.
+**Approach:** When `?seed=<n>` is present, route randomness through a small
+seedable PRNG (e.g. mulberry32) exposed as the existing `rand/randi/pick` so the
+same seed reproduces the same city and spawns. No behaviour change without a
+seed.
+**Acceptance:** Same `?seed=123` → identical city layout and initial spawns
+across reloads; no seed → unchanged random behaviour.
 
 ---
 
@@ -607,10 +713,13 @@ A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
 
 ```
-F1  Save/restore            ← everything else persists through this
-F2  Pause + Settings menu   ← the home for all options
-R1  Dispose on removal       ← stop the memory leak early
-F3  Adaptive quality         ← biggest mobile win
+D1  Dev menu / cheat console  ← makes ALL testing faster; do this first
+D2  Fast-boot & scene-jump     ← stop re-watching the intro every reload
+F1  Save/restore               ← everything else persists through this
+F2  Pause + Settings menu      ← the home for all options
+D3  Debug HUD                  ← cheap, speeds up bug-hunting
+R1  Dispose on removal          ← stop the memory leak early
+F3  Adaptive quality            ← biggest mobile win
 F4  Audio mix + ducking
 U1  Objective clarity/HUD
 J1  Haptics
@@ -627,6 +736,11 @@ R3  Anti-stuck
 A2  Accessibility
 X1  (only if approved) modular split
 ```
+
+**Character / cutscene track** (see `CHARACTERS.md`) runs in parallel and shares
+tooling with Phase 0. Rough order there: `D6` viewer → `C1` spec refactor →
+`C2` hero specs → `C4` creator → `C5` cutscene actors/animation → `C3`/`C6`
+fidelity & faces. `C4` depends on `F1` (to save the chosen character).
 
 Pick the top unclaimed task, read its card, check the acceptance criteria, build
 it small, verify (§9), commit. When in doubt about a design decision, ask.

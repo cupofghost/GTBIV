@@ -61,6 +61,7 @@ plain relative paths.
 | --- | --- |
 | `index.html` | The entire game (markup, styles, and logic) |
 | `HANDOFF.md` | Engineering handoff — architecture, code map, and the prioritised improvement backlog for contributors |
+| `CHARACTERS.md` | Character-model, character-creator, and cutscene-rendering plan (companion to `HANDOFF.md`) |
 | `three.min.js` | Vendored three.js r128 (see note below) |
 | `manifest.json` | PWA manifest — name, icons, fullscreen/landscape |
 | `icon-512.png`, `apple-touch-icon.png` | App / home-screen icons |
