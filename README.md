@@ -60,6 +60,7 @@ plain relative paths.
 | File | Purpose |
 | --- | --- |
 | `index.html` | The entire game (markup, styles, and logic) |
+| `HANDOFF.md` | Engineering handoff — architecture, code map, and the prioritised improvement backlog for contributors |
 | `three.min.js` | Vendored three.js r128 (see note below) |
 | `manifest.json` | PWA manifest — name, icons, fullscreen/landscape |
 | `icon-512.png`, `apple-touch-icon.png` | App / home-screen icons |
