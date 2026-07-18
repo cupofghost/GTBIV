@@ -210,6 +210,23 @@
     #storyBtn { margin-top:10px; font-size:14px; padding:8px 28px; }
   }
 
+  /* ===== DEV MENU (only present when ?dev=1) ===== */
+  #devPanel { display:none; position:fixed; top:10px; left:50%; transform:translateX(-50%);
+    z-index:70; width:min(94vw,720px); max-height:88vh; overflow:auto;
+    background:rgba(8,3,18,.94); border:1px solid #ff3ea0; border-radius:14px;
+    padding:12px 14px 14px; pointer-events:auto; box-shadow:0 0 30px rgba(255,62,160,.35); }
+  #devPanel h2 { color:#ff3ea0; font-size:16px; letter-spacing:2px; margin:0 0 10px; text-align:center; }
+  #devPanel .devRow { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; align-items:center; }
+  #devPanel .devLbl { color:#9be7ff; font-size:11px; width:100%; font-family:Arial,sans-serif; letter-spacing:1px; }
+  #devPanel button { font-size:11px; font-weight:900; color:#fff; background:rgba(40,16,70,.85);
+    border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:7px 10px; cursor:pointer; }
+  #devPanel button:active { transform:scale(.96); }
+  #devPanel button.devAct { background:rgba(20,90,40,.85); border-color:#7dff8a; }
+  #devPanel button.devBad { background:rgba(110,20,20,.85); border-color:#ff6b6b; }
+  #devPanel button.devTog.on { background:rgba(255,62,160,.55); border-color:#ff3ea0; }
+  #devPanel .devNote { color:#ffffff88; font-size:10px; font-family:Arial,sans-serif; width:100%; margin-top:-6px; }
+  #devHint { display:none; position:fixed; bottom:2px; right:6px; color:#ff3ea0aa; font-size:10px; z-index:5; font-family:monospace; }
+
   /* ===== CUTSCENE CINEMATICS ===== */
   #cineVignette { display:none; position:fixed; inset:0; z-index:20; pointer-events:none;
     background:radial-gradient(circle at 50% 40%, transparent 45%, rgba(0,0,0,0.65) 100%); }
