@@ -455,6 +455,15 @@ const G={ mode:'foot', money:0, heat:0, stars:0, carHP:100, boost:100,
 const WORLD={ blocks:10, block:50, road:16 };
 const DEV=location.search.includes('dev=1');
 const DEV_STATE={ open:false, god:false, inf:false };
+const QS=(()=>{
+  const p=new URLSearchParams(location.search);
+  return {
+    skipintro:DEV||p.has('skipintro'),
+    scene:(p.get('scene')||'').toLowerCase(),
+    cutscene:p.get('cutscene'),
+    mode:(p.get('mode')||'').toLowerCase()
+  };
+})();
 WORLD.pitch=WORLD.block+WORLD.road;
 WORLD.half=(WORLD.blocks*WORLD.pitch+WORLD.road)/2;
 WORLD.size=WORLD.half*2+40;
@@ -4389,6 +4398,15 @@ function startIntro(){
   $('skipIntro').style.display='block';
   checkOrientation();
 }
+function skipToGameplay(){
+  G.started=true; G.intro=false;
+  $('loadScreen').style.display='none';
+  $('start').style.display='none';
+  $('hud').style.display='block';
+  footCamYaw=player.heading;
+  camPos.set(player.x-Math.sin(player.heading)*6.5,player.y+3.2,player.z-Math.cos(player.heading)*6.5);
+  updateStarsHUD(); refreshButtons();
+}
 function endIntro(){
   if(!G.intro) return;
   stopVoiceOver();
@@ -4401,7 +4419,8 @@ function endIntro(){
   footCamYaw=player.heading;
   camPos.set(player.x-Math.sin(player.heading)*6.5,player.y+3.2,player.z-Math.cos(player.heading)*6.5);
   updateStarsHUD(); refreshButtons();
-  showStoryCard();
+  if(QS.skipintro){ applySceneJump(); }
+  else showStoryCard();
 }
 function updateIntroCam(dt){
   introT+=dt;
@@ -4533,13 +4552,63 @@ function showStoryCard(){
   $('storyCard').style.display='flex';
   trailerSay('story');
 }
-$('storyBtn').addEventListener('click',()=>{
+function dismissStoryCard(){
   $('storyCard').style.display='none';
   spawnDeb();
   toast('Meet Deb — follow the pink beacon','gold');
   setTimeout(()=>toast('CHAPTER 1: PAYING DEBTS','bad'),2400);
-});
+}
+$('storyBtn').addEventListener('click',dismissStoryCard);
 $('storyBtn').addEventListener('touchend',e=>{ e.preventDefault(); $('storyBtn').click(); });
+
+function applySceneJump(){
+  if(!QS.scene&&!QS.cutscene&&!QS.mode) return;
+  // Scene presets
+  if(QS.scene==='heist'){
+    G.night=true; applyDayNight();
+    G.crouching=true;
+    enterPizzaPlace();
+    startHeist();
+    G.heist.phase=2;
+    player.x=-PIZZA.w/2+1.8; player.z=0; player.heading=Math.PI/2;
+    player.mesh.position.set(player.x,player.y,player.z);
+    player.mesh.rotation.y=player.heading;
+    footCamYaw=player.heading;
+    startSafeCrack();
+    $('btnCrouch').classList.add('on');
+    toast('DEV: heist jump','gold');
+  } else if(QS.scene==='pizzawars'){
+    startPizzaWars();
+    toast('DEV: pizza wars jump','gold');
+  } else if(QS.scene==='deb'){
+    spawnDeb();
+    G.story.debt=800; $('debtHud').style.display='block'; $('debtNum').textContent='$800';
+    G.story.metDeb=true;
+    toast('DEV: deb jump — debt $800','gold');
+  }
+  // Mode override (must run after scene setup)
+  if(QS.mode==='car'){
+    const c=makeCar('sports',player.x+2,player.z,player.heading+Math.PI/2,{parked:true});
+    G.mode='car'; player.car=c; c.parked=false; c.driver='player';
+    player.mesh.visible=false; G.carHP=100;
+    setEngineVoice(c.type); $('speedo').style.display='block';
+  } else if(QS.mode==='heli'){
+    const h=makeHeli(player.x+3,player.z,player.heading);
+    h.landed=true; h.parked=true;
+    G.mode='heli'; player.heli=h; h.parked=false; h.driver='player';
+    player.mesh.visible=false; $('speedo').style.display='block';
+    toast('BOOST = UP · DRIFT = DOWN','gold');
+  }
+  // Cutscene jump (plays after a brief yield so camera/world are ready)
+  if(QS.cutscene){
+    const id=QS.cutscene;
+    setTimeout(()=>{
+      if(CUTSCENES[id]) playCutscene(id,player.x,player.z);
+      else toast('DEV: unknown cutscene '+id,'bad');
+    },50);
+  }
+  refreshButtons();
+}
 
 // ---- stores you can rob (more rackets in chapter 2) ----
 const stores=[];
@@ -5041,7 +5110,8 @@ $('startBtn').addEventListener('click',()=>{
   }catch(e){}
   initAudio();
   loadVOFiles();
-  startIntro();
+  if(QS.skipintro){ skipToGameplay(); applySceneJump(); }
+  else startIntro();
 });
 window.addEventListener('resize',()=>{
   renderer.setSize(window.innerWidth,window.innerHeight);
