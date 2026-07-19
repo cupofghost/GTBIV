@@ -206,6 +206,23 @@
     #storyBtn { margin-top:10px; font-size:14px; padding:8px 28px; }
   }
 
+  /* ===== DEV MENU (only present when ?dev=1) ===== */
+  #devPanel { display:none; position:fixed; top:10px; left:50%; transform:translateX(-50%);
+    z-index:70; width:min(94vw,720px); max-height:88vh; overflow:auto;
+    background:rgba(8,3,18,.94); border:1px solid #ff3ea0; border-radius:14px;
+    padding:12px 14px 14px; pointer-events:auto; box-shadow:0 0 30px rgba(255,62,160,.35); }
+  #devPanel h2 { color:#ff3ea0; font-size:16px; letter-spacing:2px; margin:0 0 10px; text-align:center; }
+  #devPanel .devRow { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; align-items:center; }
+  #devPanel .devLbl { color:#9be7ff; font-size:11px; width:100%; font-family:Arial,sans-serif; letter-spacing:1px; }
+  #devPanel button { font-size:11px; font-weight:900; color:#fff; background:rgba(40,16,70,.85);
+    border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:7px 10px; cursor:pointer; }
+  #devPanel button:active { transform:scale(.96); }
+  #devPanel button.devAct { background:rgba(20,90,40,.85); border-color:#7dff8a; }
+  #devPanel button.devBad { background:rgba(110,20,20,.85); border-color:#ff6b6b; }
+  #devPanel button.devTog.on { background:rgba(255,62,160,.55); border-color:#ff3ea0; }
+  #devPanel .devNote { color:#ffffff88; font-size:10px; font-family:Arial,sans-serif; width:100%; margin-top:-6px; }
+  #devHint { display:none; position:fixed; bottom:2px; right:6px; color:#ff3ea0aa; font-size:10px; z-index:5; font-family:monospace; }
+
   /* ===== CUTSCENE CINEMATICS ===== */
   #cineVignette { display:none; position:fixed; inset:0; z-index:20; pointer-events:none;
     background:radial-gradient(circle at 50% 40%, transparent 45%, rgba(0,0,0,0.65) 100%); }
@@ -409,6 +426,8 @@
   <div id="rotateSub">Grand Turbo Boost IV plays in landscape &mdash; turn your device sideways</div>
 </div>
 <div id="fpsWarn"></div>
+<div id="devPanel"><h2>DEV MENU</h2></div>
+<div id="devHint">` dev</div>
 <script src="three.min.js"></script>
 <script>
 'use strict';
@@ -427,6 +446,15 @@ const G={ mode:'foot', money:0, heat:0, stars:0, carHP:100, boost:100,
   escapeT:0, bustT:0, missionsDone:0, over:false, started:false, paused:false,
   station:0, weapon:'fists', rockets:0 };
 const WORLD={ blocks:10, block:50, road:16 };
+const _PARAMS=new URLSearchParams(location.search);
+const DEV=_PARAMS.get('dev')==='1';
+const DEV_STATE={ open:false, god:false, inf:false };
+const QS={
+  skipintro:DEV||_PARAMS.has('skipintro'),
+  scene:(_PARAMS.get('scene')||'').toLowerCase(),
+  cutscene:_PARAMS.get('cutscene'),
+  mode:(_PARAMS.get('mode')||'').toLowerCase()
+};
 WORLD.pitch=WORLD.block+WORLD.road;
 WORLD.half=(WORLD.blocks*WORLD.pitch+WORLD.road)/2;
 WORLD.size=WORLD.half*2+40;
@@ -2366,7 +2394,7 @@ function startHeist(){
   $('heistHUD').style.display='block';
   $('btnCrouch').style.display='flex';
   toast('HEIST STARTED — SNEAK IN','gold'); sfx.mission();
-  trailerSay('heist');
+  turboSay('heist');
 }
 function endHeist(){
   G.heist=null;
@@ -2629,7 +2657,7 @@ function updateHeliMode(dt){
   h.x+=h.vel.x*dt; h.z+=h.vel.z*dt;
   h.y+=h.vy*dt;
   // ditched in the ocean
-  if(overWater(h.x,h.z)&&h.y<0.9){
+  if(overWater(h.x,h.z)&&h.y<0.9&&!DEV_STATE.god){
     burst(h.x,0.4,h.z,40,COL_WATER,8,1.1,3);
     sfx.bigCrash(); shake(0.8);
     player._shore={x:clamp(h.x,-(WATER_R-7),WATER_R-7),z:clamp(h.z,-(WATER_R-7),WATER_R-7)};
@@ -2989,9 +3017,9 @@ function doAttack(){
     }
     return;
   }
-  if(G.weapon==='rpg'&&G.rockets>0){
+  if(G.weapon==='rpg'&&(G.rockets>0||DEV_STATE.inf)){
     p.punchT=0.8;
-    G.rockets--;
+    if(!DEV_STATE.inf) G.rockets--;
     if(G.rockets<=0) G.weapon='pistol';
     sfx.rocket();
     addHeat(20);
@@ -3049,7 +3077,7 @@ function damageArea(x,z,rad,dmg){
     const d=Math.hypot(h.x-x,h.z-z);
     if(d<rad&&h.y<3) damageHeli(h,dmg*(1-d/rad));
   }
-  if(G.mode==='foot'&&Math.hypot(player.x-x,player.z-z)<3) wasted();
+  if(G.mode==='foot'&&Math.hypot(player.x-x,player.z-z)<3&&!DEV_STATE.god) wasted();
   addHeat(25);
 }
 
@@ -3171,6 +3199,7 @@ document.addEventListener('keydown',e=>{
   if(e.code==='KeyC') toggleCrouch();
   if(e.code==='KeyN') toggleNight();
   if(e.code==='KeyM'&&G.mode==='foot'&&!pizzaWars) startPizzaWars();
+  if(DEV&&e.code==='Backquote') toggleDevMenu();
 });
 document.addEventListener('keyup',e=>{ keys[e.code]=false; });
 function pollKeys(){
@@ -3350,6 +3379,7 @@ function carPhysics(car,dt,ctl){
 }
 function damageCar(car,amt,why){
   if(car.dead) return;
+  if(DEV_STATE.god&&car===player.car) return;
   car.hp-=amt;
   if(car===player.car){
     G.carHP=Math.max(0,car.hp/car.maxhp*100);
@@ -3498,8 +3528,8 @@ function updateCarMode(dt){
   // BOOST / DRIFT buttons also feed gas, so one thumb does the whole move
   const ctl={steer,throttle:(input.gas||input.boost||input.drift?1:0)-(input.brake?1:0),
     drift:input.drift,boost:input.boost};
-  if(input.boost&&G.boost>0&&Math.abs(c.speed)>2){
-    G.boost=Math.max(0,G.boost-32*dt);
+  if(input.boost&&(G.boost>0||DEV_STATE.inf)&&Math.abs(c.speed)>2){
+    if(!DEV_STATE.inf) G.boost=Math.max(0,G.boost-32*dt);
     const dir=new THREE.Vector3(Math.sin(c.heading),0,Math.cos(c.heading));
     const rear=c.mesh.position.clone().addScaledVector(dir,2.2);
     burst(rear.x,0.5,rear.z,2,COL_FIRE,1.5,0.25,0);
@@ -3528,7 +3558,7 @@ function updateCarMode(dt){
   }
 
   // --- drove into the ocean: splash, dead engine, slow sink, then WASTED
-  if(!c.sinking&&overWater(c.x,c.z)&&c.y<=0.01){
+  if(!c.sinking&&overWater(c.x,c.z)&&c.y<=0.01&&!DEV_STATE.god){
     c.sinking=true; c.sinkT=0; c.airborne=false; c.vy=0;
     burst(c.x,0.4,c.z,36,COL_WATER,7,1,3);
     burst(c.x,0.4,c.z,18,COL_WATER,4,0.7,2);
@@ -3745,7 +3775,7 @@ function startMission(){
     setBeacon(null);
     toast('3 STARS — LOSE THE COPS!','bad');
   }
-  trailerSay(type);   // movie-trailer voice reads the mission briefing
+  turboSay(type);     // Turbo narrates his own mission starts now
 }
 function completeMission(bonus){
   const r=(mission.reward||0)+(bonus||0);
@@ -3869,7 +3899,7 @@ function updateCops(dt){
         if(mission&&mission.type==='rampage') mission.value+=80;
       }
     }
-    if(G.mode==='foot'&&Math.hypot(player.x-c.x,player.z-c.z)<3.2){
+    if(G.mode==='foot'&&Math.hypot(player.x-c.x,player.z-c.z)<3.2&&!DEV_STATE.god){
       G.bustT+=dt;
       if(G.bustT>1.1) busted();
     }
@@ -4378,6 +4408,15 @@ function startIntro(){
   $('skipIntro').style.display='block';
   checkOrientation();
 }
+function skipToGameplay(){
+  G.started=true; G.intro=false;
+  $('loadScreen').style.display='none';
+  $('start').style.display='none';
+  $('hud').style.display='block';
+  footCamYaw=player.heading;
+  camPos.set(player.x-Math.sin(player.heading)*6.5,player.y+3.2,player.z-Math.cos(player.heading)*6.5);
+  updateStarsHUD(); refreshButtons();
+}
 function endIntro(){
   if(!G.intro) return;
   stopVoiceOver();
@@ -4390,7 +4429,8 @@ function endIntro(){
   footCamYaw=player.heading;
   camPos.set(player.x-Math.sin(player.heading)*6.5,player.y+3.2,player.z-Math.cos(player.heading)*6.5);
   updateStarsHUD(); refreshButtons();
-  showStoryCard();
+  if(QS.skipintro){ applySceneJump(); }
+  else showStoryCard();
 }
 function updateIntroCam(dt){
   introT+=dt;
@@ -4520,15 +4560,66 @@ function updateStory(dt){
 function showStoryCard(){
   G.story.cardShown=true;
   $('storyCard').style.display='flex';
-  trailerSay('story');
+  // Turbo narrates the setup instead of a deep-voiced announcer
+  speakLine("Okay, here's the deal. I'm Turbo Jones, fresh out of minimum security, and my ex Deb wants eight hundred bucks in child support by tonight. I pay up, or it's straight back to the slammer.",'male',{pitch:0.82,rate:0.92,volume:0.9});
 }
-$('storyBtn').addEventListener('click',()=>{
+function dismissStoryCard(){
   $('storyCard').style.display='none';
   spawnDeb();
   toast('Meet Deb — follow the pink beacon','gold');
   setTimeout(()=>toast('CHAPTER 1: PAYING DEBTS','bad'),2400);
-});
+}
+$('storyBtn').addEventListener('click',dismissStoryCard);
 $('storyBtn').addEventListener('touchend',e=>{ e.preventDefault(); $('storyBtn').click(); });
+
+function applySceneJump(){
+  if(!QS.scene&&!QS.cutscene&&!QS.mode) return;
+  // Scene presets
+  if(QS.scene==='heist'){
+    G.night=true; applyDayNight();
+    G.crouching=true;
+    enterPizzaPlace();
+    startHeist();
+    G.heist.phase=2;
+    player.x=-PIZZA.w/2+1.8; player.z=0; player.heading=Math.PI/2;
+    player.mesh.position.set(player.x,player.y,player.z);
+    player.mesh.rotation.y=player.heading;
+    footCamYaw=player.heading;
+    startSafeCrack();
+    $('btnCrouch').classList.add('on');
+    toast('DEV: heist jump','gold');
+  } else if(QS.scene==='pizzawars'){
+    startPizzaWars();
+    toast('DEV: pizza wars jump','gold');
+  } else if(QS.scene==='deb'){
+    spawnDeb();
+    G.story.debt=800; $('debtHud').style.display='block'; $('debtNum').textContent='$800';
+    G.story.metDeb=true;
+    toast('DEV: deb jump — debt $800','gold');
+  }
+  // Mode override (must run after scene setup)
+  if(QS.mode==='car'){
+    const c=makeCar('sports',player.x+2,player.z,player.heading+Math.PI/2,{parked:true});
+    G.mode='car'; player.car=c; c.parked=false; c.driver='player';
+    player.mesh.visible=false; G.carHP=100;
+    setEngineVoice(c.type); $('speedo').style.display='block';
+  } else if(QS.mode==='heli'){
+    const h=makeHeli(player.x+3,player.z,player.heading);
+    h.landed=true; h.parked=true;
+    G.mode='heli'; player.heli=h; h.parked=false; h.driver='player';
+    player.mesh.visible=false; $('speedo').style.display='block';
+    toast('BOOST = UP · DRIFT = DOWN','gold');
+  }
+  // Cutscene jump (plays after a brief yield so camera/world are ready)
+  if(QS.cutscene){
+    const id=QS.cutscene;
+    setTimeout(()=>{
+      if(CUTSCENES[id]) playCutscene(id,player.x,player.z);
+      else toast('DEV: unknown cutscene '+id,'bad');
+    },50);
+  }
+  refreshButtons();
+}
 
 // ---- stores you can rob (more rackets in chapter 2) ----
 const stores=[];
@@ -4994,6 +5085,30 @@ const TURBO_LINES={
     {src:null, text:"This is a citizen's requisition."},
     {src:null, text:"Ooh, leather seats!"},
   ],
+  delivery:[
+    {src:null, text:"Delivery run. Grab the package, get it across town, and don't scratch the merchandise."},
+    {src:null, text:"Special delivery — and I'm the special part."},
+  ],
+  style:[
+    {src:null, text:"Style mission. Sixty seconds. Catch air, drift hard, and look good doing it."},
+    {src:null, text:"Time to make this look pretty."},
+  ],
+  checkpoints:[
+    {src:null, text:"Checkpoint race. Hit every marker before the clock bleeds out."},
+    {src:null, text:"Gotta hit those checkpoints before time runs out."},
+  ],
+  rampage:[
+    {src:null, text:"Rampage. They want chaos... give them chaos."},
+    {src:null, text:"Let's redecorate the city. With explosions."},
+  ],
+  heat:[
+    {src:null, text:"The heat is on. Lose the badge brigade before they lose their patience."},
+    {src:null, text:"Cops are grumpy. Time to disappear."},
+  ],
+  heist:[
+    {src:null, text:"The heist is on. Sneak in, crack the safe, and vanish before the alarm screams."},
+    {src:null, text:"Nice and quiet... until it isn't."},
+  ],
 };
 let turboCool=0;
 // pacing for the ambient (non-event) quips so they don't spam
@@ -5006,24 +5121,6 @@ function turboSay(cat){
   if(!line.src||!playVOFile(line.src,1.0,0.95)) speak(line.text,'male',{pitch:0.8,rate:0.95,volume:0.9});
 }
 
-// ---- MOVIE-TRAILER VOICE: reads big on-screen explanations, deep and growly ----
-const TRAILER={
-  story:"Turbo Jones just walked out of minimum security with twelve dollars and a bus pass. His ex-wife Deb is waiting downtown, and she wants her child support. All eight hundred dollars of it. Pay up... or it's straight back to jail.",
-  delivery:"Delivery run. Grab the package, get it across town, and don't scratch the merchandise.",
-  style:"Style mission. Sixty seconds. Catch air, drift hard, and look good doing it.",
-  checkpoints:"Checkpoint race. Hit every marker before the clock bleeds out.",
-  rampage:"Rampage. They want chaos... give them chaos.",
-  heat:"The heat is on. Lose the badge brigade before they lose their patience.",
-  heist:"The heist is on. Sneak in, crack the safe, and vanish before the alarm screams.",
-};
-function trailerSay(key){
-  if(!G.started||G.over) return;
-  const text=TRAILER[key]; if(!text) return;
-  stopVoiceOver();   // trailer voice owns the mic
-  // recorded read pitched down to a growl if the file exists, else deep growly TTS
-  if(!playVOFile('tr_'+key+'.mp3',0.74,1.0))
-    speakLine(text,'male',{pitch:0.5,rate:0.78,volume:0.95});
-}
 function updateIntroNarration(dt){
   if(!G.intro||!G.started) return;
   INTRO_LINES.forEach((line,i)=>{
@@ -5051,6 +5148,59 @@ showDialogue=function(speaker,text,duration){
 
 // ================= END VOICEOVER SYSTEM =================
 
+// ================= DEV TOOLS =================
+(function initDevTools(){
+  if(!DEV) return;
+  const panel=$('devPanel');
+  const hint=$('devHint'); if(hint) hint.style.display='block';
+  const row=(lbl,...btns)=>{
+    const d=document.createElement('div'); d.className='devRow';
+    if(lbl){ const l=document.createElement('div'); l.className='devLbl'; l.textContent=lbl; d.appendChild(l); }
+    btns.forEach(b=>d.appendChild(b)); panel.appendChild(d);
+  };
+  const btn=(txt,cls,on)=>{ const e=document.createElement('button'); e.textContent=txt; e.className=cls||''; e.addEventListener('click',on); return e; };
+  const tog=(txt,key)=>{
+    const e=btn(txt,'devTog');
+    e.addEventListener('click',()=>{ DEV_STATE[key]=!DEV_STATE[key]; e.classList.toggle('on',DEV_STATE[key]); toast('DEV: '+txt+' '+(DEV_STATE[key]?'ON':'OFF'),'gold'); });
+    return e;
+  };
+  // Money / story
+  row('MONEY', btn('+ $100','devAct',()=>addMoney(100)), btn('+ $1000','devAct',()=>addMoney(1000)), btn('Clear Debt','devAct',()=>{ G.story.debt=0; G.story.paidOff=true; $('debtHud').style.display='none'; addMoney(0); toast('DEBT CLEARED','gold'); }));
+  // Heat
+  row('WANTED', btn('Stars +1','devBad',()=>addHeat(20)), btn('Stars 6','devBad',()=>{G.heat=100; addHeat(0);}), btn('Clear Heat','devAct',()=>clearHeat(false)));
+  // Vehicles
+  row('SPAWN', btn('Sedan','devAct',()=>spawnCarAtPlayer('sedan')), btn('Sports','devAct',()=>spawnCarAtPlayer('sports')), btn('Moto','devAct',()=>spawnCarAtPlayer('moto')), btn('Heli','devAct',()=>spawnHeliAtPlayer()));
+  // Cheats
+  row('CHEATS', tog('God Mode','god'), tog('Infinite Boost/Ammo','inf'));
+  // Teleport
+  row('TELEPORT', btn('Deb','devAct',()=>teleport(deb?deb.x:0,deb?deb.z:0)), btn('Pizza','devAct',()=>teleport(PIZZA.doorX,PIZZA.doorZ)), btn('Corner','devAct',()=>teleport(WORLD.half,WORLD.half)), btn('Random','devAct',()=>{const p=randomRoadPoint(); teleport(p.x,p.z);}));
+  // Time
+  row('TIME', btn('Day','devAct',()=>{if(G.night)toggleNight();}), btn('Night','devAct',()=>{if(!G.night)toggleNight();}));
+  // Mission / cutscene
+  row('MISSION', btn('Trigger','devAct',()=>{ if(!mission){ missionCooldown=0; lastType=''; } }), btn('Complete','devAct',()=>{ if(mission) completeMission(500); }), btn('Fail','devBad',()=>{ if(mission) failMission(); }));
+  row('CUTSCENE', btn('Deb Confront','devAct',()=>playCutscene('deb_confrontation',player.x,player.z)), btn('Deb Payoff','devAct',()=>playCutscene('deb_payoff',player.x,player.z)), btn('Pizza Wars','devAct',()=>startPizzaWars()));
+  row('SAVE', btn('Wipe Save','devBad',()=>{ localStorage.removeItem('gtb4.save'); toast('SAVE WIPED','bad'); }));
+  row('', btn('Close','',()=>toggleDevMenu()));
+
+  function spawnCarAtPlayer(type){
+    if(!G.started) return;
+    const c=makeCar(type,player.x+2,player.z+2,player.heading+Math.PI/2,{parked:true});
+    c.driver=null;
+  }
+  function spawnHeliAtPlayer(){
+    if(!G.started) return;
+    const h=makeHeli(player.x+3,player.z+3,player.heading); h.landed=true; h.parked=true;
+  }
+  function teleport(x,z){
+    if(!G.started) return;
+    if(G.mode==='car'&&player.car){ player.car.x=x; player.car.z=z; player.car.mesh.position.set(x,player.car.y||0,z); }
+    else if(G.mode==='heli'&&player.heli){ player.heli.x=x; player.heli.z=z; player.heli.mesh.position.set(x,player.heli.y||0,z); }
+    else { player.x=x; player.z=z; if(player.mesh) player.mesh.position.set(x,player.y||0,z); }
+  }
+  window.toggleDevMenu=()=>{ DEV_STATE.open=!DEV_STATE.open; panel.style.display=DEV_STATE.open?'block':'none'; };
+})();
+// ================= END DEV TOOLS =================
+
 // ================= START / RESIZE =================
 $('startBtn').addEventListener('click',()=>{
   $('start').style.display='none';
@@ -5063,7 +5213,8 @@ $('startBtn').addEventListener('click',()=>{
   }catch(e){}
   initAudio();
   loadVOFiles();
-  startIntro();
+  if(QS.skipintro){ skipToGameplay(); applySceneJump(); }
+  else startIntro();
 });
 window.addEventListener('resize',()=>{
   renderer.setSize(window.innerWidth,window.innerHeight);
