@@ -124,6 +124,52 @@ First appearance: `turbo_bowl_payoff` cutscene.
 Gags: treat Coach's whistle with more reverence than Coach does.
 ```
 
+### Danny Kowalski
+```
+NAME: Danny Kowalski                ROLE: rival → ally (redemption arc)
+One-line: The once-star quarterback whose knee Turbo blew out over a
+  Gatorade — now the Wildcats' equipment manager, permanent limp, zero
+  interest in reliving 1994.
+Voice: Tired, dry, doesn't rise to Turbo's energy — the only person in
+  this strand as deadpan as Deb. Not bitter, exactly, more exhausted by
+  the whole subject after two decades of other people staying mad on his
+  behalf.
+  Sample: "You know I have a knee brace named after this game, right?
+  Not a good name."
+Wants / Deadline: To be left alone about the incident. Secretly wants an
+  actual apology instead of another Turbo deflection.
+Relationship to Turbo: the actual injured party in the strand's founding
+  myth — everyone else's grudge (Coach's, the jocks') is really proxy
+  anger on Danny's behalf, and Danny himself has mostly moved on.
+First appearance: the equipment shed at Wildcats Field, noticeable once
+  Coach lets Turbo back on the field after Rematch.
+Arc / payoff: `danny_apology` — a short, sincere scene where Turbo gives
+  his first real, undeflected apology of the game so far, and Danny
+  accepts it on one condition. Mirrors and foreshadows the eventual Deb
+  payoff.
+Gags: keeps a jar on the equipment counter labeled "GATORADE FUND,"
+  visibly still not full after twenty years.
+```
+
+### The PA Voice (Wildcats Field announcer)
+```
+NAME: credited only as "THE PA VOICE"   ROLE: color
+One-line: A nervous local volunteer running the stadium PA system —
+  underprepared, over-enthusiastic, and reading sponsor copy for
+  businesses that clearly don't exist.
+Voice: Small-town sports-announcer cadence; mispronounces things; trails
+  off mid-sentence; genuinely thrilled by every play no matter the
+  stakes.
+Wants: to get through the broadcast without another mic-feedback
+  incident.
+Relationship to Turbo: none personally — pure ambient narration during
+  Turbo Bowl.
+First appearance: Turbo Bowl, first "Play Ball" trigger.
+Gags: reads increasingly absurd fake local-business ads between plays
+  (more "zero trademarks harmed" parody territory); can't settle on
+  Turbo's name ("Turbo... Jonas? Jones? The bus-pass guy!").
+```
+
 ---
 
 ## 2. New location sheet
@@ -160,7 +206,8 @@ player verbs wherever possible, new mechanics flagged explicitly in §7.
    the **proximity-trigger** pattern already used for Deb/stores).
 3. **Rematch** — a scripted 1-on-1 fistfight against Coach, a **named boss
    ped** (new pattern — see §7).
-4. **Turbo Bowl** — the unlockable minigame (the one real new mode — see §7).
+4. **Turbo Bowl** — the unlockable minigame (locked design in §5; the one
+   real new mode — build-cost flag in §8).
 
 ---
 
@@ -214,7 +261,53 @@ Ties to spine: parallel payoff to the Deb strand — both are Turbo trying,
 
 ---
 
-## 5. Cutscene scripts
+## 5. Turbo Bowl — minigame design (LOCKED: Endless Run)
+
+Decision made — going with the cheap version (§8 Option A), kept
+deliberately simple rather than growing a "downs" system or new verbs.
+Full design so it's buildable without further back-and-forth:
+
+```
+MODE: Turbo Bowl                     UNLOCK: complete Rematch
+LOCATION: San Chaos Wildcats Field, replayable anytime after unlock
+Setup: a "PLAY BALL" beacon at midfield (same beacon pattern as story/
+  mission triggers). Walking into it starts a run — no separate menu.
+Core loop (one continuous timed sprint, not multiple downs):
+  1. Kickoff — Turbo receives the ball at his own end zone (PA "kickoff"
+     bark, §7).
+  2. He sprints the length of the field toward the far end zone using
+     the EXISTING move controls only — no new input, no new verb.
+  3. A handful of Alumni Wildcats (3 to start) spawn ahead/to the sides
+     and converge on him, reusing the existing chase-AI shape (same
+     "close the distance" logic as cop pursuit, just non-lethal).
+  4. Touching a defender = TACKLED. Run ends immediately. This is a
+     SOFT fail — no busted/wasted screen, no penalty, instant retry via
+     the same beacon.
+  5. Reaching the far end zone = TOUCHDOWN. Triggers `turbo_bowl_payoff`
+     on the first win only; subsequent wins just get a toast + bark
+     (§7 `turbo_turbobowl_run`) — the full cutscene is a one-time thing.
+Scoring: yards covered before being tackled or scoring (distance
+  traveled = the score). No timer pressure needed — the defenders
+  closing in ARE the pressure. Track a session-best (and, once F1/save
+  lands, a persisted best) so replays have something to chase.
+Difficulty: each successful touchdown adds one more defender on the next
+  attempt (cap it low, e.g. 3 → 6, so it never turns into a bullet-hell).
+  Resets to 3 if the player hasn't played in a while, or just holds flat
+  if that's simpler — engineering's call, not a story requirement.
+Fail/retry: tackled → instant re-prompt at the beacon, no cooldown. This
+  should feel like pickup-game replayability, not a mission with stakes.
+```
+
+*Why this shape:* every piece of it reuses something that already exists
+— movement, a chase-AI pattern, a beacon trigger, a toast/bark pipeline —
+except the yardage/defender-count bookkeeping itself, which is small
+state, not a new system. It's the cheapest version of "football
+minigame" that still delivers the beat you asked for (win → cheerleaders
+→ Dad).
+
+---
+
+## 6. Cutscene scripts
 
 ```
 CUTSCENE: coach_rematch_intro — LOCATION: Wildcats Field, sideline — TIME: day
@@ -265,8 +358,43 @@ SHOT 3 — WIDE, 2.2s, fade.
 ```
 
 ```
+CUTSCENE: danny_apology — LOCATION: Wildcats Field, equipment shed — TIME: day
+[Trigger: player approaches the equipment shed after coach_defeat has played]
+
+SHOT 1 — WIDE, 2.4s, push in on a guy restocking footballs, favoring one leg.
+  ACTION: Danny doesn't look up.
+  DANNY: "Coach let you back on the field. Bold move."
+
+SHOT 2 — MEDIUM two-shot, 3.2s.
+  TURBO: "Danny. Hey. Been a while."
+  DANNY: "Nineteen years. But sure, 'a while.'"
+
+SHOT 3 — CLOSE on Turbo, 3.6s, cut. (the one beat where he actually
+  stops joking)
+  TURBO: "...I'm sorry about your knee. I was showing off. It wasn't
+    about you. That doesn't make it better, I know."
+
+SHOT 4 — CLOSE on Danny, 3.4s.
+  DANNY: "...huh. That's the first time you've said that without a
+    punchline after it."
+
+SHOT 5 — MEDIUM two-shot, 3.0s, cut.
+  DANNY: "Fine. Apology accepted. Never bring up the wrestling match
+    again."
+  TURBO: "The what now? Never heard of it."
+
+SHOT 6 — WIDE, 2.0s, fade.
+  ACTION: Danny almost smiles. Almost. He goes back to stacking footballs.
+```
+*Why this beat:* it's the strand's real emotional payoff — the first
+apology Turbo gives anyone without immediately deflecting it into a
+joke — and it's small and cheap (one location, two characters, no new
+mechanic) precisely so it doesn't compete with the football beats for
+build budget.
+
+```
 CUTSCENE: turbo_bowl_payoff — LOCATION: Wildcats Field — TIME: day
-[Trigger: first Turbo Bowl win — see §7 for minigame scope]
+[Trigger: first Turbo Bowl win — see §5 for the locked minigame design]
 
 SHOT 1 — WIDE, 2.4s, crowd noise, push in on Turbo spiking the ball.
   TURBO: "Still got it! Twenty years later, STILL GOT IT!"
@@ -294,7 +422,7 @@ SHOT 6 — WIDE pull-up, 2.0s, fade out.
 
 ---
 
-## 6. Bark packs
+## 7. Bark packs
 
 ```
 PACK: jock_street_taunt (Alumni Wildcats, roaming encounters pre-Rematch)
@@ -382,9 +510,82 @@ PACK: turbo_backstory_callback (Turbo, rare ambient bark — extends the
   hardest — let him say something absurd with total conviction)
 ```
 
+```
+PACK: danny_ambient (Danny Kowalski, idle lines at the equipment shed,
+  after `danny_apology` has played)
+- "Don't step on the equipment. I only just got it organized."
+- "You know I have a knee brace named after this game, right? Not a
+  good name."
+- "Gatorade Fund's still not full, by the way."
+- "Coach still won't let me referee your games. Says I'm 'biased.' I
+  am, a little."
+(tone note: dry, deadpan — the least impressed person on the field, and
+  proud of it)
+```
+
+### Turbo Bowl dialogue (the minigame itself, §5)
+
+```
+PACK: pa_announcer_turbo_bowl (THE PA VOICE — keyed to distance
+  milestones during a run: kickoff, midfield, red zone, touchdown,
+  tackled)
+- "And he's OFF! Turbo Jones — sorry, is it Jonas? — with the ball!"
+- "Ohhh he's cutting left, he's cutting right, does HE even know where
+  he's going?"
+- "Fifty yards! Halfway there, folks — halfway to glory or a pulled
+  hamstring!"
+- "TOUCHDOWN! TOUCHDOWN JONES! I mean JONES-JONAS! SOMEBODY CONFIRM THE
+  SPELLING!"
+- "Ohh, and he's DOWN. Tackled. That's gotta hurt. Today's game is
+  brought to you by Big Gary's Discount Airbags — 'we cushion the
+  blow, literally.'"
+- "This broadcast is sponsored by Sunny Sam's Suspiciously Cheap
+  Watches. Sunny Sam is not currently answering his phone."
+(tone note: warm, chaotic small-town-broadcast energy, genuinely losing
+  the thread mid-sentence)
+```
+
+```
+PACK: coach_sideline_turbobowl (Coach, cheering from the sideline once
+  Turbo's back on the field — distinct from his Rematch fight taunts)
+- "Head up, JONES! Eyes downfield!"
+- "That's it! That's what I've been trying to teach you for TWENTY
+  YEARS!"
+- "Don't you dare fumble in front of me again!"
+- "ATTA BOY— don't let it go to your head."
+(tone note: still gruff, but rooting for him now — the thaw from
+  Rematch shows here)
+```
+
+```
+PACK: jock_turbobowl_defender (Alumni Wildcats, chasing Turbo during a
+  run — friendlier register than the pre-Rematch `jock_fight` pack)
+- "Not today, Jones!"
+- "You're still slow, old man!"
+- "I've got you, I've got you— dang it, I don't got you!"
+- "Coach is WATCHING, Jones, don't embarrass us!"
+(tone note: competitive but warm — needling a friend, not an enemy)
+```
+
+```
+PACK: turbo_turbobowl_run (Turbo, during/after a Turbo Bowl attempt)
+- "Outta my way, I'm HISTORIC!"
+- "Twenty years of cardio for THIS moment!"
+- "Juke left— no— juke RIGHT— just RUN, TURBO!"
+- "This is for the locker room I'll never see again!"
+(on getting tackled)
+- "...I meant to do that."
+- "The grass broke my fall. Mostly."
+(on scoring, replays after the first win — the full cutscene only fires once)
+- "STILL. GOT. IT."
+- "Somebody call Deb, tell her I'm FAST again!"
+(tone note: same breezy deflection as his core lines — even getting
+  tackled is a bit, not a setback)
+```
+
 ---
 
-## 7. Engineering flags
+## 8. Engineering flags
 
 Ranked by how far each sits from what already exists in `index.html`,
 per `HANDOFF.md`'s golden rules (§8 — new systems need sign-off).
@@ -403,18 +604,14 @@ per `HANDOFF.md`'s golden rules (§8 — new systems need sign-off).
 3. **Dad's interrupt trigger** — *low.* Mirrors the existing proximity +
    cutscene pattern (same shape as `spawnDeb`/story triggers). Cheap.
 4. **Turbo Bowl minigame** — *the real ask, flagged per HANDOFF.md §2.8
-   ("new game mode... needs sign-off first").* This isn't a mission, it's
-   a mode, and it doesn't fit the existing archetype list. Two options,
-   ranked by cost:
-   - **Option A — Endless Run (recommended, far cheaper):** dodge/juke a
-     line of Alumni Wildcats defenders sprinting a set distance, reusing
-     the existing run/dodge foot verbs and chase-AI shape (defenders
-     "tackle" on touch like a non-lethal cop grab). Timer + yardage score.
-   - **Option B — Target Accuracy (stretch):** throw at receivers/targets
-     for points against a clock. Needs a new aim/throw verb that doesn't
-     exist anywhere in the game today — meaningfully heavier lift.
-   Recommend scoping Option A only, and only once you're ready to treat
-   this as an actual expansion pass rather than polish.
+   ("new game mode... needs sign-off first").* **Design locked** (§5):
+   Endless Run — dodge/juke a small wave of Alumni Wildcats sprinting the
+   field length, reusing existing move controls and the chase-AI shape,
+   scored by yards covered. Deliberately skips the target-accuracy/
+   throwing version that would need a brand-new aim verb — not on the
+   table. This is still, mechanically, a new mode rather than a mission,
+   so it's still the one item on this list that needs your go-ahead to
+   actually build, even with the design settled.
 
 None of the fight-adjacent work (§7.1–7.3) requires a new *system* the way
 the minigame does — they're new content riding existing verbs. The
@@ -422,16 +619,19 @@ minigame is the one item on this list that's a real go/no-go decision.
 
 ---
 
-## 8. What's next
+## 9. What's next
 
-This covers "football characters and dialogue, and Coach": two new named
-characters (Coach Grimsby, Reverend Jones), two new archetypes (Alumni
-Wildcats, Cheer Squad), one location, two mission specs, three cutscenes,
-and eight bark packs — all built from the promo monologue's specific
+The strand is now feature-complete on the page: four named characters
+(Coach Grimsby, Reverend Jones, Danny Kowalski, the PA Voice), two
+archetypes (Alumni Wildcats, Cheer Squad), one location, two mission
+specs, a locked minigame design, four cutscenes (`coach_rematch_intro`,
+`coach_defeat`, `danny_apology`, `turbo_bowl_payoff`), and a full line
+pass across every role — all built from the promo monologue's specific
 details (the Gatorade/Danny Kowalski incident, the hot dogs, "gotta get
-creative").
+creative"). `danny_apology` gives the strand its one sincere beat, mirroring
+the eventual Deb payoff.
 
-Open threads: Danny Kowalski himself as a possible future character (an
-appearance/forgiveness beat); whether Turbo Bowl gets greenlit as an
-actual build (your call, per §7); and whether this strand should ever
-cross the Chaos Pizza strand or the Deb spine directly, or stay parallel.
+Open threads: whether to actually greenlight the Turbo Bowl build (design's
+locked, sign-off isn't — §8); whether this strand should ever cross the
+Chaos Pizza strand or the Deb spine directly, or stay parallel; and the
+still-open Chapter 2 premise and radio DJ personas from `CHAPTER1.md`.
