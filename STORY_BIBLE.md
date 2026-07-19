@@ -268,13 +268,15 @@ Gags/landmarks: <memorable bits>
   and ended his football career. The antagonist of the "Revenge on Coach"
   mission (see §7 worked example). Comedic, not menacing — a petty tyrant of
   a small kingdom (his field, his whistle, his rules).
-- **Turbo's Dad** — off-screen moral authority turned running gag. Devout,
-  overprotective, the reason Turbo "wasn't allowed" to date cheerleaders in
-  high school. Pays off in the football-minigame punchline (§7 worked
-  example) by showing up at the worst possible moment.
+- **Turbo's Dad** — **never appears on-screen.** Devout, overprotective, the
+  reason Turbo "wasn't allowed" to date cheerleaders in high school — and the
+  rule outlived the reason for it. He's a voice in Turbo's head, not a
+  character in a scene: the football-minigame punchline (§7 worked example)
+  pays this off by having Turbo self-censor entirely on his own, years later,
+  with nobody watching and nobody making him. That's the whole joke.
 - **The Cheerleaders** — a group, not individuals (unless the writer wants to
-  name one as a bigger recurring character later). Function as a reward/
-  payoff beat: they approach Turbo when he wins — right before Dad ruins it.
+  name one as a bigger recurring character later). Function as a reward beat
+  Turbo talks himself out of — nobody stops him, he stops himself.
 - **Chaos High Jocks** — Turbo's old teammates, now a hostile street faction
   (see §3/§4). Not individually named; a taunting, fist-throwing crowd, like
   Chaos Pizza's gang members but without turf.
@@ -390,21 +392,29 @@ SHOT 2 — MEDIUM, 3.0s, cut.
   TURBO: "That's right. That's what I'm talking about."
   ACTION: cheerleaders start walking toward him, waving.
 
-SHOT 3 — MEDIUM, 3.5s, cut. (FX: record-scratch sting)
-  ACTION: Turbo's Dad appears, marching in from the sideline.
-  DAD: "Turbo! What did we say about the cheerleaders?!"
+SHOT 3 — CLOSE on Turbo, 3.0s, cut. (FX: he visibly catches himself)
+  TURBO: "...Nope. Nope, can't. Church."
+  ACTION: Turbo holds a hand up, waving them off before they even arrive —
+    entirely his own call, nobody's watching, nobody made him.
 
-SHOT 4 — CLOSE on Turbo, 3.0s, cut.
-  TURBO: "...Because of church. I know, Dad. I know."
-  ACTION: the cheerleaders peel off, disappointed. Turbo deflates.
+SHOT 4 — MEDIUM, 3.0s, cut.
+  ACTION: the cheerleaders shrug and peel off. Turbo watches them go, alone,
+    still holding the pose.
+  TURBO: "Dad would be so proud. If he knew. Which he won't. Because I'm not
+    telling him. Because there's nothing to tell. Because I said no."
 
 SHOT 5 — WIDE, 2.0s, fade out.
-  ACTION: Dad steers Turbo away by the shoulder. Coach, defeated, just watches.
+  ACTION: Turbo, alone on the field, nodding to himself like that was a
+    normal thing that just happened. Coach, defeated, just watches from the
+    sideline, baffled.
 ```
 
-Guardrail for the writer: keep Dad and the cheerleaders **comedic, not creepy**
-— this is a PG-13 gag about Turbo never escaping his dad's rules, not about the
-cheerleaders as objects. The joke is entirely on Turbo.
+Guardrail for the writer: **Dad never appears** — this is a solo Turbo bit. The
+joke is that he polices *himself*, unprompted, years later, with zero stakes and
+zero witnesses — that's funnier and sadder than an external authority doing it
+for him. Keep the cheerleaders **comedic, not creepy**: they're a reward beat
+Turbo talks himself out of, not objects of the joke. The joke is entirely on
+Turbo.
 
 ---
 

@@ -763,13 +763,16 @@ on a win.
 feel good, stop and check in rather than over-building — the punchline
 cutscene (FB5) is the actual payoff, not the football mechanics themselves.
 
-#### FB5 — Cheerleaders + Dad punchline cutscene `P2 · Risk: Med`
+#### FB5 — Cheerleaders punchline cutscene (solo Turbo, no Dad on-screen) `P2 · Risk: Med`
 **Why:** The joke the whole arc is building to.
 **Where:** triggered on winning **FB4**; another `CUTSCENES` entry, using the
 new actor/pose work from `CHARACTERS.md` (**C8**) if that's landed yet, or a
 camera-only cutscene (today's cutscene capability) if not — see
 `STORY_BIBLE.md`'s cutscene script for the exact beats (cheerleaders approach
-→ Dad appears → yells that he's not allowed → cut to Turbo's reaction).
+→ Turbo waves them off himself, unprompted, citing his dad's rule → they leave
+→ Turbo alone on the field, self-satisfied). **Dad never appears on-screen** —
+he's a voice in Turbo's head, not a character in the scene; don't add a Dad
+actor/model for this.
 **Acceptance:** plays once on the minigame win, matches the scripted beats in
 `STORY_BIBLE.md`, ends cleanly back in normal gameplay, doesn't re-trigger on
 replay of the minigame (or does, deliberately — confirm with Austin which).
