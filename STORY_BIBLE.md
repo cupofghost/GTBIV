@@ -42,7 +42,8 @@ deadline.
   is a career, the radio is unhinged. Satire of crime games, not a real crime
   story.
 - **80s neon-noir** dressing: synthwave, sunset gradients, palm trees, VHS grain,
-  movie-trailer voiceover. Style is loud and pink/cyan.
+  Turbo's own running commentary in place of a movie-trailer voiceover. Style is
+  loud and pink/cyan.
 - **Cartoon violence, PG-13 attitude.** Slapstick "MY SPLEEN!" energy, not gore.
   Innuendo over profanity. Keep it broadcastable-absurd.
 - **Turbo is the joke and the heart.** He's a screw-up with a code; the comedy
@@ -99,10 +100,16 @@ Write dialogue to fit these registers. Samples are pulled from the game.
 **Deb** — deadpan, done-with-him, sharper than Turbo, not a villain. Dry menace.
 - *"Turbo. We need to talk." / "Pay me, or you go BACK to jail. Have fun, Turbo."*
 
-**The Trailer Announcer** — deep, growly movie-trailer voice; reads mission
-briefings and big beats. Over-the-top epic about petty things.
-- *"Rampage. They want chaos... give them chaos." / "The heist is on. Sneak in,
-  crack the safe, and vanish before the alarm screams."*
+**Turbo Jones (narrator mode)** — same cocky, breezy register, but when he's
+explaining the job to himself (and the player) it lands like an under-breath
+running commentary. No separate deep-voiced announcer; Turbo is the only voice
+that reads mission briefings and big story beats.
+- *"Okay, here's the deal. I'm Turbo Jones, fresh out of minimum security, and my
+  ex Deb wants eight hundred bucks in child support by tonight. I pay up, or it's
+  straight back to the slammer."*
+- *"Delivery run. Grab the package, get it across town, and don't scratch the
+  merchandise." / "Rampage. They want chaos... give them chaos." / "The heist is
+  on. Sneak in, crack the safe, and vanish before the alarm screams."*
 
 **Ambient San Chaos citizens** — absurd, oblivious, fourth-wall-adjacent.
 - *"Nice weather for a rampage." / "The cops here? Useless." / "I saw THREE

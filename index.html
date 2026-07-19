@@ -2401,7 +2401,7 @@ function startHeist(){
   $('heistHUD').style.display='block';
   $('btnCrouch').style.display='flex';
   toast('HEIST STARTED — SNEAK IN','gold'); sfx.mission();
-  trailerSay('heist');
+  turboSay('heist');
 }
 function endHeist(){
   G.heist=null;
@@ -3757,7 +3757,7 @@ function startMission(){
     setBeacon(null);
     toast('3 STARS — LOSE THE COPS!','bad');
   }
-  trailerSay(type);   // movie-trailer voice reads the mission briefing
+  turboSay(type);     // Turbo narrates his own mission starts now
 }
 function completeMission(bonus){
   const r=(mission.reward||0)+(bonus||0);
@@ -4548,7 +4548,8 @@ function updateStory(dt){
 function showStoryCard(){
   G.story.cardShown=true;
   $('storyCard').style.display='flex';
-  trailerSay('story');
+  // Turbo narrates the setup instead of a deep-voiced announcer
+  speakLine("Okay, here's the deal. I'm Turbo Jones, fresh out of minimum security, and my ex Deb wants eight hundred bucks in child support by tonight. I pay up, or it's straight back to the slammer.",'male',{pitch:0.82,rate:0.92,volume:0.9});
 }
 function dismissStoryCard(){
   $('storyCard').style.display='none';
@@ -4992,6 +4993,30 @@ const TURBO_LINES={
     {src:null, text:"Nice ride. It's mine now."},
     {src:null, text:"Keys in the ignition. How thoughtful."},
   ],
+  delivery:[
+    {src:null, text:"Delivery run. Grab the package, get it across town, and don't scratch the merchandise."},
+    {src:null, text:"Special delivery — and I'm the special part."},
+  ],
+  style:[
+    {src:null, text:"Style mission. Sixty seconds. Catch air, drift hard, and look good doing it."},
+    {src:null, text:"Time to make this look pretty."},
+  ],
+  checkpoints:[
+    {src:null, text:"Checkpoint race. Hit every marker before the clock bleeds out."},
+    {src:null, text:"Gotta hit those checkpoints before time runs out."},
+  ],
+  rampage:[
+    {src:null, text:"Rampage. They want chaos... give them chaos."},
+    {src:null, text:"Let's redecorate the city. With explosions."},
+  ],
+  heat:[
+    {src:null, text:"The heat is on. Lose the badge brigade before they lose their patience."},
+    {src:null, text:"Cops are grumpy. Time to disappear."},
+  ],
+  heist:[
+    {src:null, text:"The heist is on. Sneak in, crack the safe, and vanish before the alarm screams."},
+    {src:null, text:"Nice and quiet... until it isn't."},
+  ],
 };
 let turboCool=0;
 function turboSay(cat){
@@ -5002,24 +5027,6 @@ function turboSay(cat){
   if(!line.src||!playVOFile(line.src,1.0,0.95)) speak(line.text,'male',{pitch:0.8,rate:0.95,volume:0.9});
 }
 
-// ---- MOVIE-TRAILER VOICE: reads big on-screen explanations, deep and growly ----
-const TRAILER={
-  story:"Turbo Jones just walked out of minimum security with twelve dollars and a bus pass. His ex-wife Deb is waiting downtown, and she wants her child support. All eight hundred dollars of it. Pay up... or it's straight back to jail.",
-  delivery:"Delivery run. Grab the package, get it across town, and don't scratch the merchandise.",
-  style:"Style mission. Sixty seconds. Catch air, drift hard, and look good doing it.",
-  checkpoints:"Checkpoint race. Hit every marker before the clock bleeds out.",
-  rampage:"Rampage. They want chaos... give them chaos.",
-  heat:"The heat is on. Lose the badge brigade before they lose their patience.",
-  heist:"The heist is on. Sneak in, crack the safe, and vanish before the alarm screams.",
-};
-function trailerSay(key){
-  if(!G.started||G.over) return;
-  const text=TRAILER[key]; if(!text) return;
-  stopVoiceOver();   // trailer voice owns the mic
-  // recorded read pitched down to a growl if the file exists, else deep growly TTS
-  if(!playVOFile('tr_'+key+'.mp3',0.74,1.0))
-    speakLine(text,'male',{pitch:0.5,rate:0.78,volume:0.95});
-}
 function updateIntroNarration(dt){
   if(!G.intro||!G.started) return;
   INTRO_LINES.forEach((line,i)=>{
