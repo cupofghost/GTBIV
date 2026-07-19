@@ -69,8 +69,15 @@ plain relative paths.
 | `title-bg.jpg` | Title-screen background art |
 | `panel1.jpg`, `panel2.jpg`, `panel3.jpg` | Legacy key-art panels (no longer referenced) |
 | `vo1.mp3` – `vo4.mp3` | Turbo Jones intro narration (with subtitles) |
-| `t_run1.mp3` – `t_run3.mp3` | "Run someone over" catchphrases |
-| `t_shoot1.mp3` | Shooting catchphrase |
+| `t_run1.mp3` – `t_run7.mp3` | "Run someone over" catchphrases |
+| `t_shoot1.mp3` – `t_shoot6.mp3` | Shooting catchphrases |
+| `t_approach1.mp3` – `t_approach12.mp3` | Talking to a pedestrian |
+| `t_punch1.mp3` – `t_punch11.mp3` | Punch catchphrases |
+| `t_slow1.mp3` – `t_slow9.mp3` | Driving too slow catchphrases |
+| `t_stopsign1.mp3` – `t_stopsign9.mp3` | Running a red light catchphrases |
+| `t_cops1.mp3` – `t_cops11.mp3` | Cop-chase catchphrases |
+| `t_car1.mp3` – `t_car6.mp3` | Stealing a car catchphrases |
+| `Turbo Jones Voice MP3s/` | Unused voice-casting auditions (two takes of the intro line) kept for reference — not wired into the game |
 
 ### three.js is vendored, not from a CDN
 
