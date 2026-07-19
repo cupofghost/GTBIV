@@ -81,6 +81,35 @@ These are established in the shipping game. Build on them; don't rewrite them.
     up... or it's straight back to the slammer. Time to go to work."*
   - Deb: *"Turbo. We need to talk." / "You owe me $800 in child support." / "Pay
     me, or you go BACK to jail. Have fun, Turbo."*
+- **Turbo's backstory** (from his own retelling — see the full monologue in §4;
+  treat this as how Turbo tells it, not necessarily objective truth, which is
+  itself a character trait):
+  - He was **the greatest football player anybody had ever seen** in high
+    school — fast, strong, handsome, by his own account. Every cheerleader
+    wanted to date him.
+  - **His dad wouldn't let him date them, because of church.** Turbo says he
+    respected that. He clearly still isn't over it.
+  - He got **banned from the locker room** — reason unspecified/glossed over
+    by Turbo, played as an unexplained injustice he insists wasn't his fault.
+    Having no locker room access, he "had to quit the team."
+  - This is the wound the football saga (§7 worked example, `HANDOFF.md`
+    Phase 7) is built on: a rival team of old teammates (**Chaos High
+    Jocks**) still rag on him in the streets, and **Coach** is the one who
+    banned him — the target of Turbo's eventual revenge mission.
+  - **Why he owes Deb:** he "meant to pay" — but kept buying stuff he wanted
+    instead, until the money was gone. This is Turbo's own explanation for
+    the $800 debt that kicks off Chapter 1. Play it as impulsive, not
+    malicious — he's a soft touch for himself, not a schemer.
+  - **Prison diet:** hot dogs, three times a day. A standing complaint/gag.
+  - **His stated goal is not redemption — it's a transaction:** get back on
+    his feet and "make things right with Deb so she'll leave me the F alone."
+    Keep this self-serving framing; it's consistent with his voice (§4) and
+    funnier than a sincere redemption arc.
+- **Chaos High Jocks** — a third hostile faction (alongside cops and Chaos
+  Pizza): Turbo's old football team, still holding a grudge, roaming the
+  streets and picking fights with him on sight. **Already implemented in the
+  shipping game** (ambient NPCs, ~7 on the street at any time) — see
+  `HANDOFF.md` Phase 7, task **FB1**.
 
 ---
 
@@ -120,6 +149,62 @@ that reads mission briefings and big story beats.
 **Radio DJs** (to be written) — three stations' worth of unhinged patter, fake
 ads, and between-song bits. Same comic register, station-flavored.
 
+**Turbo Jones (backstory monologue)** — Turbo talking about his life, unprompted,
+to camera/no one in particular. This is the master reference for his self-pitying,
+self-justifying, weirdly-specific comic voice — mine it for barks, a possible
+unlockable cutscene/easter egg, or loading-screen flavor text, but don't quote it
+in full inside gameplay (it's a promo piece, not a script — pull individual beats
+from it instead):
+
+> *"My name's Turbo Jones. People hear 'minimum security' and they laugh. They
+> think it's some kind of summer camp. Let me tell you something — it ain't.
+> Every day I wake up surrounded by nothing but dudes. Just... dudes. I love
+> women. Always have. And now? It's like the universe looked at me and said,
+> 'Turbo, no.'*
+>
+> *People think I'm some kind of deadbeat. They say, 'Turbo, why didn't you pay
+> child support?' I meant to pay Deb. I really did. I had every intention. But
+> then I started buying stuff I wanted, and next thing you know... the money was
+> gone. It happens. One minute you're looking at a cool shirt, the next minute
+> you're in prison explaining your financial strategy to a gross guy!*
+>
+> *Nobody ever talks about my struggles. I've had hardship my whole life. Back
+> in high school, I was the greatest football player anybody had ever seen.
+> Fast, strong, handsome. The cheerleaders all wanted to date me. Every single
+> one of them. But my dad wouldn't let me because of church. I respected him, so
+> that was that. You think that doesn't leave scars?*
+>
+> *Then, out of nowhere, I got banned from the locker room for no reason...
+> How's a man supposed to make it as a football star if he can't use the locker
+> room? So I had to quit the team. People always ask, 'Turbo, what happened?'
+> Life happened.*
+>
+> *Now I'm eating hot dogs three times a day while Deb's out there thinking of
+> how to screw me even harder. It's not fair! Some nights I stare out my tiny
+> little window and wonder where it all went wrong. Was it the shopping? I don't
+> know. All I know is a man can only endure so much.*
+>
+> *One day I'll get back on my feet. I'll rebuild my life. I'll make things
+> right with Deb so she'll leave me the F alone. Just got to get creative..."*
+
+Comic engine to reuse from this: **wildly disproportionate self-pity**, treating
+petty consequences (jail, debt) as unjust hardship, **specific weird details**
+("a gross guy," "hot dogs three times a day") landing harder than general
+complaints, and **never actually apologizing** — every setback is something
+that *happened to* him.
+
+**Chaos High Jocks** (shipped taunts — canon; see `JOCK_TAUNTS` in `index.html`):
+- *"Hey Jones! Heard you got banned from the locker room!" / "Nice hands, Turbo
+  — too bad you can't use 'em on the field anymore!" / "Coach still tells that
+  story. Every practice." / "Real men play football, Turbo. What do you play
+  now, felon?" / "Bet your dad still won't let you talk to cheerleaders!" /
+  "Should be paying child support, not starting fights!" / "Heard you spent it
+  all on a cool shirt. Nice shirt, deadbeat." / "Washed up AND broke. Rough
+  year, Jones." / "Somebody get this guy back to minimum security!" / "You'll
+  never wear the jersey again, Turbo!"*
+- Register: young, cocky, needling — they know exactly which old wounds to
+  poke and enjoy it.
+
 ---
 
 ## 5. World bible — San Chaos City
@@ -130,9 +215,26 @@ Use/extend these; add new locations with the §7 template.
 - **Established / implied:** downtown skyscrapers, a **beach & boardwalk**, the
   **docks** ("the docks are hot tonight"), open **water** (drive in = swim),
   **ramps** for stunts, robbable **stores**, a **Chaos Pizza** parlor + turf,
-  minimum-security **prison** (Turbo's origin), and Deb's meetup spot downtown.
-- **Factions:** the **badge brigade** (cops), **Chaos Pizza** (rival gang), and
-  whatever crews/rackets the writer invents (keep it parody).
+  minimum-security **prison** (Turbo's origin), **Chaos High** (Turbo's old
+  high school — see location sheet below), and Deb's meetup spot downtown.
+- **Factions:** the **badge brigade** (cops), **Chaos Pizza** (rival gang),
+  **Chaos High Jocks** (Turbo's old football team, still hostile — roams the
+  streets, see §3/§4), and whatever crews/rackets the writer invents (keep it
+  parody).
+
+**LOCATION: Chaos High football field**   DISTRICT: near the high school
+```
+Vibe: sun-bleached bleachers, a faded end-zone mural, a PA system that's seen
+  better days — Turbo's glory days, gone slightly to seed.
+What the player does here: the "Chaos High Jocks" faction's home turf; site
+  of the "Revenge on Coach" mission; site of the football minigame once
+  unlocked (see HANDOFF.md Phase 7, tasks FB2–FB5).
+Story hooks: Coach still runs practice here. This is where Turbo got banned
+  from the locker room and where he goes to settle it.
+Gags/landmarks: a retired jersey with Turbo's number hanging crooked in a
+  case nobody dusts; a scoreboard stuck on an old score; Coach's whistle,
+  audible from way too far away.
+```
 - **Running gags to seed & pay off:** "zero trademarks harmed," the useless cops,
   helicopters *every day now*, the city "peaked in the 80s," everyone knows "a guy
   who knows a guy," the unseen kid, gas prices, Turbo's court hearing.
@@ -162,6 +264,20 @@ Gags/landmarks: <memorable bits>
 - **A cop / the badge brigade** — recurring incompetent authority; maybe one named
   detective who thinks he's in a serious cop drama.
 - **Radio DJs** (×3 stations) — comic narrators of the city.
+- **Coach** — Turbo's old football coach, banned him from the locker room
+  and ended his football career. The antagonist of the "Revenge on Coach"
+  mission (see §7 worked example). Comedic, not menacing — a petty tyrant of
+  a small kingdom (his field, his whistle, his rules).
+- **Turbo's Dad** — off-screen moral authority turned running gag. Devout,
+  overprotective, the reason Turbo "wasn't allowed" to date cheerleaders in
+  high school. Pays off in the football-minigame punchline (§7 worked
+  example) by showing up at the worst possible moment.
+- **The Cheerleaders** — a group, not individuals (unless the writer wants to
+  name one as a bigger recurring character later). Function as a reward/
+  payoff beat: they approach Turbo when he wins — right before Dad ruins it.
+- **Chaos High Jocks** — Turbo's old teammates, now a hostile street faction
+  (see §3/§4). Not individually named; a taunting, fist-throwing crowd, like
+  Chaos Pizza's gang members but without turf.
 
 **Character sheet template:**
 ```
@@ -208,6 +324,87 @@ New toys/areas unlocked:
 Keep **Chapter 1 = "Paying Debts"** as the canonical opener (intro → meet Deb →
 first jobs → pay the $800 → beat). The writer can expand it into a full mission
 list and add Chapters 2+.
+
+### Worked example: the Football Saga side strand
+
+Austin greenlit this arc as a first-class side strand (see `HANDOFF.md` Phase
+7 for the implementation backlog — `FB1`, ambient jock NPCs, already ships).
+It's written out in full here both as real canon and as a **worked example**
+of how to fill in the §8/§9 templates.
+
+**MISSION: Revenge on Coach**   CHAPTER: side strand / SIDE: Football Saga
+```
+Logline: Turbo finally settles the score with the coach who ended his career.
+Given by: Coach himself, encountered at the Chaos High field.
+Trigger: player approaches Coach at the field (see HANDOFF.md FB2/FB3)
+Archetype: custom (staged confrontation + fight, modeled on the heist
+  system's triggered-encounter pattern, not the random mission pool)
+Setup cutscene: "coach_confrontation" (script below)
+OBJECTIVE (in verbs): beat Coach in a fistfight (punch) at the field.
+Escalation / complication: Coach doesn't fight fair — expect him to call in
+  a jock or two (reuse the existing jocks[] hostiles) partway through.
+Fail states: none in the traditional sense — Turbo can retreat and try again;
+  this is a story beat, not a timed mission.
+Reward: unlocks the football minigame permanently (persistent flag).
+Wanted impact: none — this is off the cops' radar.
+Dialogue hooks: Coach taunts before the fight; Turbo gets the last word after.
+Payoff cutscene: short victory beat, then "You can play again, Jones." —
+  unlock confirmed on-screen.
+Ties to spine: none directly; it's a side strand about Turbo's pride, not the
+  $800 debt. Keep it separate from the Deb plot.
+```
+
+**CUTSCENE: coach_confrontation** — LOCATION: Chaos High field — TIME: day
+```
+[Trigger: player approaches Coach at the field for the first time]
+
+SHOT 1 — WIDE, 2.5s, static on the empty field.
+  ACTION: Coach stands mid-field, whistle around his neck, arms crossed.
+
+SHOT 2 — MEDIUM, 3.5s, push in.
+  COACH: "Well, well. Turbo Jones. Still banned, by the way."
+
+SHOT 3 — CLOSE on Turbo, 3.5s, cut.
+  TURBO: "You ended my whole career, Coach. Over nothing."
+
+SHOT 4 — CLOSE on Coach, 4.0s, cut.
+  COACH: "It wasn't 'nothing,' Jones. It was everything. Every single time."
+
+SHOT 5 — WIDE, 2.0s, pull back. (FX: whistle blast, fade to gameplay)
+  ACTION: Coach raises his fists. Fight begins.
+```
+
+**MINIGAME: Football (post-unlock)** — see `HANDOFF.md` **FB4** for the build
+spec (keep it arcade-simple: a short timed catch/score loop, not a sports
+sim). Narratively: Turbo suits up one more time, plays a quick pickup game at
+the field, and wins — setting up the punchline cutscene below.
+
+**CUTSCENE: football_win_punchline** — LOCATION: Chaos High field — TIME: day
+```
+[Trigger: player wins the football minigame (HANDOFF.md FB5)]
+
+SHOT 1 — WIDE, 2.0s, crowd cheering (reuse ambient ped cheer/chatter).
+  ACTION: Turbo, triumphant, catches his breath in the end zone.
+
+SHOT 2 — MEDIUM, 3.0s, cut.
+  TURBO: "That's right. That's what I'm talking about."
+  ACTION: cheerleaders start walking toward him, waving.
+
+SHOT 3 — MEDIUM, 3.5s, cut. (FX: record-scratch sting)
+  ACTION: Turbo's Dad appears, marching in from the sideline.
+  DAD: "Turbo! What did we say about the cheerleaders?!"
+
+SHOT 4 — CLOSE on Turbo, 3.0s, cut.
+  TURBO: "...Because of church. I know, Dad. I know."
+  ACTION: the cheerleaders peel off, disappointed. Turbo deflates.
+
+SHOT 5 — WIDE, 2.0s, fade out.
+  ACTION: Dad steers Turbo away by the shoulder. Coach, defeated, just watches.
+```
+
+Guardrail for the writer: keep Dad and the cheerleaders **comedic, not creepy**
+— this is a PG-13 gag about Turbo never escaping his dad's rules, not about the
+cheerleaders as objects. The joke is entirely on Turbo.
 
 ---
 

@@ -2006,6 +2006,63 @@ function updateGangMembers(dt){
   }
 }
 
+// ================= FOOTBALL RIVALS: CHAOS HIGH JOCKS =================
+// Turbo's old teammates. They never let the locker-room thing go. Roam the
+// streets in their letterman jackets, taunt him on sight, throw hands if he
+// gets close — same simplified auto-counter pattern as the Chaos Pizza gang.
+const JOCK_TAUNTS=[
+  "Hey Jones! Heard you got banned from the locker room!",
+  "Nice hands, Turbo — too bad you can't use 'em on the field anymore!",
+  "Coach still tells that story. Every practice.",
+  "Real men play football, Turbo. What do you play now, felon?",
+  "Bet your dad still won't let you talk to cheerleaders!",
+  "Should be paying child support, not starting fights!",
+  "Heard you spent it all on a cool shirt. Nice shirt, deadbeat.",
+  "Washed up AND broke. Rough year, Jones.",
+  "Somebody get this guy back to minimum security!",
+  "You'll never wear the jersey again, Turbo!",
+];
+const jocks=[];
+function spawnJock(x,z){
+  const mesh=makePerson(pick([0xc4342a,0xd9c44f]),'guy');
+  const j={mesh,x,z,homeX:x,homeZ:z,heading:rand(0,TAU),speed:2.6,state:'guard',tauntT:rand(1,4)};
+  mesh.position.set(x,0,z); scene.add(mesh);
+  jocks.push(j); return j;
+}
+function spawnJocks(n){
+  for(let k=0;k<n;k++){
+    const b=pick(blockInfo);
+    spawnJock(b.cx+rand(-BLOCK/2,BLOCK/2),b.cz+rand(-BLOCK/2,BLOCK/2));
+  }
+}
+function updateJocks(dt){
+  for(const j of jocks){
+    j.heading+=rand(-0.3,0.3)*dt;
+    j.x+=Math.sin(j.heading)*j.speed*dt; j.z+=Math.cos(j.heading)*j.speed*dt;
+    // wander loosely, don't stray too far from their patrol spot
+    const hd=Math.hypot(j.x-j.homeX,j.z-j.homeZ);
+    if(hd>40) j.heading=Math.atan2(j.homeX-j.x,j.homeZ-j.z);
+    j.mesh.position.set(j.x,0,j.z); j.mesh.rotation.y=j.heading;
+    const sw=Math.sin(performance.now()/500)*0.4;
+    j.mesh.userData.legL.rotation.x=sw; j.mesh.userData.legR.rotation.x=-sw;
+    const d=Math.hypot(player.x-j.x,player.z-j.z);
+    // taunt when Turbo gets in earshot
+    j.tauntT-=dt;
+    if(d<12&&j.tauntT<=0){
+      showBubble(j,pick(JOCK_TAUNTS),2600);
+      wahVoice(rand(95,140),j.x,j.z);
+      j.tauntT=rand(6,10);
+    }
+    // swing on him if he gets close
+    if(d<4&&j.state!=='attack'){ j.state='attack'; j.heading=Math.atan2(player.x-j.x,player.z-j.z); }
+    if(j.state==='attack'){
+      if(d<1.5){ doPunch(); j.state='guard'; }
+      else if(d>12) j.state='guard';
+    }
+  }
+}
+// ================= END FOOTBALL RIVALS =================
+
 // Turf coloring on minimap
 function drawTurfOnMinimap(){
   if(!CHAOS.x) return;
@@ -4258,6 +4315,7 @@ function loop(){
         updatePizzaDrivers(sdt);
         updateChaosDrivers(sdt);
         updateGangMembers(sdt);
+        updateJocks(sdt);
         updateGuards(sdt);
         updatePizzaDelivery(sdt);
         updateSafeCrack(sdt);
@@ -4322,6 +4380,7 @@ function bootSpawns(){
   try{ spawnPizzaDrivers(3); }catch(e){ console.warn('pizza spawn',e); }
   try{ spawnChaosDrivers(2); }catch(e){ console.warn('chaos spawn',e); }
   try{ spawnGangMembers(3); }catch(e){ console.warn('gang spawn',e); }
+  try{ spawnJocks(7); }catch(e){ console.warn('jock spawn',e); }
   try{ spawnGuards(); }catch(e){ console.warn('guard spawn',e); }
 }
 bootSpawns();
