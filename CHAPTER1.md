@@ -443,26 +443,147 @@ transitions, the toast/bark pipeline).
 
 ---
 
-## 8. Bark packs — new
+## 8. Bark packs — Chapter 1 full line set
+
+Every speaking role in Chapter 1, written to the §11 pack format. Where a
+pack extends a category that already ships in `index.html`
+(`TURBO_LINES.car`, `CHAT_LINES`, `TALK_LINES`), that's called out so
+engineering knows whether to append to an existing array or add a new
+category.
+
+### Turbo Jones
 
 ```
-PACK: donna_marinara_taunt (radio/toast bark, Pizza Wars or repeated jacking)
+PACK: store_robbery (NEW category — plays on entering a hold-up, during
+  the ~2.6s robbery window)
+- "This is a stickup. A polite one."
+- "Nobody move. Except the cash. The cash can move."
+- "Consider this a donation. To me."
+- "I'll take the drawer and a lottery ticket. Scratcher, not Powerball —
+  I'm not greedy."
+- "Hands where I can see the register."
+- "This'll go a lot faster if nobody's a hero."
+- "I've got a kid to feed. Don't look at me like that, it's TRUE."
+- "Relax, it's insured. Probably."
+- "This is between me and the register. You're just standing near it."
+(tone note: fast, nervous-confident — playing tough while visibly winging it)
+```
+
+```
+PACK: store_robbery_success (NEW — fires the moment the take lands)
+- "And that's how Daddy pays rent. Sort of."
+- "Four hundred to go. Feels like four thousand."
+- "Anyone asks, I was never here. I was very obviously here."
+- "One store down. San Chaos has, what, a hundred more?"
+- "Cha-ching. Minus the ching. It's all quiet, actually."
+(tone note: quick relief and triumph, snaps back to breezy)
+```
+
+```
+PACK: debt_grumble (NEW — low-frequency idle bark while debt is unpaid,
+  fires rarely while wandering, same cooldown pattern as existing ambient
+  quips like `slow`/`cops`)
+- "Eight hundred bucks. That's a lot of quarters."
+- "Note to self: don't marry someone smarter than you."
+- "Deb's clock is louder than my conscience, and that's saying something."
+- "If I had a dollar for every dollar I owe, I wouldn't owe it."
+- "Tonight. She said tonight. Very specific woman, my ex."
+- "Somewhere out there, a kid thinks I'm cooler than this. Gotta keep that
+  going."
+- "$800. Not $799. She counted."
+(tone note: rueful muttering to himself, comic self-pity — the one
+  category that gets close to sincere before he deflects)
+```
+
+```
+PACK: pizza_jack (extends the SHIPPED `TURBO_LINES.car` category —
+  fires specifically when the jacked vehicle is a Chaos Pizza delivery
+  car/van, in place of a generic car-jack line)
+- "Extra hot, extra stolen."
+- "Thirty minutes or it's free. Actually, it's already free."
+- "Do I look like a delivery boy? Don't answer that."
+- "Special delivery: nothing, to nowhere, on your dime."
+- "This one's for the tip jar. My tip jar. Which is my pocket."
+- "Objection! I'm allergic to paying for pizza."
+- "Fresh outta the oven and outta your parking lot."
+(tone note: same register as the shipped car-jack lines — short, punchy,
+deflects with a joke)
+```
+
+```
+PACK: turbo_meets_deb (NEW — optional pre-beat, fires as Turbo closes the
+  last few steps into `deb_confrontation`, before her first locked line)
+- "Hey Deb. You're looking... like you want to kill me. Cool, cool."
+- "Been a minute. You look great. Furious, but great."
+- "So, funny story about the eight hundred—"
+(tone note: nervous charm — Deb is the one person his jokes visibly don't
+  land on; keep it short, he loses momentum fast around her)
+```
+
+```
+PACK: turbo_pays_deb (NEW — optional, fires the instant the $800 leaves
+  his hand, just before the `deb_payoff` cutscene's locked lines)
+- "There. Eight hundred, exact change, no confetti."
+- "See? I'm basically a functioning adult now."
+- "Don't spend it all in one place. Kidding. Spend it on the kid."
+(tone note: proud of himself, slightly too proud — first sincere beat of
+  the chapter, played for one line before the joke undercuts it)
+```
+
+### Deb
+
+Her three confrontation lines and two payoff lines are **locked canon**
+(§3/§1 of `STORY_BIBLE.md`) — reproduced here for reference only, not to
+be altered:
+- "Turbo. We need to talk." / "You owe me $800 in child support." /
+  "Pay me, or you go BACK to jail. Have fun, Turbo."
+- "...wow. You actually paid." / "Later, Turbo."
+
+```
+PACK: deb_idle_wait (NEW and OPTIONAL — small ambient mutters while she's
+  standing at her corner waiting, before Turbo gets close enough to
+  trigger the confrontation. Does not touch or replace the locked
+  DEB_LINES sequence; same speech-bubble mechanism as `debSay`.)
+- "(checks phone) Unbelievable."
+- "(sigh) Tonight, Turbo. I mean it."
+- "(to herself) I should've asked for it in the divorce."
+(tone note: muttered to herself, not yet addressed to Turbo — flavor only;
+  cut this pack entirely if it dilutes the impact of her first real line)
+```
+
+### Donna Marinara
+
+```
+PACK: donna_marinara_taunt (radio/toast bark, plays during Pizza Wars or
+  repeated pizza-car jacking, before the pizza_warning cutscene has fired)
 - "You have odd taste in delivery vehicles, Turbo."
 - "Return my scooter. I will not ask a third time."
 - "Every crust has its limit."
 - "This isn't a rivalry. It's quality control."
 - "I hope you like the taste of consequences."
-(tone note: calm, clipped, never shouting — the menace is in the composure)
+- "A man who steals pizza cars has never truly tasted pizza."
+- "I built this fleet from a single scooter and a grudge. Don't test me."
+- "You are not a customer. You are a supply-chain issue."
+- "Even my dough has more backbone than your excuses."
+- "I've buried men for less than a stolen breadstick."
+(tone note: calm, clipped, never shouting — the menace is entirely in the
+  composure)
 ```
 
 ```
-PACK: chaos_pizza_goon_taunt (rank-and-file gang members, chase/gunfight barks)
-- "Boss said no discounts!"
-- "You're not on the delivery schedule, pal!"
-- "This one's extra crispy!"
-- "Nobody steals the family car!"
-(tone note: loud, dumb-muscle energy — the contrast to Donna's cool is the joke)
+PACK: donna_marinara_repeat_offense (NEW — escalation tier; fires if the
+  pizza-heat counter crosses a second, higher threshold AFTER
+  pizza_warning has already played once)
+- "I warned you once. Warnings are a courtesy. I'm out of courtesy."
+- "You're not on my menu anymore, Turbo. You're the special."
+- "Somebody bring me a box. A big one."
+- "Last time was a conversation. This time is a delivery — of a different
+  kind."
+(tone note: same composure, dialed up exactly one notch — she still never
+  raises her voice, which is the point)
 ```
+
+### Detective Frank Hardcastle
 
 ```
 PACK: detective_hardcastle (fires during 3+-star wanted chases)
@@ -472,25 +593,71 @@ PACK: detective_hardcastle (fires during 3+-star wanted chases)
   him nothing."
 - "Somewhere, a donut is getting cold. It'll have to wait."
 - "The city doesn't forgive. Neither do I. Probably."
+- "I used to believe in the system. Now I believe in overtime pay."
+- "They call him Turbo. I call him Tuesday's problem."
+- "My captain says let it go. My captain's never lost a jukebox to a guy
+  in a stolen sedan."
+- "Every siren in this city sings the same sad song. I just hum along."
 (tone note: hardboiled noir monologue, played completely straight — he
-means every word, which is what makes it funny)
+  means every word, which is what makes it funny)
 ```
 
 ```
-PACK: pizza_jack (Turbo, extends the existing TURBO_LINES.car category)
-- "Extra hot, extra stolen."
-- "Thirty minutes or it's free. Actually, it's already free."
-- "Do I look like a delivery boy? Don't answer that."
-(tone note: same register as the shipped car-jack lines — short, punchy,
-deflects with a joke)
+PACK: hardcastle_high_heat (NEW — escalation tier for 5+ stars, more
+  frantic/self-aware than the base pack)
+- "This is it. This is the one. It's always the one, until it isn't."
+- "Dispatch, requesting backup. And maybe a therapist."
+- "If I don't get him tonight, I retire. I say that every night."
+(tone note: same register, cranked one notch more desperate)
 ```
 
+### Chaos Pizza goons
+
 ```
-PACK: boardwalk_racer_taunt (Curb Appeal mission giver, ambient challenge lines)
+PACK: chaos_pizza_goon_taunt (rank-and-file gang members, chase/gunfight
+  barks — extends the existing `gangMembers`/`chaosDrivers` entities)
+- "Boss said no discounts!"
+- "You're not on the delivery schedule, pal!"
+- "This one's extra crispy!"
+- "Nobody steals the family car!"
+- "That's a FAMILY vehicle, chump!"
+- "You want a tip? Here's my fist!"
+- "Boss is gonna hear about this — and so are your kneecaps!"
+- "Get off our route, freeloader!"
+(tone note: loud, dumb-muscle energy — the contrast to Donna's cool is
+  the joke)
+```
+
+### Boardwalk racer (Curb Appeal mission giver)
+
+```
+PACK: boardwalk_racer_taunt (ambient challenge lines, plays near the
+  Boardwalk ramp cluster / at the start of Curb Appeal)
 - "Bet you can't catch air off that ramp without eating pavement."
 - "My grandma drifts better than that."
 - "Sixty seconds. Make it count, hotshot."
-(tone note: cocky but harmless — a rival for bragging rights, not a threat)
+- "Pink slips are so last decade. Just embarrass yourself for free."
+- "I've seen shopping carts drift better."
+- "Land it clean or don't land it at all."
+(tone note: cocky but harmless — bragging-rights rival, not a threat)
+```
+
+### Ambient pedestrians
+
+```
+PACK: ped_chatter_chapter1 (NEW — interleave into the existing
+  CHAT_LINES/TALK_LINES pools; Chapter-1-flavored gossip, same oblivious
+  register)
+- "Some guy's been jacking pizza cars all week. Bold strategy."
+- "Heard Chaos Pizza put a bounty on a 'menace in a bus-pass jacket.'"
+- "Guy owes his ex eight hundred bucks, apparently. Yikes, dude."
+- "Detective what's-his-name was on the radio again, talking about 'the
+  city's soul.' Weird guy."
+- "I ordered a pizza an hour ago. Still waiting. Wonder why."
+- "Saw a guy rob a store and then just... walk. No running. Confidence."
+- "Child support's rough, man. Rougher with a getaway car involved."
+(tone note: same fourth-wall-adjacent, oblivious voice as the shipped
+  pools — meant to interleave with them, not replace them)
 ```
 
 ---
@@ -500,9 +667,11 @@ PACK: boardwalk_racer_taunt (Curb Appeal mission giver, ambient challenge lines)
 This covers the "flesh out Chapter 1" pass: two new named characters
 (Donna Marinara, Detective Hardcastle), the Kid locked to a name/age, five
 location sheets, six mission specs, two new cutscenes bracketing the
-existing Deb scenes, and five bark packs.
+existing Deb scenes, and a full line pass across every Chapter 1 speaking
+role (§8) — Turbo's chapter-specific barks, Donna's two-tier menace, both
+Hardcastle tiers, the goons, the racer, and ambient gossip.
 
 Open threads for a follow-up pass, whenever we pick them up: Chapter 2's
 premise (what pressure replaces the $800 clock), the radio DJ personas for
 the three existing stations (VICE FM, TURBO FM, BOOM BAP 90), and a fuller
-pedestrian/ambient bark expansion.
+pedestrian/ambient bark expansion beyond Chapter 1.
