@@ -1,0 +1,111 @@
+character,voice_direction,context,line_text,filename
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",pizza_warning cutscene,"You've been sampling my delivery fleet, Turbo.",donna_01.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",pizza_warning cutscene,"That's a violation of the family recipe. Next slice you steal, I take something back. Something you'll miss more than a pizza.",donna_02.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_taunt,"You have odd taste in delivery vehicles, Turbo.",donna_03.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_taunt,I will not ask a third time. Return my scooter.,donna_04.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_taunt,Every crust has its limit.,donna_05.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_taunt,This isn't a rivalry. It's quality control.,donna_06.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_taunt,I hope you like the taste of consequences.,donna_07.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_taunt,A man who steals pizza cars has never truly tasted pizza.,donna_08.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_taunt,I built this fleet from a single scooter and a grudge. Don't test me.,donna_09.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_taunt,You are not a customer. You are a supply-chain issue.,donna_10.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_taunt,Even my dough has more backbone than your excuses.,donna_11.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_taunt,I've buried men for less than a stolen breadstick.,donna_12.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_repeat_offense,I warned you once. Warnings are a courtesy. I'm out of courtesy.,donna_13.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_repeat_offense,"You're not on my menu anymore, Turbo. You're the special.",donna_14.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_repeat_offense,Somebody bring me a box. A big one.,donna_15.mp3
+Donna Marinara,"calm, composed, never raises volume — menace delivered flat, in food metaphor",donna_marinara_repeat_offense,Last time was a conversation. This time is a delivery — of a different kind.,donna_16.mp3
+Detective Frank Hardcastle,"gravelly hardboiled-noir monologue, played completely straight",character intro line,"The city was a jukebox of sin, and Turbo Jones was its greatest hit.",hardcastle_01.mp3
+Detective Frank Hardcastle,"gravelly hardboiled-noir monologue, played completely straight",detective_hardcastle,Another night in San Chaos. Another Jones.,hardcastle_02.mp3
+Detective Frank Hardcastle,"gravelly hardboiled-noir monologue, played completely straight",detective_hardcastle,I've seen a hundred guys like him. I've caught none of them.,hardcastle_03.mp3
+Detective Frank Hardcastle,"gravelly hardboiled-noir monologue, played completely straight",detective_hardcastle,"Dispatch, this is Hardcastle. Tell my captain I said... nothing. Tell him nothing.",hardcastle_04.mp3
+Detective Frank Hardcastle,"gravelly hardboiled-noir monologue, played completely straight",detective_hardcastle,"Somewhere, a donut is getting cold. It'll have to wait.",hardcastle_05.mp3
+Detective Frank Hardcastle,"gravelly hardboiled-noir monologue, played completely straight",detective_hardcastle,The city doesn't forgive. Neither do I. Probably.,hardcastle_06.mp3
+Detective Frank Hardcastle,"gravelly hardboiled-noir monologue, played completely straight",detective_hardcastle,I used to believe in the system. Now I believe in overtime pay.,hardcastle_07.mp3
+Detective Frank Hardcastle,"gravelly hardboiled-noir monologue, played completely straight",detective_hardcastle,They call him Turbo. I call him Tuesday's problem.,hardcastle_08.mp3
+Detective Frank Hardcastle,"gravelly hardboiled-noir monologue, played completely straight",detective_hardcastle,My captain says let it go. My captain's never lost a jukebox to a guy in a stolen sedan.,hardcastle_09.mp3
+Detective Frank Hardcastle,"gravelly hardboiled-noir monologue, played completely straight",detective_hardcastle,Every siren in this city sings the same sad song. I just hum along.,hardcastle_10.mp3
+Detective Frank Hardcastle,"gravelly hardboiled-noir monologue, played completely straight",hardcastle_high_heat,"This is it. This is the one. It's always the one, until it isn't.",hardcastle_11.mp3
+Detective Frank Hardcastle,"gravelly hardboiled-noir monologue, played completely straight",hardcastle_high_heat,"Dispatch, requesting backup. And maybe a therapist.",hardcastle_12.mp3
+Detective Frank Hardcastle,"gravelly hardboiled-noir monologue, played completely straight",hardcastle_high_heat,"If I don't get him tonight, I retire. I say that every night.",hardcastle_13.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_rematch_intro cutscene,Jones. Heard you were out. Heard you were causing trouble. Figures.,coach_01.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_rematch_intro cutscene,"You body-slammed my quarterback over a Gatorade, Jones. You're not a victim. You're a liability with a grudge.",coach_02.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_rematch_intro cutscene,"Rules haven't changed. You want back on my field, you go through me. Fists only. Let's go.",coach_03.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_defeat cutscene,"...huh. Still got it, Jones. Still stupid. But you got it.",coach_04.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_defeat cutscene,Fine. You're off The List. Field's open. Don't make me regret this.,coach_05.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_defeat cutscene,Absolutely not.,coach_06.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_taunt,"PICK UP YOUR FEET, JONES!",coach_07.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_taunt,That's the same sloppy footwork that cost you the season!,coach_08.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_taunt,I've benched better hits than that!,coach_09.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_taunt,You call that a punch? I've been hit harder by a cold front!,coach_10.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_taunt,TWENTY YEARS and you STILL lead with your chin!,coach_11.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_defeat pack,"...alright. Alright! Down. You're down— I mean, I'm down.",coach_12.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_defeat pack,Get up. No — stay down a second. Then get up.,coach_13.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_defeat pack,"Fine! FINE! You've got heart, Jones! Misplaced, but heart!",coach_14.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_sideline_turbobowl,"Head up, JONES! Eyes downfield!",coach_15.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_sideline_turbobowl,That's it! That's what I've been trying to teach you for TWENTY YEARS!,coach_16.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_sideline_turbobowl,Don't you dare fumble in front of me again!,coach_17.mp3
+Coach Gary Grimsby,"drill-sergeant bark, even when kind — coaches people mid-fight",coach_sideline_turbobowl,ATTA BOY— don't let it go to your head.,coach_18.mp3
+Reverend Cornelius Jones,"booms like mid-sermon at all times, completely earnest, not a joke to him",turbo_bowl_payoff cutscene,TURBO JONES! You get AWAY from those young women this instant! We have discussed this!,dad_01.mp3
+Reverend Cornelius Jones,"booms like mid-sermon at all times, completely earnest, not a joke to him",turbo_bowl_payoff cutscene,I don't care if you're ninety-four — put some space between you and the pom-poms!,dad_02.mp3
+Reverend Cornelius Jones,"booms like mid-sermon at all times, completely earnest, not a joke to him",dad_interrupt,TURBO JONES! What did we say about eye contact with the opposite sex?!,dad_03.mp3
+Reverend Cornelius Jones,"booms like mid-sermon at all times, completely earnest, not a joke to him",dad_interrupt,"Is that a CHEERLEADER? Turbo, we TALKED about this!",dad_04.mp3
+Reverend Cornelius Jones,"booms like mid-sermon at all times, completely earnest, not a joke to him",dad_interrupt,"The Lord is watching, and so, apparently, am I — CONSTANTLY!",dad_05.mp3
+Reverend Cornelius Jones,"booms like mid-sermon at all times, completely earnest, not a joke to him",dad_interrupt,"Not. Allowed. Two words, son. I've said them your whole life!",dad_06.mp3
+Danny Kowalski,"tired and dry, doesn't rise to anyone's energy — most deadpan voice in the cast",danny_apology cutscene,Coach let you back on the field. Bold move.,danny_01.mp3
+Danny Kowalski,"tired and dry, doesn't rise to anyone's energy — most deadpan voice in the cast",danny_apology cutscene,"Nineteen years. But sure, 'a while.'",danny_02.mp3
+Danny Kowalski,"tired and dry, doesn't rise to anyone's energy — most deadpan voice in the cast",danny_apology cutscene,...huh. That's the first time you've said that without a punchline after it.,danny_03.mp3
+Danny Kowalski,"tired and dry, doesn't rise to anyone's energy — most deadpan voice in the cast",danny_apology cutscene,Fine. Apology accepted. Never bring up the wrestling match again.,danny_04.mp3
+Danny Kowalski,"tired and dry, doesn't rise to anyone's energy — most deadpan voice in the cast",danny_ambient,Don't step on the equipment. I only just got it organized.,danny_05.mp3
+Danny Kowalski,"tired and dry, doesn't rise to anyone's energy — most deadpan voice in the cast",danny_ambient,"You know I have a knee brace named after this game, right? Not a good name.",danny_06.mp3
+Danny Kowalski,"tired and dry, doesn't rise to anyone's energy — most deadpan voice in the cast",danny_ambient,"Gatorade Fund's still not full, by the way.",danny_07.mp3
+Danny Kowalski,"tired and dry, doesn't rise to anyone's energy — most deadpan voice in the cast",danny_ambient,"Coach still won't let me referee your games. Says I'm 'biased.' I am, a little.",danny_08.mp3
+The PA Voice,"small-town sports-broadcast cadence — nervous, over-enthusiastic, trails off mid-sentence",pa_announcer_turbo_bowl,"And he's OFF! Turbo Jones — sorry, is it Jonas? — with the ball!",pa_01.mp3
+The PA Voice,"small-town sports-broadcast cadence — nervous, over-enthusiastic, trails off mid-sentence",pa_announcer_turbo_bowl,"Ohhh he's cutting left, he's cutting right, does HE even know where he's going?",pa_02.mp3
+The PA Voice,"small-town sports-broadcast cadence — nervous, over-enthusiastic, trails off mid-sentence",pa_announcer_turbo_bowl,"Fifty yards! Halfway there, folks — halfway to glory or a pulled hamstring!",pa_03.mp3
+The PA Voice,"small-town sports-broadcast cadence — nervous, over-enthusiastic, trails off mid-sentence",pa_announcer_turbo_bowl,TOUCHDOWN! TOUCHDOWN JONES! I mean JONES-JONAS! SOMEBODY CONFIRM THE SPELLING!,pa_04.mp3
+The PA Voice,"small-town sports-broadcast cadence — nervous, over-enthusiastic, trails off mid-sentence",pa_announcer_turbo_bowl,"Ohh, and he's DOWN. Tackled. That's gotta hurt. Today's game is brought to you by Big Gary's Discount Airbags — 'we cushion the blow, literally.'",pa_05.mp3
+The PA Voice,"small-town sports-broadcast cadence — nervous, over-enthusiastic, trails off mid-sentence",pa_announcer_turbo_bowl,This broadcast is sponsored by Sunny Sam's Suspiciously Cheap Watches. Sunny Sam is not currently answering his phone.,pa_06.mp3
+Amber,"light, casual, a little unimpressed even when impressed",turbo_bowl_payoff cutscene,"Okay, that was actually kind of impressive.",amber_01.mp3
+Chaos Pizza Goons,"loud, dumb-muscle energy — comic contrast to Donna's cool composure",chaos_pizza_goon_taunt,Boss said no discounts!,goon_01.mp3
+Chaos Pizza Goons,"loud, dumb-muscle energy — comic contrast to Donna's cool composure",chaos_pizza_goon_taunt,"You're not on the delivery schedule, pal!",goon_02.mp3
+Chaos Pizza Goons,"loud, dumb-muscle energy — comic contrast to Donna's cool composure",chaos_pizza_goon_taunt,This one's extra crispy!,goon_03.mp3
+Chaos Pizza Goons,"loud, dumb-muscle energy — comic contrast to Donna's cool composure",chaos_pizza_goon_taunt,Nobody steals the family car!,goon_04.mp3
+Chaos Pizza Goons,"loud, dumb-muscle energy — comic contrast to Donna's cool composure",chaos_pizza_goon_taunt,"That's a FAMILY vehicle, chump!",goon_05.mp3
+Chaos Pizza Goons,"loud, dumb-muscle energy — comic contrast to Donna's cool composure",chaos_pizza_goon_taunt,You want a tip? Here's my fist!,goon_06.mp3
+Chaos Pizza Goons,"loud, dumb-muscle energy — comic contrast to Donna's cool composure",chaos_pizza_goon_taunt,Boss is gonna hear about this — and so are your kneecaps!,goon_07.mp3
+Chaos Pizza Goons,"loud, dumb-muscle energy — comic contrast to Donna's cool composure",chaos_pizza_goon_taunt,"Get off our route, freeloader!",goon_08.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_street_taunt,"Hey, it's Fumble Jones!",jock_01.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_street_taunt,"Coach still talks about what you did to Danny's knee, man.",jock_02.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_street_taunt,You still owe this team an apology. And a knee replacement.,jock_03.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_street_taunt,"Nice bus pass, star player.",jock_04.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_street_taunt,Heard you're back. Heard nobody cares.,jock_05.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_street_taunt,You get banned from the locker room AND the whole city? Impressive.,jock_06.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_fight,This is for Danny's knee!,jock_07.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_fight,"You're not even wearing pads, this is EASY!",jock_08.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_fight,"Coach said if I see you, I hit you. Simple as that.",jock_09.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_fight,"Should've stayed inside, Jones!",jock_10.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_post_rematch,"...respect, man. Actual respect.",jock_11.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_post_rematch,Coach never lost a fistfight before. You broke something sacred.,jock_12.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_post_rematch,"You're still banned from the group chat, though.",jock_13.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_turbobowl_defender,"Not today, Jones!",jock_14.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_turbobowl_defender,"You're still slow, old man!",jock_15.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_turbobowl_defender,"I've got you, I've got you— dang it, I don't got you!",jock_16.mp3
+Alumni Wildcats,"cocky ex-jock, half taunting half genuinely sore — warms up after Rematch",jock_turbobowl_defender,"Coach is WATCHING, Jones, don't embarrass us!",jock_17.mp3
+Boardwalk Racer,"cocky but harmless — a bragging-rights rival, not a real threat",boardwalk_racer_taunt,Bet you can't catch air off that ramp without eating pavement.,racer_01.mp3
+Boardwalk Racer,"cocky but harmless — a bragging-rights rival, not a real threat",boardwalk_racer_taunt,My grandma drifts better than that.,racer_02.mp3
+Boardwalk Racer,"cocky but harmless — a bragging-rights rival, not a real threat",boardwalk_racer_taunt,"Sixty seconds. Make it count, hotshot.",racer_03.mp3
+Boardwalk Racer,"cocky but harmless — a bragging-rights rival, not a real threat",boardwalk_racer_taunt,Pink slips are so last decade. Just embarrass yourself for free.,racer_04.mp3
+Boardwalk Racer,"cocky but harmless — a bragging-rights rival, not a real threat",boardwalk_racer_taunt,I've seen shopping carts drift better.,racer_05.mp3
+Boardwalk Racer,"cocky but harmless — a bragging-rights rival, not a real threat",boardwalk_racer_taunt,Land it clean or don't land it at all.,racer_06.mp3
+Cheer Squad,"light and gossipy, mostly indifferent to the general chaos of San Chaos",cheer_squad_ambient,"Two, four, six, eight, who do we NOT appreciate? Coach's whistle, that's who.",cheer_01.mp3
+Cheer Squad,"light and gossipy, mostly indifferent to the general chaos of San Chaos",cheer_squad_ambient,Is that guy allowed back here?,cheer_02.mp3
+Cheer Squad,"light and gossipy, mostly indifferent to the general chaos of San Chaos",cheer_squad_ambient,"He's kind of got main-character energy, not gonna lie.",cheer_03.mp3
+Deb,"deadpan, economical, out of patience but not cruel — never shouted",deb_confrontation cutscene (locked canon),Turbo. We need to talk.,deb_01.mp3
+Deb,"deadpan, economical, out of patience but not cruel — never shouted",deb_confrontation cutscene (locked canon),You owe me $800 in child support.,deb_02.mp3
+Deb,"deadpan, economical, out of patience but not cruel — never shouted",deb_confrontation cutscene (locked canon),"Pay me, or you go BACK to jail. Have fun, Turbo.",deb_03.mp3
+Deb,"deadpan, economical, out of patience but not cruel — never shouted",deb_payoff cutscene (locked canon),...wow. You actually paid.,deb_04.mp3
+Deb,"deadpan, economical, out of patience but not cruel — never shouted",deb_payoff cutscene (locked canon),"Later, Turbo.",deb_05.mp3
+Deb,"deadpan, economical, out of patience but not cruel — never shouted",deb_idle_wait (action: checks phone),Unbelievable.,deb_06.mp3
+Deb,"deadpan, economical, out of patience but not cruel — never shouted",deb_idle_wait (action: sighs),"Tonight, Turbo. I mean it.",deb_07.mp3
+Deb,"deadpan, economical, out of patience but not cruel — never shouted",deb_idle_wait (action: to herself),I should've asked for it in the divorce.,deb_08.mp3
