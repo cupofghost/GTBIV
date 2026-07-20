@@ -180,7 +180,17 @@ keeps the diff small.
 repeatable character; `mesh.userData.spec` round-trips; rig `userData` unchanged.
 Verify in the `D6` viewer.
 
-### C2 — Body geometry overhaul: shoulders + realism `P1 · Risk: Med`
+### C2 — Body geometry overhaul: shoulders + realism `P1 · Risk: Med` `DONE`
+**Status: implemented & verified** (Kimi3). Torso is now one `LatheGeometry`
+(profile: waist → belly → ribs → chest → sloped deltoid → neck taper) replacing
+`body`+`chestUp`+the shoulder spheres — no visible shoulder balls, and it has a
+continuous wrap-around UV ready for C3 painting (u wraps the body, v runs
+waist→neck; seam at back by lathe convention). Arm pivots (`sh` groups) kept but
+tucked under the deltoid at `(side*bw*0.42, 1.52, 0)`; upper arm lengthened to
+stay covered. Rig `userData` unchanged (`body` now points at the lathe mesh —
+nothing in `index.html` consumed it). Verified in `viewer.html` (idle/walk/talk/
+point, guy+girl, all angles) and in-game: full 78-ped crowd on `LatheGeometry`,
+no console errors.
 **Goal:** Kill the "shoulder-pad" spheres; smoother, more realistic body. Applies
 to all peds. **This is the top visual complaint — do it early.**
 **Where:** the torso/arm build in `makePerson` (see §2a).
@@ -207,7 +217,13 @@ pants/face (chest-front centred, seam at back, face oval upright); crowd still
 uses flat colours; no per-ped texture on background NPCs; disposal (`R1`) frees
 hero textures on teardown.
 
-### C4 — Hair generator `P2 · Risk: Low`
+### C4 — Hair generator `P2 · Risk: Low` `DONE`
+**Status: implemented** (Kimi3). `HAIR_STYLES` map in `js/person.js`: `bald, buzz,
+short, fade, long, ponytail, bun, afro, cap` — each a function building onto
+`headG`, tinted by `hair.color`; beard is an independent add-on (skipped for bald,
+matching old behaviour). NPC random distribution is unchanged (guys:
+bald/buzz/short; girls: long/ponytail) so the crowd looks identical; the new
+styles (fade/bun/afro/cap) are picker-only for now, selectable in the viewer.
 **Goal:** A tidy library of generated, colourable hair styles the user can pick.
 **Where:** extract/expand the inline hair code in `makePerson` (§2c).
 **Acceptance:** Each style builds correctly on the head, tints by `hair.color`,

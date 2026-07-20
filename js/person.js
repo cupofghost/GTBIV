@@ -79,10 +79,12 @@ function makePerson(spec,gender){
   pelvis.scale.set(bw*0.95,0.24,bd*1.05); pelvis.position.y=0.95; g.add(pelvis);
   // articulated torso: twists and leans with the walk cycle
   const torsoG=new THREE.Group(); torsoG.position.y=1.02; g.add(torsoG);
-  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.38,1,14),shirtMat);
-  body.scale.set(bw,0.52,bd); body.position.y=0.25; torsoG.add(body);
-  const chestUp=new THREE.Mesh(new THREE.SphereGeometry(0.5,16,12),shirtMat);
-  chestUp.scale.set(bw,0.17,bd); chestUp.position.y=0.49; torsoG.add(chestUp);
+  // C2: one lathe torso — waist → chest → sloped deltoids → neck. Kills the
+  // shoulder-pad balls and gives a continuous wrap UV for painting (C3).
+  const TORSO_PROFILE=[[0.34,-0.04],[0.37,0.06],[0.40,0.16],[0.44,0.28],[0.50,0.38],
+    [0.48,0.44],[0.40,0.50],[0.26,0.55],[0.14,0.58]].map(p=>new THREE.Vector2(p[0],p[1]));
+  const body=new THREE.Mesh(new THREE.LatheGeometry(TORSO_PROFILE,14),shirtMat);
+  body.scale.set(bw,1,bd); torsoG.add(body);
   if(gender==='girl'&&!dress){
     const bust=new THREE.Mesh(new THREE.SphereGeometry(0.5,14,10),shirtMat);
     bust.scale.set(bw*0.66,0.13,bd*0.5); bust.position.set(0,0.36,bd*0.34); torsoG.add(bust);
@@ -97,11 +99,10 @@ function makePerson(spec,gender){
   }
   // ---- arms: shoulder pivot → upper arm, elbow pivot → forearm + hand
   function makeArm(side){
-    const sh=new THREE.Group(); sh.position.set(side*(bw/2+0.06),1.47,0);
-    const shoulder=new THREE.Mesh(new THREE.SphereGeometry(0.08,12,10),tank?skin:shirtMat);
-    sh.add(shoulder);
-    const upper=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.06,0.3,12),tank?skin:shirtMat);
-    upper.position.y=-0.18; sh.add(upper);
+    // pivot tucked under the deltoid — no visible shoulder ball (C2)
+    const sh=new THREE.Group(); sh.position.set(side*bw*0.42,1.52,0);
+    const upper=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.062,0.36,12),tank?skin:shirtMat);
+    upper.position.y=-0.16; sh.add(upper);
     const elb=new THREE.Group(); elb.position.y=-0.34; elb.rotation.x=-0.16; sh.add(elb);
     const elbow=new THREE.Mesh(new THREE.SphereGeometry(0.052,12,10),skin);
     elb.add(elbow);
@@ -142,25 +143,41 @@ function makePerson(spec,gender){
     const ear=new THREE.Mesh(new THREE.SphereGeometry(0.028,6,5),skin);
     ear.position.set(s*0.14,0,0); headG.add(ear);
   });
-  // ---- hair styles (from spec; 'long'/'ponytail' are the girl styles)
-  const hs=spec.hair.style;
-  if(gender==='girl'&&(hs==='long'||hs==='ponytail')){
-    const cap=new THREE.Mesh(new THREE.SphereGeometry(0.168,16,12),hairMat);
-    cap.scale.set(1,0.85,1.03); cap.position.y=0.055; headG.add(cap);
-    if(hs!=='ponytail'){
-      const back=new THREE.Mesh(new THREE.BoxGeometry(0.24,0.46,0.11),hairMat);
-      back.position.set(0,-0.24,-0.14); headG.add(back);
-    } else {
-      const tail=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.34,0.09),hairMat);
-      tail.position.set(0,-0.2,-0.17); tail.rotation.x=0.25; headG.add(tail);
-    }
-  } else if(hs!=='bald'){
-    const cap=new THREE.Mesh(new THREE.SphereGeometry(0.162,16,12),hairMat);
-    cap.scale.set(0.98,hs==='buzz'?0.55:0.75,1); cap.position.y=0.075; headG.add(cap);
-    if(spec.hair.beard){
-      const beard=new THREE.Mesh(new THREE.BoxGeometry(0.19,0.09,0.05),hairMat);
-      beard.position.set(0,-0.11,0.1); headG.add(beard);
-    }
+  // ---- C4 hair library: named styles, each builds onto headG, tinted by hair.color.
+  // Beard is an independent add-on. New styles = new entries.
+  const HAIR_STYLES={
+    bald(){},
+    buzz(h){ const c=new THREE.Mesh(new THREE.SphereGeometry(0.162,16,12),h);
+      c.scale.set(0.98,0.55,1); c.position.y=0.075; headG.add(c); },
+    short(h){ const c=new THREE.Mesh(new THREE.SphereGeometry(0.162,16,12),h);
+      c.scale.set(0.98,0.75,1); c.position.y=0.075; headG.add(c); },
+    fade(h){ const c=new THREE.Mesh(new THREE.SphereGeometry(0.162,16,12),h);
+      c.scale.set(0.9,0.5,0.92); c.position.y=0.095; headG.add(c);
+      const top=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.06,0.2),h);
+      top.position.y=0.14; headG.add(top); },
+    long(h){ const c=new THREE.Mesh(new THREE.SphereGeometry(0.168,16,12),h);
+      c.scale.set(1,0.85,1.03); c.position.y=0.055; headG.add(c);
+      const back=new THREE.Mesh(new THREE.BoxGeometry(0.24,0.46,0.11),h);
+      back.position.set(0,-0.24,-0.14); headG.add(back); },
+    ponytail(h){ const c=new THREE.Mesh(new THREE.SphereGeometry(0.168,16,12),h);
+      c.scale.set(1,0.85,1.03); c.position.y=0.055; headG.add(c);
+      const tail=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.34,0.09),h);
+      tail.position.set(0,-0.2,-0.17); tail.rotation.x=0.25; headG.add(tail); },
+    bun(h){ const c=new THREE.Mesh(new THREE.SphereGeometry(0.166,16,12),h);
+      c.scale.set(1,0.8,1.02); c.position.y=0.06; headG.add(c);
+      const b=new THREE.Mesh(new THREE.SphereGeometry(0.07,10,8),h);
+      b.position.set(0,0.16,-0.1); headG.add(b); },
+    afro(h){ const a=new THREE.Mesh(new THREE.SphereGeometry(0.21,14,12),h);
+      a.scale.set(1,0.95,1); a.position.y=0.08; headG.add(a); },
+    cap(h){ const c=new THREE.Mesh(new THREE.SphereGeometry(0.168,16,12),h);
+      c.scale.set(1,0.7,1.02); c.position.y=0.07; headG.add(c);
+      const brim=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.02,0.1),h);
+      brim.position.set(0,0.045,0.18); headG.add(brim); },
+  };
+  (HAIR_STYLES[spec.hair.style]||HAIR_STYLES.short)(hairMat);
+  if(spec.hair.beard&&spec.hair.style!=='bald'){
+    const beard=new THREE.Mesh(new THREE.BoxGeometry(0.19,0.09,0.05),hairMat);
+    beard.position.set(0,-0.11,0.1); headG.add(beard);
   }
   g.scale.y=spec.height;
   g.userData={legL,legR,armL,armR,body,torso:torsoG,head:headG,jaw,mouth,gender,spec};

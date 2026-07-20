@@ -49,7 +49,8 @@
   <div class="row"><label>skin</label><input type="color" id="skin"></div>
   <h2>Hair</h2>
   <div class="row"><label>style</label><select id="hstyle">
-    <option>short</option><option>buzz</option><option>long</option><option>ponytail</option><option>bald</option>
+    <option>short</option><option>buzz</option><option>fade</option><option>long</option>
+    <option>ponytail</option><option>bun</option><option>afro</option><option>cap</option><option>bald</option>
   </select></div>
   <div class="row"><label>colour</label><input type="color" id="hcolor"></div>
   <div class="row"><label>beard</label><input type="checkbox" id="beard"></div>
@@ -181,7 +182,14 @@ addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);
 });
-rebuild(randomPersonSpec(0x37c8ff,'guy'));
+// test hooks: ?preset=turbo|deb|npc&pose=walk&angle=2.4&still=1
+const Q=new URLSearchParams(location.search);
+if(Q.get('angle')) camA=+Q.get('angle');
+if(Q.get('still')) turntable=false;
+if(Q.get('pose')){ pose=Q.get('pose');
+  document.querySelectorAll('#poses button').forEach(b=>b.classList.toggle('on',b.dataset.p===pose)); }
+const PRESETS={turbo:()=>randomPersonSpec(0x37c8ff,'guy'),deb:()=>randomPersonSpec(0xff3ea0,'girl'),npc:()=>randomPersonSpec()};
+rebuild((PRESETS[Q.get('preset')]||PRESETS.turbo)());
 </script>
 </body>
 </html>
