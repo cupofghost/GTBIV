@@ -1848,7 +1848,7 @@ function doPizzaJack(){
     if(d<3.5&&car.pizzaState==='delivering'&&car.pizzaDest){
       // Steal the car and the delivery
       G.mode='car'; player.car=car; car.parked=false; car.driver='player';
-      turboSay('car');
+      turboSay('pizzaJack');
       player.mesh.visible=false;
       activeDelivery={dest:car.pizzaDest,timer:50,originalCar:car};
       car.pizzaState='jacked';
@@ -4418,6 +4418,15 @@ function loop(){
     drawMinimap();
     positionBubble();
     if(turboCool>0) turboCool-=dt;
+    if(debApproachVOT>0) debApproachVOT-=dt;
+    // idle barks: fire every 22–38 s while on foot and not in a chase
+    if(G.mode==='foot'&&G.started&&!G.over&&G.wanted===0){
+      idleVOT-=dt;
+      if(idleVOT<=0){
+        idleVOT=rand(22,38);
+        turboSay(!G.story.paidOff ? 'idleDebt' : 'idleBackstory');
+      }
+    } else { idleVOT=Math.max(idleVOT,8); }
     fpsAcc+=dt; fpsN++; fpsT+=dt;
     if(fpsT>2){ $('fpsWarn').textContent=Math.round(fpsN/fpsAcc)+' fps'; fpsAcc=0; fpsN=0; fpsT=0; }
   }
@@ -4659,6 +4668,11 @@ function updateStory(dt){
     }
     return;
   }
+  // Turbo quips when he's close to Deb but not yet ready/able to pay
+  if(G.story.debt>0&&d<8&&debApproachVOT<=0){
+    turboSay('debApproach');
+    debApproachVOT=rand(20,30);
+  }
   if(G.story.debt>0&&d<3&&G.mode==='foot'&&G.money>=G.story.debt&&!activeCutscene){
     G.money-=G.story.debt; $('money').textContent='$'+G.money;
     G.story.debt=0; G.story.paidOff=true;
@@ -4666,6 +4680,7 @@ function updateStory(dt){
     queueSave();
     sfx.coin();
     if(debBeacon){ scene.remove(debBeacon); debBeacon=null; }
+    turboCool=0; turboSay('payingDeb');
     // Cinematic payoff sequence
     playCutscene('deb_payoff', deb.x, deb.z, ()=>{
       bigEvent('DEB PAID','#7dff8a','Chapter 2 coming soon...');
@@ -4761,7 +4776,7 @@ function updateStores(dt){
         continue;
       }
       s.robT+=dt;
-      if(!s.warned){ s.warned=true; toast('HOLDING UP THE STORE — stay close!','gold'); }
+      if(!s.warned){ s.warned=true; toast('HOLDING UP THE STORE — stay close!','gold'); turboSay('robbery'); }
       if(Math.random()<dt*6) blip(1200,900,0.05,0.05,'square');
       if(s.robT>2.6){
         const take=randi(120,220);
@@ -4771,6 +4786,7 @@ function updateStores(dt){
         burst(s.x,1.2,s.z,20,COL_CASH,3,0.8,4);
         sfx.coin();
         toast('STORE ROBBED! +$'+take,'gold');
+        turboSay('robberyTake');
       }
     } else if(d>4){ s.robT=0; s.hinted=false; s.warned=false; }
   }
@@ -5226,10 +5242,71 @@ const TURBO_LINES={
     {src:null, text:"The heist is on. Sneak in, crack the safe, and vanish before the alarm screams."},
     {src:null, text:"Nice and quiet... until it isn't."},
   ],
+  // store robbery hold-up (gun drawn, waiting for cash)
+  robbery:[
+    {src:'robbery/robbery_01_polite-stickup.mp3', text:"This is a stickup. A polite one."},
+    {src:'robbery/robbery_02_cash-can-move.mp3', text:"Nobody move. Except the cash. The cash can move."},
+    {src:'robbery/robbery_03_donation-to-me.mp3', text:"Consider this a donation. To me."},
+    {src:'robbery/robbery_04_scratcher.mp3', text:"I'll take the drawer and a lottery ticket. Scratcher, not Powerball — I'm not greedy."},
+    {src:'robbery/robbery_05_hands-register.mp3', text:"Hands where I can see the register."},
+    {src:'robbery/robbery_06_nobodys-a-hero.mp3', text:"This'll go a lot faster if nobody's a hero."},
+    {src:'robbery/robbery_07_kid-to-feed.mp3', text:"I've got a kid to feed. Don't look at me like that, it's TRUE."},
+    {src:'robbery/robbery_08_its-insured.mp3', text:"Relax, it's insured. Probably."},
+    {src:'robbery/robbery_09_between-me-and-register.mp3', text:"This is between me and the register. You're just standing near it."},
+  ],
+  // after the cash drawer opens
+  robberyTake:[
+    {src:'robbery_take/robbery_take_01_daddy-pays-rent.mp3', text:"And that's how Daddy pays rent. Sort of."},
+    {src:'robbery_take/robbery_take_02_four-hundred-to-go.mp3', text:"Four hundred to go. Feels like four thousand."},
+    {src:'robbery_take/robbery_take_03_never-here.mp3', text:"Anyone asks, I was never here. I was very obviously here."},
+    {src:'robbery_take/robbery_take_04_one-store-down.mp3', text:"One store down. San Chaos has, what, a hundred more?"},
+    {src:'robbery_take/robbery_take_05_cha-ching.mp3', text:"Cha-ching. Minus the ching. It's all quiet, actually."},
+  ],
+  // jacking a Chaos Pizza delivery car specifically
+  pizzaJack:[
+    {src:'pizza_jack/pizza_jack_01_extra-hot-extra-stolen.mp3', text:"Extra hot, extra stolen."},
+    {src:'pizza_jack/pizza_jack_02_already-free.mp3', text:"Thirty minutes or it's free. Actually, it's already free."},
+    {src:'pizza_jack/pizza_jack_03_delivery-boy.mp3', text:"Do I look like a delivery boy? Don't answer that."},
+    {src:'pizza_jack/pizza_jack_04_special-delivery.mp3', text:"Special delivery: nothing, to nowhere, on your dime."},
+    {src:'pizza_jack/pizza_jack_05_tip-jar.mp3', text:"This one's for the tip jar. My tip jar. Which is my pocket."},
+    {src:'pizza_jack/pizza_jack_06_allergic-to-paying.mp3', text:"Objection! I'm allergic to paying for pizza."},
+    {src:'pizza_jack/pizza_jack_07_outta-your-parking-lot.mp3', text:"Fresh outta the oven and outta your parking lot."},
+  ],
+  // walking back up to Deb while the debt is still owed
+  debApproach:[
+    {src:'approach_deb/approach_deb_01_looking-like-you-want-to-kill-me.mp3', text:"Hey Deb. You're looking... like you want to kill me. Cool, cool."},
+    {src:'approach_deb/approach_deb_02_furious-but-great.mp3', text:"Been a minute. You look great. Furious, but great."},
+    {src:'approach_deb/approach_deb_03_funny-story.mp3', text:"So, funny story about the eight hundred—"},
+  ],
+  // handing Deb the money
+  payingDeb:[
+    {src:'paying_deb/paying_deb_01_exact-change.mp3', text:"There. Eight hundred, exact change, no confetti."},
+    {src:'paying_deb/paying_deb_02_functioning-adult.mp3', text:"See? I'm basically a functioning adult now."},
+    {src:'paying_deb/paying_deb_03_spend-it-on-the-kid.mp3', text:"Don't spend it all in one place. Kidding. Spend it on the kid."},
+  ],
+  // idle — debt weighing on him
+  idleDebt:[
+    {src:'idle_debt/idle_debt_01_lot-of-quarters.mp3', text:"Eight hundred bucks. That's a lot of quarters."},
+    {src:'idle_debt/idle_debt_02_dont-marry-smarter.mp3', text:"Note to self: don't marry someone smarter than you."},
+    {src:'idle_debt/idle_debt_03_debs-clock.mp3', text:"Deb's clock is louder than my conscience, and that's saying something."},
+    {src:'idle_debt/idle_debt_04_dollar-for-every-dollar.mp3', text:"If I had a dollar for every dollar I owe, I wouldn't owe it."},
+    {src:'idle_debt/idle_debt_05_tonight.mp3', text:"Tonight. She said tonight. Very specific woman, my ex."},
+    {src:'idle_debt/idle_debt_06_kid-thinks-im-cool.mp3', text:"Somewhere out there, a kid thinks I'm cooler than this. Gotta keep that going."},
+    {src:'idle_debt/idle_debt_07_she-counted.mp3', text:"$800. Not $799. She counted."},
+  ],
+  // idle — football backstory callbacks
+  idleBackstory:[
+    {src:'idle_backstory/idle_backstory_01_hot-dog-opinions.mp3', text:"Two years, three hot dogs a day. I have OPINIONS about hot dogs now."},
+    {src:'idle_backstory/idle_backstory_02_i-see-a-pattern.mp3', text:"Church camp took my cheerleaders. Coach took my locker room. Deb's taking my money. I see a pattern and I don't like it."},
+    {src:'idle_backstory/idle_backstory_03_wrestling-match.mp3', text:"I didn't lose my temper. I lost a WRESTLING MATCH. Slight difference."},
+    {src:'idle_backstory/idle_backstory_04_thats-history.mp3', text:"Fast, strong, handsome. That's not bragging, Coach, that's HISTORY."},
+    {src:'idle_backstory/idle_backstory_05_get-creative.mp3', text:"Just gotta get creative. Always gotta get creative."},
+  ],
 };
 let turboCool=0;
 // pacing for the ambient (non-event) quips so they don't spam
 let slowVOT=0, copVOT=0, redLightArmed=true;
+let idleVOT=rand(22,38), debApproachVOT=0;
 function turboSay(cat){
   if(!G.started||G.over||turboCool>0) return;
   turboCool=2.2;

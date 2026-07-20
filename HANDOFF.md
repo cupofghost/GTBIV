@@ -98,13 +98,32 @@ sound on, and confirm nothing regressed. Watch the on-screen `fps` readout
 - **PWA:** `manifest.json` + icons; installable, fullscreen, landscape-locked.
 
 ### File layout (everything is at repo root, referenced by relative path)
-| File | Purpose |
+| File / folder | Purpose |
 | --- | --- |
 | `index.html` | The whole game — markup, CSS, and all logic |
 | `three.min.js` | Vendored Three.js r128 |
 | `manifest.json`, `icon-512.png`, `apple-touch-icon.png` | PWA |
 | `panel1-3.jpg` | Intro cinematic key-art (placeholders) |
-| `vo1-4.mp3`, `t_run1-3.mp3`, `t_shoot1.mp3` | Voiceover + catchphrases |
+| `vo1-4.mp3` | Intro narration (the four opening lines) |
+| `t_approach1-12.mp3` | Approach-ped barks (wired as `TURBO_LINES.approach`) |
+| `t_car1-6.mp3` | Carjack barks (`TURBO_LINES.car`) |
+| `t_cops1-11.mp3` | Chased-by-cops barks (`TURBO_LINES.cops`) |
+| `t_punch1-11.mp3` | Punch barks (`TURBO_LINES.punch`) |
+| `t_run1-7.mp3` | Run-someone-over barks (`TURBO_LINES.runover`) |
+| `t_shoot1-6.mp3` | Firing barks (`TURBO_LINES.shoot`) |
+| `t_slow1-9.mp3` | Driving-slow barks (`TURBO_LINES.slow`) |
+| `t_stopsign1-9.mp3` | Red-light barks (`TURBO_LINES.stopsign`) |
+| `robbery/` | Store hold-up barks (`TURBO_LINES.robbery`) |
+| `robbery_take/` | Post-robbery quips (`TURBO_LINES.robberyTake`) |
+| `pizza_jack/` | Pizza-car-jack quips (`TURBO_LINES.pizzaJack`) |
+| `approach_deb/` | Approaching-Deb barks (`TURBO_LINES.debApproach`) |
+| `paying_deb/` | Paying-Deb quips (`TURBO_LINES.payingDeb`) |
+| `idle_debt/` | Idle barks — debt theme (`TURBO_LINES.idleDebt`) |
+| `idle_backstory/` | Idle barks — football backstory (`TURBO_LINES.idleBackstory`) |
+| `turbo_bowl_run/`, `turbo_bowl_scoring/`, `turbo_bowl_tackled/` | Football-minigame barks (FB4 — not yet wired) |
+| `cutscene_first_score/`, `cutscene_coach_*`, `cutscene_danny_*`, `cutscene_turbo_bowl_payoff/` | Cutscene VO (Football Saga — not yet wired) |
+| `intro/`, `promo/` | Promo-monologue and narrator audition clips (not in-game) |
+| `Turbo Jones Voice MP3s/` | Casting-comparison audition clips (Austin's decision) |
 | `HANDOFF.md` | **This doc** |
 
 ### Structure of `index.html`
