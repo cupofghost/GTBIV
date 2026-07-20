@@ -252,6 +252,13 @@ Grab elements with `$('id')`. Key ids you'll touch:
   `'gold'|'bad'|…`). Use it; don't invent new notification systems.
 
 ### 6.8 Missions & story
+> **Tone: play it straight.** Whenever you write or wire narrative — mission
+> briefings, barks, story beats, cutscene dialogue — treat San Chaos and Turbo's
+> predicament as real, serious, and high-stakes. Never write toward a laugh,
+> wink at the player, or signal that a moment is a joke; the premise is absurd
+> but the delivery never is. The definitive tone rule and voice samples live in
+> `STORY_BIBLE.md §2` and `§4` — follow them.
+
 - **Story (Chapter 1):** Turbo owes **Deb $800 by tonight**. `updateStory`
   drives it; store robberies + mission payouts fund the debt. This is the
   spine — don't break the debt loop.
@@ -735,6 +742,13 @@ spending that torched his child-support money) is now **locked canon** — see
 structured mission/cutscene specs. This phase is the implementation side.
 Build in order; each step depends on the previous existing in the world.
 
+> **Play it straight.** This arc is built on an absurd premise, and it only
+> works if every beat is played completely dead straight — Coach, the jocks,
+> and Turbo all mean every word; the camera never winks; nothing is staged
+> or timed "for the laugh." Build the encounters, the fight, and the cutscenes
+> as sincere character drama. Whatever lands, lands because the world takes
+> itself seriously — never because the game is signalling that it's a joke.
+
 #### FB1 — Ambient jock NPCs (roam, taunt, fight on sight) `DONE`
 **Status: implemented** (see `JOCK_TAUNTS`, `spawnJock`/`spawnJocks`/
 `updateJocks` near the `RIVAL PIZZA GANG` section, wired into `bootSpawns()`
@@ -798,16 +812,17 @@ is set, entered at **FB2**'s field.
 **Approach:** Keep it arcade-simple — e.g. a short timed "catch N passes" or
 "score N touchdowns against token defenders" loop using existing movement/
 collision, not a new physics system. See `STORY_BIBLE.md` for the intended
-tone (silly, quick, triumphant) and the win condition that feeds **FB5**.
+tone (quick, physical, and played straight — Turbo suiting up one more time
+and meaning it) and the win condition that feeds **FB5**.
 **Acceptance:** playable start-to-finish, has a clear win/lose state, doesn't
 require new asset pipelines, holds framerate, ends by handing off to **FB5**
 on a win.
 **Flag for Austin:** if this starts requiring real sports-sim mechanics to
-feel good, stop and check in rather than over-building — the punchline
-cutscene (FB5) is the actual payoff, not the football mechanics themselves.
+feel good, stop and check in rather than over-building — the FB5 cutscene
+is the actual payoff, not the football mechanics themselves.
 
-#### FB5 — Cheerleaders punchline cutscene (solo Turbo, no Dad on-screen) `P2 · Risk: Med`
-**Why:** The joke the whole arc is building to.
+#### FB5 — Cheerleaders cutscene (solo Turbo, no Dad on-screen) `P2 · Risk: Med`
+**Why:** The character beat the whole arc is building to.
 **Where:** triggered on winning **FB4**; another `CUTSCENES` entry, using the
 new actor/pose work from `CHARACTERS.md` (**C8**) if that's landed yet, or a
 camera-only cutscene (today's cutscene capability) if not — see
@@ -888,7 +903,7 @@ save the painted character). See `CHARACTERS.md §5` for the full order.
 **Football saga track** (Phase 7, above) also runs in parallel — `FB1` (ambient
 jocks) is already done. Order: `FB2` field → `FB3` Coach mission (depends on `F1`
 for the persistent unlock flag, and ideally the `CUTSCENES` system) → `FB4`
-minigame → `FB5` punchline cutscene (benefits from `C8`'s actor/pose work, but
+minigame → `FB5` cutscene (benefits from `C8`'s actor/pose work, but
 can ship camera-only if that's not ready yet). See `STORY_BIBLE.md` for every
 narrative beat this track needs.
 

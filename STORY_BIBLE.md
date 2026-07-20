@@ -27,31 +27,38 @@ child support for his ex-wife **Deb** — or he's going straight back to jail. I
 **San Chaos City**, the only way to make that kind of money fast is to cause a
 lot of it.
 
-**Genre:** open-world crime-comedy sandbox. Think neon 80s synthwave GTA parody —
-absurd, satirical, self-aware, and cartoonishly violent without ever taking
-itself seriously. **"Zero trademarks harmed."**
+**Genre:** open-world crime sandbox with a neon 80s synthwave skin. The premise
+is absurd, but it is **played completely straight** — every character treats San
+Chaos and Turbo's predicament as real, serious, and high-stakes. Nobody in this
+world thinks any of it is funny, and neither does the narration. Invent your own
+brands, songs, and celebrities; **use no real trademarks.**
 
-**Player fantasy:** be a lovable idiot menace with a car, a wisecrack, and a
-deadline.
+**Player fantasy:** be a small-time crook with a fast car, a faster mouth, and a
+deadline you might not make.
 
 ---
 
 ## 2. Tone, rating & style
 
-- **Comedy first.** Every system is played for laughs — cops are useless, crime
-  is a career, the radio is unhinged. Satire of crime games, not a real crime
-  story.
+- **Play it straight.** This is the one rule the whole bible hangs on. The
+  premise is absurd; the delivery never is. Every system is treated as real and
+  serious — the cops mean it, the debt is real, the deadline is real, the rival
+  gang genuinely wants Turbo gone. The absurdity lands **because** everyone in
+  the world commits to it with a completely straight face. Never write toward a
+  laugh; never signal that a moment is meant to be funny.
 - **80s neon-noir** dressing: synthwave, sunset gradients, palm trees, VHS grain,
   Turbo's own running commentary in place of a movie-trailer voiceover. Style is
   loud and pink/cyan.
-- **Cartoon violence, PG-13 attitude.** Slapstick "MY SPLEEN!" energy, not gore.
-  Innuendo over profanity. Keep it broadcastable-absurd.
-- **Turbo is the joke and the heart.** He's a screw-up with a code; the comedy
-  lands because he half-means it about the kid.
-- **Do:** puns, deadpan, escalating absurdity, fourth-wall winks ("Grand Turbo
-  Boost? Is that a vitamin?"), running gags.
-- **Don't:** real brands, real people, real song lyrics, actual cruelty, edginess
-  for its own sake, anything that needs a licence. Parody originals only.
+- **Stylized, non-graphic violence, PG-13 attitude.** No gore. Attitude over
+  profanity. Keep it broadcastable.
+- **Turbo is the heart.** He's a screw-up with a code; it works because he
+  half-means it about the kid — play that sincerely and never undercut it.
+- **Do:** deadpan delivery, escalating stakes, weirdly specific detail,
+  characters who fully believe in their own world. Let the humor be a byproduct
+  of sincerity, never the goal.
+- **Don't:** wink at the camera, break the fourth wall, lampshade the absurdity,
+  or play a scene "for laughs." Also don't use real brands, real people, real
+  song lyrics, or anything that needs a licence — invent originals only.
 
 ---
 
@@ -100,11 +107,12 @@ These are established in the shipping game. Build on them; don't rewrite them.
     instead, until the money was gone. This is Turbo's own explanation for
     the $800 debt that kicks off Chapter 1. Play it as impulsive, not
     malicious — he's a soft touch for himself, not a schemer.
-  - **Prison diet:** hot dogs, three times a day. A standing complaint/gag.
+  - **Prison diet:** hot dogs, three times a day. A standing complaint.
   - **His stated goal is not redemption — it's a transaction:** get back on
     his feet and "make things right with Deb so she'll leave me the F alone."
-    Keep this self-serving framing; it's consistent with his voice (§4) and
-    funnier than a sincere redemption arc.
+    Keep this self-serving framing; it's truer to his voice (§4) than a tidy
+    redemption arc, and it plays straighter — he isn't in on any joke about
+    himself.
 - **Chaos High Jocks** — a third hostile faction (alongside cops and Chaos
   Pizza): Turbo's old football team, still holding a grudge, roaming the
   streets and picking fights with him on sight. **Already implemented in the
@@ -124,7 +132,8 @@ Write dialogue to fit these registers. Samples are pulled from the game.
   leave a mark." / "Outta the way! I'm late for a court hearing."*
 - Fires a shot: *"Say goodnight." / "That's how we settle things in San Chaos." /
   "You picked the wrong block, buddy."*
-- Register: short, punchy, present tense, deflects everything with a joke.
+- Register: short, punchy, present tense, deflects everything with a one-liner
+  — and he always means it; he's never doing a bit.
 
 **Deb** — deadpan, done-with-him, sharper than Turbo, not a villain. Dry menace.
 - *"Turbo. We need to talk." / "Pay me, or you go BACK to jail. Have fun, Turbo."*
@@ -140,21 +149,24 @@ that reads mission briefings and big story beats.
   merchandise." / "Rampage. They want chaos... give them chaos." / "The heist is
   on. Sneak in, crack the safe, and vanish before the alarm screams."*
 
-**Ambient San Chaos citizens** — absurd, oblivious, fourth-wall-adjacent.
+**Ambient San Chaos citizens** — oblivious, unbothered, completely sincere.
+They react to constant chaos as if it's ordinary weather; that flat sincerity
+is the point, not a wink.
 - *"Nice weather for a rampage." / "The cops here? Useless." / "I saw THREE
   explosions before breakfast." / "Real estate here is BOOMING. Literally." /
   "This city peaked in the 80s."*
 - Panic yells: *"AAAH!" / "MY SPLEEN!" / "NOT AGAIN!" / "I JUST GOT HERE!"*
 
-**Radio DJs** (to be written) — three stations' worth of unhinged patter, fake
-ads, and between-song bits. Same comic register, station-flavored.
+**Radio DJs** (to be written) — three stations' worth of patter, fake ads, and
+between-song bits. Same straight-faced in-world register, station-flavored — DJs
+who fully believe in their own stations, not comedians doing radio.
 
 **Turbo Jones (backstory monologue)** — Turbo talking about his life, unprompted,
-to camera/no one in particular. This is the master reference for his self-pitying,
-self-justifying, weirdly-specific comic voice — mine it for barks, a possible
+to no one in particular. This is the master reference for his self-pitying,
+self-justifying, weirdly-specific voice — mine it for barks, a possible
 unlockable cutscene/easter egg, or loading-screen flavor text, but don't quote it
 in full inside gameplay (it's a promo piece, not a script — pull individual beats
-from it instead):
+from it instead). He is dead serious the entire time; that's exactly why it works:
 
 > *"My name's Turbo Jones. People hear 'minimum security' and they laugh. They
 > think it's some kind of summer camp. Let me tell you something — it ain't.
@@ -187,11 +199,12 @@ from it instead):
 > *One day I'll get back on my feet. I'll rebuild my life. I'll make things
 > right with Deb so she'll leave me the F alone. Just got to get creative..."*
 
-Comic engine to reuse from this: **wildly disproportionate self-pity**, treating
+The engine to reuse from this: **wildly disproportionate self-pity**, treating
 petty consequences (jail, debt) as unjust hardship, **specific weird details**
 ("a gross guy," "hot dogs three times a day") landing harder than general
 complaints, and **never actually apologizing** — every setback is something
-that *happened to* him.
+that *happened to* him. He delivers all of it with total conviction; write it
+that way — earnest, aggrieved, never self-aware.
 
 **Chaos High Jocks** (shipped taunts — canon; see `JOCK_TAUNTS` in `index.html`):
 - *"Hey Jones! Heard you got banned from the locker room!" / "Nice hands, Turbo
@@ -219,8 +232,8 @@ Use/extend these; add new locations with the §7 template.
   high school — see location sheet below), and Deb's meetup spot downtown.
 - **Factions:** the **badge brigade** (cops), **Chaos Pizza** (rival gang),
   **Chaos High Jocks** (Turbo's old football team, still hostile — roams the
-  streets, see §3/§4), and whatever crews/rackets the writer invents (keep it
-  parody).
+  streets, see §3/§4), and whatever crews/rackets the writer invents (keep them
+  original — no real-world orgs or brands).
 
 **LOCATION: Chaos High football field**   DISTRICT: near the high school
 ```
@@ -231,14 +244,16 @@ What the player does here: the "Chaos High Jocks" faction's home turf; site
   unlocked (see HANDOFF.md Phase 7, tasks FB2–FB5).
 Story hooks: Coach still runs practice here. This is where Turbo got banned
   from the locker room and where he goes to settle it.
-Gags/landmarks: a retired jersey with Turbo's number hanging crooked in a
-  case nobody dusts; a scoreboard stuck on an old score; Coach's whistle,
-  audible from way too far away.
+Telling details / landmarks: a retired jersey with Turbo's number hanging
+  crooked in a case nobody dusts; a scoreboard stuck on an old score; Coach's
+  whistle, audible from way too far away.
 ```
-- **Running gags to seed & pay off:** "zero trademarks harmed," the useless cops,
-  helicopters *every day now*, the city "peaked in the 80s," everyone knows "a guy
-  who knows a guy," the unseen kid, gas prices, Turbo's court hearing.
-- **Tone of place:** everything is a little too on-fire and everyone's fine with it.
+- **Recurring threads to seed & pay off** (world texture, not bits — plant them
+  and let them recur without comment): the overwhelmed cops, helicopters *every
+  day now*, the city "peaked in the 80s," everyone knows "a guy who knows a guy,"
+  the unseen kid, gas prices, Turbo's court hearing.
+- **Tone of place:** everything is a little too on-fire, and everyone treats that
+  as completely normal.
 
 **Location sheet template:**
 ```
@@ -246,7 +261,7 @@ LOCATION: <name>            DISTRICT: <area>
 Vibe: <one line>
 What the player does here: <mechanics — race start, heist target, store, hideout…>
 Story hooks: <who/what happens here>
-Gags/landmarks: <memorable bits>
+Telling details / landmarks: <memorable, grounded specifics>
 ```
 
 ---
@@ -259,21 +274,23 @@ Gags/landmarks: <memorable bits>
 - **Deb** — ex-wife, holds the deadline. Not evil, just fed up. Potential depth:
   she's not wrong.
 - **The Kid** — unseen; the stakes. Decide age/name/relationship beats.
-- **Chaos Pizza boss** — rival gang leader; comedic antagonist. Needs a name,
-  gimmick, and beef with Turbo.
-- **A cop / the badge brigade** — recurring incompetent authority; maybe one named
-  detective who thinks he's in a serious cop drama.
-- **Radio DJs** (×3 stations) — comic narrators of the city.
+- **Chaos Pizza boss** — rival gang leader and antagonist; plays it deadly
+  serious about pizza. Needs a name, gimmick, and beef with Turbo.
+- **A cop / the badge brigade** — recurring, overwhelmed authority; maybe one
+  named detective who takes himself and the job completely seriously.
+- **Radio DJs** (×3 stations) — in-world narrators of the city.
 - **Coach** — Turbo's old football coach, banned him from the locker room
   and ended his football career. The antagonist of the "Revenge on Coach"
-  mission (see §7 worked example). Comedic, not menacing — a petty tyrant of
-  a small kingdom (his field, his whistle, his rules).
+  mission (see §7 worked example). Not a supervillain — a petty tyrant of a
+  small kingdom (his field, his whistle, his rules) who fully believes in his
+  own importance. Play him straight; his conviction is what makes him land.
 - **Turbo's Dad** — **never appears on-screen.** Devout, overprotective, the
   reason Turbo "wasn't allowed" to date cheerleaders in high school — and the
   rule outlived the reason for it. He's a voice in Turbo's head, not a
-  character in a scene: the football-minigame punchline (§7 worked example)
+  character in a scene: the football-minigame cutscene (§7 worked example)
   pays this off by having Turbo self-censor entirely on his own, years later,
-  with nobody watching and nobody making him. That's the whole joke.
+  with nobody watching and nobody making him. Play it as a genuine, private
+  moment of a man honoring his father — not as a bit.
 - **The Cheerleaders** — a group, not individuals (unless the writer wants to
   name one as a bigger recurring character later). Function as a reward beat
   Turbo talks himself out of — nobody stops him, he stops himself.
@@ -290,7 +307,7 @@ Wants / Deadline: <what drives them>
 Relationship to Turbo:
 First appearance: <where/when in the story>
 Arc / payoff: <how they change or return>
-Gags: <their running bits>
+Recurring details: <their running threads — played straight, never as bits>
 ```
 
 ---
@@ -379,9 +396,9 @@ SHOT 5 — WIDE, 2.0s, pull back. (FX: whistle blast, fade to gameplay)
 **MINIGAME: Football (post-unlock)** — see `HANDOFF.md` **FB4** for the build
 spec (keep it arcade-simple: a short timed catch/score loop, not a sports
 sim). Narratively: Turbo suits up one more time, plays a quick pickup game at
-the field, and wins — setting up the punchline cutscene below.
+the field, and wins — setting up the cutscene below.
 
-**CUTSCENE: football_win_punchline** — LOCATION: Chaos High field — TIME: day
+**CUTSCENE: football_win** — LOCATION: Chaos High field — TIME: day
 ```
 [Trigger: player wins the football minigame (HANDOFF.md FB5)]
 
@@ -409,12 +426,14 @@ SHOT 5 — WIDE, 2.0s, fade out.
     sideline, baffled.
 ```
 
-Guardrail for the writer: **Dad never appears** — this is a solo Turbo bit. The
-joke is that he polices *himself*, unprompted, years later, with zero stakes and
-zero witnesses — that's funnier and sadder than an external authority doing it
-for him. Keep the cheerleaders **comedic, not creepy**: they're a reward beat
-Turbo talks himself out of, not objects of the joke. The joke is entirely on
-Turbo.
+Guardrail for the writer: **Dad never appears** — this is a solo Turbo scene.
+The point is that he polices *himself*, unprompted, years later, with zero
+stakes and zero witnesses — played straight, that's more affecting than an
+external authority doing it for him. Keep the cheerleaders a **sincere reward
+beat Turbo talks himself out of**, never leering. Play the whole scene dead
+straight: no wink, no comic timing, no cue that the audience is meant to laugh.
+Turbo means every word, and the camera treats it as the quiet, slightly sad
+moment it is.
 
 ---
 
@@ -476,9 +495,10 @@ SHOT 2 — ...
 ```
 
 Guidelines: keep scenes **short** (3–6 shots, seconds each — it's a mobile game),
-one idea per scene, dialogue punchy, always end on a button (joke, threat, or
-hook). Mark **CLOSE** shots for emotional/comic beats, **WIDE** for
-establishing/action.
+one idea per scene, dialogue punchy, always end on a button (a threat, a hook,
+or a hard line — never a groaner). Mark **CLOSE** shots for emotional beats,
+**WIDE** for establishing/action. Direct every scene straight: characters mean
+what they say and the camera never comments.
 
 **Worked example (re-formatting the existing Deb scene):**
 ```
@@ -492,7 +512,7 @@ SHOT 3 — CLOSE on Deb, 4.0s.
 SHOT 4 — MEDIUM two-shot, 4.8s, cut. (FX: shake)
   DEB: "Pay me, or you go BACK to jail. Have fun, Turbo."
 SHOT 5 — WIDE pull-up, 2.0s, fade out.
-  ACTION: Deb walks off; Turbo shrugs at camera.
+  ACTION: Deb walks off; Turbo watches her go, then turns and heads the other way.
 ```
 
 The writer should deliver scenes in this format. (Engineering later maps
@@ -526,7 +546,8 @@ High-volume, low-cost color. Deliver as labeled line packs.
 - **Mission-giver radio chatter** — lines that play during a job (encouragement,
   taunts, complications).
 - **Radio DJ packs** — 3 stations, each with a persona: station IDs, fake ads
-  (parody only), between-song patter, "traffic & crime" reports.
+  (originals only — no real brands), between-song patter, "traffic & crime"
+  reports. The DJs believe every word; the ads are sincere.
 
 **Bark pack format:**
 ```
@@ -541,10 +562,16 @@ PACK: <trigger/speaker>
 ## 12. Guardrails for the writer
 
 - **Never contradict §3 Locked Canon.**
-- **Parody, not infringement:** invent originals; no real brands, celebrities, or
-  copyrighted lyrics. "Zero trademarks harmed" is a design law.
-- **Comedy + heart:** keep it funny; let the kid/Deb thread carry real (small)
-  stakes so it's not weightless.
+- **Play it straight (§2):** never write toward a laugh, wink at the camera, or
+  signal that a moment is a joke. Characters mean what they say; the world takes
+  itself seriously. Any humor is a byproduct of that sincerity — it is never the
+  target you aim at.
+- **Originals, not infringement:** invent your own brands, celebrities, and
+  songs; never use real ones or copyrighted lyrics. No real trademarks — a hard
+  design law.
+- **Straight-faced + heart:** let the kid/Deb thread carry real stakes so the
+  world has weight; play those beats sincerely, not for a lump in the throat and
+  not for a laugh.
 - **Playable:** every mission must reduce to the §8 verbs, or be flagged as needing
   a new mechanic.
 - **Mobile-short:** cutscenes and missions are bite-sized; respect a phone
