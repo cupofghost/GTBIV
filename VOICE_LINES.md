@@ -1,10 +1,11 @@
-# GTB IV — Voice Line Script (Chatterbox)
+# GTB IV — Voice Line Script (SpeechGen)
 
 > Every speaking role from `CHAPTER1.md` and `FOOTBALL_STRAND.md`,
-> organized character-by-character for TTS generation. **Turbo and Deb are
-> excluded** — Kimi's handling those two. Their line packs still live in
-> `CHAPTER1.md` §8 (new material) and the shipped `TURBO_LINES`/`DEB_LINES`
-> arrays in `index.html` (existing material), if you need them later.
+> organized character-by-character for TTS generation. **Only Turbo is
+> excluded** — Kimi's handling his lines exclusively. Deb is included
+> below: SpeechGen is now generating her audio too. Turbo's line packs
+> still live in `CHAPTER1.md` §8 (new material) and the shipped
+> `TURBO_LINES` array in `index.html` (existing material), if needed later.
 >
 > Each section leads with a one-line voice direction pulled from that
 > character's sheet, then every line they speak, cleaned of stage
@@ -134,6 +135,23 @@ below if you'd rather not cast a seventh actor.
 
 ---
 
+## Deb
+**Voice direction:** deadpan, economical, out of patience but not cruel —
+she's used up all her patience years before the game starts, so nothing
+here is shouted. Five lines are locked canon (already shipped); three are
+optional idle mutters not yet wired into the game.
+
+1. "Turbo. We need to talk." *(`deb_confrontation` cutscene, locked canon)*
+2. "You owe me $800 in child support." *(`deb_confrontation` cutscene, locked canon)*
+3. "Pay me, or you go BACK to jail. Have fun, Turbo." *(`deb_confrontation` cutscene, locked canon)*
+4. "...wow. You actually paid." *(`deb_payoff` cutscene, locked canon)*
+5. "Later, Turbo." *(`deb_payoff` cutscene, locked canon)*
+6. "Unbelievable." *(idle, action: checks phone)*
+7. "Tonight, Turbo. I mean it." *(idle, action: sighs)*
+8. "I should've asked for it in the divorce." *(idle, action: to herself)*
+
+---
+
 ## Group voices
 
 These roles are archetypes, not named individuals — one or two voice
@@ -228,8 +246,9 @@ here for completeness, not recommended as a first pass:
 | Danny Kowalski | 8 |
 | The PA Voice | 6 |
 | Amber | 1 |
+| Deb | 8 |
 | Chaos Pizza Goons (group) | 8 |
 | Alumni Wildcats (group) | 17 |
 | Boardwalk Racer (group) | 6 |
 | Cheer Squad (group) | 3 |
-| **Total (excl. skip list)** | **102** |
+| **Total (excl. skip list)** | **110** |
