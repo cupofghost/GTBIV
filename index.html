@@ -241,6 +241,31 @@
   #devPanel .devNote { color:#ffffff88; font-size:10px; font-family:Arial,sans-serif; width:100%; margin-top:-6px; }
   #devHint { display:none; position:fixed; bottom:2px; right:6px; color:#ff3ea0aa; font-size:10px; z-index:5; font-family:monospace; }
 
+  /* ===== PAUSE MENU ===== */
+  #pauseBtn { position:absolute; top:calc(44px + env(safe-area-inset-top)); left:118px;
+    width:44px; height:36px; border-radius:10px; border:1px solid #ffffff44;
+    background:rgba(6,2,16,.78); color:#fff; font-size:13px; pointer-events:auto;
+    display:flex; align-items:center; justify-content:center; text-shadow:0 1px 3px #000; }
+  #pauseMenu { display:none; position:fixed; inset:0; z-index:52; background:rgba(5,2,12,.88);
+    align-items:center; justify-content:center; pointer-events:auto; }
+  .pmPanel { width:min(92vw,400px); max-height:88vh; overflow:auto; text-align:center;
+    background:rgba(8,3,18,.96); border:1px solid #ff3ea0; border-radius:14px;
+    padding:14px 18px 16px; box-shadow:0 0 30px rgba(255,62,160,.35); }
+  .pmPanel h2 { color:#ff3ea0; font-size:18px; font-style:italic; letter-spacing:4px; margin:0 0 12px; }
+  .pmBtn { display:block; width:100%; margin:8px 0; font-size:14px; font-weight:900; color:#fff;
+    font-family:'Arial Black',Arial,sans-serif; letter-spacing:2px; cursor:pointer;
+    background:rgba(40,16,70,.85); border:1px solid rgba(255,255,255,.25); border-radius:10px;
+    padding:11px 10px; }
+  .pmBtn:active { transform:scale(.97); }
+  #pmResume { background:rgba(20,90,40,.85); border-color:#7dff8a; }
+  #pmRestart { background:rgba(110,20,20,.85); border-color:#ff6b6b; }
+  .pmRow { display:flex; align-items:center; gap:10px; margin:14px 0; text-align:left; }
+  .pmRow label { color:#9be7ff; font-size:11px; font-family:Arial,sans-serif; letter-spacing:1px; width:58px; flex:none; }
+  .pmRow input[type=range] { flex:1; accent-color:#ff3ea0; min-height:26px; }
+  .pmRow .pmVal { color:#ffd23e; font-size:11px; font-family:monospace; width:36px; text-align:right; flex:none; }
+  .pmHowTxt { color:#e8e8f0; font-family:Arial,sans-serif; font-size:12px; line-height:1.8; text-align:left; }
+  .pmHowTxt b { color:#ffd23e; }
+
   /* ===== CUTSCENE CINEMATICS ===== */
   #cineVignette { display:none; position:fixed; inset:0; z-index:20; pointer-events:none;
     background:radial-gradient(circle at 50% 40%, transparent 45%, rgba(0,0,0,0.65) 100%); }
@@ -364,6 +389,7 @@
   </div>
   <div id="radioBtn">&#9834;</div>
   <div id="fsBtn">&#x26F6;</div>
+  <div id="pauseBtn">&#10074;&#10074;</div>
   <div class="tbtn" id="btnHorn">HORN</div>
   <div id="pedals">
     <div class="tbtn pedal" id="btnBrake">BRAKE</div>
@@ -402,7 +428,7 @@
     <div id="controlsHint">
       Left thumb: move &middot; <b>right thumb: swipe to look around</b> &middot; pedals drive<br>
       Stick people up with the pistol &middot; rob glowing stores &middot; pay Deb her $800<br>
-      <b>N</b> = day/night &middot; <b>C</b> = crouch &middot; <b>M</b> = Pizza Wars mission<br>
+      <b>N</b> = day/night &middot; <b>C</b> = crouch &middot; <b>M</b> = Pizza Wars mission &middot; <b>P</b> = pause<br>
       Tap &#9834; for radio/night &middot; Desktop: WASD / E / F / G gun / Q radio / drag right side to look
     </div>
     <div id="rotateHint">&#8635; landscape recommended</div>
@@ -448,6 +474,33 @@
 <div id="fpsWarn"></div>
 <div id="devPanel"><h2>DEV MENU</h2></div>
 <div id="devHint">` dev</div>
+<div id="pauseMenu">
+  <div class="pmPanel" id="pmMain">
+    <h2>PAUSED</h2>
+    <button class="pmBtn" id="pmResume">RESUME</button>
+    <button class="pmBtn" id="pmHowBtn">HOW TO PLAY</button>
+    <button class="pmBtn" id="pmSetBtn">SETTINGS</button>
+    <button class="pmBtn" id="pmRestart">RESTART GAME</button>
+  </div>
+  <div class="pmPanel" id="pmSettings" style="display:none">
+    <h2>SETTINGS</h2>
+    <div class="pmRow"><label for="volMaster">MASTER</label><input type="range" id="volMaster" min="0" max="100" step="5"><span class="pmVal" id="volMasterVal"></span></div>
+    <div class="pmRow"><label for="volMusic">MUSIC</label><input type="range" id="volMusic" min="0" max="100" step="5"><span class="pmVal" id="volMusicVal"></span></div>
+    <button class="pmBtn" id="pmSetBack">BACK</button>
+  </div>
+  <div class="pmPanel" id="pmHow" style="display:none">
+    <h2>HOW TO PLAY</h2>
+    <div class="pmHowTxt">
+      <b>TOUCH:</b> left stick moves &middot; swipe the right side to look &middot; pedals drive.
+      ENTER steals cars &middot; PUNCH / gun button fights &middot; TALK chats up peds.<br>
+      <b>DESKTOP:</b> WASD move &middot; E enter/exit &middot; F attack &middot; G weapon &middot; Space jump/drift &middot;
+      Q radio &middot; N day/night &middot; C crouch &middot; R replay &middot; P pause.<br>
+      <b>THE JOB:</b> Deb wants <b>$800</b> by tonight. Rob glowing stores, stick up
+      peds with the pistol, run missions &mdash; and shake the cops before they bust you.
+    </div>
+    <button class="pmBtn" id="pmHowBack">BACK</button>
+  </div>
+</div>
 <div id="btnReplay">&#10227; REPLAY</div>
 <div id="replayBar">
   <button id="replayBack">-5s</button>
@@ -474,6 +527,7 @@ const $=id=>document.getElementById(id);
 
 const G={ mode:'foot', money:0, heat:0, stars:0, carHP:100, boost:100,
   escapeT:0, bustT:0, missionsDone:0, over:false, started:false, paused:false,
+  portraitPause:false, menuPaused:false,
   station:0, weapon:'fists', rockets:0 };
 const WORLD={ blocks:10, block:50, road:16 };
 const _PARAMS=new URLSearchParams(location.search);
@@ -496,7 +550,7 @@ function initAudio(){
   if(AC){ AC.resume(); return; }
   initVoiceOver();
   AC=new (window.AudioContext||window.webkitAudioContext)();
-  masterGain=AC.createGain(); masterGain.gain.value=0.9; masterGain.connect(AC.destination);
+  masterGain=AC.createGain(); masterGain.gain.value=0.9*SETTINGS.master/100; masterGain.connect(AC.destination);
   engineOsc=AC.createOscillator(); engineOsc.type='sawtooth'; engineOsc.frequency.value=50;
   engineLP=AC.createBiquadFilter(); engineLP.type='lowpass'; engineLP.frequency.value=500;
   engineGain=AC.createGain(); engineGain.gain.value=0;
@@ -511,7 +565,7 @@ function initAudio(){
   sirenOsc=AC.createOscillator(); sirenOsc.type='triangle'; sirenOsc.frequency.value=700;
   sirenGain=AC.createGain(); sirenGain.gain.value=0;
   sirenOsc.connect(sirenGain); sirenGain.connect(masterGain); sirenOsc.start();
-  musicGain=AC.createGain(); musicGain.gain.value=0.5; musicGain.connect(masterGain);
+  musicGain=AC.createGain(); musicGain.gain.value=musicVolVal(); musicGain.connect(masterGain);
   nextNoteTime=AC.currentTime+0.1;
 }
 // analog gauge dashboard — needle, digital speed, hull + nitro bars
@@ -3233,7 +3287,7 @@ function applyLook(dx,dy){
   }
   lookHoldT=1.2; // keep the auto-follow from fighting your thumb
 }
-const lookSkip=el=>el&&el.closest&&el.closest('.tbtn,#fsBtn,#radioBtn,button,.hudBox,#minimap,#storyCard,#start,#replayBar,#btnReplay');
+const lookSkip=el=>el&&el.closest&&el.closest('.tbtn,#fsBtn,#radioBtn,#pauseBtn,#pauseMenu,button,.hudBox,#minimap,#storyCard,#start,#replayBar,#btnReplay');
 document.addEventListener('touchstart',e=>{
   for(const t of e.changedTouches){
     if(t.clientX<window.innerWidth*0.45 && t.clientY>window.innerHeight*0.35 && joyTouch===null && G.started && !G.over){
@@ -3282,8 +3336,10 @@ document.addEventListener('keydown',e=>{
     else if(e.code==='Space'){ e.preventDefault(); toggleReplayPlay(); }
     return;
   }
+  if(G.menuPaused){ if(e.code==='Escape'||e.code==='KeyP') resumeGame(); return; }
   if(e.code==='KeyR'){ enterReplay(); return; }
   if(activeCutscene&&(e.code==='Enter'||e.code==='Space'||e.code==='Escape')){ skipCutscene(); return; }
+  if(e.code==='KeyP'||e.code==='Escape'){ pauseGame(); return; }
   if(e.code==='KeyE') doEnterExit();
   if(G.intro&&(e.code==='Enter'||e.code==='Space')) endIntro();
   if(e.code==='Space'&&G.mode==='foot'){ if(G.heist&&G.heist.phase===2) tapSafeCrack(); else doJump(); }
@@ -3822,7 +3878,7 @@ function cycleRadio(){
   const st=STATIONS[G.station];
   toast(st?st.name:'RADIO OFF','gold');
   $('radioBtn').classList.toggle('off',!st);
-  if(musicGain) musicGain.gain.value=st?0.5:0;
+  if(musicGain) musicGain.gain.value=st?musicVolVal():0;
   musicStep=0;
   if(AC) nextNoteTime=AC.currentTime+0.1;
   queueSave();
@@ -4465,7 +4521,8 @@ function checkOrientation(){
   const portrait=window.innerHeight>window.innerWidth;
   // ask for landscape right from the loading screen, not just in-game
   $('rotate').style.display=portrait?'flex':'none';
-  G.paused=portrait&&G.started;
+  G.portraitPause=portrait;
+  syncPause();
 }
 checkOrientation();
 window.addEventListener('orientationchange',()=>setTimeout(checkOrientation,200));
@@ -5355,7 +5412,7 @@ function enterReplay(){
   replay={ pos:recBuf.length-1, playing:false, frame:0,
     cam:{ x:camera.position.x, y:camera.position.y, z:camera.position.z,
           yaw:Math.atan2(d.x,d.z), pitch:Math.asin(clamp(d.y,-1,1)), up:0, dn:0 } };
-  ['btns','pedals','mission','heistHUD'].forEach(id=>{ const el=$(id); if(el){ el.dataset.rv=el.style.display; el.style.display='none'; } });
+  ['btns','pedals','mission','heistHUD','pauseBtn'].forEach(id=>{ const el=$(id); if(el){ el.dataset.rv=el.style.display; el.style.display='none'; } });
   $('replayBar').style.display='flex';
   $('replayScrub').max=recBuf.length-1; $('replayScrub').value=replay.pos;
   toast('REPLAY — drag right side to look, stick to fly','gold');
@@ -5374,7 +5431,7 @@ function exitReplay(){
   player.mesh.position.set(player.x,player.y,player.z); player.mesh.rotation.y=player.heading;
   player.mesh.visible=(G.mode==='foot');
   G.replay=false; replay=null;
-  ['btns','pedals','mission','heistHUD'].forEach(id=>{ const el=$(id); if(el&&el.dataset.rv!==undefined){ el.style.display=el.dataset.rv; delete el.dataset.rv; } });
+  ['btns','pedals','mission','heistHUD','pauseBtn'].forEach(id=>{ const el=$(id); if(el&&el.dataset.rv!==undefined){ el.style.display=el.dataset.rv; delete el.dataset.rv; } });
   $('replayBar').style.display='none';
   footCamYaw=player.heading; camPos.set(player.x-Math.sin(player.heading)*6.5,player.y+3.2,player.z-Math.cos(player.heading)*6.5);
   toast('BACK TO LIVE','gold');
@@ -5420,6 +5477,67 @@ function updateReplay(dt){
   hold('replayUp','up'); hold('replayDn','dn');
 })();
 
+// ================= PAUSE MENU & SETTINGS =================
+// G.paused has two independent causes — portrait orientation and the menu —
+// so each sets its own flag and syncPause() is the only writer of G.paused.
+const SET_KEY='gtb4.settings';
+const SETTINGS=(function(){
+  const d={ v:1, master:100, music:100 };
+  try{ const s=JSON.parse(localStorage.getItem(SET_KEY)); if(s&&s.v===1) Object.assign(d,s); }catch(e){}
+  return d;
+})();
+function saveSettings(){ try{ localStorage.setItem(SET_KEY,JSON.stringify(SETTINGS)); }catch(e){} }
+const musicVolVal=()=>0.5*SETTINGS.music/100; // radio's stock 0.5 gain scaled by the music slider
+function applyVolumes(){
+  if(masterGain) masterGain.gain.value=0.9*SETTINGS.master/100;
+  if(musicGain) musicGain.gain.value=STATIONS[G.station]?musicVolVal():0;
+}
+function syncPause(){ G.paused=G.started&&(G.portraitPause||G.menuPaused); }
+function pauseGame(){
+  if(G.menuPaused||!G.started||G.over||G.intro||activeCutscene||G.replay) return;
+  if($('storyCard').style.display==='flex') return;
+  G.menuPaused=true; syncPause();
+  showPausePanel('pmMain');
+  $('pauseMenu').style.display='flex';
+  // suspending the context freezes the audio clock too, so the radio resumes seamlessly
+  if(AC) AC.suspend();
+  try{ if(VO&&VO.speaking) VO.pause(); }catch(e){}
+  saveGame(); // pausing is a natural checkpoint
+}
+function resumeGame(){
+  if(!G.menuPaused) return;
+  G.menuPaused=false; syncPause();
+  $('pauseMenu').style.display='none';
+  if(AC) AC.resume();
+  try{ if(VO) VO.resume(); }catch(e){}
+}
+function togglePauseMenu(){ if(G.menuPaused) resumeGame(); else pauseGame(); }
+function showPausePanel(id){ ['pmMain','pmSettings','pmHow'].forEach(p=>{ $(p).style.display=p===id?'block':'none'; }); }
+(function initPauseUI(){
+  $('pauseBtn').addEventListener('click',togglePauseMenu);
+  $('pauseBtn').addEventListener('touchend',e=>{ e.preventDefault(); togglePauseMenu(); });
+  $('pmResume').addEventListener('click',resumeGame);
+  $('pmSetBtn').addEventListener('click',()=>showPausePanel('pmSettings'));
+  $('pmHowBtn').addEventListener('click',()=>showPausePanel('pmHow'));
+  $('pmSetBack').addEventListener('click',()=>showPausePanel('pmMain'));
+  $('pmHowBack').addEventListener('click',()=>showPausePanel('pmMain'));
+  // restart reloads the page (save already flushed on pause) — armed tap so a stray touch can't fire it
+  let armT=0;
+  $('pmRestart').addEventListener('click',()=>{
+    if(performance.now()-armT<2500){ location.reload(); return; }
+    armT=performance.now();
+    $('pmRestart').textContent='SURE? TAP AGAIN';
+    setTimeout(()=>{ $('pmRestart').textContent='RESTART GAME'; armT=0; },2500);
+  });
+  const slider=(id,key)=>{
+    const el=$(id), val=$(id+'Val');
+    el.value=SETTINGS[key]; val.textContent=SETTINGS[key]+'%';
+    el.addEventListener('input',()=>{ SETTINGS[key]=+el.value; val.textContent=el.value+'%'; applyVolumes(); });
+    el.addEventListener('change',saveSettings); // persist on release, not every drag tick
+  };
+  slider('volMaster','master'); slider('volMusic','music');
+})();
+
 // ================= SAVE SYSTEM =================
 // one versioned JSON blob in localStorage; writes are debounced, never per-frame
 const SAVE_KEY='gtb4.save';
@@ -5449,7 +5567,7 @@ function restoreSave(s){
   G.station=s.station||0;
   const st=STATIONS[G.station];
   $('radioBtn').classList.toggle('off',!st);
-  if(musicGain) musicGain.gain.value=st?0.5:0;
+  if(musicGain) musicGain.gain.value=st?musicVolVal():0;
   const stry=s.story||{};
   G.story.metDeb=!!stry.metDeb; G.story.debt=stry.debt||0; G.story.paidOff=!!stry.paidOff;
   G.story.cardShown=true; // continuing never replays the chapter card
