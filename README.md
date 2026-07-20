@@ -45,6 +45,7 @@ This repo is a static site at the root, so it deploys with no build step:
 | Gun | On-screen button | `G` |
 | Jump | On-screen button | Space |
 | Radio | Tap ♪ | `Q` |
+| Replay last 30 s (free camera) | REPLAY button | `R` (Space = play/pause, Esc = exit) |
 | Day / night | — | `N` |
 | Crouch | — | `C` |
 | Pizza Wars mission | — | `M` |

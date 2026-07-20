@@ -189,6 +189,13 @@
     #loadTV { width:min(56vw,320px); height:min(40vh,170px); }
     #loadTips { font-size:10px; max-width:80vw; }
     #startBtn { margin-top:4px; font-size:min(4.5vw,17px); padding:9px 26px; }
+    #continueBtn { margin-top:16px; font-size:min(6vw,26px); color:#0b0616; font-weight:900;
+      background:linear-gradient(180deg,#7dff8a,#2fd463); border:none; border-radius:14px;
+      padding:16px 42px; letter-spacing:2px; box-shadow:0 0 24px #7dff8a88, 0 6px 0 #1a7a38;
+      animation:pulse 1.4s infinite; pointer-events:auto; }
+    #newGameBtn { margin-top:12px; font-size:min(4vw,18px); color:#ffd7ee; font-weight:900;
+      background:rgba(60,16,50,.6); border:2px solid #ff3ea0; border-radius:12px;
+      padding:10px 30px; letter-spacing:2px; pointer-events:auto; }
     #controlsHint { font-size:10px; line-height:1.45; max-width:88vw; }
     #rotateHint { font-size:10px; }
     /* --- compact cinematics so the intro doesn't eat half the view --- */
@@ -206,6 +213,17 @@
     #storyBtn { margin-top:10px; font-size:14px; padding:8px 28px; }
   }
 
+  /* ===== REPLAY ===== */
+  #btnReplay { display:none; position:fixed; top:10px; right:120px; z-index:30;
+    color:#9be7ff; font-size:12px; font-weight:900; letter-spacing:1px; font-family:Arial,sans-serif;
+    background:rgba(10,6,20,.6); border:2px solid #9be7ff66; border-radius:10px; padding:6px 10px; }
+  #replayBar { display:none; position:fixed; bottom:8px; left:50%; transform:translateX(-50%);
+    z-index:40; align-items:center; gap:6px; background:rgba(10,6,20,.75); border:2px solid #ff3ea066;
+    border-radius:12px; padding:6px 10px; }
+  #replayBar button { font-size:12px; font-weight:900; color:#fff; background:rgba(40,16,70,.85);
+    border:1px solid #ff3ea088; border-radius:8px; padding:6px 10px; font-family:Arial,sans-serif; }
+  #replayScrub { width:min(38vw,260px); accent-color:#ff3ea0; }
+  #replayTime { color:#9be7ff; font-size:11px; font-family:monospace; min-width:52px; text-align:center; }
   /* ===== DEV MENU (only present when ?dev=1) ===== */
   #devPanel { display:none; position:fixed; top:10px; left:50%; transform:translateX(-50%);
     z-index:70; width:min(94vw,720px); max-height:88vh; overflow:auto;
@@ -379,6 +397,8 @@
     <div id="loadTips"><b>TIP:</b> Stick up pedestrians with your pistol for quick cash. <b>TIP:</b> Rob glowing stores to pay Deb faster. <b>TIP:</b> Pizza delivery drivers carry hot tips.</div>
   </div>
     <button id="startBtn" style="display:none">TAP TO PLAY</button>
+    <button id="continueBtn" style="display:none">CONTINUE</button>
+    <button id="newGameBtn" style="display:none">NEW GAME</button>
     <div id="controlsHint">
       Left thumb: move &middot; <b>right thumb: swipe to look around</b> &middot; pedals drive<br>
       Stick people up with the pistol &middot; rob glowing stores &middot; pay Deb her $800<br>
@@ -428,6 +448,16 @@
 <div id="fpsWarn"></div>
 <div id="devPanel"><h2>DEV MENU</h2></div>
 <div id="devHint">` dev</div>
+<div id="btnReplay">&#10227; REPLAY</div>
+<div id="replayBar">
+  <button id="replayBack">-5s</button>
+  <button id="replayPlay">&#9654;</button>
+  <input type="range" id="replayScrub" min="0" max="0" value="0">
+  <span id="replayTime"></span>
+  <button id="replayUp">UP</button>
+  <button id="replayDn">DN</button>
+  <button id="replayExit">EXIT</button>
+</div>
 <script src="three.min.js"></script>
 <script>
 'use strict';
@@ -2442,6 +2472,7 @@ function toggleNight(){
   applyDayNight();
   if(G.night){ toast('NIGHT FALLS','bad'); blip(200,100,0.8,0.12,'sine'); }
   else { toast('DAYBREAK','good'); blip(400,800,0.6,0.12,'sine'); }
+  queueSave();
 }
 
 // Heist state machine
@@ -3191,6 +3222,7 @@ $('radioBtn').addEventListener('mousedown',cycleRadio);
 let lookTouch=null, lookLX=0, lookLY=0;
 let camYawOff=0, camPitch=0, lookHoldT=0; // camYawOff orbits car/heli cam; foot mode writes footCamYaw
 function applyLook(dx,dy){
+  if(G.replay&&replay){ replay.cam.yaw-=dx*0.0048; replay.cam.pitch=clamp(replay.cam.pitch-dy*0.005,-1.2,1.2); return; }
   const yaw=-dx*0.0048, pit=dy*0.006;
   if(G.mode==='foot'){
     footCamYaw+=yaw;
@@ -3201,7 +3233,7 @@ function applyLook(dx,dy){
   }
   lookHoldT=1.2; // keep the auto-follow from fighting your thumb
 }
-const lookSkip=el=>el&&el.closest&&el.closest('.tbtn,#fsBtn,#radioBtn,button,.hudBox,#minimap,#storyCard,#start');
+const lookSkip=el=>el&&el.closest&&el.closest('.tbtn,#fsBtn,#radioBtn,button,.hudBox,#minimap,#storyCard,#start,#replayBar,#btnReplay');
 document.addEventListener('touchstart',e=>{
   for(const t of e.changedTouches){
     if(t.clientX<window.innerWidth*0.45 && t.clientY>window.innerHeight*0.35 && joyTouch===null && G.started && !G.over){
@@ -3245,6 +3277,12 @@ document.addEventListener('mouseup',()=>{ if(mouseJoy){ mouseJoy=false; joyEnd()
 const keys={};
 document.addEventListener('keydown',e=>{
   keys[e.code]=true;
+  if(G.replay){
+    if(e.code==='KeyR'||e.code==='Escape') exitReplay();
+    else if(e.code==='Space'){ e.preventDefault(); toggleReplayPlay(); }
+    return;
+  }
+  if(e.code==='KeyR'){ enterReplay(); return; }
   if(activeCutscene&&(e.code==='Enter'||e.code==='Space'||e.code==='Escape')){ skipCutscene(); return; }
   if(e.code==='KeyE') doEnterExit();
   if(G.intro&&(e.code==='Enter'||e.code==='Space')) endIntro();
@@ -3771,6 +3809,7 @@ function toast(msg,cls){
 function addMoney(n,label){
   G.money+=n; $('money').textContent='$'+G.money;
   if(label) toast(label+' +$'+n,'good');
+  queueSave();
 }
 function updateStarsHUD(){
   let html='';
@@ -3786,6 +3825,7 @@ function cycleRadio(){
   if(musicGain) musicGain.gain.value=st?0.5:0;
   musicStep=0;
   if(AC) nextNoteTime=AC.currentTime+0.1;
+  queueSave();
 }
 
 // ================= MISSIONS =================
@@ -4298,6 +4338,13 @@ function loop(){
     return;
   }
 
+  // Replay mode: frozen gameplay, scrub the ring buffer, free-fly camera
+  if(G.replay){
+    updateReplay(dt);
+    renderer.render(scene,camera);
+    return;
+  }
+
   if(G.started&&!G.paused){
     scheduleMusic();
     if(!G.over){
@@ -4345,6 +4392,7 @@ function loop(){
           c.type.toUpperCase(),G.carHP,G.boost);
       }
       checkPizzaJack();
+      recTick(dt);
     }
     updateParticles(dt);
     updatePickupVisuals(now/1000);
@@ -4402,7 +4450,11 @@ loop();
     if(pct<100) setTimeout(tick,rand(80,180));
     else{
       $('loadScreen').classList.add('off');
-      setTimeout(()=>{ $('loadScreen').style.display='none'; $('startBtn').style.display='block'; },800);
+      setTimeout(()=>{
+        $('loadScreen').style.display='none';
+        if(loadSave()&&!QS.skipintro){ $('continueBtn').style.display='block'; $('newGameBtn').style.display='block'; }
+        else $('startBtn').style.display='block';
+      },800);
     }
   };
   setTimeout(tick,300);
@@ -4472,6 +4524,7 @@ function skipToGameplay(){
   $('loadScreen').style.display='none';
   $('start').style.display='none';
   $('hud').style.display='block';
+  $('btnReplay').style.display='block';
   footCamYaw=player.heading;
   camPos.set(player.x-Math.sin(player.heading)*6.5,player.y+3.2,player.z-Math.cos(player.heading)*6.5);
   updateStarsHUD(); refreshButtons();
@@ -4484,6 +4537,7 @@ function endIntro(){
   G.intro=false;
   ['cineTop','cineBot','introLogo','skipIntro'].forEach(id=>$(id).style.display='none');
   $('hud').style.display='block';
+  $('btnReplay').style.display='block';
   // hand the camera to the normal follow logic without a jump
   footCamYaw=player.heading;
   camPos.set(player.x-Math.sin(player.heading)*6.5,player.y+3.2,player.z-Math.cos(player.heading)*6.5);
@@ -4585,7 +4639,8 @@ function updateStory(dt){
   }
   if(!G.story.metDeb){
     if(d<3&&G.mode==='foot'&&!activeCutscene){ 
-      G.story.metDeb=true; 
+      G.story.metDeb=true;
+      queueSave();
       playCutscene('deb_confrontation', deb.x, deb.z);
     }
     return;
@@ -4597,6 +4652,7 @@ function updateStory(dt){
       if(deb.lineIdx===DEB_LINES.length){
         G.story.debt=800;
         $('debtHud').style.display='block'; $('debtNum').textContent='$800';
+        queueSave();
         setTimeout(()=>toast('Earn $800: stick up people or rob stores','gold'),3000);
         setTimeout(()=>toast('Stick-up: pull the PISTOL on someone up close','gold'),6400);
       }
@@ -4607,6 +4663,7 @@ function updateStory(dt){
     G.money-=G.story.debt; $('money').textContent='$'+G.money;
     G.story.debt=0; G.story.paidOff=true;
     $('debtHud').style.display='none';
+    queueSave();
     sfx.coin();
     if(debBeacon){ scene.remove(debBeacon); debBeacon=null; }
     // Cinematic payoff sequence
@@ -4861,6 +4918,7 @@ function endCutscene(){
   hideDialogue();
   // Restore UI
   $('hud').style.display='block';
+  $('btnReplay').style.display='block';
   $('cineTop').style.display='none';
   $('cineBot').style.display='none';
   $('cineVignette').style.display='none';
@@ -5260,8 +5318,154 @@ showDialogue=function(speaker,text,duration){
 })();
 // ================= END DEV TOOLS =================
 
+// ================= REPLAY SYSTEM =================
+// ring buffer of the last REC_DUR seconds; replay freezes the sim and frees the camera
+const REC_DUR=30, REC_HZ=15, REC_MAX=REC_DUR*REC_HZ;
+const recBuf=[]; let recTimer=0, replay=null;
+const REC_ARRS=()=>[cars,peds,cops,helis,gangMembers,jocks,chaosDrivers];
+function recTick(dt){
+  recTimer-=dt; if(recTimer>0) return; recTimer=1/REC_HZ;
+  const s={p:[player.x,player.y,player.z,player.heading,G.mode,player.mesh.visible],e:[]};
+  REC_ARRS().forEach(arr=>{ for(const o of arr){ if(o.mesh) s.e.push([o,o.x,o.y||0,o.z,o.heading||0]); } });
+  recBuf.push(s); if(recBuf.length>REC_MAX) recBuf.shift();
+}
+function applySnap(a,b,f,frameId){
+  const pm=player.mesh;
+  pm.position.set(lerp(a.p[0],b.p[0],f),lerp(a.p[1],b.p[1],f),lerp(a.p[2],b.p[2],f));
+  pm.rotation.y=a.p[3]+angDiff(a.p[3],b.p[3])*f;
+  pm.visible=!!a.p[5];
+  const n=Math.min(a.e.length,b.e.length);
+  for(let i=0;i<n;i++){
+    const ea=a.e[i], eb=b.e[i], o=ea[0];
+    if(o!==eb[0]) continue; // list shifted between frames — skip, hide pass handles it
+    if(!o.mesh.parent){ scene.add(o.mesh); o._ra=true; }
+    if(o._pv===undefined) o._pv=o.mesh.visible;
+    o.mesh.visible=true; o._rf=frameId;
+    o.mesh.position.set(lerp(ea[1],eb[1],f),lerp(ea[2],eb[2],f),lerp(ea[3],eb[3],f));
+    o.mesh.rotation.y=ea[4]+angDiff(ea[4],eb[4])*f;
+  }
+}
+function hideStale(frameId){ // anything replay moved but not in this frame gets hidden
+  REC_ARRS().forEach(arr=>{ for(const o of arr){ if(o.mesh&&o._rf!==undefined&&o._rf!==frameId&&frameId-o._rf<REC_MAX) o.mesh.visible=false; } });
+}
+function enterReplay(){
+  if(G.replay||!G.started||G.over||G.intro||activeCutscene||recBuf.length<REC_HZ){ if(recBuf.length<REC_HZ) toast('REPLAY: nothing recorded yet','bad'); return; }
+  G.replay=true;
+  const d=new THREE.Vector3(); camera.getWorldDirection(d);
+  replay={ pos:recBuf.length-1, playing:false, frame:0,
+    cam:{ x:camera.position.x, y:camera.position.y, z:camera.position.z,
+          yaw:Math.atan2(d.x,d.z), pitch:Math.asin(clamp(d.y,-1,1)), up:0, dn:0 } };
+  ['btns','pedals','mission','heistHUD'].forEach(id=>{ const el=$(id); if(el){ el.dataset.rv=el.style.display; el.style.display='none'; } });
+  $('replayBar').style.display='flex';
+  $('replayScrub').max=recBuf.length-1; $('replayScrub').value=replay.pos;
+  toast('REPLAY — drag right side to look, stick to fly','gold');
+}
+function toggleReplayPlay(){ if(replay){ replay.playing=!replay.playing; $('replayPlay').textContent=replay.playing?'❚❚':'▶'; } }
+function exitReplay(){
+  if(!replay) return;
+  // restore every entity replay touched to its live state
+  REC_ARRS().forEach(arr=>{ for(const o of arr){
+    if(!o.mesh) continue;
+    o.mesh.position.set(o.x,o.y||0,o.z); if(o.heading!==undefined) o.mesh.rotation.y=o.heading;
+    if(o._pv!==undefined){ o.mesh.visible=o._pv; delete o._pv; }
+    if(o._ra){ scene.remove(o.mesh); o._ra=false; }
+    delete o._rf;
+  }});
+  player.mesh.position.set(player.x,player.y,player.z); player.mesh.rotation.y=player.heading;
+  player.mesh.visible=(G.mode==='foot');
+  G.replay=false; replay=null;
+  ['btns','pedals','mission','heistHUD'].forEach(id=>{ const el=$(id); if(el&&el.dataset.rv!==undefined){ el.style.display=el.dataset.rv; delete el.dataset.rv; } });
+  $('replayBar').style.display='none';
+  footCamYaw=player.heading; camPos.set(player.x-Math.sin(player.heading)*6.5,player.y+3.2,player.z-Math.cos(player.heading)*6.5);
+  toast('BACK TO LIVE','gold');
+}
+function updateReplay(dt){
+  const r=replay, c=r.cam;
+  // fly cam: joystick/arrow keys move in the look plane, look-drag orbits
+  let jx=input.jx, jy=input.jy;
+  if(keys['KeyA']||keys['ArrowLeft']) jx=-1; else if(keys['KeyD']||keys['ArrowRight']) jx=1;
+  if(keys['KeyW']||keys['ArrowUp']) jy=-1; else if(keys['KeyS']||keys['ArrowDown']) jy=1;
+  const sp=(keys['ShiftLeft']||keys['ShiftRight'])?46:16;
+  const cp=Math.cos(c.pitch), fx=Math.sin(c.yaw)*cp, fy=Math.sin(c.pitch), fz=Math.cos(c.yaw)*cp;
+  const rx=Math.cos(c.yaw), rz=-Math.sin(c.yaw);
+  c.x+=(-jy*fx+jx*rx)*sp*dt; c.y+=(-jy*fy)*sp*dt; c.z+=(-jy*fz+jx*rz)*sp*dt;
+  if(keys['KeyE']||c.up>0) c.y+=sp*0.7*dt;
+  if(keys['KeyQ']||c.dn>0) c.y-=sp*0.7*dt;
+  c.y=clamp(c.y,0.5,300);
+  camera.position.set(c.x,c.y,c.z);
+  camera.lookAt(c.x+fx,c.y+fy,c.z+fz);
+  // playback
+  if(r.playing){ r.pos+=dt*REC_HZ; if(r.pos>=recBuf.length-1){ r.pos=recBuf.length-1; r.playing=false; $('replayPlay').textContent='▶'; } }
+  const i=clamp(Math.floor(r.pos),0,recBuf.length-2), f=r.pos-i;
+  r.frame++;
+  applySnap(recBuf[i],recBuf[i+1],f,r.frame);
+  hideStale(r.frame);
+  if(document.activeElement!==$('replayScrub')) $('replayScrub').value=r.pos;
+  $('replayTime').textContent=((recBuf.length-1-r.pos)/REC_HZ).toFixed(1)+'s ago';
+}
+// replay bar wiring
+(function initReplayUI(){
+  $('btnReplay').addEventListener('click',enterReplay);
+  $('btnReplay').addEventListener('touchend',e=>{ e.preventDefault(); enterReplay(); });
+  $('replayPlay').addEventListener('click',toggleReplayPlay);
+  $('replayBack').addEventListener('click',()=>{ if(replay) replay.pos=Math.max(0,replay.pos-5*REC_HZ); });
+  $('replayExit').addEventListener('click',exitReplay);
+  $('replayScrub').addEventListener('input',e=>{ if(replay){ replay.pos=+e.target.value; replay.playing=false; $('replayPlay').textContent='▶'; } });
+  const hold=(id,key)=>{ const el=$(id);
+    el.addEventListener('touchstart',e=>{ e.preventDefault(); if(replay) replay.cam[key]=1; },{passive:false});
+    el.addEventListener('touchend',()=>{ if(replay) replay.cam[key]=0; });
+    el.addEventListener('mousedown',()=>{ if(replay) replay.cam[key]=1; });
+    el.addEventListener('mouseup',()=>{ if(replay) replay.cam[key]=0; });
+  };
+  hold('replayUp','up'); hold('replayDn','dn');
+})();
+
+// ================= SAVE SYSTEM =================
+// one versioned JSON blob in localStorage; writes are debounced, never per-frame
+const SAVE_KEY='gtb4.save';
+let saveDirty=false, saveT=null;
+function saveGame(){
+  const blob={ v:1, money:G.money, missionsDone:G.missionsDone, night:!!G.night,
+    station:G.station, coachBeaten:!!G.coachBeaten,
+    story:{ metDeb:G.story.metDeb, debt:G.story.debt, paidOff:G.story.paidOff } };
+  try{ localStorage.setItem(SAVE_KEY,JSON.stringify(blob)); }catch(e){}
+}
+function queueSave(){
+  saveDirty=true;
+  if(saveT) return;
+  saveT=setTimeout(()=>{ saveT=null; if(saveDirty){ saveDirty=false; saveGame(); } },800);
+}
+function loadSave(){
+  try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY)); return (s&&s.v===1)?s:null; }
+  catch(e){ return null; }
+}
+function wipeSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+// land the player straight in gameplay with saved state re-applied
+function restoreSave(s){
+  G.money=s.money||0; $('money').textContent='$'+G.money;
+  G.missionsDone=s.missionsDone||0;
+  G.coachBeaten=!!s.coachBeaten;
+  if(!!s.night!==!!G.night) toggleNight();
+  G.station=s.station||0;
+  const st=STATIONS[G.station];
+  $('radioBtn').classList.toggle('off',!st);
+  if(musicGain) musicGain.gain.value=st?0.5:0;
+  const stry=s.story||{};
+  G.story.metDeb=!!stry.metDeb; G.story.debt=stry.debt||0; G.story.paidOff=!!stry.paidOff;
+  G.story.cardShown=true; // continuing never replays the chapter card
+  if(!G.story.paidOff){
+    spawnDeb();
+    if(G.story.metDeb&&deb) deb.lineIdx=DEB_LINES.length; // skip her intro lecture
+    if(G.story.debt>0){ $('debtHud').style.display='block'; $('debtNum').textContent='$'+G.story.debt; }
+  }
+  toast('SAVE LOADED — $'+G.money,'gold');
+}
+// last-chance flush when the tab is backgrounded/closed (mobile Safari kills fast)
+window.addEventListener('pagehide',()=>{ if(G.started&&!G.over) saveGame(); });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden&&G.started&&!G.over) saveGame(); });
+
 // ================= START / RESIZE =================
-$('startBtn').addEventListener('click',()=>{
+function beginGame(){
   $('start').style.display='none';
   // ask the phone nicely to go fullscreen + lock landscape (fails silently on iOS)
   try{
@@ -5274,7 +5478,27 @@ $('startBtn').addEventListener('click',()=>{
   loadVOFiles();
   if(QS.skipintro){ skipToGameplay(); applySceneJump(); }
   else startIntro();
+}
+$('startBtn').addEventListener('click',beginGame);
+$('continueBtn').addEventListener('click',()=>{
+  const s=loadSave();
+  if(!s){ beginGame(); return; }
+  $('start').style.display='none';
+  try{
+    const el=document.documentElement;
+    if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+    if(screen.orientation&&screen.orientation.lock)
+      screen.orientation.lock('landscape').catch(()=>{});
+  }catch(e){}
+  initAudio();
+  loadVOFiles();
+  skipToGameplay();
+  restoreSave(s);
+  if(QS.skipintro) applySceneJump();
 });
+$('newGameBtn').addEventListener('click',()=>{ wipeSave(); beginGame(); });
+$('continueBtn').addEventListener('touchend',e=>{ e.preventDefault(); $('continueBtn').click(); });
+$('newGameBtn').addEventListener('touchend',e=>{ e.preventDefault(); $('newGameBtn').click(); });
 window.addEventListener('resize',()=>{
   renderer.setSize(window.innerWidth,window.innerHeight);
   camera.aspect=window.innerWidth/window.innerHeight;

@@ -317,7 +317,13 @@ call, stop and ask rather than guessing.
 > `localStorage['gtb4.dev']` flag). None of this should be reachable in a normal
 > session.
 
-#### D1 — Dev menu / cheat console `P0 · Risk: Low`
+#### D1 — Dev menu / cheat console `P0 · Risk: Low` `DONE`
+**Status: implemented & verified** (Kimi3). `?dev=1` gates everything; backtick toggles
+`#devPanel` (see `DEV TOOLS` section). Money/debt, stars/heat, vehicle + heli spawns,
+god mode, infinite boost/ammo (`DEV_STATE.god/inf` already respected in `damageCar`,
+`damageArea`, rocket/boost spend, water death), teleports (Deb/Pizza/corner/random),
+day/night, mission trigger/complete/fail, cutscene shortcuts, wipe save. Panel and
+keybind are inert without `?dev=1`.
 **Why:** Today you can only reach a state by *playing* to it — grind money,
 commit crimes for stars, drive to Deb. That makes every test slow. One hidden
 panel fixes it.
@@ -336,7 +342,11 @@ existing functions — don't duplicate game logic.
 obvious immediate effect; god mode makes you unkillable; without `?dev=1` the
 panel and keybind do nothing. No dev code runs in a normal session.
 
-#### D2 — Fast-boot & scene-jump flags `P0 · Risk: Low`
+#### D2 — Fast-boot & scene-jump flags `P0 · Risk: Low` `DONE`
+**Status: implemented & verified** (Kimi3). `?dev=1` or `?skipintro` skips loader
+wait + intro + story card via `skipToGameplay()`. `?scene=heist|pizzawars|deb`,
+`?mode=car|heli`, `?cutscene=<id>` all handled in `applySceneJump()` (called from
+both the start button and `endIntro()` when skipping). Normal load unchanged.
 **Why:** Sitting through the loader + intro cinematic + story card on **every
 reload** is the biggest single time sink when testing.
 **Where:** boot/`START / RESIZE` flow, intro + story-card gating.
@@ -358,7 +368,26 @@ with a key.
 **Acceptance:** Numbers update live and match reality; toggling off removes it;
 no measurable fps cost.
 
-#### D4 — Free-fly / spectator camera `P1 · Risk: Med`
+#### D4 — Free-fly / spectator camera `P1 · Risk: Med` `DONE (via Replay)`
+**Status: delivered as part of the Replay System** (Kimi3). The replay's fly-cam
+is a full spectator camera: joystick/WASD moves in the look plane, right-side
+drag orbits, `E`/`Q` (or UP/DN touch buttons) for altitude, Shift for speed —
+and it returns cleanly to the normal follow-cam on exit. A standalone
+dev-mode detach toggle can still be added later if wanted, but the capability
+(and the cutscene-shot-composition use case) is covered.
+
+**REPLAY SYSTEM** (player-facing, ships in normal sessions — not dev-gated):
+a `REC_DUR=30s` ring buffer (`recBuf`, 15Hz snapshots of the player + every
+entity in `cars/peds/cops/helis/gangMembers/jocks/chaosDrivers`) is recorded
+once per frame inside the `!G.over` gameplay branch. `enterReplay()` (HUD
+**REPLAY** button / `R` key) freezes the sim via a dedicated `G.replay` branch
+at the top of `loop()`, hands the camera to `updateReplay()`, and plays back
+snapshots lerped between frames. Entities despawned mid-window are temporarily
+re-added to the scene (`_ra` flag) and original mesh visibility is preserved
+(`_pv`) and restored on `exitReplay()`; meshes of live entities snap back to
+their authoritative sim state on exit. UI: `#replayBar` (play/pause, -5s,
+scrub slider, "Ns ago", UP/DN, EXIT). No recording during intro/cutscenes/
+pause; needs ≥1s of buffer to enter.
 **Why:** You can't currently inspect the world, a character model, or frame a
 cutscene from an arbitrary angle.
 **Where:** `CAMERA`; gated dev toggle that suspends normal `updateCamera`.
@@ -409,7 +438,21 @@ across reloads; no seed → unchanged random behaviour.
 
 ### Phase 1 — Foundations (do these first)
 
-#### F1 — Save & restore progress `P0 · Risk: Low`
+#### F1 — Save & restore progress `P0 · Risk: Low` `DONE`
+**Status: implemented & verified** (Kimi3). `SAVE SYSTEM` section (just before
+`START / RESIZE`): versioned blob `{v:1, money, missionsDone, night, station,
+coachBeaten, story:{metDeb,debt,paidOff}}` at `localStorage['gtb4.save']`.
+Writes go through `queueSave()` (800ms debounce) hooked into `addMoney`,
+`toggleNight`, `cycleRadio`, meeting Deb, the $800 debt being set, and paying Deb
+off — plus unconditional `pagehide`/`visibilitychange` flushes so mobile Safari
+backgrounding never loses progress. Boot: loader completion shows **CONTINUE /
+NEW GAME** when a save exists (`#continueBtn`/`#newGameBtn`); CONTINUE calls
+`restoreSave()` — straight into gameplay (no intro/card replay), Deb respawned
+with her intro lecture skipped (`deb.lineIdx=DEB_LINES.length`), debt HUD
+restored; NEW GAME wipes the save and plays the full intro. `G.coachBeaten` is
+already in the blob for **FB3**. Verified headless (Chromium, 800×390): earn →
+reload → Continue restores money/day-night/station/Deb; New Game wipes; absent
+or corrupt save falls back to a fresh game; no writes inside `loop()`.
 **Why:** There is **no persistence** (`localStorage` is used 0 times). Pay Deb
 $800, close the tab, everything's gone. This kills any sense of progression.
 **Where:** new small "SAVE SYSTEM" section; hook into boot (`START / RESIZE`),
@@ -812,10 +855,10 @@ A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
 
 ```
-D1  Dev menu / cheat console  ← makes ALL testing faster; do this first
-D2  Fast-boot & scene-jump     ← stop re-watching the intro every reload
-F1  Save/restore               ← everything else persists through this
-F2  Pause + Settings menu      ← the home for all options
+✔ D1  Dev menu / cheat console   DONE
+✔ D2  Fast-boot & scene-jump     DONE
+✔ F1  Save/restore               DONE
+F2  Pause + Settings menu      ← NEXT: the home for all options
 D3  Debug HUD                  ← cheap, speeds up bug-hunting
 R1  Dispose on removal          ← stop the memory leak early
 F3  Adaptive quality            ← biggest mobile win
