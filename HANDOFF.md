@@ -422,7 +422,14 @@ UI. Ties into the pause menu (F2) later.
 **Acceptance:** Slow-mo visibly slows cars/peds/particles without breaking
 collision; step advances exactly one sim frame; `1×` is identical to today.
 
-#### D6 — Character / model viewer (turntable) `P1 · Risk: Low`
+#### D6 — Character / model viewer (turntable) `P1 · Risk: Low` `DONE`
+**Status: implemented** (Kimi3) as a standalone **`viewer.html`** (dev tool, not linked
+from the game). Loads `three.min.js` + the shared `js/person.js` builder, shows one
+character on a lit turntable with orbit/zoom, live controls for every `PersonSpec`
+field (gender/build/height/skin, hair style/colour/beard, outfit colours +
+dress/shorts/tank), canned poses driving the real rig joints (idle/walk/talk/point/
+armsCrossed), Random NPC / Turbo / Deb presets, and spec JSON export/import. The
+creator's preview surface (C5/C6) should reuse this page.
 **Why:** The **workbench** for finishing character models and building the
 creator — iterate on a model in isolation instead of hunting for one in-game.
 Directly serves the character-model + creator + cutscene goals.

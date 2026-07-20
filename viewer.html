@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>GTB IV — Character Viewer (D6)</title>
+<style>
+  html,body{margin:0;height:100%;background:#0a0a14;color:#dfe6ff;font-family:system-ui,sans-serif;overflow:hidden}
+  #stage{position:fixed;inset:0}
+  #panel{position:fixed;top:0;right:0;bottom:0;width:240px;background:rgba(10,10,22,.88);
+    padding:10px;overflow-y:auto;font-size:12px;border-left:1px solid #2a2a4a}
+  #panel h1{font-size:13px;margin:2px 0 8px;color:#37c8ff}
+  #panel h2{font-size:11px;margin:10px 0 4px;color:#8a94b8;text-transform:uppercase}
+  .row{display:flex;align-items:center;justify-content:space-between;margin:3px 0;gap:6px}
+  .row label{flex:1;color:#aab4d8}
+  select,input[type=color]{background:#16162a;color:#dfe6ff;border:1px solid #2a2a4a;border-radius:4px;font-size:12px}
+  input[type=color]{width:44px;height:22px;padding:0}
+  input[type=range]{width:100px}
+  button{background:#1c2a4a;color:#dfe6ff;border:1px solid #37c8ff55;border-radius:6px;
+    padding:6px 8px;margin:2px;font-size:12px;cursor:pointer}
+  button.on{background:#37c8ff;color:#06121e}
+  .btns{display:flex;flex-wrap:wrap}
+  #specOut{width:100%;height:90px;background:#0e0e1c;color:#8aff6b;border:1px solid #2a2a4a;
+    font:10px monospace;border-radius:4px;white-space:pre}
+  #hint{position:fixed;left:8px;bottom:6px;font-size:11px;color:#5a6488}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="panel">
+  <h1>CHARACTER VIEWER (D6)</h1>
+  <div class="btns">
+    <button id="bRandom">🎲 Random NPC</button>
+    <button id="bTurbo">Turbo</button>
+    <button id="bDeb">Deb</button>
+  </div>
+  <h2>Pose</h2>
+  <div class="btns" id="poses">
+    <button data-p="idle" class="on">Idle</button>
+    <button data-p="walk">Walk</button>
+    <button data-p="talk">Talk</button>
+    <button data-p="point">Point</button>
+    <button data-p="armsCrossed">Arms X</button>
+  </div>
+  <h2>Base</h2>
+  <div class="row"><label>gender</label><select id="gender"><option>guy</option><option>girl</option></select></div>
+  <div class="row"><label>build</label><input type="range" id="build" min="0.8" max="1.3" step="0.01"></div>
+  <div class="row"><label>height</label><input type="range" id="height" min="0.9" max="1.12" step="0.01"></div>
+  <div class="row"><label>skin</label><input type="color" id="skin"></div>
+  <h2>Hair</h2>
+  <div class="row"><label>style</label><select id="hstyle">
+    <option>short</option><option>buzz</option><option>long</option><option>ponytail</option><option>bald</option>
+  </select></div>
+  <div class="row"><label>colour</label><input type="color" id="hcolor"></div>
+  <div class="row"><label>beard</label><input type="checkbox" id="beard"></div>
+  <h2>Outfit</h2>
+  <div class="row"><label>shirt</label><input type="color" id="shirt"></div>
+  <div class="row"><label>pants</label><input type="color" id="pants"></div>
+  <div class="row"><label>shoes</label><input type="color" id="shoes"></div>
+  <div class="row"><label>dress</label><input type="checkbox" id="dress"></div>
+  <div class="row"><label>shorts</label><input type="checkbox" id="shorts"></div>
+  <div class="row"><label>tank top</label><input type="checkbox" id="tank"></div>
+  <h2>Spec JSON</h2>
+  <div class="btns"><button id="bExport">Export</button><button id="bImport">Import</button></div>
+  <textarea id="specOut" spellcheck="false"></textarea>
+</div>
+<div id="hint">drag = orbit · wheel = zoom</div>
+<script src="three.min.js"></script>
+<script src="js/person.js"></script>
+<script>
+// ---- scene: lit turntable echoing the game's mood
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+document.getElementById('stage').appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x0e0e1e);
+scene.fog=new THREE.Fog(0x0e0e1e,8,26);
+const camera=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,0.1,100);
+let camA=0.6,camE=0.18,camR=3.4;
+scene.add(new THREE.AmbientLight(0x8899ff,0.55));
+const key=new THREE.DirectionalLight(0xffe0b0,0.9); key.position.set(2,4,3); scene.add(key);
+const rim=new THREE.DirectionalLight(0xff3ea0,0.35); rim.position.set(-3,2,-2); scene.add(rim);
+// platform
+const plat=new THREE.Mesh(new THREE.CylinderGeometry(1,1.1,0.08,40),
+  new THREE.MeshLambertMaterial({color:0x1c2440}));
+plat.position.y=-0.04; scene.add(plat);
+const ringM=new THREE.Mesh(new THREE.TorusGeometry(1.04,0.012,8,60),
+  new THREE.MeshBasicMaterial({color:0x37c8ff}));
+ringM.rotation.x=Math.PI/2; ringM.position.y=0.005; scene.add(ringM);
+const grid=new THREE.GridHelper(30,60,0x222244,0x141428); grid.position.y=-0.08; scene.add(grid);
+
+// ---- character
+let person=null, spec=null, pose='idle', phase=0, turntable=true;
+const hex=n=>'#'+n.toString(16).padStart(6,'0');
+const unhex=s=>parseInt(s.slice(1),16);
+function rebuild(s){
+  spec=s||spec||randomPersonSpec();
+  if(person){ scene.remove(person); person.traverse(o=>{ if(o.geometry)o.geometry.dispose(); if(o.material)o.material.dispose(); }); }
+  person=makePerson(spec); scene.add(person);
+  syncUI();
+}
+function syncUI(){
+  gender.value=spec.gender; build.value=spec.build; height.value=spec.height;
+  skin.value=hex(spec.skin); hcolor.value=hex(spec.hair.color); beard.checked=!!spec.hair.beard;
+  hstyle.value=['long','ponytail'].includes(spec.hair.style)&&spec.gender==='guy'?'short':spec.hair.style;
+  shirt.value=hex(spec.outfit.shirt.color); pants.value=hex(spec.outfit.pants.color);
+  shoes.value=hex(spec.outfit.shoes.color);
+  dress.checked=!!spec.outfit.dress; shorts.checked=!!spec.outfit.pants.shorts; tank.checked=!!spec.outfit.tank;
+  specOut.value=JSON.stringify(spec,(k,v)=>k==='tex'?null:v);
+}
+function readUI(){
+  spec.gender=gender.value; spec.build=+build.value; spec.height=+height.value;
+  spec.skin=unhex(skin.value); spec.hair.color=unhex(hcolor.value); spec.hair.beard=beard.checked;
+  spec.hair.style=hstyle.value; spec.outfit.shirt.color=unhex(shirt.value);
+  spec.outfit.pants.color=unhex(pants.value); spec.outfit.shoes.color=unhex(shoes.value);
+  spec.outfit.dress=dress.checked; spec.outfit.pants.shorts=shorts.checked; spec.outfit.tank=tank.checked;
+  rebuild(spec);
+}
+document.querySelectorAll('#panel input,#panel select').forEach(el=>{
+  if(el.id!=='specOut') el.addEventListener('input',readUI);
+});
+bRandom.onclick=()=>rebuild(randomPersonSpec());
+bTurbo.onclick=()=>rebuild(randomPersonSpec(0x37c8ff,'guy'));
+bDeb.onclick=()=>rebuild(randomPersonSpec(0xff3ea0,'girl'));
+bExport.onclick=()=>{ specOut.value=JSON.stringify(spec,null,1); specOut.select(); document.execCommand('copy'); };
+bImport.onclick=()=>{ try{ rebuild(JSON.parse(specOut.value)); }catch(e){ alert('bad JSON'); } };
+poses.addEventListener('click',e=>{
+  if(!e.target.dataset.p) return;
+  pose=e.target.dataset.p;
+  document.querySelectorAll('#poses button').forEach(b=>b.classList.toggle('on',b===e.target));
+});
+
+// ---- orbit control
+let drag=false,px=0,py=0;
+renderer.domElement.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;turntable=false;});
+addEventListener('pointerup',()=>drag=false);
+addEventListener('pointermove',e=>{
+  if(!drag) return;
+  camA+=(e.clientX-px)*0.01; camE=Math.max(-0.1,Math.min(1.2,camE+(e.clientY-py)*0.005));
+  px=e.clientX; py=e.clientY;
+});
+renderer.domElement.addEventListener('wheel',e=>{camR=Math.max(1.4,Math.min(8,camR+e.deltaY*0.003));});
+
+// ---- poses drive the same userData joints the game animates
+function applyPose(u,t){
+  u.legL.rotation.x=u.legR.rotation.x=0;
+  u.armL.rotation.x=u.armR.rotation.x=u.armL.rotation.z=u.armR.rotation.z=0;
+  u.head.rotation.x=u.head.rotation.y=u.torso.rotation.y=0;
+  if(pose==='walk'){
+    const s=Math.sin(t*7);
+    u.legL.rotation.x=s*0.7; u.legR.rotation.x=-s*0.7;
+    u.armL.rotation.x=-s*0.55; u.armR.rotation.x=s*0.55;
+    u.torso.rotation.y=s*0.08;
+  } else if(pose==='talk'){
+    u.head.rotation.y=Math.sin(t*1.3)*0.15;
+    u.armR.rotation.x=-0.5+Math.sin(t*4)*0.12;
+    if(u.jaw) u.jaw.position.y=-0.105-Math.abs(Math.sin(t*9))*0.02;
+  } else if(pose==='point'){
+    u.armR.rotation.x=-1.5; u.head.rotation.y=0.1;
+  } else if(pose==='armsCrossed'){
+    u.armL.rotation.x=u.armR.rotation.x=-0.9;
+    u.armL.rotation.z=0.7; u.armR.rotation.z=-0.7;
+  } else { // idle
+    u.armL.rotation.x=Math.sin(t*1.2)*0.04; u.armR.rotation.x=-Math.sin(t*1.2)*0.04;
+    u.torso.rotation.y=Math.sin(t*0.6)*0.03;
+  }
+}
+
+let last=performance.now();
+(function loop(now){
+  requestAnimationFrame(loop);
+  const dt=Math.min(0.05,(now-last)/1000); last=now; phase+=dt;
+  if(turntable) camA+=dt*0.3;
+  if(person){ applyPose(person.userData,phase); person.rotation.y=Math.sin(phase*0.2)*0.0; }
+  camera.position.set(Math.sin(camA)*camR*Math.cos(camE),1+camR*Math.sin(camE),Math.cos(camA)*camR*Math.cos(camE));
+  camera.lookAt(0,0.95,0);
+  renderer.render(scene,camera);
+})(last);
+addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+rebuild(randomPersonSpec(0x37c8ff,'guy'));
+</script>
+</body>
+</html>

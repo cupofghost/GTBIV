@@ -162,7 +162,14 @@ PNG **data URLs** in the save (see C6).
 
 ## 4. Task cards
 
-### C1 — Refactor `makePerson` to a spec object `P0 · Risk: Med`
+### C1 — Refactor `makePerson` to a spec object `P0 · Risk: Med` `DONE`
+**Status: implemented & verified** (Kimi3). `makePerson` + `randomPersonSpec` now live in
+**`js/person.js`** (shared, plain script — still zero-build), loaded by `index.html` and
+`viewer.html`. Builds deterministically from a `PersonSpec` (extended with
+`outfit.tank`); a legacy `makePerson(shirtColor, gender)` shim keeps every old call
+site unchanged. `mesh.userData.spec` round-trips; rig `userData` untouched (plus the
+`jaw`/`mouth` already added for replay). Verified headless: 78-ped crowd spawns with
+specs, no console errors, geometry byte-identical to the old build.
 **Goal:** `makePerson(spec)` builds deterministically from a `PersonSpec`;
 `randomPersonSpec()` reproduces **today's** random NPC look exactly. Every NPC
 spawn becomes `makePerson(randomPersonSpec())` — zero visible change.
