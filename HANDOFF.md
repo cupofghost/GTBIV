@@ -894,3 +894,134 @@ narrative beat this track needs.
 
 Pick the top unclaimed task, read its card, check the acceptance criteria, build
 it small, verify (§9), commit. When in doubt about a design decision, ask.
+
+---
+
+## 11. Trailer Production Notes (session log, 2026-07-19/20)
+
+> Merged in from a separate trailer-production session (agent: Kimi3). That
+> session's in-game capture attempt was ultimately a failure — kept here so
+> the next attempt doesn't repeat the same expensive dead ends.
+
+### 11.1 State at a glance
+
+- **Hosted:** https://cupofghost.github.io/GTBIV/index.html
+- **Repo files needed to run offline:** `index.html` + `three.min.js` only
+  (the hosted version has everything else inlined). Serve over HTTP (e.g.
+  `python3 -m http.server`), don't open as `file://`.
+- **Two trailers exist:**
+  1. `GTB IV - Official Teaser Trailer.mp4` (v1) — concept-art cinematics +
+     Turbo voiceover. **Fast, reliable pipeline (~15 min).**
+  2. `GTB IV - Official In-Game Teaser Trailer.mp4` (v2) — real gameplay
+     capture intercut with concept art. **Extremely expensive pipeline —
+     read §11.4 before ever redoing it.**
+
+### 11.2 Assets produced this session
+
+| Asset | Location | Notes |
+|---|---|---|
+| 13 concept-art cinematic stills (2K PNG) | work backup: `gtb4-trailer/shots/` | sunrise, Turbo face w/ sunglasses, prison, overhead city, football, locker room, silhouette, hotdogs, wheels burnout, chase, drift, title bg, final city |
+| Music bed + SFX (mp3) | `gtb4-trailer/audio/` | `music_bed.mp3` (22s synthwave loop), `burnout.mp3`, `boom.mp3`, `chase_sfx.mp3` |
+| Turbo voiceover (15 mp3s) | user re-uploaded from earlier chat | `intro_01..13` + `promo_01..02`, total ≈ 2:16. Voice lines come from the "Turbo语音故事" chat. |
+| In-game capture frames (JPEG, 960×540 @ 20fps) | `gtb4-trailer/ingame/{shot}/fNNNN.jpg` | sunrise 80f, overhead 210f, street 160f, wheels 48f, chase 280f, driveoff 230f, dusk 140f |
+| Build scripts | `gtb4-trailer/build.py` (v1), `build2.py`, `build3.py` (v2) | full FFmpeg pipelines, reusable |
+| Local copy of the game | `gtb4-trailer/game/` | index.html + three.min.js |
+
+**Important sandbox lesson:** only `/mnt/agents` survives session restarts.
+Everything in `/tmp` was wiped once mid-session, destroying ~35 minutes of
+captures. Write valuable output to persistent storage *as you go*, not at
+the end.
+
+### 11.3 v1 pipeline (concept-art trailer) — RECOMMENDED DEFAULT
+
+1. Generate stills with the image plugin (2K, 16:9). Style anchor:
+   *"synthwave retrowave GTA loading screen art, purple/magenta/orange, no
+   text."*
+2. Motion via FFmpeg `zoompan` (zoom/pan) per segment, pre-cropped to kill
+   the generator watermark: `crop=2048:1072:0:40`, letterbox
+   `pad=1920:1080:0:138:black` (2.39:1).
+3. Audio = voiceover chain (0.35s gaps, starts at 3.0s) + music bed loop at
+   0.22 volume w/ fades + SFX at timestamps, `amix` + `alimiter`.
+4. Title cards with `drawtext` (DejaVu Sans Bold, GTA yellow `0xFFD23E`,
+   black border).
+5. Re-encode final to crf 23 for phone-sized file (~43–49MB at 2:24).
+
+**Gotcha:** `amix` filterchains need `;` between chains — a missing
+semicolon gives "No output pad can be associated" errors.
+
+### 11.4 v2 pipeline (in-game capture) — READ BEFORE RETRYING
+
+#### Why it was brutal
+The sandbox has **no GPU** — the game renders on CPU (SwiftShader or
+llvmpipe via ANGLE). Every 960×540 frame costs 0.2–2s on a good day, and
+certain scene/camera states hang the rasterizer for 60s+ or forever. A full
+capture day involved 5 browser relaunches and one total `/tmp` wipe.
+
+#### What actually worked (the "safe playbook")
+1. **Virtual clock:** override `performance.now` with a controllable `__vt`
+   (`add_init_script`).
+2. **rAF pump (critical):** replace `requestAnimationFrame` so it only
+   stores the callback; step manually with `__pump(50)`. Without this,
+   background rAF frames run with `dt=0` and hang the game loop in car
+   mode. One pump = one deterministic 50ms sim+render step.
+3. **Director hook:** wrap `renderer.render` — apply cinematic camera
+   *right before* render (game re-sets the camera every frame; last write
+   wins), then capture pixels via `gl.readPixels` + base64.
+   **`canvas.toDataURL` is 10–100× slower — never use it.**
+4. **Freeze ambient sim:**
+   `updateTraffic/Cops/Peds/CopHeli/Pizza*/Chaos*/Gang*/Guards/Wanted/Mission/Rockets/Clouds/Gulls = ()=>{}`
+   — traffic collision physics NaN'd and hard-hung the loop otherwise. Hide
+   ambient car/ped meshes.
+5. **Puppet cars:** create with `makeCar(...)` then
+   `cars.splice(cars.indexOf(c),1)` so collision/traffic AI ignores them;
+   animate `mesh.position/rotation` and `mesh.userData.wheels[].rotation.x`
+   manually. Cop lightbar flash: `mesh.userData.lightbar.material.color`.
+6. **Player:** park at (-300,-300), `mesh.visible=false`.
+7. **llvmpipe = Mesa software GL** (`--use-angle=default --enable-gpu`) —
+   ~2× faster than SwiftShader for this game.
+
+#### Camera profiles: safe vs. fatal
+- **Safe (1–2s/frame, no stalls):** camera looking *down* or horizontal —
+  overhead, street flythrough (y=4.5 looking slightly down), front-quarter
+  chase cam (y≈3), skyline-from-water shots. All final footage uses these.
+- **Fatal (60s+ hangs or deadlock):** low grazing camera close to a car
+  (the wheel close-up), camera tilting up near geometry. Never fully
+  diagnosed — likely degenerate clipped triangles. **Don't retry these
+  angles; there is no fix found.**
+- The "slow pan up from the wheel" was faked in the edit instead (digital
+  push-in on captured footage).
+
+#### ffmpeg gotchas discovered
+- `minterpolate` on an `image2` sequence **ignores input timestamps** →
+  output duration = frames/30 regardless of `-framerate 20` or `setpts`.
+  Fix: two-pass — image2 → 20fps intermediate mp4, then
+  `minterpolate=fps=30:mi_mode=blend` (1:1 segments) or
+  `setpts=N*PTS,fps=30 -fps_mode cfr` (stretched segments).
+- This ffmpeg build defaults to `fps_mode passthrough`, so `-r 30` does
+  **not** duplicate frames; use `-fps_mode cfr`.
+- Non-persistent shell kills children on timeout — long encodes must
+  finish within one call or run fully detached (`setsid`/`nohup` + verify
+  moov atom with ffprobe afterward; `-movflags +faststart` requires a final
+  rewrite pass that a kill will corrupt).
+
+### 11.5 Process lessons (user feedback, 2026-07-20)
+
+- **Flag cost early.** ~30 min in, in-game capture was clearly an
+  expedition; the right move was to stop and ask. For open-ended tasks:
+  state approach + rough cost upfront, bail early if spiraling.
+- **The user can message mid-task** — work is checkpointed to persistent
+  storage, so "pause/change direction" never destroys progress. Keep it
+  that way.
+- **Best way to get real gameplay footage: screen-record on the user's
+  phone.** The game runs great on real hardware. User records 30s → agent
+  cuts it into the trailer (titles, VO, music) in ~10 min. This is the
+  preferred path for v3.
+
+### 11.6 Open threads / next steps
+
+- [ ] v3 trailer: user phone capture + existing VO/music/title pipeline.
+- [ ] Optional: 60-second cutdown for sharing.
+- [ ] Optional: merge the clean in-game clips (chase, driveoff, overhead —
+      all saved) into a mostly-cinematic trailer cheaply.
+- [ ] Turbo's sunglasses close-up only exists as concept art — the in-game
+      character model has no face detail; keep using art for those beats.
