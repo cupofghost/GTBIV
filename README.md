@@ -64,6 +64,8 @@ plain relative paths.
 | `HANDOFF.md` | Engineering handoff — architecture, code map, and the prioritised improvement backlog for contributors |
 | `CHARACTERS.md` | Character-model, paint/creator, and cutscene-rendering plan (companion to `HANDOFF.md`) |
 | `STORY_BIBLE.md` | Story & script-writing framework — canon, voice, world, and mission/cutscene templates for narrative work |
+| `CHAPTER1.md`, `FOOTBALL_STRAND.md` | Scripts for the next chapter of missions/cutscenes (store robberies, cop chases, the football side-strand) |
+| `TURBO_LINES.md`, `DEB_LINES.md`, `VOICE_LINES.md`, `VOICE_LINES.csv` | Full voice-line scripts per character, prepped for TTS/voice-casting generation (CSV is the batch-export format) |
 | `three.min.js` | Vendored three.js r128 (see note below) |
 | `manifest.json` | PWA manifest — name, icons, fullscreen/landscape |
 | `icon-512.png`, `apple-touch-icon.png` | App / home-screen icons |
@@ -78,7 +80,29 @@ plain relative paths.
 | `t_stopsign1.mp3` – `t_stopsign9.mp3` | Running a red light catchphrases |
 | `t_cops1.mp3` – `t_cops11.mp3` | Cop-chase catchphrases |
 | `t_car1.mp3` – `t_car6.mp3` | Stealing a car catchphrases |
-| `Turbo Jones Voice MP3s/` | Unused voice-casting auditions (two takes of the intro line) kept for reference — not wired into the game |
+| `Turbo Jones Voice MP3s/` | Unused voice-casting auditions and test renders (intro line, two takes) kept for reference — not wired into the game |
+
+### Recorded dialogue for upcoming content (not wired in yet)
+
+These folders hold professionally recorded Turbo/NPC lines for the
+`CHAPTER1.md` / `FOOTBALL_STRAND.md` scripts (see `TURBO_LINES.md` for which
+lines already have audio). None of it is `fetch()`ed by `index.html` yet —
+it's staged here waiting to be hooked up the same way `vo1-4.mp3`/`t_*.mp3`
+are today.
+
+| Folder | Scene |
+| --- | --- |
+| `intro/` | Extended intro narration/backstory |
+| `promo/` | Trailer/store-listing voiceover |
+| `approach/`, `approach_deb/` | Talking to a pedestrian / to Deb |
+| `punch/`, `run_over/`, `carjack/`, `pizza_jack/` | Punch, run-someone-over, steal-a-car, jack-a-pizza-car barks |
+| `driving_slow/`, `red_light/`, `chased/` | Driving-too-slow, red-light, and cop-chase barks |
+| `robbery/`, `robbery_take/` | Store hold-up and grabbing the cash |
+| `firing/` | Getting fired / job-loss barks |
+| `idle_backstory/`, `idle_debt/` | Idle chatter — backstory and the $800 child-support debt |
+| `paying_deb/` | Paying off Deb |
+| `turbo_bowl_run/`, `turbo_bowl_scoring/`, `turbo_bowl_tackled/` | Football-strand mission barks |
+| `cutscene_coach_defeat/`, `cutscene_coach_rematch/`, `cutscene_danny_apology/`, `cutscene_first_score/`, `cutscene_turbo_bowl_payoff/` | Named cutscene dialogue for the football strand |
 
 ### three.js is vendored, not from a CDN
 
