@@ -222,6 +222,7 @@
     border-radius:12px; padding:6px 10px; }
   #replayBar button { font-size:12px; font-weight:900; color:#fff; background:rgba(40,16,70,.85);
     border:1px solid #ff3ea088; border-radius:8px; padding:6px 10px; font-family:Arial,sans-serif; }
+  #replayBar button.on { background:rgba(20,90,40,.85); border-color:#7dff8a; }
   #replayScrub { width:min(38vw,260px); accent-color:#ff3ea0; }
   #replayTime { color:#9be7ff; font-size:11px; font-family:monospace; min-width:52px; text-align:center; }
   /* ===== DEV MENU (only present when ?dev=1) ===== */
@@ -509,6 +510,9 @@
   <span id="replayTime"></span>
   <button id="replayUp">UP</button>
   <button id="replayDn">DN</button>
+  <button id="replayTalk">TALK</button>
+  <button id="shadesOn">&#128374;&#65039; ON</button>
+  <button id="shadesOff">&#128374;&#65039; OFF</button>
   <button id="replayExit">EXIT</button>
 </div>
 <script src="three.min.js"></script>
@@ -1712,7 +1716,7 @@ function makePerson(shirt,gender){
     }
   }
   g.scale.y=rand(0.94,1.06);
-  g.userData={legL,legR,armL,armR,body,torso:torsoG,head:headG,gender};
+  g.userData={legL,legR,armL,armR,body,torso:torsoG,head:headG,jaw,mouth,gender};
   g.add(makeShadow(0.5));
   return g;
 }
@@ -2240,6 +2244,22 @@ const player={
   heading:0, phase:0, punchT:0, car:null, vy:0, y:0,
 };
 scene.add(player.mesh);
+// Turbo's sunglasses — replay photo-op prop, slides on/off his face
+(function(){
+  const hg=player.mesh.userData.head;
+  const shades=new THREE.Group();
+  const dark=new THREE.MeshBasicMaterial({color:0x0a0a12});
+  [-1,1].forEach(s=>{
+    const lens=new THREE.Mesh(new THREE.BoxGeometry(0.088,0.058,0.02),dark);
+    lens.position.set(s*0.058,0.02,0.146); shades.add(lens);
+    const temple=new THREE.Mesh(new THREE.BoxGeometry(0.012,0.012,0.17),dark);
+    temple.position.set(s*0.115,0.024,0.055); shades.add(temple);
+  });
+  const bridge=new THREE.Mesh(new THREE.BoxGeometry(0.036,0.014,0.016),dark);
+  bridge.position.set(0,0.03,0.148); shades.add(bridge);
+  shades.visible=false; hg.add(shades);
+  player.mesh.userData.shades=shades;
+})();
 makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
 
 
@@ -5409,7 +5429,7 @@ function enterReplay(){
   if(G.replay||!G.started||G.over||G.intro||activeCutscene||recBuf.length<REC_HZ){ if(recBuf.length<REC_HZ) toast('REPLAY: nothing recorded yet','bad'); return; }
   G.replay=true;
   const d=new THREE.Vector3(); camera.getWorldDirection(d);
-  replay={ pos:recBuf.length-1, playing:false, frame:0,
+  replay={ pos:recBuf.length-1, playing:false, frame:0, talk:false, talkT:0, shadesAnim:null,
     cam:{ x:camera.position.x, y:camera.position.y, z:camera.position.z,
           yaw:Math.atan2(d.x,d.z), pitch:Math.asin(clamp(d.y,-1,1)), up:0, dn:0 } };
   ['btns','pedals','mission','heistHUD','pauseBtn'].forEach(id=>{ const el=$(id); if(el){ el.dataset.rv=el.style.display; el.style.display='none'; } });
@@ -5431,6 +5451,8 @@ function exitReplay(){
   player.mesh.position.set(player.x,player.y,player.z); player.mesh.rotation.y=player.heading;
   player.mesh.visible=(G.mode==='foot');
   G.replay=false; replay=null;
+  const u=player.mesh.userData; // jaw back to neutral (shades stay however you left them)
+  if(u.jaw){ u.jaw.position.y=-0.105; u.jaw.scale.y=0.62; u.mouth.scale.set(1,1,1); }
   ['btns','pedals','mission','heistHUD','pauseBtn'].forEach(id=>{ const el=$(id); if(el&&el.dataset.rv!==undefined){ el.style.display=el.dataset.rv; delete el.dataset.rv; } });
   $('replayBar').style.display='none';
   footCamYaw=player.heading; camPos.set(player.x-Math.sin(player.heading)*6.5,player.y+3.2,player.z-Math.cos(player.heading)*6.5);
@@ -5444,7 +5466,7 @@ function updateReplay(dt){
   if(keys['KeyW']||keys['ArrowUp']) jy=-1; else if(keys['KeyS']||keys['ArrowDown']) jy=1;
   const sp=(keys['ShiftLeft']||keys['ShiftRight'])?46:16;
   const cp=Math.cos(c.pitch), fx=Math.sin(c.yaw)*cp, fy=Math.sin(c.pitch), fz=Math.cos(c.yaw)*cp;
-  const rx=Math.cos(c.yaw), rz=-Math.sin(c.yaw);
+  const rx=-Math.cos(c.yaw), rz=Math.sin(c.yaw); // screen-right for a +Z-convention camera
   c.x+=(-jy*fx+jx*rx)*sp*dt; c.y+=(-jy*fy)*sp*dt; c.z+=(-jy*fz+jx*rz)*sp*dt;
   if(keys['KeyE']||c.up>0) c.y+=sp*0.7*dt;
   if(keys['KeyQ']||c.dn>0) c.y-=sp*0.7*dt;
@@ -5459,6 +5481,21 @@ function updateReplay(dt){
   hideStale(r.frame);
   if(document.activeElement!==$('replayScrub')) $('replayScrub').value=r.pos;
   $('replayTime').textContent=((recBuf.length-1-r.pos)/REC_HZ).toFixed(1)+'s ago';
+  // Turbo photo-op anims: flapping jaw + sliding shades
+  const u=player.mesh.userData;
+  if(r.talk){
+    r.talkT+=dt; const o=Math.abs(Math.sin(r.talkT*11));
+    u.jaw.position.y=-0.105-o*0.028; u.jaw.scale.y=0.62+o*0.3;
+    u.mouth.scale.set(1+o*0.3,1+o*2.4,1);
+  } else if(u.jaw.position.y!==-0.105){
+    u.jaw.position.y=-0.105; u.jaw.scale.y=0.62; u.mouth.scale.set(1,1,1);
+  }
+  if(r.shadesAnim){
+    const a=r.shadesAnim; a.t+=dt*3.4; const k=clamp(a.t,0,1), e=k*k*(3-2*k);
+    u.shades.visible=true;
+    u.shades.position.y=a.dir>0?lerp(0.4,0,e):lerp(0,0.4,e);
+    if(k>=1){ if(a.dir<0) u.shades.visible=false; r.shadesAnim=null; }
+  }
 }
 // replay bar wiring
 (function initReplayUI(){
@@ -5475,6 +5512,9 @@ function updateReplay(dt){
     el.addEventListener('mouseup',()=>{ if(replay) replay.cam[key]=0; });
   };
   hold('replayUp','up'); hold('replayDn','dn');
+  $('replayTalk').addEventListener('click',()=>{ if(replay){ replay.talk=!replay.talk; $('replayTalk').classList.toggle('on',replay.talk); } });
+  $('shadesOn').addEventListener('click',()=>{ if(replay&&!replay.shadesAnim) replay.shadesAnim={t:0,dir:1}; });
+  $('shadesOff').addEventListener('click',()=>{ if(replay&&!replay.shadesAnim) replay.shadesAnim={t:0,dir:-1}; });
 })();
 
 // ================= PAUSE MENU & SETTINGS =================

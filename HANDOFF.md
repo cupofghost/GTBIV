@@ -393,8 +393,15 @@ snapshots lerped between frames. Entities despawned mid-window are temporarily
 re-added to the scene (`_ra` flag) and original mesh visibility is preserved
 (`_pv`) and restored on `exitReplay()`; meshes of live entities snap back to
 their authoritative sim state on exit. UI: `#replayBar` (play/pause, -5s,
-scrub slider, "Ns ago", UP/DN, EXIT). No recording during intro/cutscenes/
-pause; needs ≥1s of buffer to enter.
+scrub slider, "Ns ago", UP/DN, EXIT) plus **Turbo photo-op controls**: `TALK`
+toggles a jaw-flap animation (`userData.jaw`/`mouth`, exposed on the
+`makePerson` rig), `🕶 ON/OFF` slides a sunglasses prop on/off his face (built
+onto Turbo's `headG` at boot, `userData.shades`, player-only; state survives
+exiting replay, jaw always resets to neutral). No recording during
+intro/cutscenes/pause; needs ≥1s of buffer to enter.
+**Camera note:** the fly-cam right vector is `(-cos yaw, 0, sin yaw)` —
+screen-right for this codebase's `dir=(sin h,0,cos h)` +Z convention. Don't
+"fix" it back; the naive `(cos, 0, -sin)` form inverts A/D.
 **Why:** You can't currently inspect the world, a character model, or frame a
 cutscene from an arbitrary angle.
 **Where:** `CAMERA`; gated dev toggle that suspends normal `updateCamera`.
