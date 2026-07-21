@@ -1851,7 +1851,7 @@ function doPizzaJack(){
     if(d<3.5&&car.pizzaState==='delivering'&&car.pizzaDest){
       // Steal the car and the delivery
       G.mode='car'; player.car=car; car.parked=false; car.driver='player';
-      turboSay('car');
+      turboSay('pizza_jack');
       player.mesh.visible=false;
       activeDelivery={dest:car.pizzaDest,timer:50,originalCar:car};
       car.pizzaState='jacked';
@@ -1862,6 +1862,15 @@ function doPizzaJack(){
       refreshButtons();
       toast('PIZZA DELIVERY — GO!','gold');
       sfx.mission();
+      // CHAPTER1.md §7 — pizza-heat counter feeds the pizza_warning cutscene
+      // (checked in updateStory) and Donna's ambient taunt/escalation barks.
+      G.story.pizzaHeat++; queueSave();
+      if(!G.story.pizzaWarned){
+        if(G.story.pizzaHeat>=2) toast(pick(DONNA_TAUNT_LINES),'bad');
+      } else if(!G.story.pizzaRepeatWarned&&G.story.pizzaHeat>=6){
+        G.story.pizzaRepeatWarned=true; queueSave();
+        toast(pick(DONNA_REPEAT_LINES),'bad');
+      }
       return;
     }
   }
@@ -3348,7 +3357,18 @@ function pz0(){ if(G.mode==='car'&&player.car) return player.car.z; if(G.mode===
 function addHeat(n){
   G.heat=clamp(G.heat+n,0,100);
   const s=G.heat<=0?0:G.heat<25?1:G.heat<45?2:G.heat<65?3:G.heat<85?4:5;
-  if(s>G.stars) toast(s+' STAR'+(s>1?'S':'')+'!','bad');
+  if(s>G.stars){
+    // CHAPTER1.md §7 — Hardcastle cuts into the chatter the first time a
+    // session hits 3 stars, then it's the plain star toast from then on.
+    if(s>=3&&!G.story.hardcastleShown){
+      G.story.hardcastleShown=true; queueSave();
+      const line=pick(HARDCASTLE_LINES);
+      toast(line,'bad');
+      speak(line,'male',{pitch:0.6,rate:0.86,volume:0.85});
+    } else {
+      toast(s+' STAR'+(s>1?'S':'')+'!','bad');
+    }
+  }
   G.stars=s;
   updateStarsHUD();
 }
@@ -4607,13 +4627,46 @@ $('skipIntro').addEventListener('click',endIntro);
 $('skipIntro').addEventListener('touchend',e=>{ e.preventDefault(); endIntro(); });
 
 // ================= STORY: TURBO JONES, CHAPTER 1 =================
-G.story={cardShown:false,metDeb:false,debt:0,paidOff:false};
+G.story={cardShown:false,metDeb:false,debt:0,paidOff:false,
+  pizzaHeat:0,pizzaWarned:false,pizzaRepeatWarned:false,firstScoreShown:false,hardcastleShown:false};
 let deb=null, debBeacon=null;
 const DEB_LINES=[
   'Turbo. We need to talk.',
   'You owe me $800 in child support.',
   'Pay me, or you go BACK to jail. Have fun, Turbo.',
 ];
+// Chapter 1 supporting-cast bark packs (CHAPTER1.md §8) — text-only for now,
+// spoken through the synth voice like any other unrecorded character.
+const HARDCASTLE_LINES=[
+  "Another night in San Chaos. Another Jones.",
+  "I've seen a hundred guys like him. I've caught none of them.",
+  "Dispatch, this is Hardcastle. Tell my captain I said... nothing. Tell him nothing.",
+  "Somewhere, a donut is getting cold. It'll have to wait.",
+  "The city doesn't forgive. Neither do I. Probably.",
+  "I used to believe in the system. Now I believe in overtime pay.",
+  "They call him Turbo. I call him Tuesday's problem.",
+  "My captain says let it go. My captain's never lost a jukebox to a guy in a stolen sedan.",
+  "Every siren in this city sings the same sad song. I just hum along.",
+];
+const DONNA_TAUNT_LINES=[
+  "You have odd taste in delivery vehicles, Turbo.",
+  "Return my scooter. I will not ask a third time.",
+  "Every crust has its limit.",
+  "This isn't a rivalry. It's quality control.",
+  "I hope you like the taste of consequences.",
+  "A man who steals pizza cars has never truly tasted pizza.",
+  "I built this fleet from a single scooter and a grudge. Don't test me.",
+  "You are not a customer. You are a supply-chain issue.",
+  "Even my dough has more backbone than your excuses.",
+  "I've buried men for less than a stolen breadstick.",
+];
+const DONNA_REPEAT_LINES=[
+  "I warned you once. Warnings are a courtesy. I'm out of courtesy.",
+  "You're not on my menu anymore, Turbo. You're the special.",
+  "Somebody bring me a box. A big one.",
+  "Last time was a conversation. This time is a delivery — of a different kind.",
+];
+let debtGrumbleT=rand(30,50); // ambient idle bark while the debt is unpaid
 function makePillar(color,r,h){
   const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,10,1,true),
     new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.32,side:THREE.DoubleSide,depthWrite:false}));
@@ -4696,6 +4749,21 @@ function updateStory(dt){
       }
     }
     return;
+  }
+  // CHAPTER1.md §7 engineering flags — chapter-1 pressure beats while the
+  // debt is still owed. Cheap, once-per-frame checks; each fires at most once.
+  if(G.story.debt>0&&!activeCutscene){
+    if(!G.story.firstScoreShown&&G.money>=200){
+      G.story.firstScoreShown=true; queueSave();
+      playCutscene('first_score', player.x, player.z);
+    } else if(G.story.pizzaHeat>=3&&!G.story.pizzaWarned&&CHAOS.exterior&&
+        Math.hypot(player.x-CHAOS.x,player.z-CHAOS.z)<60){
+      G.story.pizzaWarned=true; queueSave();
+      playCutscene('pizza_warning', player.x, player.z);
+    } else {
+      debtGrumbleT-=dt;
+      if(debtGrumbleT<=0){ turboSay('debt_grumble'); debtGrumbleT=rand(30,50); }
+    }
   }
   if(G.story.debt>0&&d<3&&G.mode==='foot'&&G.money>=G.story.debt&&!activeCutscene){
     G.money-=G.story.debt; $('money').textContent='$'+G.money;
@@ -4840,6 +4908,33 @@ const CUTSCENES={
       { duration:3.8, pos:[5,2.2,5], lookAt:[0,1,0], fov:56,
         dialogue:{speaker:'DEB',text:'Later, Turbo.'}, transition:'smooth' },
       { duration:2.5, pos:[0,3,12], lookAt:[0,0.8,0], fov:62, dialogue:null, transition:'fade' }
+    ]
+  },
+  // CHAPTER1.md §6 — fires once cumulative Chapter-1 earnings cross ~$200
+  first_score:{
+    onStart(){ sfx.coin(); setTimeout(()=>blip(300,340,0.12,0.08,'sine'),2200); },
+    shots:[
+      { duration:2.2, pos:[2.2,1.6,2.6], lookAt:[0,1.3,0], fov:42,
+        dialogue:{speaker:'TURBO',text:'Two hundred down. Six hundred to go. Piece of cake.'}, transition:'smooth' },
+      { duration:2.6, pos:[1.1,1.55,1.3], lookAt:[0,1.55,0], fov:30,
+        dialogue:{speaker:'TURBO',text:"...I'll call her back. After the cake."}, transition:'cut' },
+      { duration:1.6, pos:[0,3,9], lookAt:[0,1,0], fov:58, dialogue:null, transition:'fade' }
+    ]
+  },
+  // CHAPTER1.md §6 — Chapter 1's complication: fires once the pizza-heat
+  // counter crosses its threshold near Chaos Pizza turf (see updateStory)
+  pizza_warning:{
+    onStart(){ blip(180,90,0.4,0.2,'sawtooth'); },
+    shots:[
+      { duration:2.4, pos:[3,1.7,3.4], lookAt:[0,1.3,0], fov:50, dialogue:null, transition:'smooth' },
+      { duration:3.6, pos:[0.9,1.5,1.4], lookAt:[0,1.5,0], fov:34,
+        dialogue:{speaker:'DONNA (PHONE)',text:"You've been sampling my delivery fleet, Turbo."}, transition:'cut', shake:0.12 },
+      { duration:3.4, pos:[-2.2,1.6,2.6], lookAt:[0,1.35,0], fov:40,
+        dialogue:{speaker:'TURBO',text:"Delivery fleet? I thought those were just... cars. With pizza smell."}, transition:'smooth' },
+      { duration:4.0, pos:[0.9,1.5,1.4], lookAt:[0,1.5,0], fov:34,
+        dialogue:{speaker:'DONNA (PHONE)',text:"That's a violation of the family recipe. Next slice you steal, I take something back. Something you'll miss more than a pizza."}, transition:'cut', shake:0.18 },
+      { duration:2.2, pos:[0,3,8], lookAt:[0,1,0], fov:58,
+        dialogue:{speaker:'TURBO',text:'Noted. Extra menace, hold the anchovies.'}, transition:'fade' }
     ]
   }
 };
@@ -5272,6 +5367,26 @@ const TURBO_LINES={
     {src:null, text:"The heist is on. Sneak in, crack the safe, and vanish before the alarm screams."},
     {src:null, text:"Nice and quiet... until it isn't."},
   ],
+  // jacking a marked pizza delivery car specifically (CHAPTER1.md §8)
+  pizza_jack:[
+    {src:null, text:"Extra hot, extra stolen."},
+    {src:null, text:"Thirty minutes or it's free. Actually, it's already free."},
+    {src:null, text:"Do I look like a delivery boy? Don't answer that."},
+    {src:null, text:"Special delivery: nothing, to nowhere, on your dime."},
+    {src:null, text:"This one's for the tip jar. My tip jar. Which is my pocket."},
+    {src:null, text:"Objection! I'm allergic to paying for pizza."},
+    {src:null, text:"Fresh outta the oven and outta your parking lot."},
+  ],
+  // rare ambient mutter while the $800 is still unpaid (CHAPTER1.md §8)
+  debt_grumble:[
+    {src:null, text:"Eight hundred bucks. That's a lot of quarters."},
+    {src:null, text:"Note to self: don't marry someone smarter than you."},
+    {src:null, text:"Deb's clock is louder than my conscience, and that's saying something."},
+    {src:null, text:"If I had a dollar for every dollar I owe, I wouldn't owe it."},
+    {src:null, text:"Tonight. She said tonight. Very specific woman, my ex."},
+    {src:null, text:"Somewhere out there, a kid thinks I'm cooler than this. Gotta keep that going."},
+    {src:null, text:"$800. Not $799. She counted."},
+  ],
 };
 let turboCool=0;
 // pacing for the ambient (non-event) quips so they don't spam
@@ -5336,12 +5451,13 @@ showDialogue=function(speaker,text,duration){
   // Cheats
   row('CHEATS', tog('God Mode','god'), tog('Infinite Boost/Ammo','inf'));
   // Teleport
-  row('TELEPORT', btn('Deb','devAct',()=>teleport(deb?deb.x:0,deb?deb.z:0)), btn('Pizza','devAct',()=>teleport(PIZZA.doorX,PIZZA.doorZ)), btn('Corner','devAct',()=>teleport(WORLD.half,WORLD.half)), btn('Random','devAct',()=>{const p=randomRoadPoint(); teleport(p.x,p.z);}));
+  row('TELEPORT', btn('Deb','devAct',()=>teleport(deb?deb.x:0,deb?deb.z:0)), btn('Pizza','devAct',()=>teleport(PIZZA.doorX,PIZZA.doorZ)), btn('Chaos','devAct',()=>teleport(CHAOS.x,CHAOS.z)), btn('Corner','devAct',()=>teleport(WORLD.half,WORLD.half)), btn('Random','devAct',()=>{const p=randomRoadPoint(); teleport(p.x,p.z);}));
   // Time
   row('TIME', btn('Day','devAct',()=>{if(G.night)toggleNight();}), btn('Night','devAct',()=>{if(!G.night)toggleNight();}));
   // Mission / cutscene
   row('MISSION', btn('Trigger','devAct',()=>{ if(!mission){ missionCooldown=0; lastType=''; } }), btn('Complete','devAct',()=>{ if(mission) completeMission(500); }), btn('Fail','devBad',()=>{ if(mission) failMission(); }));
   row('CUTSCENE', btn('Deb Confront','devAct',()=>playCutscene('deb_confrontation',player.x,player.z)), btn('Deb Payoff','devAct',()=>playCutscene('deb_payoff',player.x,player.z)), btn('Pizza Wars','devAct',()=>startPizzaWars()));
+  row('CH1 STORY', btn('First Score','devAct',()=>playCutscene('first_score',player.x,player.z)), btn('Pizza Warning','devAct',()=>playCutscene('pizza_warning',player.x,player.z)), btn('+3 Pizza Heat','devAct',()=>{ G.story.pizzaHeat+=3; toast('pizzaHeat='+G.story.pizzaHeat,'gold'); }), btn('Reset Ch1 Flags','devBad',()=>{ Object.assign(G.story,{pizzaHeat:0,pizzaWarned:false,pizzaRepeatWarned:false,firstScoreShown:false,hardcastleShown:false}); toast('CH1 FLAGS RESET','bad'); }));
   row('SAVE', btn('Wipe Save','devBad',()=>{ localStorage.removeItem('gtb4.save'); toast('SAVE WIPED','bad'); }));
   row('', btn('Close','',()=>toggleDevMenu()));
 
@@ -5554,7 +5670,10 @@ let saveDirty=false, saveT=null;
 function saveGame(){
   const blob={ v:1, money:G.money, missionsDone:G.missionsDone, night:!!G.night,
     station:G.station, coachBeaten:!!G.coachBeaten,
-    story:{ metDeb:G.story.metDeb, debt:G.story.debt, paidOff:G.story.paidOff } };
+    story:{ metDeb:G.story.metDeb, debt:G.story.debt, paidOff:G.story.paidOff,
+      pizzaHeat:G.story.pizzaHeat, pizzaWarned:G.story.pizzaWarned,
+      pizzaRepeatWarned:G.story.pizzaRepeatWarned, firstScoreShown:G.story.firstScoreShown,
+      hardcastleShown:G.story.hardcastleShown } };
   try{ localStorage.setItem(SAVE_KEY,JSON.stringify(blob)); }catch(e){}
 }
 function queueSave(){
@@ -5579,6 +5698,9 @@ function restoreSave(s){
   if(musicGain) musicGain.gain.value=st?musicVolVal():0;
   const stry=s.story||{};
   G.story.metDeb=!!stry.metDeb; G.story.debt=stry.debt||0; G.story.paidOff=!!stry.paidOff;
+  G.story.pizzaHeat=stry.pizzaHeat||0; G.story.pizzaWarned=!!stry.pizzaWarned;
+  G.story.pizzaRepeatWarned=!!stry.pizzaRepeatWarned; G.story.firstScoreShown=!!stry.firstScoreShown;
+  G.story.hardcastleShown=!!stry.hardcastleShown;
   G.story.cardShown=true; // continuing never replays the chapter card
   if(!G.story.paidOff){
     spawnDeb();

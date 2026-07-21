@@ -114,6 +114,36 @@
 5. "This is a citizen's requisition."
 6. "Ooh, leather seats!"
 
+### Jacking a Chaos Pizza vehicle specifically
+*Wired: `TURBO_LINES.pizza_jack`, replaces the generic jack line when the jacked car is a marked pizza delivery car (`doPizzaJack`).*
+1. "Extra hot, extra stolen."
+2. "Thirty minutes or it's free. Actually, it's already free."
+3. "Do I look like a delivery boy? Don't answer that."
+4. "Special delivery: nothing, to nowhere, on your dime."
+5. "This one's for the tip jar. My tip jar. Which is my pocket."
+6. "Objection! I'm allergic to paying for pizza."
+7. "Fresh outta the oven and outta your parking lot."
+
+### Idle — the debt weighing on him
+*Wired: `TURBO_LINES.debt_grumble`, rare ambient bark (~30–50s cooldown) while `G.story.debt>0` (`updateStory`).*
+1. "Eight hundred bucks. That's a lot of quarters."
+2. "Note to self: don't marry someone smarter than you."
+3. "Deb's clock is louder than my conscience, and that's saying something."
+4. "If I had a dollar for every dollar I owe, I wouldn't owe it."
+5. "Tonight. She said tonight. Very specific woman, my ex."
+6. "Somewhere out there, a kid thinks I'm cooler than this. Gotta keep that going."
+7. "$800. Not $799. She counted."
+
+### Cutscene: `first_score`
+*Wired: `CUTSCENES.first_score`, fires once when Chapter-1 earnings cross $200 (`updateStory`).*
+1. "Two hundred down. Six hundred to go. Piece of cake."
+2. "...I'll call her back. After the cake."
+
+### Cutscene: `pizza_warning`
+*Wired: `CUTSCENES.pizza_warning`, fires once `G.story.pizzaHeat` crosses 3 near Chaos Pizza HQ, guarded off if the HQ's already been destroyed via Pizza Wars (`updateStory`).*
+1. "Delivery fleet? I thought those were just... cars. With pizza smell."
+2. "Noted. Extra menace, hold the anchovies."
+
 ---
 
 ## New lines — Chapter 1 (`CHAPTER1.md`)
@@ -136,24 +166,6 @@
 4. "One store down. San Chaos has, what, a hundred more?"
 5. "Cha-ching. Minus the ching. It's all quiet, actually."
 
-### Idle — the debt weighing on him
-1. "Eight hundred bucks. That's a lot of quarters."
-2. "Note to self: don't marry someone smarter than you."
-3. "Deb's clock is louder than my conscience, and that's saying something."
-4. "If I had a dollar for every dollar I owe, I wouldn't owe it."
-5. "Tonight. She said tonight. Very specific woman, my ex."
-6. "Somewhere out there, a kid thinks I'm cooler than this. Gotta keep that going."
-7. "$800. Not $799. She counted."
-
-### Jacking a Chaos Pizza vehicle specifically
-1. "Extra hot, extra stolen."
-2. "Thirty minutes or it's free. Actually, it's already free."
-3. "Do I look like a delivery boy? Don't answer that."
-4. "Special delivery: nothing, to nowhere, on your dime."
-5. "This one's for the tip jar. My tip jar. Which is my pocket."
-6. "Objection! I'm allergic to paying for pizza."
-7. "Fresh outta the oven and outta your parking lot."
-
 ### Approaching Deb
 1. "Hey Deb. You're looking... like you want to kill me. Cool, cool."
 2. "Been a minute. You look great. Furious, but great."
@@ -163,10 +175,6 @@
 1. "There. Eight hundred, exact change, no confetti."
 2. "See? I'm basically a functioning adult now."
 3. "Don't spend it all in one place. Kidding. Spend it on the kid."
-
-### Cutscene: `first_score`
-1. "Two hundred down. Six hundred to go. Piece of cake."
-2. "...I'll call her back. After the cake."
 
 ---
 
