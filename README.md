@@ -6,8 +6,10 @@ pass — and an ex-wife who wants $800 in child support by tonight. Steal cars,
 fly helis, dodge cops, and cause chaos in San Chaos City.
 
 Built as a single self-contained HTML5 page using [three.js](https://threejs.org)
-for the 3D world and the Web Audio API for engine sounds, procedural music, and
-recorded voiceover. Designed for **landscape** phones and installable as a PWA.
+for the 3D world and the Web Audio API for engine sounds, a fully procedural 80s
+**synthwave soundtrack** (sidechain-pumped, reverb-drenched radio with a song
+per station), and recorded voiceover. Designed for **landscape** phones and
+installable as a PWA.
 
 <p align="center"><img src="icon-512.png" width="140" alt="GTB IV icon"></p>
 

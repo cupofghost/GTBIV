@@ -94,10 +94,13 @@ sound on, and confirm nothing regressed. Watch the on-screen `fps` readout
   at `min(devicePixelRatio, 1.75)`). No shadow maps — the game uses cheap
   **blob shadows** (`makeShadow`) and instanced meshes for density.
 - **Audio:** Raw **Web Audio API** — one `AudioContext` (`AC`), a `masterGain`,
-  a live engine synth (oscillators + filters), a fully **procedural radio**
-  (3 stations synthesised from `sKick/sSnare/sBass/sPad/…`), a `sfx` object of
-  one-shot synth effects, and a **voiceover** system that both plays recorded
-  `.mp3` narration and synthesises "wah-wah" NPC speech.
+  a live engine synth (oscillators + filters), a fully **procedural 80s
+  synthwave soundtrack** (3 radio stations, each a *playlist* of through-
+  composed songs in `SW_SONGS`, driven by `scheduleMusic`/`stepSong` through an
+  FX rack — sidechain **pump**, convolver **reverb**, ping-pong **delay**, bus
+  compressor), a `sfx` object of one-shot synth effects, and a **voiceover**
+  system that plays recorded `.mp3` narration (ducking the music under it) and
+  synthesises "wah-wah" NPC speech.
 - **UI/HUD:** Plain DOM overlaid on the WebGL canvas (see §6.7). Styled by the
   single `<style>` block (lines ~15–418).
 - **PWA:** `manifest.json` + icons; installable, fullscreen, landscape-locked.
@@ -138,7 +141,7 @@ Sections, in file order, with what lives in each:
 | Banner / area | What's in it |
 | --- | --- |
 | top of `<script>` | **Helpers & global state** — `rand/randi/pick/clamp/lerp/angDiff`, `TAU`, `$`, and the two master state objects **`G`** and **`WORLD`** (see §6.1) |
-| `AUDIO` | `initAudio`, engine synth, `sfx` object, procedural radio (`STATIONS`, `scheduleMusic`), dash gauge drawing |
+| `AUDIO` | `initAudio` (+ `buildMusicRack`/`makeIR` FX rack), engine synth, `sfx` object, synthwave soundtrack (`SW_SONGS`, `STATIONS`, `scheduleMusic`/`stepSong`, `sw*` instruments), dash gauge drawing |
 | `THREE SETUP` | `scene`, `camera`, `renderer`, sky/sun textures, lights |
 | `CITY` | Procedural block/building/road generation, `intersections`, water, ramps, street furniture, collision helpers (`buildingHit`, `rampHit`, `resolveFootCollision`) |
 | `PARTICLES` | Fixed-size pool (`P_MAX=360`, `parts[]`), `spawnP`, `burst`, `updateParticles`, colour constants |
@@ -250,10 +253,19 @@ colliders in this cheap analytic style.
   to the start flow. `AC` is the context, `masterGain` the master bus.
 - **`sfx`** is an object of one-shot synth effects (`sfx.crash`, `sfx.coin`,
   `sfx.jump`, `sfx.mission`, `sfx.fail`, …). Add new effects here.
-- Radio is procedural: `STATIONS` + `scheduleMusic()` schedule notes ahead of
-  the audio clock. Voiceover: `speak()` for synth NPC "wah" voice; `playVOFile`
-  for recorded narration.
-- **There is currently no volume mixing** beyond `masterGain` — see task **F4**.
+- Radio is a procedural **synthwave soundtrack**: each `STATIONS[]` entry is a
+  playlist of songs from `SW_SONGS`. `scheduleMusic()` clocks ahead of the audio
+  clock and hands each 16th to `stepSong()`, which reads the current song's
+  arrangement (`sections` with an `e`nergy that morphs the drum kit + filter
+  brightness), chord `prog`, `bass`, and `lead` melody, then triggers the `sw*`
+  instruments. Everything routes through the FX rack built in `initAudio`
+  (`musicPump` sidechain, `musicVerbIn` reverb send, `musicDelayIn` ping-pong,
+  a bus compressor) → `musicGain` → `musicVODuck` → `masterGain`. To add a song,
+  push to `SW_SONGS` and reference it from a station's `songs`.
+- Voiceover: `speak()` for synth NPC "wah" voice; `playVOFile`/`playVOLine` for
+  recorded narration. Any active narration **ducks the radio** via the
+  ref-counted `voDuckOn/Off` → `duckMusicForVO` (F4's "music dips during VO").
+- Music/Master volume mix via the `SETTINGS` sliders (`musicVolVal` → `musicGain`).
 - **Recorded voice lives under `voice/<character>/…`** (today only
   `voice/turbo/`, see `README.md` for the full folder map). `INTRO_LINES`
   (top of `VOICEOVER SYSTEM`) points at `voice/turbo/intro/`; `TURBO_LINES`
