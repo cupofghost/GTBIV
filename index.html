@@ -3163,9 +3163,12 @@ function joyStart(x,y,id){
 }
 function joyMove(x,y){
   let dx=x-joyCX, dy=y-joyCY;
-  const d=Math.hypot(dx,dy), max=55;
+  const d=Math.hypot(dx,dy), max=55, dead=10;
   if(d>max){ dx*=max/d; dy*=max/d; }
-  input.jx=dx/max; input.jy=dy/max;
+  // Radial dead zone: ignore thumb jitter near rest, then rescale dead..max so
+  // input still reaches full magnitude right past the threshold (no dead jump).
+  if(d<dead){ input.jx=0; input.jy=0; }
+  else{ const s=(Math.min(d,max)-dead)/(max-dead)/Math.min(d,max); input.jx=dx*s; input.jy=dy*s; }
   knobEl.style.transform='translate(calc(-50% + '+dx+'px), calc(-50% + '+dy+'px))';
 }
 function joyEnd(){
