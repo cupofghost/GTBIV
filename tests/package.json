@@ -1,0 +1,11 @@
+{
+  "name": "gtb4-tests",
+  "private": true,
+  "description": "Headless regression suite for GTB IV. Lives outside the game's zero-build deploy — see tests/README.md.",
+  "scripts": {
+    "test": "node run.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  }
+}

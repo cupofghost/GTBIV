@@ -73,11 +73,16 @@ enter/steal vehicle, `E` punch, `G` gun, `Space` jump, `Q` radio, `N`
 day/night, `C` crouch, `M` Pizza Wars. Look = drag the **right** half of the
 screen.
 
-**There is no automated test suite.** Verification is by playing. For every
-change, run the relevant [Verification Checklist](#9-verification--definition-of-done)
+**There's a headless regression suite** at `tests/` (`cd tests && node run.js`)
+covering state/logic — boot, cutscenes, the Chapter 1 story machine,
+save/restore, and a shallow sweep of missions/wanted. Run it before every
+commit; it catches silent state-machine breakage in seconds. It does **not**
+replace playing — it can't judge feel, framing, or fps. For every change,
+still run the relevant [Verification Checklist](#9-verification--definition-of-done)
 in a **landscape phone-sized viewport** (browser devtools device mode), with
 sound on, and confirm nothing regressed. Watch the on-screen `fps` readout
-(top-of-loop, id `fpsWarn`) — a change that drops it is a bug.
+(top-of-loop, id `fpsWarn`) — a change that drops it is a bug. See
+`tests/README.md` for how the suite works and how to add a case.
 
 ---
 
@@ -890,6 +895,8 @@ replay of the minigame (or does, deliberately — confirm with Austin which).
 
 Before committing **any** task:
 
+0. **Automated suite is green.** `cd tests && node run.js` — catches state-
+   machine and save-shape regressions before you even open a browser.
 1. **It runs.** `python3 -m http.server 8099` → game boots to the title, starts,
    and plays. No console errors.
 2. **Landscape phone check.** Devtools device mode, ~800×390 landscape, touch:

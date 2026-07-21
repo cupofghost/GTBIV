@@ -76,6 +76,7 @@ plain relative paths.
 | `CHARACTERS.md` | Character-model, paint/creator, and cutscene-rendering plan (companion to `HANDOFF.md`) |
 | `STORY_BIBLE.md` | Story & script-writing framework — canon, voice, world, and mission/cutscene templates for narrative work |
 | `CHAPTER1.md`, `FOOTBALL_STRAND.md` | Scripts for the next chapter of missions/cutscenes (store robberies, cop chases, the football side-strand) |
+| `tests/` | Headless regression suite (state/logic, not visuals) — `cd tests && node run.js`. See `tests/README.md` |
 | `TURBO_LINES.md`, `DEB_LINES.md`, `VOICE_LINES.md`, `VOICE_LINES.csv` | Full voice-line scripts per character, prepped for TTS/voice-casting generation (CSV is the batch-export format) |
 | `three.min.js` | Vendored three.js r128 (see note below) |
 | `manifest.json` | PWA manifest — name, icons, fullscreen/landscape |
