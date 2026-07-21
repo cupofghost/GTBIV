@@ -569,17 +569,27 @@ resolution + higher fps, no crashes, no missing-object errors. Auto-downshift
 triggers when fps is throttled (test with CPU throttling in devtools). Manual
 setting sticks across reloads.
 
-#### F4 — Audio mix buses + music ducking `P1 · Risk: Low`
+#### F4 — Audio mix buses + music ducking `P1 · Risk: Low` `PARTIAL`
+**Status: ducking done; SFX/Voice buses remain** (Claude). Shipped alongside the
+80s-synthwave-soundtrack rebuild: a `musicGain` bus feeds an FX rack (sidechain
+**pump**, convolver **reverb**, ping-pong **delay**, bus compressor) →
+`musicGain` → **`musicVODuck`** → `masterGain`. **Master + Music** sliders exist
+in Settings (persisted). Voiceover **ducks the radio** via ref-counted
+`voDuckOn/Off` → `duckMusicForVO` on both the mp3 (`playVOFile`/`playVOLine`) and
+TTS (`processVOQueue`) paths, and un-ducks cleanly (`stopVoiceOver` →
+`voDuckReset`). Covered by `tests/cases/soundtrack.test.js`.
+**Still to do:** dedicated **`sfxGain`** and **`voiceGain`** sub-buses (`sfx.*`
+and VO currently connect straight to `masterGain`) and **SFX / Voice** sliders in
+Settings, so those categories can be mixed/muted independently.
 **Why:** Only `masterGain` exists; you can't turn music down without killing
 SFX, and voiceover fights the radio.
 **Where:** `AUDIO` section (bus routing), Settings (F2) for sliders.
-**Approach:** Insert **`musicGain`, `sfxGain`, `voiceGain`** sub-buses between the
-per-sound nodes and `masterGain`. Route radio → music, `sfx.*` → sfx, VO → voice.
-Add **Master / Music / SFX / Voice** sliders in Settings (persisted, F1).
-**Duck** the music bus down while voiceover/dialogue plays, ease it back after.
+**Approach:** Insert **`sfxGain`, `voiceGain`** sub-buses between the per-sound
+nodes and `masterGain`. Route `sfx.*` → sfx, VO → voice (music already routes
+through `musicGain`). Add **SFX / Voice** sliders in Settings (persisted, F1).
 **Acceptance:** Each slider independently changes its category in real time and
-persists. During Deb/story VO the radio dips and recovers. Muting music leaves
-engine + SFX + VO intact.
+persists. During Deb/story VO the radio dips and recovers (**done**). Muting
+music leaves engine + SFX + VO intact.
 
 ---
 
@@ -945,7 +955,7 @@ F2  Pause + Settings menu      ← NEXT: the home for all options
 D3  Debug HUD                  ← cheap, speeds up bug-hunting
 R1  Dispose on removal          ← stop the memory leak early
 F3  Adaptive quality            ← biggest mobile win
-F4  Audio mix + ducking
+~ F4  Audio mix + ducking      ← ducking DONE; sfx/voice buses remain
 U1  Objective clarity/HUD
 J1  Haptics
 P1  Mission variety
