@@ -14,7 +14,7 @@
 ---
 
 ## Intro narration
-*Already recorded: `vo1.mp3`–`vo4.mp3`*
+*Already recorded: `voice/turbo/intro/intro_01_san-chaos.mp3`–`intro_04_pay-up-or-slammer.mp3`*
 
 1. "San Chaos. The city that never sleeps... because it's too busy causing trouble."
 2. "Name's Turbo Jones. I just walked out of minimum security with twelve dollars and a bus pass."
@@ -88,7 +88,7 @@
 11. "My ex hits harder than you!"
 
 ### Running someone over
-*Lines 1–3 already recorded: `t_run1.mp3`, `t_run2.mp3`, `t_run3.mp3`*
+*All 7 lines recorded: `voice/turbo/ambient/run_over/`*
 1. "Oops. Should've looked both ways, pal."
 2. "That's gonna leave a mark."
 3. "Outta the way! I'm late for a court hearing."
@@ -98,7 +98,7 @@
 7. "That's on you, honestly."
 
 ### Firing a weapon
-*Line 1 already recorded: `t_shoot1.mp3`*
+*All 6 lines recorded: `voice/turbo/ambient/firing/`*
 1. "Say goodnight."
 2. "That's how we settle things in San Chaos."
 3. "You picked the wrong block, buddy."

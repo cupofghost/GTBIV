@@ -104,7 +104,7 @@ sound on, and confirm nothing regressed. Watch the on-screen `fps` readout
 | `three.min.js` | Vendored Three.js r128 |
 | `manifest.json`, `icon-512.png`, `apple-touch-icon.png` | PWA |
 | `panel1-3.jpg` | Intro cinematic key-art (placeholders) |
-| `vo1-4.mp3`, `t_run1-3.mp3`, `t_shoot1.mp3` | Voiceover + catchphrases |
+| `voice/turbo/intro/`, `voice/turbo/ambient/*/` | Recorded intro narration + catchphrases (wired — see §6.6) |
 | `HANDOFF.md` | **This doc** |
 
 ### Structure of `index.html`
@@ -236,6 +236,21 @@ substep. Keep new colliders in this cheap analytic style.
   the audio clock. Voiceover: `speak()` for synth NPC "wah" voice; `playVOFile`
   for recorded narration.
 - **There is currently no volume mixing** beyond `masterGain` — see task **F4**.
+- **Recorded voice lives under `voice/<character>/…`** (today only
+  `voice/turbo/`, see `README.md` for the full folder map). `INTRO_LINES`
+  (top of `VOICEOVER SYSTEM`) points at `voice/turbo/intro/`; `TURBO_LINES`
+  points each ambient category (`approach`, `punch`, `slow`, `stopsign`,
+  `cops`, `runover`, `shoot`, `car`) at its matching `voice/turbo/ambient/*/`
+  folder. Everything else under `voice/turbo/` (`story/`, `cutscenes/`,
+  `backstory_intro/`, `promo/`, `raw/`) is recorded but **not yet referenced
+  by any code** — it's staged for the `CHAPTER1.md`/`FOOTBALL_STRAND.md`
+  missions and cutscenes that will consume it. To wire a staged line in: add
+  a `{src:'voice/turbo/<folder>/<file>.mp3', text:'…'}` entry wherever that
+  scene/trigger lives, same pattern as the ambient categories.
+- **New voice-acting drops:** add them as a new folder under `voice/<character>/`
+  (new characters get their own top-level folder, e.g. `voice/deb/`) using the
+  `category/lowercase_line_slug.mp3` naming already in place — no reorganizing
+  needed, just add the array entries once a drop is ready to wire up.
 
 ### 6.7 DOM / HUD layer
 UI is DOM, not canvas (except the minimap + dash gauge, which are 2D canvases).

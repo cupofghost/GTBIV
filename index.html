@@ -4890,7 +4890,12 @@ $('cutsceneSkip').addEventListener('click',skipCutscene);
 $('cutsceneSkip').addEventListener('touchend',e=>{e.preventDefault();skipCutscene();});
 
 // Typewriter dialogue
+// Captions disabled for now — the box sits over the play area and blocks the
+// view. Voice lines still play (speak() below is untouched); this only stops
+// the on-screen text. Flip CAPTIONS_ENABLED back on to restore them.
+const CAPTIONS_ENABLED=false;
 function showDialogue(speaker, text, duration){
+  if(!CAPTIONS_ENABLED) return;
   const box=$('dialogueBox'), nameEl=$('speakerName'), textEl=$('dialogueText');
   box.style.display='block';
   nameEl.textContent=speaker;
@@ -5004,10 +5009,10 @@ function speak(text,gender,opts){
 // ================= INTRO NARRATION =================
 // Recorded voiceover (mp3) so it sounds identical on every device, with on-screen subtitles
 const INTRO_LINES=[
-  {t:1.0, dur:6.2, src:'vo1.mp3', text:"San Chaos. The city that never sleeps... because it's too busy causing trouble."},
-  {t:7.6, dur:6.6, src:'vo2.mp3', text:"Name's Turbo Jones. I just walked out of minimum security with twelve dollars and a bus pass."},
-  {t:14.6, dur:7.4, src:'vo3.mp3', text:"My ex-wife Deb? She wants eight hundred dollars in child support. And she wants it today."},
-  {t:22.4, dur:5.0, src:'vo4.mp3', text:"So I pay up... or it's straight back to the slammer. Time to go to work."},
+  {t:1.0, dur:6.2, src:'voice/turbo/intro/intro_01_san-chaos.mp3', text:"San Chaos. The city that never sleeps... because it's too busy causing trouble."},
+  {t:7.6, dur:6.6, src:'voice/turbo/intro/intro_02_names-turbo-jones.mp3', text:"Name's Turbo Jones. I just walked out of minimum security with twelve dollars and a bus pass."},
+  {t:14.6, dur:7.4, src:'voice/turbo/intro/intro_03_ex-wife-deb.mp3', text:"My ex-wife Deb? She wants eight hundred dollars in child support. And she wants it today."},
+  {t:22.4, dur:5.0, src:'voice/turbo/intro/intro_04_pay-up-or-slammer.mp3', text:"So I pay up... or it's straight back to the slammer. Time to go to work."},
 ];
 let introLinesSpoken=[];
 // VO plays through the WebAudio engine (unlocked by the TAP TO PLAY gesture),
@@ -5021,7 +5026,10 @@ function loadVOFiles(){
       .then(buf=>{ voBuffers[i]=buf; }).catch(()=>{});
   });
   // preload Turbo's recorded catchphrases too
-  ['t_run1.mp3','t_run2.mp3','t_run3.mp3','t_shoot1.mp3'].forEach(src=>{
+  ['voice/turbo/ambient/run_over/run_over_01_look-both-ways.mp3',
+   'voice/turbo/ambient/run_over/run_over_02_leave-a-mark.mp3',
+   'voice/turbo/ambient/run_over/run_over_03_court-hearing.mp3',
+   'voice/turbo/ambient/firing/firing_01_say-goodnight.mp3'].forEach(src=>{
     voExtra[src]=null;
     fetch(src).then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab))
       .then(buf=>{ voExtra[src]=buf; }).catch(()=>{});
@@ -5065,95 +5073,95 @@ function playVOFile(src,rate,gain){
 const TURBO_LINES={
   // walking up to a pedestrian (Talk button)
   approach:[
-    {src:'t_approach1.mp3', text:"Oh, honey."},
-    {src:'t_approach2.mp3', text:"That shirt was already litter."},
-    {src:'t_approach3.mp3', text:"Oops, sorry about that."},
-    {src:'t_approach4.mp3', text:"Hey. You got the time? No? Cool."},
-    {src:'t_approach5.mp3', text:"Nice face. Be a shame if something happened to it."},
-    {src:'t_approach6.mp3', text:"You look like you owe me money."},
-    {src:'t_approach7.mp3', text:"Move along, citizen. Nothing to see. Yet."},
-    {src:'t_approach8.mp3', text:"I love what you've done with your whole situation."},
-    {src:'t_approach9.mp3', text:"Beautiful day to ruin, isn't it?"},
-    {src:'t_approach10.mp3', text:"Don't mind me. I'm just a guy. A very dangerous guy."},
-    {src:'t_approach11.mp3', text:"Spare a dollar? I'm eight hundred short."},
-    {src:'t_approach12.mp3', text:"You smell like a parking garage."},
+    {src:'voice/turbo/ambient/approach/approach_01_oh-honey.mp3', text:"Oh, honey."},
+    {src:'voice/turbo/ambient/approach/approach_02_shirt-was-litter.mp3', text:"That shirt was already litter."},
+    {src:'voice/turbo/ambient/approach/approach_03_oops-sorry.mp3', text:"Oops, sorry about that."},
+    {src:'voice/turbo/ambient/approach/approach_04_got-the-time.mp3', text:"Hey. You got the time? No? Cool."},
+    {src:'voice/turbo/ambient/approach/approach_05_nice-face.mp3', text:"Nice face. Be a shame if something happened to it."},
+    {src:'voice/turbo/ambient/approach/approach_06_owe-me-money.mp3', text:"You look like you owe me money."},
+    {src:'voice/turbo/ambient/approach/approach_07_move-along-citizen.mp3', text:"Move along, citizen. Nothing to see. Yet."},
+    {src:'voice/turbo/ambient/approach/approach_08_whole-situation.mp3', text:"I love what you've done with your whole situation."},
+    {src:'voice/turbo/ambient/approach/approach_09_beautiful-day-to-ruin.mp3', text:"Beautiful day to ruin, isn't it?"},
+    {src:'voice/turbo/ambient/approach/approach_10_dangerous-guy.mp3', text:"Don't mind me. I'm just a guy. A very dangerous guy."},
+    {src:'voice/turbo/ambient/approach/approach_11_spare-a-dollar.mp3', text:"Spare a dollar? I'm eight hundred short."},
+    {src:'voice/turbo/ambient/approach/approach_12_parking-garage.mp3', text:"You smell like a parking garage."},
   ],
   // throwing a punch
   punch:[
-    {src:'t_punch1.mp3', text:"Hi-yah!"},
-    {src:'t_punch2.mp3', text:"My fingers are powerful."},
-    {src:'t_punch3.mp3', text:"Don't make me fist you!"},
-    {src:'t_punch4.mp3', text:"Knuckle sandwich, extra mustard!"},
-    {src:'t_punch5.mp3', text:"That's for looking at me."},
-    {src:'t_punch6.mp3', text:"Pow! Right in the kisser."},
-    {src:'t_punch7.mp3', text:"These hands are registered weapons."},
-    {src:'t_punch8.mp3', text:"You just got Turbo'd."},
-    {src:'t_punch9.mp3', text:"Sit down, you were leaving anyway."},
-    {src:'t_punch10.mp3', text:"Free chiropractic adjustment!"},
-    {src:'t_punch11.mp3', text:"I learned that one in the yard."},
+    {src:'voice/turbo/ambient/punch/punch_01_hi-yah.mp3', text:"Hi-yah!"},
+    {src:'voice/turbo/ambient/punch/punch_02_fingers-powerful.mp3', text:"My fingers are powerful."},
+    {src:'voice/turbo/ambient/punch/punch_03_dont-make-me-fist-you.mp3', text:"Don't make me fist you!"},
+    {src:'voice/turbo/ambient/punch/punch_04_knuckle-sandwich.mp3', text:"Knuckle sandwich, extra mustard!"},
+    {src:'voice/turbo/ambient/punch/punch_05_looking-at-me.mp3', text:"That's for looking at me."},
+    {src:'voice/turbo/ambient/punch/punch_06_pow-right-in-the-kisser.mp3', text:"Pow! Right in the kisser."},
+    {src:'voice/turbo/ambient/punch/punch_07_registered-weapons.mp3', text:"These hands are registered weapons."},
+    {src:'voice/turbo/ambient/punch/punch_08_turbod.mp3', text:"You just got Turbo'd."},
+    {src:'voice/turbo/ambient/punch/punch_09_sit-down.mp3', text:"Sit down, you were leaving anyway."},
+    {src:'voice/turbo/ambient/punch/punch_10_free-chiropractic-adjustment.mp3', text:"Free chiropractic adjustment!"},
+    {src:'voice/turbo/ambient/punch/punch_11_learned-in-the-yard.mp3', text:"I learned that one in the yard."},
   ],
   // crawling along in a car
   slow:[
-    {src:'t_slow1.mp3', text:"What am I, a grandma?"},
-    {src:'t_slow2.mp3', text:"Taking my time, because I'm worth it."},
-    {src:'t_slow3.mp3', text:"This is a getaway, not a funeral procession."},
-    {src:'t_slow4.mp3', text:"Any day now, engine."},
-    {src:'t_slow5.mp3', text:"I've seen glaciers move faster."},
-    {src:'t_slow6.mp3', text:"We're basically parked."},
-    {src:'t_slow7.mp3', text:"A snail just lapped us."},
-    {src:'t_slow8.mp3', text:"Sunday drive in the middle of a crime spree."},
-    {src:'t_slow9.mp3', text:"Step on it... me!"},
+    {src:'voice/turbo/ambient/driving_slow/driving_slow_01_grandma.mp3', text:"What am I, a grandma?"},
+    {src:'voice/turbo/ambient/driving_slow/driving_slow_02_taking-my-time.mp3', text:"Taking my time, because I'm worth it."},
+    {src:'voice/turbo/ambient/driving_slow/driving_slow_03_not-a-funeral.mp3', text:"This is a getaway, not a funeral procession."},
+    {src:'voice/turbo/ambient/driving_slow/driving_slow_04_any-day-now-engine.mp3', text:"Any day now, engine."},
+    {src:'voice/turbo/ambient/driving_slow/driving_slow_05_glaciers.mp3', text:"I've seen glaciers move faster."},
+    {src:'voice/turbo/ambient/driving_slow/driving_slow_06_basically-parked.mp3', text:"We're basically parked."},
+    {src:'voice/turbo/ambient/driving_slow/driving_slow_07_snail-lapped-us.mp3', text:"A snail just lapped us."},
+    {src:'voice/turbo/ambient/driving_slow/driving_slow_08_sunday-drive.mp3', text:"Sunday drive in the middle of a crime spree."},
+    {src:'voice/turbo/ambient/driving_slow/driving_slow_09_step-on-it-me.mp3', text:"Step on it... me!"},
   ],
   // blowing through an intersection on a red
   stopsign:[
-    {src:'t_stopsign1.mp3', text:"No cops, no stops!"},
-    {src:'t_stopsign2.mp3', text:"Weeee!"},
-    {src:'t_stopsign3.mp3', text:"Red light's just a suggestion."},
-    {src:'t_stopsign4.mp3', text:"Stop signs are for quitters."},
-    {src:'t_stopsign5.mp3', text:"Yellow means floor it!"},
-    {src:'t_stopsign6.mp3', text:"I'll stop when I'm dead. And I'm not."},
-    {src:'t_stopsign7.mp3', text:"Whoops, was that red?"},
-    {src:'t_stopsign8.mp3', text:"Traffic laws are more like guidelines."},
-    {src:'t_stopsign9.mp3', text:"Outta the way, I'm improvising!"},
+    {src:'voice/turbo/ambient/red_light/red_light_01_no-cops-no-stops.mp3', text:"No cops, no stops!"},
+    {src:'voice/turbo/ambient/red_light/red_light_02_weeee.mp3', text:"Weeee!"},
+    {src:'voice/turbo/ambient/red_light/red_light_03_suggestion.mp3', text:"Red light's just a suggestion."},
+    {src:'voice/turbo/ambient/red_light/red_light_04_stop-signs-for-quitters.mp3', text:"Stop signs are for quitters."},
+    {src:'voice/turbo/ambient/red_light/red_light_05_yellow-means-floor-it.mp3', text:"Yellow means floor it!"},
+    {src:'voice/turbo/ambient/red_light/red_light_06_stop-when-im-dead.mp3', text:"I'll stop when I'm dead. And I'm not."},
+    {src:'voice/turbo/ambient/red_light/red_light_07_whoops-was-that-red.mp3', text:"Whoops, was that red?"},
+    {src:'voice/turbo/ambient/red_light/red_light_08_guidelines.mp3', text:"Traffic laws are more like guidelines."},
+    {src:'voice/turbo/ambient/red_light/red_light_09_improvising.mp3', text:"Outta the way, I'm improvising!"},
   ],
   // being chased by the cops
   cops:[
-    {src:'t_cops1.mp3', text:"I'm Turbo — you'll never catch me!"},
-    {src:'t_cops2.mp3', text:"I pay your taxes!"},
-    {src:'t_cops3.mp3', text:"Catch me if you can, badge boys!"},
-    {src:'t_cops4.mp3', text:"This is police harassment! And I love it."},
-    {src:'t_cops5.mp3', text:"You'll never take me alive! Or at all!"},
-    {src:'t_cops6.mp3', text:"Donut break's over, boys!"},
-    {src:'t_cops7.mp3', text:"I'm not speeding, I'm auditioning!"},
-    {src:'t_cops8.mp3', text:"Tell the chief I said hi!"},
-    {src:'t_cops9.mp3', text:"Wanted level? More like wanted TALENT."},
-    {src:'t_cops10.mp3', text:"Eat my exhaust!"},
-    {src:'t_cops11.mp3', text:"My ex hits harder than you!"},
+    {src:'voice/turbo/ambient/chased/chased_01_never-catch-me.mp3', text:"I'm Turbo — you'll never catch me!"},
+    {src:'voice/turbo/ambient/chased/chased_02_pay-your-taxes.mp3', text:"I pay your taxes!"},
+    {src:'voice/turbo/ambient/chased/chased_03_badge-boys.mp3', text:"Catch me if you can, badge boys!"},
+    {src:'voice/turbo/ambient/chased/chased_04_police-harassment.mp3', text:"This is police harassment! And I love it."},
+    {src:'voice/turbo/ambient/chased/chased_05_take-me-alive.mp3', text:"You'll never take me alive! Or at all!"},
+    {src:'voice/turbo/ambient/chased/chased_06_donut-break.mp3', text:"Donut break's over, boys!"},
+    {src:'voice/turbo/ambient/chased/chased_07_auditioning.mp3', text:"I'm not speeding, I'm auditioning!"},
+    {src:'voice/turbo/ambient/chased/chased_08_tell-the-chief.mp3', text:"Tell the chief I said hi!"},
+    {src:'voice/turbo/ambient/chased/chased_09_wanted-talent.mp3', text:"Wanted level? More like wanted TALENT."},
+    {src:'voice/turbo/ambient/chased/chased_10_eat-my-exhaust.mp3', text:"Eat my exhaust!"},
+    {src:'voice/turbo/ambient/chased/chased_11_my-ex-hits-harder.mp3', text:"My ex hits harder than you!"},
   ],
   runover:[
-    {src:'t_run1.mp3', text:"Oops. Should've looked both ways, pal."},
-    {src:'t_run2.mp3', text:"That's gonna leave a mark."},
-    {src:'t_run3.mp3', text:"Outta the way! I'm late for a court hearing."},
-    {src:'t_run4.mp3', text:"Walk it off, champ!"},
-    {src:'t_run5.mp3', text:"Jaywalking's a crime, ya know."},
-    {src:'t_run6.mp3', text:"Insurance covers that. Probably."},
-    {src:'t_run7.mp3', text:"That's on you, honestly."},
+    {src:'voice/turbo/ambient/run_over/run_over_01_look-both-ways.mp3', text:"Oops. Should've looked both ways, pal."},
+    {src:'voice/turbo/ambient/run_over/run_over_02_leave-a-mark.mp3', text:"That's gonna leave a mark."},
+    {src:'voice/turbo/ambient/run_over/run_over_03_court-hearing.mp3', text:"Outta the way! I'm late for a court hearing."},
+    {src:'voice/turbo/ambient/run_over/run_over_04_walk-it-off-champ.mp3', text:"Walk it off, champ!"},
+    {src:'voice/turbo/ambient/run_over/run_over_05_jaywalking.mp3', text:"Jaywalking's a crime, ya know."},
+    {src:'voice/turbo/ambient/run_over/run_over_06_insurance.mp3', text:"Insurance covers that. Probably."},
+    {src:'voice/turbo/ambient/run_over/run_over_07_thats-on-you.mp3', text:"That's on you, honestly."},
   ],
   shoot:[
-    {src:'t_shoot1.mp3', text:"Say goodnight."},
-    {src:'t_shoot2.mp3', text:"That's how we settle things in San Chaos."},
-    {src:'t_shoot3.mp3', text:"You picked the wrong block, buddy."},
-    {src:'t_shoot4.mp3', text:"Should've stayed home today."},
-    {src:'t_shoot5.mp3', text:"Bang. You're it."},
-    {src:'t_shoot6.mp3', text:"Consider this your eviction notice."},
+    {src:'voice/turbo/ambient/firing/firing_01_say-goodnight.mp3', text:"Say goodnight."},
+    {src:'voice/turbo/ambient/firing/firing_02_san-chaos-settle.mp3', text:"That's how we settle things in San Chaos."},
+    {src:'voice/turbo/ambient/firing/firing_03_wrong-block.mp3', text:"You picked the wrong block, buddy."},
+    {src:'voice/turbo/ambient/firing/firing_04_stayed-home.mp3', text:"Should've stayed home today."},
+    {src:'voice/turbo/ambient/firing/firing_05_bang-youre-it.mp3', text:"Bang. You're it."},
+    {src:'voice/turbo/ambient/firing/firing_06_eviction-notice.mp3', text:"Consider this your eviction notice."},
   ],
   car:[
-    {src:'t_car1.mp3', text:"Borrowing this. Permanently."},
-    {src:'t_car2.mp3', text:"Nice ride. It's mine now."},
-    {src:'t_car3.mp3', text:"Keys in the ignition. How thoughtful."},
-    {src:'t_car4.mp3', text:"Finders keepers, pal."},
-    {src:'t_car5.mp3', text:"This is a citizen's requisition."},
-    {src:'t_car6.mp3', text:"Ooh, leather seats!"},
+    {src:'voice/turbo/ambient/carjack/carjack_01_borrowing-permanently.mp3', text:"Borrowing this. Permanently."},
+    {src:'voice/turbo/ambient/carjack/carjack_02_nice-ride-mine.mp3', text:"Nice ride. It's mine now."},
+    {src:'voice/turbo/ambient/carjack/carjack_03_keys-in-ignition.mp3', text:"Keys in the ignition. How thoughtful."},
+    {src:'voice/turbo/ambient/carjack/carjack_04_finders-keepers.mp3', text:"Finders keepers, pal."},
+    {src:'voice/turbo/ambient/carjack/carjack_05_citizens-requisition.mp3', text:"This is a citizen's requisition."},
+    {src:'voice/turbo/ambient/carjack/carjack_06_leather-seats.mp3', text:"Ooh, leather seats!"},
   ],
   delivery:[
     {src:null, text:"Delivery run. Grab the package, get it across town, and don't scratch the merchandise."},

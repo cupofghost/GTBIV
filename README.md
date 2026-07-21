@@ -71,38 +71,43 @@ plain relative paths.
 | `icon-512.png`, `apple-touch-icon.png` | App / home-screen icons |
 | `title-bg.jpg` | Title-screen background art |
 | `panel1.jpg`, `panel2.jpg`, `panel3.jpg` | Legacy key-art panels (no longer referenced) |
-| `vo1.mp3` – `vo4.mp3` | Turbo Jones intro narration (with subtitles) |
-| `t_run1.mp3` – `t_run7.mp3` | "Run someone over" catchphrases |
-| `t_shoot1.mp3` – `t_shoot6.mp3` | Shooting catchphrases |
-| `t_approach1.mp3` – `t_approach12.mp3` | Talking to a pedestrian |
-| `t_punch1.mp3` – `t_punch11.mp3` | Punch catchphrases |
-| `t_slow1.mp3` – `t_slow9.mp3` | Driving too slow catchphrases |
-| `t_stopsign1.mp3` – `t_stopsign9.mp3` | Running a red light catchphrases |
-| `t_cops1.mp3` – `t_cops11.mp3` | Cop-chase catchphrases |
-| `t_car1.mp3` – `t_car6.mp3` | Stealing a car catchphrases |
-| `Turbo Jones Voice MP3s/` | Unused voice-casting auditions and test renders (intro line, two takes) kept for reference — not wired into the game |
+| `voice/` | All recorded voice audio — see below |
 
-### Recorded dialogue for upcoming content (not wired in yet)
+### Voice audio layout (`voice/turbo/…`)
 
-These folders hold professionally recorded Turbo/NPC lines for the
-`CHAPTER1.md` / `FOOTBALL_STRAND.md` scripts (see `TURBO_LINES.md` for which
-lines already have audio). None of it is `fetch()`ed by `index.html` yet —
-it's staged here waiting to be hooked up the same way `vo1-4.mp3`/`t_*.mp3`
-are today.
+All recorded dialogue lives under `voice/<character>/` — today that's just
+`turbo/`, since Turbo is the only character with recorded audio (everyone
+else is still script-only in `VOICE_LINES.md`). **`voice/turbo/ambient/` and
+`voice/turbo/intro/` are the two folders `index.html` actually `fetch()`s —
+edit those and the game hears it immediately.** Everything else under
+`voice/turbo/` is recorded and organized but not yet wired into any gameplay
+trigger (see `HANDOFF.md` §6.6 for the wiring convention and what's next).
 
-| Folder | Scene |
-| --- | --- |
-| `intro/` | Extended intro narration/backstory |
-| `promo/` | Trailer/store-listing voiceover |
-| `approach/`, `approach_deb/` | Talking to a pedestrian / to Deb |
-| `punch/`, `run_over/`, `carjack/`, `pizza_jack/` | Punch, run-someone-over, steal-a-car, jack-a-pizza-car barks |
-| `driving_slow/`, `red_light/`, `chased/` | Driving-too-slow, red-light, and cop-chase barks |
-| `robbery/`, `robbery_take/` | Store hold-up and grabbing the cash |
-| `firing/` | Getting fired / job-loss barks |
-| `idle_backstory/`, `idle_debt/` | Idle chatter — backstory and the $800 child-support debt |
-| `paying_deb/` | Paying off Deb |
-| `turbo_bowl_run/`, `turbo_bowl_scoring/`, `turbo_bowl_tackled/` | Football-strand mission barks |
-| `cutscene_coach_defeat/`, `cutscene_coach_rematch/`, `cutscene_danny_apology/`, `cutscene_first_score/`, `cutscene_turbo_bowl_payoff/` | Named cutscene dialogue for the football strand |
+| Folder | Wired into the game? | Contents |
+| --- | --- | --- |
+| `voice/turbo/intro/` | **Yes** — `INTRO_LINES` | The 4-line shipped intro narration |
+| `voice/turbo/ambient/approach/` | **Yes** — `TURBO_LINES.approach` | Talking to a pedestrian (12 lines) |
+| `voice/turbo/ambient/punch/` | **Yes** — `TURBO_LINES.punch` | Punch catchphrases (11 lines) |
+| `voice/turbo/ambient/driving_slow/` | **Yes** — `TURBO_LINES.slow` | Driving too slow (9 lines) |
+| `voice/turbo/ambient/red_light/` | **Yes** — `TURBO_LINES.stopsign` | Running a red light (9 lines) |
+| `voice/turbo/ambient/chased/` | **Yes** — `TURBO_LINES.cops` | Cop-chase catchphrases (11 lines) |
+| `voice/turbo/ambient/run_over/` | **Yes** — `TURBO_LINES.runover` | Running someone over (7 lines) |
+| `voice/turbo/ambient/firing/` | **Yes** — `TURBO_LINES.shoot` | Shooting catchphrases (6 lines) |
+| `voice/turbo/ambient/carjack/` | **Yes** — `TURBO_LINES.car` | Stealing a car catchphrases (6 lines) |
+| `voice/turbo/backstory_intro/` | Not yet | Extended 13-line intro/backstory monologue (alternate to the shipped 4-liner) |
+| `voice/turbo/story/` | Not yet | `approach_deb/`, `idle_backstory/`, `idle_debt/`, `paying_deb/`, `pizza_jack/`, `robbery/`, `robbery_take/`, `turbo_bowl_run/`, `turbo_bowl_scoring/`, `turbo_bowl_tackled/` — `CHAPTER1.md`/`FOOTBALL_STRAND.md` barks, staged ahead of the missions that will use them |
+| `voice/turbo/cutscenes/` | Not yet | `coach_defeat/`, `coach_rematch/`, `danny_apology/`, `first_score/`, `turbo_bowl_payoff/` — named cutscene dialogue for the football strand |
+| `voice/turbo/promo/` | No (not gameplay) | Trailer/store-listing voiceover |
+| `voice/turbo/raw/` | No | Voice-casting auditions and test renders, kept for reference only |
+
+**Adding new voice-acting drops:** put each new batch in its own folder
+under `voice/<character>/`, following the same `category/lowercase_line_slug.mp3`
+naming used above (e.g. `voice/deb/ambient/…`, `voice/turbo/story/new_scene/…`).
+Numbered filenames (`xxx_01_slug.mp3`) should stay in the same left-to-right
+order as the matching script in `TURBO_LINES.md`/`DEB_LINES.md` so the mapping
+into `index.html` is a straight line-by-line read. Nothing needs to move once
+it's in the right folder — an engineer just adds the `{src:'voice/…', text:…}`
+entries to wire it up.
 
 ### three.js is vendored, not from a CDN
 
