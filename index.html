@@ -36,7 +36,7 @@
   #boostbar { width:130px; height:6px; background:rgba(0,0,0,.55); border:1px solid #fff2; border-radius:4px; margin-top:2px; overflow:hidden; }
   #boostfill { height:100%; width:100%; background:#37c8ff; }
   #mission { top:calc(46px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
-    max-width:min(86vw,560px); text-align:center; font-size:14px; line-height:1.35;
+    max-width:min(calc(var(--lvw)*0.86),560px); text-align:center; font-size:14px; line-height:1.35;
     background:rgba(6,2,16,.85); border:1px solid #ff3ea088; border-radius:10px; padding:7px 14px; color:#fff; }
   #mission b { color:#ff9ecb; }
   #minimap { position:absolute; top:calc(44px + env(safe-area-inset-top)); right:12px;
@@ -106,25 +106,24 @@
     background:linear-gradient(180deg, rgba(11,6,22,.3) 0%, rgba(11,6,22,.04) 38%, rgba(11,6,22,.78) 100%); }
   #artCanvas { position:absolute; inset:0; width:100%; height:100%; }
   #startInner { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:14px; padding:20px; }
-  #title { font-size:min(8.5vw,7.2vh,54px); line-height:.95; font-style:italic; letter-spacing:2px;
-    text-align:center; max-width:94vw;
+  #title { font-size:min(calc(var(--lvw)*0.085),calc(var(--lvh)*0.072),54px); line-height:.95; font-style:italic; letter-spacing:2px;
+    text-align:center; max-width:calc(var(--lvw)*0.94);
     background:linear-gradient(180deg,#fff6c8 8%,#ffd23e 30%,#ff7a3d 52%,#ff3ea0 78%,#b04dff 100%);
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
     filter:drop-shadow(0 4px 0 #2b0b4d) drop-shadow(0 8px 18px rgba(255,62,160,.45)); }
-  #subtitle { color:#9be7ff; font-size:min(4.4vw,20px); letter-spacing:6px; text-shadow:0 0 12px #37c8ff; }
-  #startBtn { margin-top:16px; font-size:min(6vw,26px); color:#0b0616; font-weight:900;
+  #subtitle { color:#9be7ff; font-size:min(calc(var(--lvw)*0.044),20px); letter-spacing:6px; text-shadow:0 0 12px #37c8ff; }
+  #startBtn { margin-top:16px; font-size:min(calc(var(--lvw)*0.06),26px); color:#0b0616; font-weight:900;
     background:linear-gradient(180deg,#7dff8a,#2fd463); border:none; border-radius:14px;
     padding:16px 42px; letter-spacing:2px; box-shadow:0 0 24px #7dff8a88, 0 6px 0 #1a7a38;
     animation:pulse 1.4s infinite; pointer-events:auto; }
   @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.06);} }
   #controlsHint { color:#e9e0ff; font-size:13px; line-height:1.7; max-width:520px; font-family:Arial, sans-serif; }
-  #rotateHint { color:#ffd23e; font-size:12px; font-family:Arial, sans-serif; }
   #bigEvent { display:none; background:rgba(5,0,12,.55); z-index:25; pointer-events:none; }
-  #bigEventText { font-size:min(18vw,110px); font-style:italic; letter-spacing:4px;
+  #bigEventText { font-size:min(calc(var(--lvw)*0.18),110px); font-style:italic; letter-spacing:4px;
     filter:drop-shadow(0 6px 0 #000) drop-shadow(0 0 30px currentColor); }
   #bigEventSub { color:#fff; font-size:18px; margin-top:10px; text-shadow:0 2px 6px #000; }
   #fpsWarn { position:fixed; bottom:2px; left:6px; color:#ffffff55; font-size:10px; z-index:5; font-family:monospace; }
-  #loadWrap { width:min(62vw,360px); height:12px; border-radius:8px; margin-top:14px;
+  #loadWrap { width:min(calc(var(--lvw)*0.62),360px); height:12px; border-radius:8px; margin-top:14px;
     border:2px solid #ffd23e; background:rgba(0,0,0,.55); overflow:hidden;
     box-shadow:0 0 14px #ff3ea066; }
   #loadFill { height:100%; width:0%; border-radius:6px;
@@ -132,25 +131,25 @@
   #loadTxt { color:#ffd23e; font-size:12px; letter-spacing:4px; font-family:Arial,sans-serif;
     margin-top:8px; text-shadow:0 0 8px #ff3ea0; }
   /* rotate-to-landscape overlay */
-  .cineBar { display:none; position:fixed; left:0; right:0; height:11vh; background:#000; z-index:40; }
+  .cineBar { display:none; position:fixed; left:0; right:0; height:calc(var(--lvh)*0.11); background:#000; z-index:40; }
   #cineTop { top:0; } #cineBot { bottom:0; }
   #introLogo { display:none; position:fixed; inset:0; z-index:41; pointer-events:none;
     flex-direction:column; align-items:center; justify-content:center; }
-  #introLogo .big { font-family:'Arial Black',Arial,sans-serif; font-size:min(8vw,56px);
+  #introLogo .big { font-family:'Arial Black',Arial,sans-serif; font-size:min(calc(var(--lvw)*0.08),56px);
     font-weight:900; font-style:italic; letter-spacing:2px; white-space:nowrap;
     background:linear-gradient(180deg,#ffd23e 20%,#ff3ea0 60%,#b44fd9);
     -webkit-background-clip:text; background-clip:text; color:transparent;
     filter:drop-shadow(0 4px 0 #2b0b45) drop-shadow(0 0 26px rgba(255,62,160,.55)); }
-  #introLogo .sub { color:#9be7ff; letter-spacing:9px; font-size:min(3.4vw,16px);
+  #introLogo .sub { color:#9be7ff; letter-spacing:9px; font-size:min(calc(var(--lvw)*0.034),16px);
     font-family:Arial,sans-serif; margin-top:8px; text-shadow:0 0 10px #000; }
-  #skipIntro { display:none; position:fixed; bottom:13vh; right:18px; z-index:45;
+  #skipIntro { display:none; position:fixed; bottom:calc(var(--lvh)*0.13); right:18px; z-index:45;
     padding:8px 16px; border-radius:12px; border:2px solid rgba(255,255,255,.4);
     background:rgba(6,2,16,.7); color:#fff; font-weight:900; font-size:13px;
     letter-spacing:2px; pointer-events:auto; }
   #storyCard { display:none; position:fixed; inset:0; z-index:55; background:rgba(5,2,12,.93);
     flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px; }
   #storyKicker { color:#9be7ff; letter-spacing:8px; font-size:13px; font-family:Arial,sans-serif; }
-  #storyTitle { font-family:'Arial Black',Arial,sans-serif; font-size:min(9vw,48px); font-style:italic;
+  #storyTitle { font-family:'Arial Black',Arial,sans-serif; font-size:min(calc(var(--lvw)*0.09),48px); font-style:italic;
     font-weight:900; margin:8px 0 18px;
     background:linear-gradient(180deg,#ffd23e,#ff3ea0); -webkit-background-clip:text;
     background-clip:text; -webkit-text-fill-color:transparent; }
@@ -162,14 +161,18 @@
   #storyBtn:active { transform:scale(.95); }
   #debtHud { top:calc(48px + env(safe-area-inset-top)); left:14px; color:#ff6b6b;
     font-size:16px; font-weight:900; letter-spacing:1px; }
-  #rotate { display:none; position:fixed; inset:0; z-index:60; background:#0b0616;
-    flex-direction:column; align-items:center; justify-content:center; gap:18px;
-    text-align:center; pointer-events:auto; }
-  #rotateIcon { font-size:84px; color:#ffd23e; animation:spinPhone 1.6s ease-in-out infinite;
-    text-shadow:0 0 24px #ff3ea0; }
-  @keyframes spinPhone { 0%,20%{transform:rotate(0);} 60%,100%{transform:rotate(90deg);} }
-  #rotateTxt { color:#fff; font-size:22px; font-weight:900; letter-spacing:3px; }
-  #rotateSub { color:#9be7ff; font-size:13px; font-family:Arial,sans-serif; }
+  /* Auto-landscape: instead of asking a portrait phone to rotate, we rotate the
+     page ourselves via CSS (see html.gtb-rotated below) — the game just always
+     presents landscape. touchAndPortraitOnly. */
+  html.gtb-rotated, html.gtb-rotated body { margin:0; padding:0; overflow:hidden; }
+  html.gtb-rotated body { position:fixed; top:0; left:0;
+    width:100vh; height:100vw;
+    transform-origin:top left; transform:rotate(90deg) translateY(-100%); }
+  /* touch-only vs desktop-only control affordances (see IS_TOUCH in the boot script) */
+  html.is-desktop #joy, html.is-desktop #btns, html.is-desktop #btnHorn,
+  html.is-desktop #pedals, html.is-desktop #btnCrouch,
+  html.is-desktop .touch-hint { display:none !important; }
+  html.is-touch .desktop-hint { display:none !important; }
   /* shrink controls on short landscape screens so nothing overlaps */
   @media (max-height:430px){
     .tbtn { width:62px; height:52px; font-size:10px; }
@@ -184,31 +187,30 @@
     .hudBox { font-size:12px; padding:4px 8px; }
     /* --- compact title screen so it fits a phone --- */
     #startInner { gap:6px; padding:8px 12px; }
-    #title { font-size:min(6.5vw,26px); }
-    #subtitle { font-size:min(3vw,12px); letter-spacing:4px; }
-    #loadTV { width:min(56vw,320px); height:min(40vh,170px); }
-    #loadTips { font-size:10px; max-width:80vw; }
-    #startBtn { margin-top:4px; font-size:min(4.5vw,17px); padding:9px 26px; }
-    #continueBtn { margin-top:16px; font-size:min(6vw,26px); color:#0b0616; font-weight:900;
+    #title { font-size:min(calc(var(--lvw)*0.065),26px); }
+    #subtitle { font-size:min(calc(var(--lvw)*0.03),12px); letter-spacing:4px; }
+    #loadTV { width:min(calc(var(--lvw)*0.56),320px); height:min(calc(var(--lvh)*0.40),170px); }
+    #loadTips { font-size:10px; max-width:calc(var(--lvw)*0.80); }
+    #startBtn { margin-top:4px; font-size:min(calc(var(--lvw)*0.045),17px); padding:9px 26px; }
+    #continueBtn { margin-top:16px; font-size:min(calc(var(--lvw)*0.06),26px); color:#0b0616; font-weight:900;
       background:linear-gradient(180deg,#7dff8a,#2fd463); border:none; border-radius:14px;
       padding:16px 42px; letter-spacing:2px; box-shadow:0 0 24px #7dff8a88, 0 6px 0 #1a7a38;
       animation:pulse 1.4s infinite; pointer-events:auto; }
-    #newGameBtn { margin-top:12px; font-size:min(4vw,18px); color:#ffd7ee; font-weight:900;
+    #newGameBtn { margin-top:12px; font-size:min(calc(var(--lvw)*0.04),18px); color:#ffd7ee; font-weight:900;
       background:rgba(60,16,50,.6); border:2px solid #ff3ea0; border-radius:12px;
       padding:10px 30px; letter-spacing:2px; pointer-events:auto; }
-    #controlsHint { font-size:10px; line-height:1.45; max-width:88vw; }
-    #rotateHint { font-size:10px; }
+    #controlsHint { font-size:10px; line-height:1.45; max-width:calc(var(--lvw)*0.88); }
     /* --- compact cinematics so the intro doesn't eat half the view --- */
-    .cineBar { height:6vh; }
-    #dialogueBox { width:min(64vw,560px); padding:8px 14px 10px; border-radius:12px;
-      bottom:calc(7vh + env(safe-area-inset-bottom)); left:auto; right:12px; transform:none; }
+    .cineBar { height:calc(var(--lvh)*0.06); }
+    #dialogueBox { width:min(calc(var(--lvw)*0.64),560px); padding:8px 14px 10px; border-radius:12px;
+      bottom:calc(calc(var(--lvh)*0.07) + env(safe-area-inset-bottom)); left:auto; right:12px; transform:none; }
     #speakerName { font-size:10px; letter-spacing:3px; margin-bottom:4px; }
     #dialogueText { font-size:13px; line-height:1.4; min-height:18px; }
-    #introLogo .big { font-size:min(5.5vw,26px); }
-    #introLogo .sub { font-size:min(2.6vw,11px); letter-spacing:5px; margin-top:4px; }
-    #skipIntro, #cutsceneSkip { bottom:calc(7vh + env(safe-area-inset-bottom)); left:12px; right:auto;
+    #introLogo .big { font-size:min(calc(var(--lvw)*0.055),26px); }
+    #introLogo .sub { font-size:min(calc(var(--lvw)*0.026),11px); letter-spacing:5px; margin-top:4px; }
+    #skipIntro, #cutsceneSkip { bottom:calc(calc(var(--lvh)*0.07) + env(safe-area-inset-bottom)); left:12px; right:auto;
       font-size:11px; padding:6px 12px; }
-    #storyTitle { font-size:min(7vw,26px); margin:4px 0 8px; }
+    #storyTitle { font-size:min(calc(var(--lvw)*0.07),26px); margin:4px 0 8px; }
     #storyText { font-size:12px; line-height:1.5; }
     #storyBtn { margin-top:10px; font-size:14px; padding:8px 28px; }
   }
@@ -223,11 +225,11 @@
   #replayBar button { font-size:12px; font-weight:900; color:#fff; background:rgba(40,16,70,.85);
     border:1px solid #ff3ea088; border-radius:8px; padding:6px 10px; font-family:Arial,sans-serif; }
   #replayBar button.on { background:rgba(20,90,40,.85); border-color:#7dff8a; }
-  #replayScrub { width:min(38vw,260px); accent-color:#ff3ea0; }
+  #replayScrub { width:min(calc(var(--lvw)*0.38),260px); accent-color:#ff3ea0; }
   #replayTime { color:#9be7ff; font-size:11px; font-family:monospace; min-width:52px; text-align:center; }
   /* ===== DEV MENU (only present when ?dev=1) ===== */
   #devPanel { display:none; position:fixed; top:10px; left:50%; transform:translateX(-50%);
-    z-index:70; width:min(94vw,720px); max-height:88vh; overflow:auto;
+    z-index:70; width:min(calc(var(--lvw)*0.94),720px); max-height:calc(var(--lvh)*0.88); overflow:auto;
     background:rgba(8,3,18,.94); border:1px solid #ff3ea0; border-radius:14px;
     padding:12px 14px 14px; pointer-events:auto; box-shadow:0 0 30px rgba(255,62,160,.35); }
   #devPanel h2 { color:#ff3ea0; font-size:16px; letter-spacing:2px; margin:0 0 10px; text-align:center; }
@@ -249,7 +251,7 @@
     display:flex; align-items:center; justify-content:center; text-shadow:0 1px 3px #000; }
   #pauseMenu { display:none; position:fixed; inset:0; z-index:52; background:rgba(5,2,12,.88);
     align-items:center; justify-content:center; pointer-events:auto; }
-  .pmPanel { width:min(92vw,400px); max-height:88vh; overflow:auto; text-align:center;
+  .pmPanel { width:min(calc(var(--lvw)*0.92),400px); max-height:calc(var(--lvh)*0.88); overflow:auto; text-align:center;
     background:rgba(8,3,18,.96); border:1px solid #ff3ea0; border-radius:14px;
     padding:14px 18px 16px; box-shadow:0 0 30px rgba(255,62,160,.35); }
   .pmPanel h2 { color:#ff3ea0; font-size:18px; font-style:italic; letter-spacing:4px; margin:0 0 12px; }
@@ -274,8 +276,8 @@
     background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.14'/%3E%3C/svg%3E");
     opacity:0.1; animation:grainShift 0.4s steps(2) infinite; }
   @keyframes grainShift { 0%{transform:translate(0,0)} 33%{transform:translate(-3%,2%)} 66%{transform:translate(2%,-3%)} 100%{transform:translate(0,0)} }
-  #dialogueBox { display:none; position:fixed; bottom:calc(11vh + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
-    z-index:22; width:min(92vw,680px); background:rgba(5,2,12,0.94);
+  #dialogueBox { display:none; position:fixed; bottom:calc(calc(var(--lvh)*0.11) + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
+    z-index:22; width:min(calc(var(--lvw)*0.92),680px); background:rgba(5,2,12,0.94);
     border:1px solid rgba(255,255,255,0.22); border-radius:18px; padding:18px 26px 22px;
     box-shadow:0 8px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08); }
   #speakerName { color:#ff3ea0; font-family:'Arial Black',Arial,sans-serif; font-size:13px;
@@ -285,7 +287,7 @@
   #dialogueText .cursor { display:inline-block; width:2px; height:19px; background:#ff3ea0;
     animation:blink 0.55s infinite; margin-left:2px; vertical-align:middle; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-  #cutsceneSkip { display:none; position:fixed; bottom:calc(13vh + env(safe-area-inset-bottom)); right:18px; z-index:45;
+  #cutsceneSkip { display:none; position:fixed; bottom:calc(calc(var(--lvh)*0.13) + env(safe-area-inset-bottom)); right:18px; z-index:45;
     padding:8px 16px; border-radius:12px; border:2px solid rgba(255,255,255,0.4);
     background:rgba(6,2,16,0.7); color:#fff; font-weight:900; font-size:13px;
     letter-spacing:2px; pointer-events:auto; }
@@ -296,7 +298,7 @@
   #loadScreen { position:fixed; inset:0; z-index:60; background:#0a0612; display:flex;
     flex-direction:column; align-items:center; justify-content:center; pointer-events:auto; }
   #loadScreen.off { opacity:0; pointer-events:none; transition:opacity 0.8s ease; }
-  #loadTV { width:min(90vw,520px); height:min(52vw,300px); background:#14101c;
+  #loadTV { width:min(calc(var(--lvw)*0.9),520px); height:min(calc(var(--lvw)*0.52),300px); background:#14101c;
     border:3px solid #333; border-radius:8px; position:relative; overflow:hidden;
     box-shadow:0 0 40px rgba(255,62,160,0.15); }
   #loadTV::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(
@@ -307,18 +309,18 @@
   #tvGlitch { position:absolute; inset:0; background:rgba(255,62,160,0.06); opacity:0; z-index:4; pointer-events:none; }
   @keyframes tvGlitch { 0%,90%,100%{opacity:0;transform:translate(0)} 91%{opacity:1;transform:translate(-3px,2px)} 92%{opacity:0;transform:translate(0)} 93%{opacity:1;transform:translate(2px,-3px)} 94%{opacity:0} }
   #tvGlitch.on { animation:tvGlitch 2.5s infinite; }
-  #loadLogo { font-family:'Arial Black',Arial,sans-serif; font-size:min(6vw,32px); font-style:italic;
+  #loadLogo { font-family:'Arial Black',Arial,sans-serif; font-size:min(calc(var(--lvw)*0.06),32px); font-style:italic;
     font-weight:900; letter-spacing:3px; color:#ffd23e; text-shadow:0 2px 0 #2b0b45, 0 0 20px rgba(255,62,160,0.4); }
-  #loadSub { color:#9be7ff; font-size:min(3vw,14px); letter-spacing:6px; font-family:Arial,sans-serif; }
+  #loadSub { color:#9be7ff; font-size:min(calc(var(--lvw)*0.03),14px); letter-spacing:6px; font-family:Arial,sans-serif; }
   #loadStatus { color:#7dff8a; font-family:monospace; font-size:13px; letter-spacing:1px; margin-top:8px; }
-  #loadBarWrap { width:min(70vw,380px); height:10px; border-radius:6px; border:2px solid #ffd23e;
+  #loadBarWrap { width:min(calc(var(--lvw)*0.7),380px); height:10px; border-radius:6px; border:2px solid #ffd23e;
     background:rgba(0,0,0,0.6); overflow:hidden; margin-top:14px; box-shadow:0 0 14px rgba(255,62,160,0.3); }
   #loadBar { height:100%; width:0%; border-radius:4px;
     background:linear-gradient(90deg,#ff3ea0,#ffd23e,#7dff8a); }
   #loadTips { color:#888; font-family:Arial,sans-serif; font-size:11px; margin-top:18px;
-    max-width:min(80vw,440px); text-align:center; line-height:1.6; letter-spacing:0.5px; }
+    max-width:min(calc(var(--lvw)*0.8),440px); text-align:center; line-height:1.6; letter-spacing:0.5px; }
   #loadTips b { color:#ffd23e; }
-  @keyframes scanline { 0%{transform:translateY(-100%)} 100%{transform:translateY(100vh)} }
+  @keyframes scanline { 0%{transform:translateY(-100%)} 100%{transform:translateY(calc(var(--lvh)*1))} }
   #scanline { position:fixed; left:0; right:0; height:2px; background:rgba(125,255,138,0.15);
     animation:scanline 3.5s linear infinite; z-index:61; pointer-events:none; }
 
@@ -344,7 +346,7 @@
   #safeText { color:#fff; font-family:Arial,sans-serif; font-size:18px; margin-top:20px; }
   #safeTimer { color:#ff6b6b; font-family:monospace; font-size:24px; margin-top:8px; }
   #alarmBar { display:none; position:fixed; top:calc(80px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
-    width:min(60vw,300px); height:8px; background:rgba(0,0,0,0.6); border:1px solid #ff4444; border-radius:4px; z-index:12; }
+    width:min(calc(var(--lvw)*0.6),300px); height:8px; background:rgba(0,0,0,0.6); border:1px solid #ff4444; border-radius:4px; z-index:12; }
   #alarmFill { height:100%; width:0%; background:linear-gradient(90deg,#ff4444,#ff8800); border-radius:3px; }
   /* Crouch button */
   #btnCrouch { position:absolute; bottom:calc(100px + env(safe-area-inset-bottom)); left:22px;
@@ -427,12 +429,18 @@
     <button id="continueBtn" style="display:none">CONTINUE</button>
     <button id="newGameBtn" style="display:none">NEW GAME</button>
     <div id="controlsHint">
-      Left thumb: move &middot; <b>right thumb: swipe to look around</b> &middot; pedals drive<br>
-      Stick people up with the pistol &middot; rob glowing stores &middot; pay Deb her $800<br>
-      <b>N</b> = day/night &middot; <b>C</b> = crouch &middot; <b>M</b> = Pizza Wars mission &middot; <b>P</b> = pause<br>
-      Tap &#9834; for radio/night &middot; Desktop: WASD / E / F / G gun / Q radio / drag right side to look
+      <div class="touch-hint">
+        Left thumb: move &middot; <b>right thumb: swipe to look around</b> &middot; pedals drive<br>
+        Stick people up with the pistol &middot; rob glowing stores &middot; pay Deb her $800<br>
+        ENTER steals cars &middot; PUNCH / gun button fights &middot; TALK chats up peds<br>
+        Tap &#9834; for radio/night
+      </div>
+      <div class="desktop-hint">
+        <b>WASD</b> move &middot; <b>drag right side to look</b> &middot; <b>E</b> enter/steal &middot; <b>F</b> attack &middot; <b>G</b> weapon &middot; Space jump/drift<br>
+        Stick people up with the pistol &middot; rob glowing stores &middot; pay Deb her $800<br>
+        <b>N</b> = day/night &middot; <b>C</b> = crouch &middot; <b>Q</b> = radio &middot; <b>M</b> = Pizza Wars mission &middot; <b>P</b> = pause
+      </div>
     </div>
-    <div id="rotateHint">&#8635; landscape recommended</div>
   </div>
 </div>
 <div class="cineBar" id="cineTop"></div>
@@ -467,11 +475,6 @@
 </div>
 <div class="tbtn" id="btnCrouch">CROUCH</div>
 
-<div id="rotate">
-  <div id="rotateIcon">&#128241;</div>
-  <div id="rotateTxt">ROTATE YOUR PHONE</div>
-  <div id="rotateSub">Grand Turbo Boost IV plays in landscape &mdash; turn your device sideways</div>
-</div>
 <div id="fpsWarn"></div>
 <div id="devPanel"><h2>DEV MENU</h2></div>
 <div id="devHint">` dev</div>
@@ -530,9 +533,41 @@ const TAU=Math.PI*2;
 function angDiff(a,b){let d=(b-a)%TAU; if(d>Math.PI)d-=TAU; if(d<-Math.PI)d+=TAU; return d;}
 const $=id=>document.getElementById(id);
 
+// ================= DEVICE / ORIENTATION =================
+// Coarse pointer == touch is the primary input (robust vs. UA-sniffing or
+// touch-event feature detection, which false-positive on touch-capable
+// laptops). Drives which control scheme shows (see CSS: html.is-touch /
+// html.is-desktop) and whether we self-rotate a portrait phone (below).
+const IS_TOUCH=matchMedia('(pointer:coarse)').matches;
+document.documentElement.classList.add(IS_TOUCH?'is-touch':'is-desktop');
+// Instead of asking the player to physically rotate a portrait phone, we
+// rotate the page ourselves (html.gtb-rotated, see <style>) so the game
+// always presents landscape. vw()/vh() give the LOGICAL (post-rotation)
+// viewport size everywhere in the game that used to read innerWidth/innerHeight
+// directly; remapXY() converts a raw touch/mouse client point into that same
+// logical space so joystick/look-drag hit-testing lines up with what's drawn.
+let ROTATED=false;
+function updateOrientationMode(){
+  ROTATED=IS_TOUCH&&innerHeight>innerWidth;
+  document.documentElement.classList.toggle('gtb-rotated',ROTATED);
+  // CSS vw/vh units always measure the *physical* viewport, even on a
+  // rotated element, so any CSS that sizes itself off vw/vh (title text,
+  // the loading-screen TV, cinebars, …) needs the logical equivalent —
+  // these custom properties are it. Use calc(var(--lvw)*0.0N) in place of
+  // "Nvw" wherever a rule needs to track the logical (post-rotation) size.
+  document.documentElement.style.setProperty('--lvw',vw()+'px');
+  document.documentElement.style.setProperty('--lvh',vh()+'px');
+}
+function vw(){ return ROTATED?innerHeight:innerWidth; }
+function vh(){ return ROTATED?innerWidth:innerHeight; }
+function remapXY(clientX,clientY){
+  return ROTATED ? {x:clientY, y:innerWidth-clientX} : {x:clientX, y:clientY};
+}
+updateOrientationMode(); // set before THREE/HUD sizing below reads vw()/vh()
+
 const G={ mode:'foot', money:0, heat:0, stars:0, carHP:100, boost:100,
   escapeT:0, bustT:0, missionsDone:0, over:false, started:false, paused:false,
-  portraitPause:false, menuPaused:false,
+  menuPaused:false,
   station:0, weapon:'fists', rockets:0 };
 const WORLD={ blocks:10, block:50, road:16 };
 const _PARAMS=new URLSearchParams(location.search);
@@ -763,11 +798,11 @@ function scheduleMusic(){
 // ================= THREE SETUP =================
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.75));
-renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setSize(vw(),vh());
 $('game').appendChild(renderer.domElement);
 const scene=new THREE.Scene();
 scene.fog=new THREE.Fog(0x2b1055,120,560);
-const camera=new THREE.PerspectiveCamera(62,window.innerWidth/window.innerHeight,0.1,3200);
+const camera=new THREE.PerspectiveCamera(62,vw()/vh(),0.1,3200);
 camera.position.set(0,30,40);
 
 const hemi=new THREE.HemisphereLight(0x8a5cff,0x1a0b2e,0.75); scene.add(hemi);
@@ -2919,8 +2954,8 @@ function positionBubble(){
   if(!bubblePed) return;
   const v=new THREE.Vector3(bubblePed.x,2.4,bubblePed.z).project(camera);
   if(v.z>1){ $('bubble').style.display='none'; bubblePed=null; clearTimeout(bubbleT); return; }
-  $('bubble').style.left=((v.x*0.5+0.5)*window.innerWidth)+'px';
-  $('bubble').style.top=((-v.y*0.5+0.5)*window.innerHeight)+'px';
+  $('bubble').style.left=((v.x*0.5+0.5)*vw())+'px';
+  $('bubble').style.top=((-v.y*0.5+0.5)*vh())+'px';
 }
 // ambient chat bubbles over gossiping pairs
 function positionChatBubbles(dt){
@@ -2934,8 +2969,8 @@ function positionChatBubbles(dt){
       }
       const v=new THREE.Vector3(ped.x,2.4,ped.z).project(camera);
       if(v.z>1||ped.bubT<=0){ ped.bub.style.display='none'; ped.bubT=0; continue; }
-      ped.bub.style.left=((v.x*0.5+0.5)*window.innerWidth)+'px';
-      ped.bub.style.top=((-v.y*0.5+0.5)*window.innerHeight)+'px';
+      ped.bub.style.left=((v.x*0.5+0.5)*vw())+'px';
+      ped.bub.style.top=((-v.y*0.5+0.5)*vh())+'px';
     }
   }
 }
@@ -3184,24 +3219,29 @@ function applyLook(dx,dy){
   lookHoldT=1.2; // keep the auto-follow from fighting your thumb
 }
 const lookSkip=el=>el&&el.closest&&el.closest('.tbtn,#fsBtn,#radioBtn,#pauseBtn,#pauseMenu,button,.hudBox,#minimap,#storyCard,#start,#replayBar,#btnReplay');
+// remapXY() converts raw (physical) touch/mouse coords into the logical,
+// post-rotation space everything else here is authored against — a no-op
+// unless we've self-rotated a portrait phone (see ROTATED up top).
 document.addEventListener('touchstart',e=>{
   for(const t of e.changedTouches){
-    if(t.clientX<window.innerWidth*0.45 && t.clientY>window.innerHeight*0.35 && joyTouch===null && G.started && !G.over){
+    const p=remapXY(t.clientX,t.clientY);
+    if(p.x<vw()*0.45 && p.y>vh()*0.35 && joyTouch===null && G.started && !G.over){
       if(e.target&&e.target.closest&&e.target.closest('.tbtn')) continue;
-      joyStart(t.clientX,t.clientY,t.identifier);
-    } else if(t.clientX>window.innerWidth*0.55 && t.clientY>window.innerHeight*0.12 && lookTouch===null && G.started && !G.over){
+      joyStart(p.x,p.y,t.identifier);
+    } else if(p.x>vw()*0.55 && p.y>vh()*0.12 && lookTouch===null && G.started && !G.over){
       if(lookSkip(e.target)) continue;
-      lookTouch=t.identifier; lookLX=t.clientX; lookLY=t.clientY;
+      lookTouch=t.identifier; lookLX=p.x; lookLY=p.y;
     }
   }
 },{passive:false});
 document.addEventListener('touchmove',e=>{
   e.preventDefault();
   for(const t of e.changedTouches){
-    if(t.identifier===joyTouch) joyMove(t.clientX,t.clientY);
+    const p=remapXY(t.clientX,t.clientY);
+    if(t.identifier===joyTouch) joyMove(p.x,p.y);
     else if(t.identifier===lookTouch){
-      applyLook(t.clientX-lookLX,t.clientY-lookLY);
-      lookLX=t.clientX; lookLY=t.clientY;
+      applyLook(p.x-lookLX,p.y-lookLY);
+      lookLX=p.x; lookLY=p.y;
     }
   }
 },{passive:false});
@@ -3212,17 +3252,18 @@ const joyReset=e=>{ for(const t of e.changedTouches){
 document.addEventListener('touchend',joyReset);
 document.addEventListener('touchcancel',joyReset);
 document.addEventListener('mousedown',e=>{
-  if(e.clientX>window.innerWidth*0.55&&lookTouch===null&&G.started&&!G.over&&!lookSkip(e.target)){
-    lookTouch='mouse'; lookLX=e.clientX; lookLY=e.clientY;
+  const p=remapXY(e.clientX,e.clientY);
+  if(p.x>vw()*0.55&&lookTouch===null&&G.started&&!G.over&&!lookSkip(e.target)){
+    lookTouch='mouse'; lookLX=p.x; lookLY=p.y;
   }
 });
 document.addEventListener('mousemove',e=>{
-  if(lookTouch==='mouse'){ applyLook(e.clientX-lookLX,e.clientY-lookLY); lookLX=e.clientX; lookLY=e.clientY; }
+  if(lookTouch==='mouse'){ const p=remapXY(e.clientX,e.clientY); applyLook(p.x-lookLX,p.y-lookLY); lookLX=p.x; lookLY=p.y; }
 });
 document.addEventListener('mouseup',()=>{ if(lookTouch==='mouse') lookTouch=null; });
 let mouseJoy=false;
-joyEl.addEventListener('mousedown',e=>{ mouseJoy=true; joyTouch='mouse'; joyCX=e.clientX; joyCY=e.clientY; });
-document.addEventListener('mousemove',e=>{ if(mouseJoy) joyMove(e.clientX,e.clientY); });
+joyEl.addEventListener('mousedown',e=>{ const p=remapXY(e.clientX,e.clientY); mouseJoy=true; joyTouch='mouse'; joyCX=p.x; joyCY=p.y; });
+document.addEventListener('mousemove',e=>{ if(mouseJoy){ const p=remapXY(e.clientX,e.clientY); joyMove(p.x,p.y); } });
 document.addEventListener('mouseup',()=>{ if(mouseJoy){ mouseJoy=false; joyEnd(); } });
 const keys={};
 document.addEventListener('keydown',e=>{
@@ -4413,12 +4454,14 @@ loop();
 })();
 
 // ================= ORIENTATION =================
+// No more "please rotate" gate — updateOrientationMode() (defined up top)
+// self-rotates a portrait phone via CSS instead, so the game just always
+// renders landscape. checkOrientation() re-derives that plus the renderer/
+// camera size, which both depend on the (possibly swapped) logical viewport.
 function checkOrientation(){
-  const portrait=window.innerHeight>window.innerWidth;
-  // ask for landscape right from the loading screen, not just in-game
-  $('rotate').style.display=portrait?'flex':'none';
-  G.portraitPause=portrait;
-  syncPause();
+  updateOrientationMode();
+  if(typeof renderer!=='undefined'&&renderer){ renderer.setSize(vw(),vh()); }
+  if(typeof camera!=='undefined'&&camera){ camera.aspect=vw()/vh(); camera.updateProjectionMatrix(); }
 }
 checkOrientation();
 window.addEventListener('orientationchange',()=>setTimeout(checkOrientation,200));
@@ -4586,8 +4629,8 @@ function updateStory(dt){
     const v=new THREE.Vector3(deb.x,2.5,deb.z).project(camera);
     if(v.z>1||deb.bubT<=0){ deb.bub.style.display='none'; deb.bubT=0; }
     else{
-      deb.bub.style.left=((v.x*0.5+0.5)*window.innerWidth)+'px';
-      deb.bub.style.top=((-v.y*0.5+0.5)*window.innerHeight)+'px';
+      deb.bub.style.left=((v.x*0.5+0.5)*vw())+'px';
+      deb.bub.style.top=((-v.y*0.5+0.5)*vh())+'px';
     }
   }
   if(!G.story.metDeb){
@@ -5416,7 +5459,7 @@ function applyVolumes(){
   if(masterGain) masterGain.gain.value=0.9*SETTINGS.master/100;
   if(musicGain) musicGain.gain.value=STATIONS[G.station]?musicVolVal():0;
 }
-function syncPause(){ G.paused=G.started&&(G.portraitPause||G.menuPaused); }
+function syncPause(){ G.paused=G.started&&G.menuPaused; }
 function pauseGame(){
   if(G.menuPaused||!G.started||G.over||G.intro||activeCutscene||G.replay) return;
   if($('storyCard').style.display==='flex') return;
@@ -5541,12 +5584,7 @@ $('continueBtn').addEventListener('click',()=>{
 $('newGameBtn').addEventListener('click',()=>{ wipeSave(); beginGame(); });
 $('continueBtn').addEventListener('touchend',e=>{ e.preventDefault(); $('continueBtn').click(); });
 $('newGameBtn').addEventListener('touchend',e=>{ e.preventDefault(); $('newGameBtn').click(); });
-window.addEventListener('resize',()=>{
-  renderer.setSize(window.innerWidth,window.innerHeight);
-  camera.aspect=window.innerWidth/window.innerHeight;
-  camera.updateProjectionMatrix();
-  checkOrientation();
-});
+window.addEventListener('resize',checkOrientation);
 updateStarsHUD();
 </script>
 </body>
