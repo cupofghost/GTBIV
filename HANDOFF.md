@@ -222,10 +222,21 @@ go through this pool.** New visual FX that spawn many short-lived objects should
 follow the same fixed-pool approach.
 
 ### 6.5 Collision
-No physics engine. Collision is hand-rolled: `buildingHit(x,z,r)` returns a
-push-out normal + depth against building AABBs; `rampHit`, `roofAt`,
-`resolveFootCollision` handle the rest. Cars and feet resolve against these each
-substep. Keep new colliders in this cheap analytic style.
+No physics engine. Collision is hand-rolled, all circle-vs-shape: `buildingHit(x,z,r)`
+returns a push-out normal + depth against building AABBs; `orientedBoxHit(x,z,r,bx,bz,
+dir,halfW,halfD)` is the shared oriented-box-vs-circle primitive (`rampHit` and
+`vehicleHit` are both one-line wrappers around it — add new oriented-box colliders
+the same way rather than re-deriving the rotation math). `pedHit` is a plain
+circle-vs-circle check against `peds` (skips `state==='down'` — you can step over a
+knocked-out ped). `resolveFootCollision(obj,r)` runs all four (buildings, ramps,
+cars, peds) in sequence and is what the player resolves against every substep in
+`updateFoot` — **NPCs and traffic do not run through it**, they have their own
+movement/avoidance, so this only stops the *player* from walking through
+things. `roofAt` handles rooftop-as-floor separately. `cameraCollide` (§6's
+`CAMERA` section) ray-marches 10 steps and now also treats a car as an occluder
+via `vehicleHit`, but only below roof height (`y<1.6`) — otherwise the camera
+would yank in every time its arc passed over a parked car's footprint. Keep new
+colliders in this cheap analytic style.
 
 ### 6.6 Audio
 - `initAudio()` must run **after a user gesture** (autoplay policy) — it's wired

@@ -1383,29 +1383,63 @@ function roofAt(x,z){
   return 0;
 }
 
+// circle vs an oriented box (box center bx,bz, heading dir, half-extents halfW x halfD)
+// — shared by ramps, parked/moving cars, and camera occlusion below.
+function orientedBoxHit(x,z,r,bx,bz,dir,halfW,halfD){
+  const dx=x-bx, dz=z-bz;
+  const cs=Math.cos(-dir), sn=Math.sin(-dir);
+  const lx=dx*cs-dz*sn, lz=dx*sn+dz*cs;      // into box-local space
+  const hw=halfW+r, hd=halfD+r;
+  if(Math.abs(lx)>=hw||Math.abs(lz)>=hd) return null;
+  // push out along the shallowest local axis, then rotate back to world space
+  const px=hw-Math.abs(lx), pz=hd-Math.abs(lz);
+  let lnx=0, lnz=0, depth;
+  if(px<pz){ lnx=lx>=0?1:-1; depth=px; } else { lnz=lz>=0?1:-1; depth=pz; }
+  const c2=Math.cos(dir), s2=Math.sin(dir);
+  return {nx:lnx*c2-lnz*s2, nz:lnx*s2+lnz*c2, depth};
+}
 // circle vs ramps (solid oriented boxes for anything on foot — cars use them as jumps instead)
 function rampHit(x,z,r){
   for(const rp of ramps){
-    const dx=x-rp.x, dz=z-rp.z;
-    const cs=Math.cos(-rp.dir), sn=Math.sin(-rp.dir);
-    const lx=dx*cs-dz*sn, lz=dx*sn+dz*cs;      // into ramp-local space
-    const hw=3.2+r, hd=4.2+r;                   // half extents (6 wide x 8 deep) + radius
-    if(Math.abs(lx)>=hw||Math.abs(lz)>=hd) continue;
-    // push out along the shallowest local axis, then rotate back to world space
-    const px=hw-Math.abs(lx), pz=hd-Math.abs(lz);
-    let lnx=0, lnz=0, depth;
-    if(px<pz){ lnx=lx>=0?1:-1; depth=px; } else { lnz=lz>=0?1:-1; depth=pz; }
-    const c2=Math.cos(rp.dir), s2=Math.sin(rp.dir);
-    return {nx:lnx*c2-lnz*s2, nz:lnx*s2+lnz*c2, depth};
+    const hit=orientedBoxHit(x,z,r,rp.x,rp.z,rp.dir,3.2,4.2);   // 6 wide x 8 deep
+    if(hit) return hit;
   }
   return null;
 }
-// resolve foot-unit collision against buildings + ramps
+// circle vs cars (parked or moving — same oriented-box shape the car mesh uses)
+function vehicleHit(x,z,r){
+  for(let i=0;i<cars.length;i++){
+    const c=cars[i];
+    if(c.dead||c.driver==='player') continue;
+    const t=CARTYPES[c.type];
+    const hit=orientedBoxHit(x,z,r,c.x,c.z,c.heading,t.w/2,t.l/2);
+    if(hit) return hit;
+  }
+  return null;
+}
+// circle vs pedestrians (knocked-down peds don't block — you can step over them)
+function pedHit(x,z,r){
+  for(let i=0;i<peds.length;i++){
+    const pd=peds[i];
+    if(pd.state==='down') continue;
+    const dx=x-pd.x, dz=z-pd.z, rr=r+0.32, d2=dx*dx+dz*dz;
+    if(d2>=rr*rr) continue;
+    const d=Math.sqrt(d2);
+    if(d>1e-6) return {nx:dx/d,nz:dz/d,depth:rr-d};
+    return {nx:1,nz:0,depth:rr};
+  }
+  return null;
+}
+// resolve foot-unit collision against buildings, ramps, cars, and other peds
 function resolveFootCollision(obj,r){
   const h1=buildingHit(obj.x,obj.z,r);
   if(h1){ obj.x+=h1.nx*h1.depth; obj.z+=h1.nz*h1.depth; }
   const h2=rampHit(obj.x,obj.z,r);
   if(h2){ obj.x+=h2.nx*h2.depth; obj.z+=h2.nz*h2.depth; }
+  const h3=vehicleHit(obj.x,obj.z,r);
+  if(h3){ obj.x+=h3.nx*h3.depth; obj.z+=h3.nz*h3.depth; }
+  const h4=pedHit(obj.x,obj.z,r);
+  if(h4){ obj.x+=h4.nx*h4.depth; obj.z+=h4.nz*h4.depth; }
 }
 
 // ================= PARTICLES =================
@@ -4212,8 +4246,12 @@ function cameraCollide(fx,fy,fz,tx,ty,tz){
   let best=1;
   for(let i=1;i<=10;i++){
     const t=i/10;
-    const x=fx+(tx-fx)*t, z=fz+(tz-fz)*t;
-    if(buildingHit(x,z,0.7)){ best=Math.max(0.12,(i-1)/10-0.04); break; }
+    const x=fx+(tx-fx)*t, z=fz+(tz-fz)*t, y=fy+(ty-fy)*t;
+    // buildings block regardless of height (they're always taller than the
+    // camera); cars are short, so only treat them as an occluder below
+    // roughly roof height — otherwise the cam would yank in just from
+    // arcing over a parked car's footprint.
+    if(buildingHit(x,z,0.7)||(y<1.6&&vehicleHit(x,z,0.7))){ best=Math.max(0.12,(i-1)/10-0.04); break; }
   }
   return _camTmp.set(fx+(tx-fx)*best,fy+(ty-fy)*best,fz+(tz-fz)*best);
 }
