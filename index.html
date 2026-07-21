@@ -436,9 +436,9 @@
         Tap &#9834; for radio/night
       </div>
       <div class="desktop-hint">
-        <b>WASD</b> move &middot; <b>drag right side to look</b> &middot; <b>E</b> enter/steal &middot; <b>F</b> attack &middot; <b>G</b> weapon &middot; Space jump/drift<br>
+        <b>WASD</b> move &middot; <b>drag right side to look</b> &middot; <b>E</b> enter/steal &middot; <b>F</b> attack &middot; <b>G</b> weapon &middot; <b>T</b> talk &middot; Space jump/drift<br>
         Stick people up with the pistol &middot; rob glowing stores &middot; pay Deb her $800<br>
-        <b>N</b> = day/night &middot; <b>C</b> = crouch &middot; <b>Q</b> = radio &middot; <b>M</b> = Pizza Wars mission &middot; <b>P</b> = pause
+        <b>N</b> = day/night &middot; <b>C</b> = crouch &middot; <b>H</b> = horn &middot; <b>Q</b> = radio &middot; <b>M</b> = Pizza Wars mission &middot; <b>P</b> = pause
       </div>
     </div>
   </div>
@@ -497,8 +497,8 @@
     <div class="pmHowTxt">
       <b>TOUCH:</b> left stick moves &middot; swipe the right side to look &middot; pedals drive.
       ENTER steals cars &middot; PUNCH / gun button fights &middot; TALK chats up peds.<br>
-      <b>DESKTOP:</b> WASD move &middot; E enter/exit &middot; F attack &middot; G weapon &middot; Space jump/drift &middot;
-      Q radio &middot; N day/night &middot; C crouch &middot; R replay &middot; P pause.<br>
+      <b>DESKTOP:</b> WASD move &middot; E enter/exit &middot; F attack &middot; G weapon &middot; T talk &middot; Space jump/drift &middot;
+      H horn &middot; Q radio &middot; N day/night &middot; C crouch &middot; R replay &middot; P pause.<br>
       <b>THE JOB:</b> Deb wants <b>$800</b> by tonight. Rob glowing stores, stick up
       peds with the pistol, run missions &mdash; and shake the cops before they bust you.
     </div>
@@ -3318,6 +3318,7 @@ document.addEventListener('keydown',e=>{
   if(G.intro&&(e.code==='Enter'||e.code==='Space')) endIntro();
   if(e.code==='Space'&&G.mode==='foot'){ if(G.heist&&G.heist.phase===2) tapSafeCrack(); else doJump(); }
   if(e.code==='KeyF') doAttack();
+  if(e.code==='KeyT') doTalk();
   if(e.code==='KeyH') doHorn();
   if(e.code==='KeyG') cycleWeapon();
   if(e.code==='KeyQ') cycleRadio();

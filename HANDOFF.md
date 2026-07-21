@@ -183,8 +183,10 @@ const WORLD = { blocks:10, block:50, road:16, pitch, half, size };
 - **`G.mode`** decides which per-frame updater runs (`updateFoot` / `updateCarMode`
   / `updateHeliMode`) and how the camera and HUD behave. It's the single most
   important switch.
-- **`G.paused`** currently only means "portrait orientation → freeze" — there is
-  **no pause menu**. (See task **F2**.)
+- **`G.paused`** is `G.started && G.menuPaused` (see `syncPause()`) — set by the
+  pause menu (F2). There's no separate portrait-orientation freeze anymore: a
+  portrait touch device self-rotates via CSS instead of pausing (§6.9-adjacent —
+  see `updateOrientationMode`/`ROTATED` near the top of the script).
 - **`player`** (a plain object, defined mid-file) holds foot position/heading and
   references `player.car` / `player.heli` when driving/flying.
 - **World entities are plain arrays of plain objects**, each carrying its own
@@ -270,10 +272,15 @@ Grab elements with `$('id')`. Key ids you'll touch:
   (`gauge`, `dashName`, `hpfill`, `boostfill`), `toasts`, `fpsWarn`.
 - Controls: `joy`/`joyKnob`, `pedals`/`pedalCol`, `btns` (`btnGas`, `btnBrake`,
   `btnBoost`, `btnDrift`, `btnEnter`, `btnPunch`, `btnGun`, `btnHorn`, `btnJump`,
-  `btnTalk`, `btnCrouch`), `radioBtn`, `fsBtn`.
+  `btnTalk`, `btnCrouch`), `radioBtn`, `fsBtn`. These (plus `.touch-hint`) are
+  touch-only — hidden on desktop via `html.is-desktop` (see `IS_TOUCH` near the
+  top of the script); `.desktop-hint` is the reverse.
 - Overlays: `start`, `loadScreen`, `storyCard`, `bigEvent`, `dialogueBox`,
-  `heistHUD`, `safeCrack`, `rotate` (portrait warning), `fadeOverlay`,
-  `nightOverlay`, cinematic bars (`cineTop/Bot/Vignette/Grain`).
+  `heistHUD`, `safeCrack`, `fadeOverlay`, `nightOverlay`, cinematic bars
+  (`cineTop/Bot/Vignette/Grain`). There's no more `rotate`/"please rotate"
+  overlay — a portrait touch device self-rotates the page instead (see
+  `updateOrientationMode`/`ROTATED`/`vw()`/`vh()`/`remapXY()` near the top of
+  the script, and the `html.gtb-rotated` CSS rule).
 - `toast(msg, cls)` is the standard transient-message helper (`cls` ∈
   `'gold'|'bad'|…`). Use it; don't invent new notification systems.
 
@@ -597,18 +604,20 @@ car camera doesn't feel sluggish at low speed. Don't regress the wall pull-in.
 clips into buildings; low-speed driving feels responsive; no motion sickness
 spikes from over-fast lerps.
 
-#### J4 — Control feel: joystick dead-zone + reverse/brake clarity `P2 · Risk: Med`
+#### J4 — Control feel: joystick dead-zone + reverse/brake clarity `P2 · Risk: Med` `PARTIAL`
+**Status: dead-zone done**, reverse/brake clarity still open. `joyMove` now has
+a 10px radial dead zone with a linear rescale back to full magnitude at the
+55px max travel (no dead jump right past the threshold) — standing still no
+longer drifts from thumb jitter, full-tilt still hits `|input.jx,jy|`=1.
+Brake-vs-reverse legibility is untouched.
 **Why:** Touch stick and the brake/reverse pedal are the highest-touch surfaces;
 small tuning pays off constantly.
 **Where:** `joyStart/Move/End`, `pollKeys`, `carPhysics` throttle handling,
 pedals DOM.
-**Approach:** Add a small joystick **dead-zone** and response curve so tiny
-touches don't jitter the character. Make brake-vs-reverse legible (the physics
-already brakes-then-reverses; ensure the pedal/HUD communicates it). Keep desktop
-WASD identical in feel.
-**Acceptance:** Standing still doesn't drift from stick noise; full-tilt still
-hits max; braking to a stop then reversing feels intentional; no change to
-keyboard players' experience.
+**Remaining:** Make brake-vs-reverse legible (the physics already
+brakes-then-reverses; ensure the pedal/HUD communicates it). Keep desktop
+WASD identical in feel (already true for the dead-zone change — `pollKeys`
+sets `input.jx/jy` directly, bypassing `joyMove`).
 
 ---
 

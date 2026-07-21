@@ -35,20 +35,31 @@ This repo is a static site at the root, so it deploys with no build step:
 
 ## Controls
 
+Touch and keyboard/mouse controls are shown/hidden automatically based on
+whether the primary input is a touch screen (`(pointer:coarse)`) — you won't
+see a phone joystick on a desktop browser, or keyboard hints on a phone.
+
 | Action | Touch | Desktop |
 | --- | --- | --- |
 | Move | Left thumb stick | `W` `A` `S` `D` |
 | Look around | Swipe right side of screen | Drag right side |
-| Drive | On-screen pedals | `W` / `S` |
-| Enter / steal vehicle | On-screen button | `F` |
-| Punch / fists | On-screen button | `E` |
-| Gun | On-screen button | `G` |
+| Drive: gas / brake | On-screen pedals | `W` / `S` |
+| Boost / drift | On-screen pedal buttons | `Shift` / `Space` |
+| Enter / steal vehicle | On-screen button | `E` |
+| Punch / fists / gun | On-screen button | `F` |
+| Cycle weapon | On-screen button | `G` |
+| Talk to a pedestrian | On-screen button | `T` |
 | Jump | On-screen button | Space |
+| Horn | On-screen button | `H` |
 | Radio | Tap ♪ | `Q` |
 | Replay last 30 s (free camera) | REPLAY button | `R` (Space = play/pause, Esc = exit) |
 | Day / night | — | `N` |
 | Crouch | — | `C` |
 | Pizza Wars mission | — | `M` |
+| Pause | Pause button | `P` / `Esc` |
+
+The game never asks a phone to physically rotate — a portrait touch device
+self-rotates the page to landscape instead (see `HANDOFF.md` §6.7 for how).
 
 Objectives: stick people up with the pistol, rob glowing stores, and pay Deb her
 $800 before the cops catch up. Your wanted level climbs with every crime.
