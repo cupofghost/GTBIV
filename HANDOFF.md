@@ -987,3 +987,54 @@ narrative beat this track needs.
 
 Pick the top unclaimed task, read its card, check the acceptance criteria, build
 it small, verify (§9), commit. When in doubt about a design decision, ask.
+
+---
+
+## 10. Changelog — polish pass (Kimi3, 2026-07-22)
+
+Owner-requested fixes, all verified headless (see `tests/cases/new-features.test.js`,
+9 cases) plus screenshot review:
+
+- **Helicopter orientation:** `makeHeliMesh` was built nose-at-−z while headings
+  fly +z — the whole mesh was backwards. Flipped nose/tail/fin/tail-rotor to the
+  car convention (+z = direction of travel).
+- **Heli shadow glitch:** blob shadow was a *child* of the heli group, so it rode
+  up into the sky. Shadows are now scene-level (`makeHeliShadow`/`updateHeliShadow`,
+  own cloned material so altitude fades them), tracked for player, cop, and
+  pilotless helis.
+- **Rooftop landing / ocean leash:** `doEnterExit` now exits whenever
+  `h.landed` (roof landings always worked; exiting above 1.5u didn't). Heli
+  bounds widened from `H+6` to `WATER_R+160` — you can fly far out over the
+  ocean (ditching still kills you).
+- **Bail + parachute:** airborne EXIT becomes `BAIL OUT` → freefall state
+  (`player.bailing`, `updateBail`). CHUTE button (or Space) opens a red/white
+  striped canopy (`makeChuteMesh`), steerable with the left stick; land on
+  streets or roofs, splash = wasted, no-chute impact > 20 = wasted. The
+  abandoned heli spins down and wrecks itself (`updatePilotlessHelis`).
+- **Jocks:** letterman jackets (`addLettermanJacket` — team wool torso, white
+  leather sleeves, rib knit, snaps, chenille "C"), bigger builds, real collision
+  (`jockHit` in `resolveFootCollision` + player/jock/jock-jock separation),
+  building/tree/vehicle avoidance, and a working chase→swing→knockdown loop
+  (they used to call the *player's* `doPunch`).
+- **Twin-stick gun:** pistol/RPG meshes ride the right forearm
+  (`updateWeaponVisual`), center-screen CSS reticule (`#reticule`), and while
+  armed Turbo faces `footCamYaw` — left stick strafes, right thumb aims.
+  Punch now animates the right arm (snap out + torso twist).
+- **Dogs:** orphaned dogs become `strayDogs` (persist, capped at 16), band into
+  `dogGangs` that roam waypoints. Punch/shoot a dog → pack goes `angry` and
+  bites. `meat` pickup (brown "M") feeds packs (FEED MEAT button / `V`); 3
+  chunks = pack heels behind you; THROW MEAT marks a ped for the takedown;
+  GO AWAY button / `B` releases them.
+- **Car audio:** 4-speed with a 0.42s clutch dwell (`car.shiftT`) instead of
+  instant 5-speed jumps; LP top cut ~2.3k→~1.5k and boost whine 45→22 (no more
+  shrill static at full chat); engine gain trimmed slightly.
+- **Sleeker cars:** `wedgeGeo` triangular prisms — wedge hood, rear deck,
+  fastback windshield + rear glass on sedan/taxi/sports/muscle/compact/cop.
+  Vans/pickups stay boxy on purpose.
+- **Trees are solid:** `treeHit` wired into foot, car, ped, and heli collision.
+- **Boost ≠ fire:** boost exhaust is now blue `COL_NITRO`, not orange flames.
+- **Burn-then-blow:** player car ≤ 22hp catches fire with a 30s fuse (2.5s if
+  already ≤ 0) — bail before it goes. All car deaths go through `killCar` →
+  `bigExplosion`: fireball, climbing mushroom-cloud emitter (`boomFx`),
+  shockwave ring, and a 5s `G.boomCam` beat that pulls out and follows the
+  cloud up. Chain reactions between cars work (dead flag set before the boom).

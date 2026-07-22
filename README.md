@@ -50,6 +50,10 @@ see a phone joystick on a desktop browser, or keyboard hints on a phone.
 | Enter / steal vehicle | On-screen button | `E` |
 | Punch / fists / gun | On-screen button | `F` |
 | Cycle weapon | On-screen button | `G` |
+| Aim (gun equipped) | Right-thumb swipe moves the reticule; Turbo faces it | Drag right side |
+| Bail out of heli / open parachute | BAIL OUT then CHUTE button | `E` then Space |
+| Feed / throw meat (dog packs) | On-screen button | `V` |
+| Dismiss your dog pack | On-screen button | `B` |
 | Talk to a pedestrian | On-screen button | `T` |
 | Jump | On-screen button | Space |
 | Horn | On-screen button | `H` |
