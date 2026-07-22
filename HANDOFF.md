@@ -1111,3 +1111,35 @@ Verified: `cd tests && node run.js` — 36/36 green, zero console errors.
 Headless Playwright smoke pass at 800×390 landscape — boots, starts, zero
 page/console errors, football field renders (turf, bleachers) and is
 reachable on foot.
+
+---
+
+## 12. Changelog — terrain foundation: seating + surface resolver (Claude, 2026-07-22)
+
+Groundwork for the upcoming **hills / graded-streets** pass. All of it is a
+**no-op on today's flat map** (every sampled `groundH` is 0) — the point is to
+route static placement through the height field instead of hardcoding `y=0`, so
+the world doesn't float when terrain is raised. Full analysis in `TERRAIN.md`;
+the actionable hills task is `HILLS_HANDOFF.md` (start a new chat there).
+
+- **Tier 3a — vertical-surface resolver.** New `supportY(x,z,curY,opt)`
+  (`index.html`) is the single "what floor is under me?" function: the highest of
+  {terrain `groundH`, building roof, stair run, registered decks} at/just below
+  `curY`. Foot movement and parachute/fall now call it. A new `DECK_SURFACES`
+  registry + `registerSurface()` is the extension point for multi-level garage
+  decks (Tier 3b, not built). Behaviour-identical to the old hand-rolled pick
+  (regression-tested).
+- **Tier 0 — grade-ready seating.** `addBuilding` computes `b.baseY` (min
+  `groundH` over the footprint); building bodies, `roofAt` (now `baseY+h`),
+  crowns, parapet lips, rooftop clutter, and a new buried **foundation skirt**
+  all offset by it. Rail pillars stretch from the ground to the beam; Pizza and
+  Chaos exteriors seat on `groundH`; the foot camera's floor clamp is
+  `groundH`-relative. Cars already settled to `groundH` at runtime — unchanged.
+- **Still `y=0` (finish in the hills pass):** football props, building/rail
+  stair-run `baseH`, pickups. Listed with line anchors in `HILLS_HANDOFF.md` §2.
+- **Tests:** new `tests/cases/terrain.test.js` (4 cases) — resolver API +
+  flat-ground consistency, every building has a finite `baseY` with roof at
+  `baseY+h`, a registered deck reads as floor-from-above / ceiling-from-below,
+  and `supportY` matches the legacy roof pick.
+
+Verified: `node tests/run.js` — 40/40 green, zero console errors.

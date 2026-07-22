@@ -1201,8 +1201,19 @@ function stairHitRun(x,z){
   return best;
 }
 function stairH(x,z){ const st=stairHitRun(x,z); return st?st.h:0; }
+// Seat a building on the LOWEST ground under its footprint so it never floats on
+// a grade; the foundation skirt (built with the crowns/lips below) hides the
+// uphill gap. Flat streets today give baseY=0 — a no-op — so this is just the
+// grade-ready plumbing the hills pass needs.
+function buildingBaseY(minX,maxX,minZ,maxZ){
+  let m=Infinity;
+  for(const gx of [minX,(minX+maxX)/2,maxX]) for(const gz of [minZ,(minZ+maxZ)/2,maxZ])
+    m=Math.min(m,groundH(gx,gz));
+  return m===Infinity?0:m;
+}
 function addBuilding(cx,cz,w,d,h){
-  buildings.push({minX:cx-w/2,maxX:cx+w/2,minZ:cz-d/2,maxZ:cz+d/2,h});
+  const minX=cx-w/2,maxX=cx+w/2,minZ=cz-d/2,maxZ=cz+d/2;
+  buildings.push({minX,maxX,minZ,maxZ,h,baseY:buildingBaseY(minX,maxX,minZ,maxZ)});
 }
 blockInfo.forEach(b=>{
   if(b.type!=='bldg') return;
@@ -1398,7 +1409,7 @@ function overWater(x,z){ return Math.abs(x)>WATER_R||Math.abs(z)>WATER_R; }
     const m=new THREE.Matrix4(), q=new THREE.Quaternion(),
           pos=new THREE.Vector3(), scl=new THREE.Vector3(), col=new THREE.Color();
     list.forEach((b,i)=>{
-      pos.set((b.minX+b.maxX)/2,0,(b.minZ+b.maxZ)/2);
+      pos.set((b.minX+b.maxX)/2,b.baseY||0,(b.minZ+b.maxZ)/2);
       scl.set(b.maxX-b.minX,b.h,b.maxZ-b.minZ);
       m.compose(pos,q,scl); inst.setMatrixAt(i,m);
       col.setHex(pick(palette)).multiplyScalar(rand(0.45,0.85));
@@ -1409,12 +1420,14 @@ function overWater(x,z){ return Math.abs(x)>WATER_R||Math.abs(z)>WATER_R; }
     scene.add(inst);
   });
   // setback crowns on the tall boys + a parapet lip on every roof
-  const crowns=[], lips=[];
+  const crowns=[], lips=[], skirts=[];
+  const SKIRT=4;   // foundation apron: buries into a downhill slope, hidden on flat ground
   buildings.forEach(b=>{
-    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ;
-    lips.push([cx,b.h,cz,w+0.7,0.5,d+0.7]);
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ, by=b.baseY||0;
+    lips.push([cx,by+b.h,cz,w+0.7,0.5,d+0.7]);
+    skirts.push([cx,by-SKIRT,cz,w,SKIRT,d]);
     if(b.h>34&&Math.random()<0.6)
-      crowns.push([cx+rand(-1,1),b.h,cz+rand(-1,1),w*rand(0.55,0.75),b.h*rand(0.18,0.3),d*rand(0.55,0.75)]);
+      crowns.push([cx+rand(-1,1),by+b.h,cz+rand(-1,1),w*rand(0.55,0.75),b.h*rand(0.18,0.3),d*rand(0.55,0.75)]);
   });
   function slab(list,color){
     if(!list.length) return;
@@ -1426,7 +1439,7 @@ function overWater(x,z){ return Math.abs(x)>WATER_R||Math.abs(z)>WATER_R; }
     });
     im.instanceMatrix.needsUpdate=true; scene.add(im);
   }
-  slab(crowns,0x8a86a0); slab(lips,0x565064);
+  slab(crowns,0x8a86a0); slab(lips,0x565064); slab(skirts,0x2a2636);
 })();
 
 // rooftop clutter: AC units, water towers, antennas — the skyline reads real from the heli
@@ -1436,11 +1449,11 @@ function overWater(x,z){ return Math.abs(x)>WATER_R||Math.abs(z)>WATER_R; }
   const anGeo=new THREE.CylinderGeometry(0.04,0.06,4.5,4); anGeo.translate(0,2.25,0);
   const acs=[],wts=[],ans=[];
   buildings.forEach(b=>{
-    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ;
-    if(Math.random()<0.8) acs.push([cx+rand(-w/4,w/4),b.h,cz+rand(-d/4,d/4)]);
-    if(Math.random()<0.5) acs.push([cx+rand(-w/4,w/4),b.h,cz+rand(-d/4,d/4)]);
-    if(b.h>18&&Math.random()<0.4) wts.push([cx+rand(-w/6,w/6),b.h,cz+rand(-d/6,d/6)]);
-    if(b.h>26&&Math.random()<0.55) ans.push([cx,b.h,cz]);
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ, by=b.baseY||0;
+    if(Math.random()<0.8) acs.push([cx+rand(-w/4,w/4),by+b.h,cz+rand(-d/4,d/4)]);
+    if(Math.random()<0.5) acs.push([cx+rand(-w/4,w/4),by+b.h,cz+rand(-d/4,d/4)]);
+    if(b.h>18&&Math.random()<0.4) wts.push([cx+rand(-w/6,w/6),by+b.h,cz+rand(-d/6,d/6)]);
+    if(b.h>26&&Math.random()<0.55) ans.push([cx,by+b.h,cz]);
   });
   function inst(geo,color,list){
     if(!list.length) return;
@@ -1839,7 +1852,8 @@ const RAIL_STATIONS=[];     // path indices where the train stops
   const pils=new THREE.InstancedMesh(pilGeo,new THREE.MeshLambertMaterial({color:0x6a6a78}),pilIdx.length);
   pilIdx.forEach((pi,i)=>{
     const pt=RAILPATH[pi];
-    e.set(0,0,0); q.setFromEuler(e); pos.set(pt.x,0,pt.z);
+    const gh=groundH(pt.x,pt.z);   // stretch the pillar from the ground up to the beam
+    e.set(0,0,0); q.setFromEuler(e); pos.set(pt.x,gh,pt.z); scl.set(1,(y-gh)/7,1);
     m.compose(pos,q,scl); pils.setMatrixAt(i,m);
     RAIL_PILLARS.push({x:pt.x,z:pt.z});
   });
@@ -2040,9 +2054,35 @@ function buildingHit(x,z,r){
 // height of the building roof at a point (0 = open ground)
 function roofAt(x,z){
   for(const b of buildings){
-    if(x>b.minX&&x<b.maxX&&z>b.minZ&&z<b.maxZ) return b.h;
+    if(x>b.minX&&x<b.maxX&&z>b.minZ&&z<b.maxZ) return (b.baseY||0)+b.h;
   }
   return 0;
+}
+
+// ===== vertical-surface resolver (Tier 3a) =====
+// groundH() is the single-valued base layer. Roofs and climbable stair runs are
+// bounded surfaces the movement code already chose between by hand; garage decks
+// and any future layered volume register here via registerSurface(). supportY()
+// answers "what floor is under this entity right now?" — the highest candidate at
+// or just below its current y. Terrain stays single-valued; verticality comes
+// from these bounded local surfaces, never from a two-valued ground.
+const DECK_SURFACES=[];   // {covers(x,z)->bool, heightAt(x,z)->y, step?:number}
+const DECK_STEP=1.4;      // max height you can step / drive up onto a deck from below
+function registerSurface(s){ DECK_SURFACES.push(s); return s; }
+function supportY(x,z,curY,opt){
+  const rt=(opt&&opt.roofThresh)||1.0, stT=(opt&&opt.stairThresh)||1.0;
+  let best=groundH(x,z);                 // base terrain, always a candidate
+  const rf=roofAt(x,z);                  // a building top is a floor once you're near it
+  if(rf>0&&curY>rf-rt&&rf>best) best=rf;
+  const sh=stairH(x,z);                  // stair runs lift you as you climb
+  if(sh>0&&curY>sh-stT&&sh>best) best=sh;
+  for(let i=0;i<DECK_SURFACES.length;i++){   // garage decks & other layered volumes
+    const s=DECK_SURFACES[i];
+    if(!s.covers(x,z)) continue;
+    const y=s.heightAt(x,z);
+    if(y<=curY+(s.step||DECK_STEP)&&y>best) best=y;   // highest floor at/just under you
+  }
+  return best;
 }
 
 // circle vs an oriented box (box center bx,bz, heading dir, half-extents halfW x halfD)
@@ -2696,10 +2736,10 @@ doEnterExit=function(){
   const signMesh=new THREE.Mesh(new THREE.PlaneGeometry(10,3.2),
     new THREE.MeshBasicMaterial({map:signTex,transparent:true}));
   signMesh.position.set(0,CHAOS.h+1.8,CHAOS.d/2+0.1); grp.add(signMesh);
-  grp.position.set(CHAOS.x,0,CHAOS.z); scene.add(grp);
+  grp.position.set(CHAOS.x,groundH(CHAOS.x,CHAOS.z),CHAOS.z); scene.add(grp);
   CHAOS.exterior=grp;
   buildings.push({minX:CHAOS.x-CHAOS.w/2,maxX:CHAOS.x+CHAOS.w/2,
-    minZ:CHAOS.z-CHAOS.d/2,maxZ:CHAOS.z+CHAOS.d/2,h:CHAOS.h});
+    minZ:CHAOS.z-CHAOS.d/2,maxZ:CHAOS.z+CHAOS.d/2,h:CHAOS.h,baseY:groundH(CHAOS.x,CHAOS.z)});
 })();
 
 // Chaos Pizza drivers - purple cars, aggressive
@@ -3331,13 +3371,13 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
     new THREE.MeshLambertMaterial({color:0x5c3a2a}));
   frame.position.set(0,2.5,PIZZA.d/2+0.15); grp.add(frame);
 
-  grp.position.set(PIZZA.x,0,PIZZA.z);
+  grp.position.set(PIZZA.x,groundH(PIZZA.x,PIZZA.z),PIZZA.z);
   scene.add(grp);
   PIZZA.exterior=grp;
 
   // Add collision box for the building
   buildings.push({minX:PIZZA.x-PIZZA.w/2,maxX:PIZZA.x+PIZZA.w/2,
-    minZ:PIZZA.z-PIZZA.d/2,maxZ:PIZZA.z+PIZZA.d/2,h:PIZZA.h});
+    minZ:PIZZA.z-PIZZA.d/2,maxZ:PIZZA.z+PIZZA.d/2,h:PIZZA.h,baseY:groundH(PIZZA.x,PIZZA.z)});
 
   // Door trigger zone (front of building)
   PIZZA.doorX=PIZZA.x; PIZZA.doorZ=PIZZA.z+PIZZA.d/2+2.5;
@@ -4053,10 +4093,7 @@ function updateBail(dt){
   ['btnPunch','btnJump','btnGun','btnTalk','btnEnter'].forEach(id=>$(id).style.display='none');
   $('reticule').style.display='none';
   if(!p.chute&&p.y>6) $('btnChute').style.display='flex';
-  const roofHere=roofAt(p.x,p.z);
-  const sh=stairH(p.x,p.z);
-  const ground=(roofHere>0&&p.y>roofHere-1.0)?roofHere:
-    Math.max(groundH(p.x,p.z),(sh>0&&p.y>sh-1.0)?sh:0);
+  const ground=supportY(p.x,p.z,p.y);   // roof / stairs / decks / street, same resolver
   const term=p.chute?-6.5:-38;
   p.vy=Math.max(term,p.vy-(p.chute?26:30)*dt);
   if(p.chute){
@@ -5072,7 +5109,6 @@ function updateFoot(dt){
     p.heading=moveAng; p.phase+=dt*sp*2.2;
   } else p.phase*=0.8;
   // floor under our feet: a roof if we're standing on one, else the street
-  const roofHere=roofAt(p.x,p.z);
   const st=stairHitRun(p.x,p.z), sh=st?st.h:0;
   const onStairs=sh>0&&p.y>sh-1.2;
   if(onStairs&&Math.abs(st.lx)>0.15){
@@ -5080,8 +5116,8 @@ function updateFoot(dt){
     const cs=Math.cos(st.r.ang), sn=Math.sin(st.r.ang), f=Math.min(1,8*dt);
     p.x-=cs*st.lx*f; p.z+=sn*st.lx*f;
   }
-  const ground=(roofHere>0&&p.y>roofHere-1.0)?roofHere:
-    Math.max(groundH(p.x,p.z),onStairs?sh:0);
+  // floor under our feet, via the shared resolver: roof / stairs / garage decks / street
+  const ground=supportY(p.x,p.z,p.y,{stairThresh:1.2});
   // jump & gravity physics
   if(p.y>ground+0.001||p.vy>0){
     p.vy-=24*dt; p.y+=p.vy*dt;
@@ -6151,7 +6187,8 @@ function updateCamera(dt){
     const tgt=cameraCollide(p.x,p.y+1.5,p.z,
       p.x-Math.sin(footCamYaw)*6.5,p.y+2.9+camPitch*2.6,p.z-Math.cos(footCamYaw)*6.5);
     camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-4*dt));
-    if(camPos.y<0.45) camPos.y=0.45;   // looking down from below ground is a bad time
+    const camFloor=groundH(camPos.x,camPos.z)+0.45;
+    if(camPos.y<camFloor) camPos.y=camFloor;   // never dip below the ground under the camera
     camera.fov=lerp(camera.fov,62,0.1);
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
