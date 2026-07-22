@@ -84,6 +84,43 @@ sound on, and confirm nothing regressed. Watch the on-screen `fps` readout
 (top-of-loop, id `fpsWarn`) — a change that drops it is a bug. See
 `tests/README.md` for how the suite works and how to add a case.
 
+### 3.1 Working efficiently (token/context budget)
+
+You are an agent with a finite context and token budget; several of you will
+pass this repo back and forth. Treat tokens as a real cost — a wasteful
+session leaves less room for the actual work and for the next agent. Rules of
+thumb, in priority order:
+
+1. **Never read `index.html` whole.** It's ~7k lines. Grep the **section
+   banner** (`// ================= CARS =================`, see §5) or the
+   symbol you're changing, then read only that hunk with a bounded
+   `offset`/`limit`. Same for the big `.md` docs — jump to the section, don't
+   page the whole file.
+2. **Diff before you read.** If two versions of a file exist, or you're
+   reconciling an upload, run `diff`/`git diff --stat` first and read only the
+   changed hunks — not both files end to end.
+3. **Verify once, at the end.** Run `cd tests && node run.js` (the 36-case
+   suite is the source of truth) once before committing, not speculatively
+   between edits. Only add a headless-browser/Playwright smoke pass when the
+   change is **visual, boot-, or input-affecting** — logic changes are already
+   covered by the suite. Don't re-run a green suite to "make sure."
+4. **Don't poll or babysit.** No `sleep`/wakeup loops waiting on something.
+   If you subscribe to a PR, stop the moment it's **merged or closed** —
+   that's terminal, tear the watch down, don't schedule check-ins on a dead
+   PR. Let event notifications wake you instead of polling.
+5. **Work inline; don't spawn sub-agents** for something you can do yourself.
+   A fresh agent re-derives all this context from cold — that's the expensive
+   path. Reserve delegation for genuinely parallel, self-contained work.
+6. **Be surgical, not exhaustive.** Prefer the smallest edit that satisfies
+   the task's Acceptance criteria (§8). Don't refactor, reformat, or "improve"
+   code you weren't asked to touch — it costs tokens now and review later.
+7. **Keep replies tight.** State what changed and what's next; skip narrating
+   options you didn't take or re-explaining decisions already made.
+
+None of this trades away correctness — run the suite, hit the Acceptance
+criteria, keep the game playable at every commit (§9). It just says: spend the
+budget on the change and its verification, not on re-reading and re-checking.
+
 ---
 
 ## 4. Architecture Overview
