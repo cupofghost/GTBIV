@@ -21,14 +21,22 @@ keeps working.
   bleachers, parked cars, doors, and a couple of camera/water constants assume
   the ground is a flat plane at height zero. Put a grade under them and they
   float or sink. That is the "breaks everything" you saw.
-- **One invariant keeps you safe:** `groundH(x, z)` must stay a *single-valued,
-  continuous height field* — exactly one ground height per `(x, z)` column.
-  Everything already routes through it. Enrich it, and re-seat the y=0 objects
-  onto it, and nothing breaks.
-- **The thing that genuinely *would* break the engine** is stacked drivable
-  surfaces — overpasses, tunnels, driving under the rail, multi-level parking.
-  Those violate the single-height-per-column model the whole collision system
-  is built on. Defer them. You do not need them to get hills and graded streets.
+- **One invariant keeps the *terrain* safe:** `groundH(x, z)` must stay a
+  *single-valued, continuous height field* — exactly one ground height per
+  `(x, z)` column. Everything already routes through it. Enrich it, and re-seat
+  the y=0 objects onto it, and nothing breaks.
+- **Multi-level structures (parking garages) are a *separate* system, and they
+  are on the roadmap.** They do **not** require making the terrain multi-valued.
+  A garage is a *bounded local volume* of stacked drivable decks sitting on top
+  of the single-valued ground — the two coexist. The efficient way to build them
+  is to first generalize the surface-selection logic the game *already* uses for
+  roofs and stairs into one **vertical-surface resolver**, then author garage
+  decks as new candidate surfaces. See §4 Tier 3.
+- **The thing that genuinely *would* break the engine** is making the *terrain
+  itself* multi-valued — general overpasses and tunnels where open road stacks
+  over open road across the whole map. That's a different, much larger problem
+  than garages. Keep terrain single-valued; get verticality from local layered
+  volumes (garages, roofs, the rail), not from a multi-valued ground.
 
 ---
 
@@ -171,21 +179,40 @@ As long as that holds:
 - A *continuous* field has **no cliffs anywhere**, so intersections stay
   consistent automatically — you don't get faults where four roads meet.
 
-**What violates the invariant (and therefore breaks the collision engine):**
-overpasses, tunnels, driving *under* the elevated rail as real geometry,
-multi-level parking ramps — anything where one `(x, z)` column has two drivable
-surfaces. The current elevated rail is safe precisely because it's *decorative*
-(props + a train on rails you can't drive on). **If the next plan introduces
-stacked drivable decks, that is the thing that breaks everything — not hills.**
-Keep terrain single-valued; get verticality from *elevation changes*, stairs,
-roofs, and the existing rail, not from stacked road decks.
+**Two heights per column is where it gets subtle.** Anything where one `(x, z)`
+has two drivable surfaces — overpasses, tunnels, driving *under* the rail,
+**garage decks** — cannot be expressed by the single-valued *terrain* field.
+That is real, and it's why the ground itself must stay single-valued.
+
+But "not expressible by `groundH`" is **not** the same as "breaks the engine."
+There are two very different scales here:
+
+- **Local layered volumes (garages):** *safe and on the roadmap.* The
+  multi-valuedness is confined to one small footprint. The rest of the world is
+  still `groundH`; inside the volume, a **surface resolver** picks the deck the
+  entity is on (the game already does a hardcoded version of this for roofs and
+  stairs). Bounded blast radius — see §4 Tier 3.
+- **Global multi-valued terrain (open road stacked over open road citywide):**
+  *this* is the rewrite. It needs a different global collision model (portal
+  volumes / a nav graph), not a height field. Deferred, and not needed for
+  garages.
+
+The current elevated rail sits in the safe camp — it's decorative (props + a
+train you can't drive on). The rule of thumb: **verticality via bounded volumes
+(garages, roofs, stairs, the rail) is fine; verticality by making the *ground*
+two-valued everywhere is the thing to avoid.**
 
 ---
 
 ## 4. Proposal — a tiered plan
 
-Ordered so each tier is independently shippable and testable. Tier 0 is a
-prerequisite; Tiers 1–2 are the payoff; Tier 3 is explicitly deferred.
+Ordered so each tier is independently shippable and testable. Tier 0 is a shared
+prerequisite for *everything below it* (hills and garages alike); Tiers 1–2 are
+the cheap terrain payoff; Tier 3 is the garage feature. Tiers are largely
+independent — garages (Tier 3) don't depend on hills (1–2) or vice versa, so
+after Tier 0 you can pick either first. Garages are the heaviest single item
+here, so if you want the quick, visible win first, land the hills; if garages
+are the priority, start at Tier 0 → 3a → 3b.
 
 ### Tier 0 — Make `groundH` the single source of truth (prerequisite)
 
@@ -261,13 +288,69 @@ single-valued; still buildable. Pick 1–2 so it's a landmark, not noise.
 
 *Risk: medium. Effort: ~a day on top of Tier 1. Payoff: memorable geography.*
 
-### Tier 3 — True multi-level (DEFER)
+### Tier 3 — Multi-level parking garages (a real feature, not a rewrite)
 
-Overpasses, tunnels, driveable rail deck, multi-level garages. **These break the
-single-height-per-column model** and need a different collision representation
-(per-surface layers, portal volumes, or a nav graph). Big rewrite, high risk,
-not needed for "hills and graded streets." Note it as a someday item. The
-elevated rail already gives the *read* of verticality for free.
+Garages are wanted, and they are **buildable without touching the
+single-valued-terrain invariant** — because a garage is a *local layered
+volume*, not a change to the global ground. The ground stays `groundH`; the
+garage stacks drivable decks on top of it inside one footprint. Build it in two
+moves:
+
+**3a — Generalize the surface picker into one resolver (do this first).** The
+game *already* selects among stacked surfaces; it's just hardcoded. On foot
+(`index.html:5083`) and mid-air (`index.html:4058`) the "floor under me" is:
+
+```js
+const ground=(roofHere>0&&p.y>roofHere-1.0)?roofHere:
+  Math.max(groundH(p.x,p.z),onStairs?sh:0);   // roofs, stairs, ground — ad hoc
+```
+
+Replace that pattern (in both foot and car integrators) with one function:
+
+```js
+// The floor the entity is standing/driving on: the highest candidate surface
+// at (x,z) that sits at or just below the entity's current y. groundH is always
+// a candidate (the base layer); roofs, stair runs, and garage decks register as
+// extra candidates covering their own footprints.
+function supportY(x, z, curY){
+  let best = groundH(x, z);
+  for(const s of surfacesCovering(x, z)){       // roofs, decks, ramps
+    const y = s.heightAt(x, z);
+    if(y <= curY + STEP && y > best) best = y;   // highest floor under you
+  }
+  return best;
+}
+```
+
+Route roofs and stairs through it too, so it's exercised the day you write it.
+This is the "build the system now" work — small, and it makes garages (and any
+future decked structure) compose instead of piling more `?:` special cases.
+
+**3b — Author garages as decked volumes.** Each garage is: N stacked floor
+slabs + columns (columns are `propHit` walls, slabs are `surfacesCovering`
+candidates), an outer wall with a gap at the ramp, and **drivable ramps** —
+which are exactly `stairHitRun` runs (`index.html:1190`) with a car-friendly
+grade: a ramp already defines `y` as a function of position along its run.
+
+The one genuinely new mechanic — and the reason garages are heavier than the
+hills — is **stateful "which deck am I on."** Inside the footprint, a pure
+`height(x,z)` can't disambiguate deck 1 from deck 2; the entity must *remember*
+its current deck and only change decks on a ramp or an edge. There's precedent:
+the "stick to the staircase" pull at `index.html:5078` is the same idea. Track
+`entity.deck`, switch it only where a ramp connects two decks, and feed the
+current deck's height as the `curY` bias into `supportY`.
+
+**Budget the camera, not the geometry.** The slabs and ramps are moderate work.
+The real time-sink is the chase camera (`index.html:6117`+) inside a low-ceiling
+multi-level space: it must not clip the deck above your head and must not see
+through the outer wall. Prototype the camera in a bare two-deck box *before*
+committing to art. If it fights you, a bounded "garage cam" mode (tighter,
+pitch-limited, hard-clamped under the ceiling) is the escape hatch.
+
+**Still off the table (the actual rewrite):** making the *terrain itself*
+multi-valued — general overpasses/tunnels where open road stacks over open road
+across the whole map. That needs a different global collision representation
+(portal volumes / nav graph) and is not required for garages. Keep it deferred.
 
 ---
 
@@ -325,12 +408,20 @@ seating:
 | 0 | y=0 objects re-seated; grade-ready | Low | ~1 day | No (terrain still flat) |
 | 1 | Terraced blocks + graded streets | Med | ~few days | No, if invariant held |
 | 2 | Named signature hills | Med | ~1 day | No |
-| 3 | Overpasses/tunnels/multi-level | High | Rewrite | **Yes — defer** |
+| 3a | Vertical-surface resolver (shared) | Low–Med | ~1–2 days | No (refactor, same behavior) |
+| 3b | Multi-level parking garages | High | ~1–2+ weeks (camera is the risk) | No, if resolver + terrain invariant held |
+| — | *Multi-valued terrain* (overpasses/tunnels citywide) | High | Rewrite | **Yes — still deferred** |
+
+Add garage regressions to §6 when you build 3b: a car drives up a ramp to deck 2
+and `supportY` reports the deck (not the ground below); driving off a deck edge
+falls to the next surface; the camera never ends up above the deck it's filming.
 
 **Bottom line for the worry that started this:** adding height and graded
-streets does **not** have to break everything. The movement half is already
-done. The breakage is a finite list of static objects nailed to `y = 0`, plus a
-few constants — fixable in a focused Tier 0 pass. The one thing that *would*
-break the engine is stacked drivable surfaces; keep the terrain a single-valued
-height field and you get hills, grade, and city-on-a-hill drama with the rest of
-the game intact.
+streets does **not** have to break everything — and **neither do parking
+garages.** The movement half is already done. Terrain breakage is a finite list
+of static objects nailed to `y = 0`, fixable in a focused Tier 0 pass. Garages
+are a *local layered volume* on top of that same single-valued ground: build the
+surface resolver once (3a), author decks + drivable ramps (3b), and budget the
+low-ceiling chase camera as the real risk. The only thing that stays a true
+rewrite is making the *terrain itself* multi-valued (open road stacked over open
+road citywide) — and you never need that for hills, graded streets, or garages.
