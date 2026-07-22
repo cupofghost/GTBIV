@@ -98,7 +98,7 @@ A few things worth knowing before you write one:
 | `cases/chapter1-story.test.js` | The Chapter 1 state machine: `first_score`, `pizza_warning`, the Hardcastle hook, pizza-heat, and their guards |
 | `cases/save-restore.test.js` | Save/restore round-trips every `G.story` field; corrupt/absent saves fall back cleanly; no per-frame writes |
 | `cases/regression.test.js` | Shallow sweep of missions, wanted/star escalation, and the pizza-jack mechanic |
-| `cases/soundtrack.test.js` | Synthwave radio: playlists/songs are well-formed and the scheduler clocks a whole song through the FX rack without throwing |
+| `cases/soundtrack.test.js` | Synthwave radio: all 9 songs are well-formed, every song on the dial schedules cleanly through the FX rack, and the wanted-level "heat" layer boosts energy without breaking the clamp |
 
 When you add a real feature, add or extend a case in the same pass —
 treat this the way the codebase already treats `HANDOFF.md`'s

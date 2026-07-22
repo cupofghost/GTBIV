@@ -254,14 +254,24 @@ colliders in this cheap analytic style.
 - **`sfx`** is an object of one-shot synth effects (`sfx.crash`, `sfx.coin`,
   `sfx.jump`, `sfx.mission`, `sfx.fail`, …). Add new effects here.
 - Radio is a procedural **synthwave soundtrack**: each `STATIONS[]` entry is a
-  playlist of songs from `SW_SONGS`. `scheduleMusic()` clocks ahead of the audio
-  clock and hands each 16th to `stepSong()`, which reads the current song's
-  arrangement (`sections` with an `e`nergy that morphs the drum kit + filter
-  brightness), chord `prog`, `bass`, and `lead` melody, then triggers the `sw*`
-  instruments. Everything routes through the FX rack built in `initAudio`
-  (`musicPump` sidechain, `musicVerbIn` reverb send, `musicDelayIn` ping-pong,
-  a bus compressor) → `musicGain` → `musicVODuck` → `masterGain`. To add a song,
-  push to `SW_SONGS` and reference it from a station's `songs`.
+  playlist of songs from `SW_SONGS` (**9 songs, 3 per station** — VICE FM /
+  TURBO FM / MIRAGE 105). `scheduleMusic()` clocks ahead of the audio clock and
+  hands each 16th to `stepSong()`, which reads the current song's arrangement
+  (`sections` with an `e`nergy that morphs the drum kit + filter brightness),
+  chord `prog`, `bass`, and `lead` melody, then triggers the `sw*` instruments.
+  Everything routes through the FX rack built in `initAudio` (`musicPump`
+  sidechain, `musicVerbIn` reverb send, `musicDelayIn` ping-pong, a bus
+  compressor) → `musicGain` → `musicVODuck` → `masterGain`. **To add a song,
+  append to `SW_SONGS`** (never insert — `STATIONS[].songs` reference it by
+  index, and those indices must stay stable) and reference it from a station's
+  `songs`.
+- **Wanted-level heat reacts on top of the current song**: `updateHeatLevel()`
+  (called once per `scheduleMusic()` tick) smoothly tracks `G.stars` into
+  `heatLevel` (0..1 — fast rise, slower cooldown) and `heatEnergy(sec)` blends
+  it into each section's authored energy, so the kit gets busier/brighter, an
+  extra off-beat kick pulse kicks in past `heatLevel>0.55`, and a tension
+  `swChaseStab` cuts in past `heatLevel>0.8` — all **without switching tracks**,
+  so a chase makes whatever's already playing hit harder.
 - Voiceover: `speak()` for synth NPC "wah" voice; `playVOFile`/`playVOLine` for
   recorded narration. Any active narration **ducks the radio** via the
   ref-counted `voDuckOn/Off` → `duckMusicForVO` (F4's "music dips during VO").
