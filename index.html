@@ -174,8 +174,15 @@
      page ourselves via CSS (see html.gtb-rotated below) — the game just always
      presents landscape. touchAndPortraitOnly. */
   html.gtb-rotated, html.gtb-rotated body { margin:0; padding:0; overflow:hidden; }
+  /* Size the rotated body off the SAME pixel metrics the WebGL canvas uses
+     (--lvw/--lvh, kept in sync with innerWidth/innerHeight by
+     updateOrientationMode). CSS 100vh/100vw units disagree with
+     window.innerHeight/innerWidth on iOS Safari (viewport-fit=cover +
+     translucent status bar + the collapsing toolbar), and that mismatch is
+     what produced the black bar + left shift. The 100vh/100vw fallbacks only
+     apply for the one synchronous frame before JS first sets the vars. */
   html.gtb-rotated body { position:fixed; top:0; left:0;
-    width:100vh; height:100vw;
+    width:var(--lvw,100vh); height:var(--lvh,100vw);
     transform-origin:top left; transform:rotate(90deg) translateY(-100%); }
   /* touch-only vs desktop-only control affordances (see IS_TOUCH in the boot script) */
   html.is-desktop #joy, html.is-desktop #btns, html.is-desktop #btnHorn,
@@ -6560,6 +6567,9 @@ function fitScreen(){
   if(c.style.width!==w+'px'||c.style.height!==h+'px'||camera.aspect!==w/h){
     renderer.setSize(w,h);
     camera.aspect=w/h; camera.updateProjectionMatrix();
+    // Re-sync --lvw/--lvh so the rotated body-box tracks the pixels the canvas
+    // just took — otherwise a toolbar collapse/expand reintroduces the black bar.
+    updateOrientationMode();
   }
 }
 if(window.visualViewport) window.visualViewport.addEventListener('resize',()=>setTimeout(fitScreen,60));
