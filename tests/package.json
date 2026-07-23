@@ -3,6 +3,8 @@
   "private": true,
   "description": "Headless regression suite for GTB IV. Lives outside the game's zero-build deploy — see tests/README.md.",
   "scripts": {
+    "syntax": "node syntax-check.js",
+    "preflight": "node preflight.js",
     "test": "node run.js"
   },
   "devDependencies": {

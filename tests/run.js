@@ -8,6 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const { startServer, resolvePlaywright, launchBrowser, openGamePage, closeGamePage } = require('./helpers');
+const { checkSyntax } = require('./syntax-check');
 
 const ROOT = path.join(__dirname, '..');
 const CASES_DIR = path.join(__dirname, 'cases');
@@ -35,6 +36,15 @@ async function main() {
   }
 
   console.log(`GTB IV test suite — ${files.length} file(s)\n`);
+
+  // Cheap syntax gate first: a parse error would blow up every case with an
+  // opaque page error after a full browser launch, so catch it in <1s here.
+  const syntax = checkSyntax();
+  if (syntax.problems.length) {
+    console.log(`  ${RED}✗${RESET} syntax check failed — fix before the suite can run:`);
+    syntax.problems.forEach(p => console.log(`      ${p}`));
+    process.exit(1);
+  }
 
   const { server, baseUrl } = await startServer(ROOT);
   const playwright = resolvePlaywright();

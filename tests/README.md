@@ -48,6 +48,30 @@ The runner starts its own static file server on a free port (no need to
 and gives each test case a fresh page/context. Exit code is `0` if
 everything passed, `1` otherwise — safe to gate on in a script or CI.
 
+## Fast pre-flight (before the full suite)
+
+The full suite launches Chromium and reloads the page per case, so it takes a
+couple of minutes. Two faster gates catch the most common breakage first:
+
+```bash
+node syntax-check.js   # ~0.5s, no browser: does index.html still parse?
+node preflight.js      # syntax + a single headless boot with zero console errors
+```
+
+- **`syntax-check.js`** compiles the inline `<script>` in `index.html` (and any
+  local `<script src>` project file like `js/person.js`, skipping vendored
+  `three.min.js`) with the browser's classic-script parse model. It *only*
+  parses — never runs the game — so a green check means "it parses", not "it
+  behaves". A typo is reported with the real `index.html` line and a caret. This
+  same check runs **inline at the top of `node run.js`**, so the full suite now
+  fails in ~0.1s on a syntax error instead of after a full browser launch.
+- **`preflight.js`** runs the syntax check, then boots the game once and asserts
+  it reaches gameplay with zero console/page errors — the quickest "did I break
+  the boot" confidence without the per-case suite overhead.
+
+Both exit `0`/`1` for scripting. Run `preflight.js` while iterating; run the
+full `run.js` before you're confident nothing regressed.
+
 ## Writing a new test case
 
 Add a file to `tests/cases/*.test.js` exporting either a single

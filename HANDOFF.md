@@ -41,15 +41,21 @@
   real fix when approved.
 
 - **W3 — No fast pre-flight; the only check is slow Playwright.** `P1 · Risk:
-  Low`. The suite launches headless Chromium with an ~800 ms settle per case and
-  relaunches contexts; the **full run exceeds 120 s** (it timed out a foreground
-  call this session and had to be backgrounded). There's no sub-10 s "did I
-  break the syntax / does it still boot" gate, so I hand-rolled a
-  `new Function(scriptBody)` parse check to catch typos in seconds. *Fix:* commit
-  that as `tests/syntax-check.js` (extract the `<script>` body, `new Function`
-  it, exit non-zero on `SyntaxError`) **and** a single-boot smoke test that just
-  loads the page and asserts zero console errors. Wire both as a fast tier run
-  before the full suite.
+  Low` `DONE`. **Done** (Claude). Two browser-free/fast gates now front the
+  suite. **`tests/syntax-check.js`** compiles `index.html`'s inline `<script>`
+  (plus local `<script src>` project files like `js/person.js`, skipping
+  vendored `three.min.js`) via `new vm.Script` — the browser's classic-script
+  parse model, so a typo nested deep in a function still surfaces — and reports
+  the real `index.html` line + a caret code-frame. It's exported as
+  `checkSyntax()` and **runs inline at the top of `run.js`**, so the full suite
+  now fails in ~0.1 s on a syntax error instead of after a full browser launch.
+  **`tests/preflight.js`** chains the syntax check + a single headless boot that
+  asserts gameplay is reached with zero console/page errors. `npm run syntax` /
+  `npm run preflight` scripts added; `tests/README.md` documents the tier.
+  *(Original note, for context: the suite launches headless Chromium with an
+  ~800 ms settle per case and relaunches contexts; the full run exceeds 120 s.
+  I'd hand-rolled a `new Function` parse check to catch typos in seconds — this
+  task made it a committed, wired-in gate.)*
 
 - **W4 — Speed up the full suite itself.** `P2 · Risk: Low`. Beyond W3's fast
   tier, the suite is slow because every case pays a fresh context + page reload
