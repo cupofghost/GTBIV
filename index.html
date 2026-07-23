@@ -275,6 +275,11 @@
   .pmRow label { color:#9be7ff; font-size:11px; font-family:Arial,sans-serif; letter-spacing:1px; width:58px; flex:none; }
   .pmRow input[type=range] { flex:1; accent-color:#ff3ea0; min-height:26px; }
   .pmRow .pmVal { color:#ffd23e; font-size:11px; font-family:monospace; width:36px; text-align:right; flex:none; }
+  .qGroup { flex:1; display:flex; gap:6px; }
+  .qBtn { flex:1; font-size:10px; font-weight:900; color:#fff; font-family:Arial,sans-serif;
+    letter-spacing:1px; cursor:pointer; background:rgba(40,16,70,.85);
+    border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:7px 2px; text-align:center; }
+  .qBtn.on { background:rgba(255,62,160,.55); border-color:#ff3ea0; }
   .pmHowTxt { color:#e8e8f0; font-family:Arial,sans-serif; font-size:12px; line-height:1.8; text-align:left; }
   .pmHowTxt b { color:#ffd23e; }
 
@@ -530,6 +535,14 @@
     <h2>SETTINGS</h2>
     <div class="pmRow"><label for="volMaster">MASTER</label><input type="range" id="volMaster" min="0" max="100" step="5"><span class="pmVal" id="volMasterVal"></span></div>
     <div class="pmRow"><label for="volMusic">MUSIC</label><input type="range" id="volMusic" min="0" max="100" step="5"><span class="pmVal" id="volMusicVal"></span></div>
+    <div class="pmRow"><label for="volSfx">SFX</label><input type="range" id="volSfx" min="0" max="100" step="5"><span class="pmVal" id="volSfxVal"></span></div>
+    <div class="pmRow"><label for="volVoice">VOICE</label><input type="range" id="volVoice" min="0" max="100" step="5"><span class="pmVal" id="volVoiceVal"></span></div>
+    <div class="pmRow"><label>QUALITY</label><div class="qGroup" id="qualityGroup">
+      <button class="qBtn" data-q="auto">AUTO</button>
+      <button class="qBtn" data-q="low">LOW</button>
+      <button class="qBtn" data-q="medium">MED</button>
+      <button class="qBtn" data-q="high">HIGH</button>
+    </div></div>
     <button class="pmBtn" id="pmSetBack">BACK</button>
   </div>
   <div class="pmPanel" id="pmHow" style="display:none">
@@ -572,6 +585,12 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const TAU=Math.PI*2;
 function angDiff(a,b){let d=(b-a)%TAU; if(d>Math.PI)d-=TAU; if(d<-Math.PI)d+=TAU; return d;}
 const $=id=>document.getElementById(id);
+
+// Adaptive-quality knobs (see ADAPTIVE QUALITY section) — declared up top so
+// every system that spawns/renders can read the current tier's limits without
+// caring where in the file quality.js-style logic lives. Defaults are the
+// 'high' tier; applyQuality() overwrites them at boot and on any tier change.
+let TRAFFIC_CAP=16, PED_CAP=34, PARTICLE_SCALE=1, GFX_TIER='high';
 
 // ================= DEVICE / ORIENTATION =================
 // Coarse pointer == touch is the primary input (robust vs. UA-sniffing or
@@ -624,7 +643,7 @@ WORLD.half=(WORLD.blocks*WORLD.pitch+WORLD.road)/2;
 WORLD.size=WORLD.half*2+40;
 
 // ================= AUDIO =================
-let AC=null, masterGain, engineOsc, engineGain, engineLP, skidGain,
+let AC=null, masterGain, sfxGain, voiceGain, engineOsc, engineGain, engineLP, skidGain,
     sirenOsc, sirenGain, musicGain, musicStep=0, nextNoteTime=0;
 // --- synthwave FX rack + soundtrack playhead (built lazily in initAudio) ---
 let musicVODuck,            // ducks the whole radio while Turbo/Deb talk
@@ -636,20 +655,25 @@ function initAudio(){
   initVoiceOver();
   AC=new (window.AudioContext||window.webkitAudioContext)();
   masterGain=AC.createGain(); masterGain.gain.value=0.9*SETTINGS.master/100; masterGain.connect(AC.destination);
+  // SFX and Voice sub-buses sit between their per-sound nodes and masterGain,
+  // so the Settings sliders can mix/mute each category independently of the
+  // radio (musicGain) and each other.
+  sfxGain=AC.createGain(); sfxGain.gain.value=SETTINGS.sfx/100; sfxGain.connect(masterGain);
+  voiceGain=AC.createGain(); voiceGain.gain.value=SETTINGS.voice/100; voiceGain.connect(masterGain);
   engineOsc=AC.createOscillator(); engineOsc.type='sawtooth'; engineOsc.frequency.value=50;
   engineLP=AC.createBiquadFilter(); engineLP.type='lowpass'; engineLP.frequency.value=500;
   engineGain=AC.createGain(); engineGain.gain.value=0;
-  engineOsc.connect(engineLP); engineLP.connect(engineGain); engineGain.connect(masterGain);
+  engineOsc.connect(engineLP); engineLP.connect(engineGain); engineGain.connect(sfxGain);
   engineOsc.start();
   const nb=AC.createBuffer(1,AC.sampleRate,AC.sampleRate), nd=nb.getChannelData(0);
   for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1;
   const skid=AC.createBufferSource(); skid.buffer=nb; skid.loop=true;
   const skF=AC.createBiquadFilter(); skF.type='bandpass'; skF.frequency.value=900; skF.Q.value=1.2;
   skidGain=AC.createGain(); skidGain.gain.value=0;
-  skid.connect(skF); skF.connect(skidGain); skidGain.connect(masterGain); skid.start();
+  skid.connect(skF); skF.connect(skidGain); skidGain.connect(sfxGain); skid.start();
   sirenOsc=AC.createOscillator(); sirenOsc.type='triangle'; sirenOsc.frequency.value=700;
   sirenGain=AC.createGain(); sirenGain.gain.value=0;
-  sirenOsc.connect(sirenGain); sirenGain.connect(masterGain); sirenOsc.start();
+  sirenOsc.connect(sirenGain); sirenGain.connect(sfxGain); sirenOsc.start();
   // Radio signal path:  [instruments] -> musicGain (volume) -> musicVODuck -> masterGain
   // musicVODuck sits under the slider so dialogue can dip the music without touching it.
   musicGain=AC.createGain(); musicGain.gain.value=musicVolVal();
@@ -754,7 +778,7 @@ function blip(f0,f1,dur,vol,type){
   o.frequency.exponentialRampToValueAtTime(Math.max(1,f1),AC.currentTime+dur);
   g.gain.setValueAtTime(vol,AC.currentTime);
   g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
-  o.connect(g); g.connect(masterGain); o.start(); o.stop(AC.currentTime+dur+0.02);
+  o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime+dur+0.02);
 }
 function noiseBurst(dur,vol,freq,q){
   if(!AC) return;
@@ -764,7 +788,7 @@ function noiseBurst(dur,vol,freq,q){
   const s=AC.createBufferSource(); s.buffer=b;
   const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=freq; f.Q.value=q;
   const g=AC.createGain(); g.gain.value=vol;
-  s.connect(f); f.connect(g); g.connect(masterGain); s.start();
+  s.connect(f); f.connect(g); g.connect(sfxGain); s.start();
 }
 const sfx={
   coin(){ blip(880,1320,0.09,0.18); setTimeout(()=>blip(1320,1760,0.12,0.15),70); },
@@ -2167,6 +2191,7 @@ function spawnP(x,y,z,vx,vy,vz,life,r,g,b,grav){
   pPos[i*3]=x; pPos[i*3+1]=y; pPos[i*3+2]=z;
 }
 function burst(x,y,z,n,cols,speed,life,grav){
+  n=Math.max(1,Math.round(n*PARTICLE_SCALE));
   for(let k=0;k<n;k++){
     const a=rand(0,TAU), s=rand(0.3,1)*speed, c=pick(cols);
     spawnP(x+rand(-0.5,0.5),y+rand(0,0.6),z+rand(-0.5,0.5),
@@ -2204,6 +2229,28 @@ function setTail(car,on){
 const shGeo=new THREE.CircleGeometry(1,10);
 const shMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.32,depthWrite:false});
 function makeShadow(rx){ const m=new THREE.Mesh(shGeo,shMat); m.rotation.x=-Math.PI/2; m.scale.set(rx,rx*0.7,1); m.position.y=0.03; return m; }
+
+// ================= GPU RESOURCE CLEANUP =================
+// Every make*Mesh() builds fresh geometries/materials per instance except a
+// handful of module-level shared assets reused across many entities (ground/
+// water planes, the particle system, and the blob-shadow circle+material).
+// disposeMesh() frees everything else when an entity is gone for good — call
+// it alongside every permanent scene.remove(). Built lazily so it can name
+// shared resources declared later in the file without a load-order problem.
+let _sharedGPU=null;
+function disposeMesh(obj){
+  if(!obj) return;
+  if(!_sharedGPU) _sharedGPU=new Set([groundGeo,sandGeo,pGeo,shGeo,shMat,fbGeo]);
+  obj.traverse(child=>{
+    if(child.geometry&&!_sharedGPU.has(child.geometry)) child.geometry.dispose();
+    const mats=Array.isArray(child.material)?child.material:(child.material?[child.material]:[]);
+    mats.forEach(m=>{
+      if(_sharedGPU.has(m)) return;
+      if(m.map) m.map.dispose();
+      m.dispose();
+    });
+  });
+}
 
 // ================= CARS =================
 const CARTYPES={
@@ -2973,7 +3020,7 @@ let dogBandT=1, gangSeq=0;
 function makeStray(dog){
   if(strayDogs.length>=16){   // animal control: the oldest stray moves on
     const old=strayDogs.shift();
-    scene.remove(old.mesh);
+    scene.remove(old.mesh); disposeMesh(old.mesh);
     if(old.gang){ const gi=old.gang.dogs.indexOf(old); if(gi>=0) old.gang.dogs.splice(gi,1); }
   }
   strayDogs.push({mesh:dog.mesh,x:dog.x,z:dog.z,phase:rand(0,TAU),gang:null,
@@ -3149,7 +3196,7 @@ function updateStrayDogs(dt){
   // dropped meat rots away
   for(let i=meatDrops.length-1;i>=0;i--){
     meatDrops[i].t-=dt;
-    if(meatDrops[i].t<=0){ scene.remove(meatDrops[i].mesh); meatDrops.splice(i,1); }
+    if(meatDrops[i].t<=0){ scene.remove(meatDrops[i].mesh); disposeMesh(meatDrops[i].mesh); meatDrops.splice(i,1); }
   }
   // meat / dismiss buttons
   const near=G.mode==='foot'?nearestStray(player.x,player.z,9):null;
@@ -3234,7 +3281,7 @@ function updatePizzaWars(dt){
         burst(CHAOS.x,2,CHAOS.z,30,COL_SMOKE,5,2,1);
         sfx.bigCrash(); shake(1.2);
         // Remove Chaos Pizza exterior
-        if(CHAOS.exterior){ scene.remove(CHAOS.exterior); CHAOS.exterior=null; }
+        if(CHAOS.exterior){ scene.remove(CHAOS.exterior); disposeMesh(CHAOS.exterior); CHAOS.exterior=null; }
         addMoney(2000,'PIZZA WARS VICTORY');
         toast('PIZZA WARS WON! +$2000','gold');
         pizzaWars=null; $('mission').style.display='none';
@@ -3842,7 +3889,8 @@ function damageHeli(h,amt){
     burst(h.x,h.y+1,h.z,40,COL_FIRE,7,1.1,4);
     if(h===player.heli){ wasted(); }
     else {
-      scene.remove(h.mesh); if(h.shadow) scene.remove(h.shadow);
+      scene.remove(h.mesh); disposeMesh(h.mesh);
+      if(h.shadow){ scene.remove(h.shadow); disposeMesh(h.shadow); }
       const i=helis.indexOf(h); if(i>=0) helis.splice(i,1);
     }
   }
@@ -3996,12 +4044,14 @@ function updatePilotlessHelis(dt){
       sfx.bigCrash(); shake(0.6);
       damageArea(h.x,h.z,6,90);
       h.dead=true; h.pilotless=false;
-      scene.remove(h.mesh); if(h.shadow) scene.remove(h.shadow);
+      scene.remove(h.mesh); disposeMesh(h.mesh);
+      if(h.shadow){ scene.remove(h.shadow); disposeMesh(h.shadow); }
       const i=helis.indexOf(h); if(i>=0) helis.splice(i,1);
     } else if(overWater(h.x,h.z)&&h.y<0.6){
       burst(h.x,0.4,h.z,36,COL_WATER,8,1.1,3);
       h.dead=true; h.pilotless=false;
-      scene.remove(h.mesh); if(h.shadow) scene.remove(h.shadow);
+      scene.remove(h.mesh); disposeMesh(h.mesh);
+      if(h.shadow){ scene.remove(h.shadow); disposeMesh(h.shadow); }
       const i=helis.indexOf(h); if(i>=0) helis.splice(i,1);
     }
   }
@@ -4123,8 +4173,9 @@ function spawnCopHeli(){
   copHeli.mesh.position.set(copHeli.x,60,copHeli.z);
 }
 function removeCopHeli(){
-  scene.remove(copHeli.mesh); scene.remove(copHeli.spot);
-  if(copHeli.shadow) scene.remove(copHeli.shadow);
+  scene.remove(copHeli.mesh); disposeMesh(copHeli.mesh);
+  scene.remove(copHeli.spot); disposeMesh(copHeli.spot);
+  if(copHeli.shadow){ scene.remove(copHeli.shadow); disposeMesh(copHeli.shadow); }
   copHeli=null;
 }
 function updateCopHeli(dt){
@@ -4290,7 +4341,7 @@ function wahVoice(pitch,x,z){
     g.gain.setValueAtTime(0.0001,t);
     g.gain.exponentialRampToValueAtTime(0.05,t+0.02);
     g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(f); f.connect(g); g.connect(masterGain);
+    o.connect(f); f.connect(g); g.connect(voiceGain);
     o.start(t); o.stop(t+dur+0.02);
     t+=dur+rand(0.02,0.06);
   }
@@ -4499,7 +4550,7 @@ function updateRockets(dt){
     }
     if(boom){
       explode(r.x,Math.max(r.y,0.3),r.z);
-      scene.remove(r.mesh); rockets.splice(i,1);
+      scene.remove(r.mesh); disposeMesh(r.mesh); rockets.splice(i,1);
     }
   }
 }
@@ -4851,7 +4902,7 @@ function updateWanted(dt){
   for(let i=cops.length-1;i>=0;i--){
     const c=cops[i];
     if(c.dead||(c.driver==='leaving'&&Math.hypot(c.x-px0(),c.z-pz0())>180)){
-      scene.remove(c.mesh); c.dead=true;
+      scene.remove(c.mesh); disposeMesh(c.mesh); c.dead=true;
       const ci=cars.indexOf(c); if(ci>=0) cars.splice(ci,1);
       cops.splice(i,1);
     }
@@ -5034,11 +5085,11 @@ function killCar(car,boom){
     burst(car.x,1,car.z,26,COL_FIRE,6,0.9,4);
     burst(car.x,1,car.z,16,COL_SMOKE,3,1.4,1);
   }
-  scene.remove(car.mesh);
+  scene.remove(car.mesh); disposeMesh(car.mesh);
   if(car.driver==='cop'&&Math.random()<0.35) spawnPickup('rpg',car.x+rand(-1,1),car.z+rand(-1,1));
   const ci=cars.indexOf(car); if(ci>=0) cars.splice(ci,1);
   const ti=traffic.indexOf(car); if(ti>=0) traffic.splice(ti,1);
-  setTimeout(()=>{ if(traffic.length<16) spawnTraffic(1); },4000);
+  setTimeout(()=>{ if(traffic.length<TRAFFIC_CAP) spawnTraffic(1); },4000);
 }
 function addStyle(n){ if(mission&&mission.type==='style') mission.value+=n; }
 
@@ -5272,7 +5323,7 @@ function updateCarMode(dt){
     c.mesh.rotation.z=lerp(c.mesh.rotation.z,0.18,0.03);
     if(Math.random()<dt*10) burst(c.x+rand(-1.4,1.4),0.15,c.z+rand(-1.4,1.4),3,COL_WATER,2,0.6,2);
     if(c.y<-2.6){
-      scene.remove(c.mesh); c.dead=true;
+      scene.remove(c.mesh); disposeMesh(c.mesh); c.dead=true;
       const ci=cars.indexOf(c); if(ci>=0) cars.splice(ci,1);
       player.car=null;
       // wash up on the nearest beach
@@ -5664,7 +5715,7 @@ function eatPiece(c){
   if(part){ part.visible=false; burst(c.x,groundH(c.x,c.z)+0.5,c.z,3,[[0.6,0.1,0.1]],1,0.3,2); }
   if(!c.eatParts.length){
     c.eaten=true;
-    scene.remove(c.mesh);
+    scene.remove(c.mesh); disposeMesh(c.mesh);
     let i=peds.indexOf(c); if(i>=0) peds.splice(i,1);
     i=footCops.indexOf(c); if(i>=0) footCops.splice(i,1);
   }
@@ -5830,7 +5881,7 @@ function updateFootCops(dt){
     const fc=footCops[i];
     if(fc.state==='down'){
       fc.downT-=dt;
-      if(fc.downT<=0){ scene.remove(fc.mesh); footCops.splice(i,1); }
+      if(fc.downT<=0){ scene.remove(fc.mesh); disposeMesh(fc.mesh); footCops.splice(i,1); }
       continue;
     }
     fc.armed=G.stars>=3;   // 3+ stars: weapons free. Below that, it's the stick.
@@ -5842,7 +5893,7 @@ function updateFootCops(dt){
     if(fc.state==='return'){
       const car=fc.car;
       if(!car||car.dead||cars.indexOf(car)<0){
-        if(d>70){ scene.remove(fc.mesh); footCops.splice(i,1); continue; }
+        if(d>70){ scene.remove(fc.mesh); disposeMesh(fc.mesh); footCops.splice(i,1); continue; }
         fc.walkT-=dt;   // stranded — walk the beat
         if(fc.walkT<=0){ fc.walkT=rand(2,5); fc.heading=rand(0,TAU); }
         fc.x+=Math.sin(fc.heading)*2.2*dt; fc.z+=Math.cos(fc.heading)*2.2*dt;
@@ -5851,7 +5902,7 @@ function updateFootCops(dt){
         const cdx=car.x-fc.x, cdz=car.z-fc.z, cd=Math.hypot(cdx,cdz);
         if(cd<3.5){
           car.driver=G.stars>0?'cop':'leaving';   // back in the saddle
-          scene.remove(fc.mesh); footCops.splice(i,1); continue;
+          scene.remove(fc.mesh); disposeMesh(fc.mesh); footCops.splice(i,1); continue;
         }
         fc.heading=Math.atan2(cdx,cdz);
         fc.x+=Math.sin(fc.heading)*5.2*dt; fc.z+=Math.cos(fc.heading)*5.2*dt;
@@ -5981,12 +6032,12 @@ function updatePeds(dt){
     if(ped.state==='down'){
       ped.downT-=dt;
       if(ped.downT<=0){
-        scene.remove(ped.mesh);
+        scene.remove(ped.mesh); disposeMesh(ped.mesh);
         if(ped.dog) makeStray(ped.dog);   // the dog outlives the owner
         if(ped.bub) ped.bub.remove();
         peds.splice(i,1);
         if(ped.kind==='chat'&&ped.partner) ped.partner.kind='local';
-        spawnPed(pick(blockInfo));
+        if(peds.length<PED_CAP) spawnPed(pick(blockInfo));
       }
       continue;
     }
@@ -6076,7 +6127,7 @@ function collectPickups(x,z,r){
   for(let i=pickups.length-1;i>=0;i--){
     const p=pickups[i];
     if(Math.hypot(p.x-x,p.z-z)<r){
-      scene.remove(p.mesh); pickups.splice(i,1);
+      scene.remove(p.mesh); disposeMesh(p.mesh); pickups.splice(i,1);
       if(p.kind==='cash'){ addMoney(25,'PICKUP'); sfx.coin(); burst(x,1,z,8,COL_CASH,2,0.5,3); }
       else if(p.kind==='wrench'){
         if(player.car){ player.car.hp=player.car.maxhp; G.carHP=100; toast('REPAIRED','good'); sfx.repair(); }
@@ -6161,13 +6212,14 @@ function wasted(spot){
   if(c){
     burst(c.x,1,c.z,40,COL_FIRE,7,1.1,4);
     burst(c.x,1,c.z,20,COL_SMOKE,3.5,1.8,1);
-    scene.remove(c.mesh); c.dead=true;
+    scene.remove(c.mesh); disposeMesh(c.mesh); c.dead=true;
     const ci=cars.indexOf(c); if(ci>=0) cars.splice(ci,1);
   }
   const ph=player.heli;
   if(ph){
     burst(ph.x,ph.y+1,ph.z,40,COL_FIRE,8,1.2,4);
-    scene.remove(ph.mesh); ph.dead=true;
+    scene.remove(ph.mesh); disposeMesh(ph.mesh); ph.dead=true;
+    if(ph.shadow){ scene.remove(ph.shadow); disposeMesh(ph.shadow); }
     const hi=helis.indexOf(ph); if(hi>=0) helis.splice(hi,1);
     player.heli=null;
   }
@@ -6439,7 +6491,7 @@ function loop(){
     positionBubble();
     if(turboCool>0) turboCool-=dt;
     fpsAcc+=dt; fpsN++; fpsT+=dt;
-    if(fpsT>2){ $('fpsWarn').textContent=Math.round(fpsN/fpsAcc)+' fps'; fpsAcc=0; fpsN=0; fpsT=0; }
+    if(fpsT>2){ const fps=fpsN/fpsAcc; $('fpsWarn').textContent=Math.round(fps)+' fps'; autoQualityTick(fps); fpsAcc=0; fpsN=0; fpsT=0; }
   }
   renderer.render(scene,camera);
 }
@@ -6688,7 +6740,7 @@ function updateStory(dt){
     const sw=Math.sin(deb.phase)*0.5, u=deb.mesh.userData;
     u.legL.rotation.x=sw; u.legR.rotation.x=-sw; u.armL.rotation.x=-sw; u.armR.rotation.x=sw;
     deb.gone+=dt;
-    if(deb.gone>14){ scene.remove(deb.mesh); if(deb.bub) deb.bub.remove(); deb=null; }
+    if(deb.gone>14){ scene.remove(deb.mesh); disposeMesh(deb.mesh); if(deb.bub) deb.bub.remove(); deb=null; }
     return;
   }
   const d=Math.hypot(player.x-deb.x,player.z-deb.z);
@@ -6751,7 +6803,7 @@ function updateStory(dt){
     $('debtHud').style.display='none';
     queueSave();
     sfx.coin();
-    if(debBeacon){ scene.remove(debBeacon); debBeacon=null; }
+    if(debBeacon){ scene.remove(debBeacon); disposeMesh(debBeacon); debBeacon=null; }
     // Cinematic payoff sequence
     playCutscene('deb_payoff', deb.x, deb.z, ()=>{
       bigEvent('DEB PAID','#7dff8a','Chapter 2 coming soon...');
@@ -7127,7 +7179,7 @@ function speakLine(text,gender,opts){
   if(v) u.voice=v;
   u.pitch=opts.pitch||(gender==='female'?1.15:0.82);
   u.rate=opts.rate||(gender==='female'?1.05:0.92);
-  u.volume=opts.volume!==undefined?opts.volume:0.9;
+  u.volume=(opts.volume!==undefined?opts.volume:0.9)*SETTINGS.voice/100;
   u.onend=()=>{ VOCurrent=null; voDuckOff(); processVOQueue(); };
   VOQueue.push(u);
   if(!VOCurrent) processVOQueue();
@@ -7160,7 +7212,7 @@ function procVoice(text,pitchBase,rate){
     g.gain.setValueAtTime(0.0001,t);
     g.gain.exponentialRampToValueAtTime(0.08,t+0.03);
     g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(f); f.connect(g); g.connect(masterGain);
+    o.connect(f); f.connect(g); g.connect(voiceGain);
     o.start(t); o.stop(t+dur+0.02);
     t+=dur+0.05;
   });
@@ -7216,7 +7268,7 @@ function playVOLine(i){
   if(!AC||!voBuffers[i]) return false;
   const src=AC.createBufferSource(); src.buffer=voBuffers[i];
   const g=AC.createGain(); g.gain.value=1.0;
-  src.connect(g); g.connect(masterGain);
+  src.connect(g); g.connect(voiceGain);
   voDuckOn(); src.onended=voDuckOff; src.start();
   voCurrentSrc=src;
   return true;
@@ -7240,7 +7292,7 @@ function playVOFile(src,rate,gain){
   const s=AC.createBufferSource(); s.buffer=voExtra[src];
   if(rate) s.playbackRate.value=rate;
   const g=AC.createGain(); g.gain.value=gain||0.95;
-  s.connect(g); g.connect(masterGain);
+  s.connect(g); g.connect(voiceGain);
   voDuckOn(); s.onended=voDuckOff; s.start();
   voCurrentSrc=s;
   return true;
@@ -7633,7 +7685,7 @@ function updateReplay(dt){
 // so each sets its own flag and syncPause() is the only writer of G.paused.
 const SET_KEY='gtb4.settings';
 const SETTINGS=(function(){
-  const d={ v:1, master:100, music:100 };
+  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto' };
   try{ const s=JSON.parse(localStorage.getItem(SET_KEY)); if(s&&s.v===1) Object.assign(d,s); }catch(e){}
   return d;
 })();
@@ -7642,7 +7694,87 @@ const musicVolVal=()=>0.5*SETTINGS.music/100; // radio's stock 0.5 gain scaled b
 function applyVolumes(){
   if(masterGain) masterGain.gain.value=0.9*SETTINGS.master/100;
   if(musicGain) musicGain.gain.value=STATIONS[G.station]?musicVolVal():0;
+  if(sfxGain) sfxGain.gain.value=SETTINGS.sfx/100;
+  if(voiceGain) voiceGain.gain.value=SETTINGS.voice/100;
 }
+
+// ---- adaptive graphics quality (F3): Low/Med/High tiers + fps-driven auto ----
+// Levers kept deliberately cheap: renderer pixel ratio, traffic/ped population
+// caps (trimmed live via disposeMesh — see R1 — when a downshift needs to
+// shed entities right now), and particle-burst size. Persisted alongside the
+// volume sliders in the same SETTINGS blob.
+const QUALITY_TIERS={
+  low:   { pixelRatio:1.0,  trafficCap:8,  pedCap:16, particleScale:0.5,  fogNear:70,  fogFar:280 },
+  medium:{ pixelRatio:1.35, trafficCap:12, pedCap:24, particleScale:0.75, fogNear:95,  fogFar:420 },
+  high:  { pixelRatio:1.75, trafficCap:16, pedCap:34, particleScale:1,    fogNear:120, fogFar:560 },
+};
+let qualityMode=SETTINGS.quality||'auto';   // 'auto'|'low'|'medium'|'high' — the user's choice
+let autoLowStreak=0, autoHighStreak=0;
+function trimToCaps(){
+  while(traffic.length>TRAFFIC_CAP){
+    let fi=-1,fd=-1;
+    for(let i=0;i<traffic.length;i++){ const c=traffic[i]; const d=Math.hypot(c.x-px0(),c.z-pz0()); if(d>fd){fd=d;fi=i;} }
+    if(fi<0) break;
+    const c=traffic[fi];
+    scene.remove(c.mesh); disposeMesh(c.mesh);
+    const ci=cars.indexOf(c); if(ci>=0) cars.splice(ci,1);
+    traffic.splice(fi,1);
+  }
+  while(peds.length>PED_CAP){
+    let fi=-1,fd=-1;
+    for(let i=0;i<peds.length;i++){ const p=peds[i]; if(p.state==='down') continue; const d=Math.hypot(p.x-px0(),p.z-pz0()); if(d>fd){fd=d;fi=i;} }
+    if(fi<0) break;
+    const p=peds[fi];
+    scene.remove(p.mesh); disposeMesh(p.mesh);
+    if(p.bub) p.bub.remove();
+    peds.splice(fi,1);
+  }
+}
+function applyQuality(tier){
+  const cfg=QUALITY_TIERS[tier]; if(!cfg) return;
+  GFX_TIER=tier;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,cfg.pixelRatio));
+  TRAFFIC_CAP=cfg.trafficCap; PED_CAP=cfg.pedCap; PARTICLE_SCALE=cfg.particleScale;
+  if(scene.fog){ scene.fog.near=cfg.fogNear; scene.fog.far=cfg.fogFar; }
+  trimToCaps();
+}
+function refreshQualityButtons(){
+  const g=$('qualityGroup'); if(!g) return;
+  g.querySelectorAll('.qBtn').forEach(b=>b.classList.toggle('on',b.dataset.q===qualityMode));
+}
+function setQualityMode(mode){
+  qualityMode=mode; SETTINGS.quality=mode; saveSettings();
+  autoLowStreak=0; autoHighStreak=0;
+  applyQuality(mode==='auto'?'high':mode);
+  refreshQualityButtons();
+}
+// fps-driven auto tier: two consecutive ~2s windows under 40fps steps down;
+// six consecutive windows pinned at 56+ steps back up. No-op outside 'auto'.
+function autoQualityTick(fps){
+  if(qualityMode!=='auto') return;
+  if(fps<40){ autoLowStreak++; autoHighStreak=0; }
+  else if(fps>=56){ autoHighStreak++; autoLowStreak=0; }
+  else { autoLowStreak=0; autoHighStreak=0; }
+  if(autoLowStreak>=2){
+    autoLowStreak=0;
+    if(GFX_TIER==='high') applyQuality('medium');
+    else if(GFX_TIER==='medium') applyQuality('low');
+  } else if(autoHighStreak>=6){
+    autoHighStreak=0;
+    if(GFX_TIER==='low') applyQuality('medium');
+    else if(GFX_TIER==='medium') applyQuality('high');
+  }
+}
+applyQuality(qualityMode==='auto'?'high':qualityMode);
+(function initQualityUI(){
+  const g=$('qualityGroup'); if(!g) return;
+  refreshQualityButtons();
+  g.querySelectorAll('.qBtn').forEach(b=>{
+    b.addEventListener('click',()=>setQualityMode(b.dataset.q));
+    b.addEventListener('touchend',e=>{ e.preventDefault(); setQualityMode(b.dataset.q); });
+  });
+})();
+
 function syncPause(){ G.paused=G.started&&G.menuPaused; }
 function pauseGame(){
   if(G.menuPaused||!G.started||G.over||G.intro||activeCutscene||G.replay) return;
@@ -7687,6 +7819,7 @@ function showPausePanel(id){ ['pmMain','pmSettings','pmHow'].forEach(p=>{ $(p).s
     el.addEventListener('change',saveSettings); // persist on release, not every drag tick
   };
   slider('volMaster','master'); slider('volMusic','music');
+  slider('volSfx','sfx'); slider('volVoice','voice');
 })();
 
 // ================= SAVE SYSTEM =================

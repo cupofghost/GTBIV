@@ -589,27 +589,30 @@ resolution + higher fps, no crashes, no missing-object errors. Auto-downshift
 triggers when fps is throttled (test with CPU throttling in devtools). Manual
 setting sticks across reloads.
 
-#### F4 — Audio mix buses + music ducking `P1 · Risk: Low` `PARTIAL`
-**Status: ducking done; SFX/Voice buses remain** (Claude). Shipped alongside the
+#### F4 — Audio mix buses + music ducking `P1 · Risk: Low` `DONE`
+**Status: implemented & verified** (Claude). Shipped alongside the
 80s-synthwave-soundtrack rebuild: a `musicGain` bus feeds an FX rack (sidechain
 **pump**, convolver **reverb**, ping-pong **delay**, bus compressor) →
-`musicGain` → **`musicVODuck`** → `masterGain`. **Master + Music** sliders exist
-in Settings (persisted). Voiceover **ducks the radio** via ref-counted
-`voDuckOn/Off` → `duckMusicForVO` on both the mp3 (`playVOFile`/`playVOLine`) and
-TTS (`processVOQueue`) paths, and un-ducks cleanly (`stopVoiceOver` →
-`voDuckReset`). Covered by `tests/cases/soundtrack.test.js`.
-**Still to do:** dedicated **`sfxGain`** and **`voiceGain`** sub-buses (`sfx.*`
-and VO currently connect straight to `masterGain`) and **SFX / Voice** sliders in
-Settings, so those categories can be mixed/muted independently.
-**Why:** Only `masterGain` exists; you can't turn music down without killing
-SFX, and voiceover fights the radio.
-**Where:** `AUDIO` section (bus routing), Settings (F2) for sliders.
-**Approach:** Insert **`sfxGain`, `voiceGain`** sub-buses between the per-sound
-nodes and `masterGain`. Route `sfx.*` → sfx, VO → voice (music already routes
-through `musicGain`). Add **SFX / Voice** sliders in Settings (persisted, F1).
-**Acceptance:** Each slider independently changes its category in real time and
-persists. During Deb/story VO the radio dips and recovers (**done**). Muting
-music leaves engine + SFX + VO intact.
+`musicGain` → **`musicVODuck`** → `masterGain`. Voiceover **ducks the radio**
+via ref-counted `voDuckOn/Off` → `duckMusicForVO` on both the mp3
+(`playVOFile`/`playVOLine`) and TTS (`processVOQueue`) paths, and un-ducks
+cleanly (`stopVoiceOver` → `voDuckReset`). Covered by
+`tests/cases/soundtrack.test.js`.
+**SFX/Voice buses (closed out):** dedicated **`sfxGain`** and **`voiceGain`**
+sub-buses sit between the per-sound nodes and `masterGain`. `blip`/`noiseBurst`
+(the shared one-shot helpers behind every `sfx.*` entry) plus the continuous
+engine/skid/siren loops route through `sfxGain`; `wahVoice` (ambient NPC
+chatter), `procVoice` (TTS fallback), and the recorded-VO players
+(`playVOLine`/`playVOFile`) route through `voiceGain` — `speakLine`'s
+browser-TTS path scales `utterance.volume` by the same slider since
+SpeechSynthesis has no Web Audio node to route. **Master / Music / SFX /
+Voice** sliders all live in Settings, persisted in the same `SETTINGS` blob
+(F1's localStorage pattern).
+**Why:** Only `masterGain` existed; you couldn't turn music down without
+killing SFX, and voiceover fought the radio.
+**Acceptance:** each slider independently changes its category in real time
+and persists; during Deb/story VO the radio dips and recovers; muting music
+leaves engine + SFX + VO intact.
 
 ---
 
@@ -1086,10 +1089,10 @@ throughout:
 ✔ F1  Save/restore               DONE
 ✔ F2  Pause + Settings menu      DONE
 ✔ D3  Debug HUD                  DONE
-R1  Dispose on removal          ← NEXT: stop the memory leak early
-F3  Adaptive quality            ← biggest mobile win
-~ F4  Audio mix + ducking      ← ducking DONE; sfx/voice buses remain
-U1  Objective clarity/HUD
+✔ R1  Dispose on removal         DONE
+✔ F3  Adaptive quality           DONE
+✔ F4  Audio mix + ducking        DONE
+U1  Objective clarity/HUD       ← NEXT
 J1  Haptics
 P1  Mission variety
 J3  Camera options
