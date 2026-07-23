@@ -573,7 +573,19 @@ menu is interactive. Don't let orientation-pause and menu-pause fight — track
 Resume continues exactly where you were. Works in landscape touch. Rotating to
 portrait still shows the rotate warning without corrupting menu state.
 
-#### F3 — Adaptive graphics quality `P0 · Risk: Med`
+#### F3 — Adaptive graphics quality `P0 · Risk: Med` `DONE`
+**Status: implemented & verified** (Claude). New `adaptive graphics quality`
+block in `PAUSE MENU & SETTINGS` defines `QUALITY_TIERS` (`low`/`medium`/`high`)
+covering renderer pixel ratio, `TRAFFIC_CAP`/`PED_CAP` population limits,
+`PARTICLE_SCALE` (applied in `burst()`), and fog near/far. A **QUALITY** row in
+the Settings panel (AUTO/LOW/MED/HIGH buttons) calls `setQualityMode()`,
+persisted in `SETTINGS.quality` (default `'auto'`) alongside the volume sliders.
+`autoQualityTick(fps)` runs from the existing 2s fps-sample window in `loop()`:
+two consecutive windows under 40fps step the tier down, six consecutive
+windows pinned at 56+ step it back up; manual modes disable the auto
+state machine. `applyQuality()` calls `trimToCaps()` to shed live
+traffic/peds immediately via R1's `disposeMesh()` rather than waiting for
+natural despawns, so a downshift is visible right away.
 **Why:** Pixel ratio is set **once**; there's an fps readout but nothing acts on
 it. On weak phones the game just chugs. This is the single biggest mobile win.
 **Where:** `THREE SETUP` (renderer), `MAIN LOOP` (fps sampling already exists),
@@ -587,7 +599,10 @@ auto. Persist the choice (F1).
 **Acceptance:** Force a low tier → visibly fewer NPCs/particles + lower internal
 resolution + higher fps, no crashes, no missing-object errors. Auto-downshift
 triggers when fps is throttled (test with CPU throttling in devtools). Manual
-setting sticks across reloads.
+setting sticks across reloads. Verified: full headless suite green (36/36),
+plus a standalone Playwright smoke pass confirming live trim on downshift,
+cap/pixel-ratio changes on tier switch, settings persistence across reload,
+and the auto up/down state machine.
 
 #### F4 — Audio mix buses + music ducking `P1 · Risk: Low` `DONE`
 **Status: implemented & verified** (Claude). Shipped alongside the
@@ -763,10 +778,20 @@ noticeably calms the camera; HUD text scales without breaking layout.
 
 ### Phase 5 — Robustness & Performance Hygiene
 
-#### R1 — Dispose GPU resources on entity removal `P0 · Risk: Med`
-**Why:** **`.dispose()` is never called.** Every despawned car/ped/particle mesh
-leaks its geometry+material on the GPU; over a long session memory climbs and
-mobile browsers eventually kill the tab.
+#### R1 — Dispose GPU resources on entity removal `P0 · Risk: Med` `DONE`
+**Status: implemented & verified** (Claude). New `GPU RESOURCE CLEANUP` section
+(right after the shadow helpers) adds `disposeMesh(obj)`: a lazily-built
+`_sharedGPU` set (`groundGeo`, `sandGeo`, `pGeo`, `shGeo`, `shMat`, `fbGeo`) plus
+a `traverse()` that disposes every other child's geometry/material (and its
+`.map` texture) while skipping anything in that shared set. Called alongside
+every permanent `scene.remove()` — car deaths (`killCar`, water sink, wanted
+cleanup), ped/foot-cop deaths and the eaten-corpse path, cop helis and
+pilotless-heli crashes/water deaths (plus the player's own heli shadow on a
+`wasted()` explosion, previously leaked), rockets, stray-dog churn, meat
+drops, and the Chaos Pizza exterior mesh on Pizza Wars completion.
+**Why:** **`.dispose()` was never called.** Every despawned car/ped/particle mesh
+leaked its geometry+material on the GPU; over a long session memory climbed and
+mobile browsers eventually killed the tab.
 **Where:** everywhere an entity is permanently removed — `damageCar` (car death),
 ped/cop cleanup, rockets, gang members, expired pickups.
 **Approach:** Add a small `disposeMesh(obj3d)` helper that traverses and disposes
@@ -776,7 +801,10 @@ once and reused, and only disposed at teardown). Call it wherever an entity is
 gone for good. Audit which geometries are shared vs per-instance first.
 **Acceptance:** Drive around causing lots of spawns/despawns for several minutes
 → JS heap + GPU memory stay roughly flat (check devtools Memory / Performance).
-No visual regressions (shared assets still render).
+No visual regressions (shared assets still render). Verified: full headless
+suite green (36/36), plus a standalone Playwright smoke pass confirming
+disposed meshes revive cleanly when the Replay system re-adds a recently-killed
+entity mid-scrub (no console errors, clean exit).
 
 #### R2 — Pool traffic / peds instead of churning them `P2 · Risk: Med`
 **Why:** Cars and peds are spliced and re-`spawn`ed via timeouts, creating and
