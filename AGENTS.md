@@ -12,6 +12,7 @@
 
 **The doc map (what to read for what):**
 - **`AGENTS.md`** (this file) — roles, protocol, the live task board, the human wrap-up rule (§7). Start here.
+- `HUMAN_GUIDE.md` — the condensed, human-facing version of this doc + `ASSETS.md`: which tool to reach for, ready-to-paste prompts, and the habits that keep sessions fast. Point Austin here.
 - `GAME_PLAN.md` — strategy: state report, the Places/loading growth plan, the asset pipeline.
 - `ASSETS.md` — **how to actually generate art** (Midjourney/Nano Banana/Kimi): style DNA, per-subject prompt recipes, mobile budget. Read before making or requesting any image.
 - `HANDOFF.md` — the engineering backlog + architecture + code map. The *how* of the code.

@@ -96,6 +96,7 @@ plain relative paths.
 | --- | --- |
 | `index.html` | The entire game (markup, styles, and logic) |
 | `AGENTS.md` | **Mission control — read first.** Agent roster, the repo-as-message-bus handoff protocol, and the live task board every agent/human works from |
+| `HUMAN_GUIDE.md` | **For the human.** One-page cheat sheet: which AI tool to reach for, ready-to-paste prompts, and the habits that keep multi-agent work fast |
 | `GAME_PLAN.md` | Top-level map — verified state-of-the-game report, the Places & Loading growth architecture, and the multi-agent (code + graphics) asset pipeline |
 | `ASSETS.md` | Art-generation guide — San Chaos style DNA, which image tool (Midjourney/Nano Banana/Kimi) to use for what, per-subject prompt recipes (cars, people, trees, buildings…), and the mobile texture budget |
 | `HANDOFF.md` | Engineering handoff — architecture, code map, and the prioritised improvement backlog for contributors |
