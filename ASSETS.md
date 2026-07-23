@@ -31,7 +31,7 @@ pretty picture the engine can't use.
 ## 1. The San Chaos style DNA (bake this into every prompt)
 
 Everything must read as one world: **1980s neon-noir, synthwave, sun-baked
-crime-comedy city at magic hour.** Consistency beats individual brilliance — a
+crime city at magic hour.** Consistency beats individual brilliance — a
 gorgeous asset in the wrong palette is a bug.
 
 **Canonical palette** (copy verbatim into prompts and into any code that tints
@@ -47,7 +47,7 @@ art):
 **Style suffix — paste at the end of every prompt** (tune only the subject):
 
 ```
-…, 1980s synthwave neon-noir aesthetic, San Chaos crime-comedy city, magic-hour
+…, 1980s synthwave neon-noir aesthetic, San Chaos neon-noir crime city, magic-hour
 sunset lighting with hot-pink #ff3ea0 and cyan #24d0e0 rim light and gold #ffd23e
 highlights over deep purple-black #0a0612 shadows, bold clean shapes, slightly
 stylized not photoreal, high contrast, no text, no watermark, no logo

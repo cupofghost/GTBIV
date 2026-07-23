@@ -51,7 +51,8 @@ Design beat (STORY_BIBLE / GAME_PLAN)
         → art request filed here (§4) → Nano Banana / Midjourney produce to spec
            → Austin/Claude size to the mobile budget + commit at the fixed path
               → Claude wires any staged VO, reviews, runs the suite
-                 → commit (green + playable) → update this board → repeat
+                 → commit (green + playable) → open PR to main → update this
+                    board → wrap-up to Austin (§7) → Austin merges → repeat
 ```
 
 **Rules every agent follows (these are the golden rules, enforced):**
@@ -62,9 +63,15 @@ Design beat (STORY_BIBLE / GAME_PLAN)
    (§3) with your name, so two agents don't collide on the 355 KB `index.html`.
 3. **One logical change per commit, always playable.** Run `cd tests &&
    node run.js` (must be green) before every commit.
-4. **Work on your own branch**, PR to `main` when green. Don't push to someone
-   else's active branch. (Each session/agent gets its own `claude/…` or
-   `kimi/…` branch.)
+4. **Work on your own branch, and open a PR to `main` after every improvement —
+   automatically, every time.** Each session/agent gets its own `claude/…` or
+   `kimi/…` branch; don't push to someone else's active branch. The moment a unit
+   of work is green + playable and committed, **open a pull request to `main`**
+   (or push the new commit to the branch of the PR you already opened for this
+   task). Don't wait to be asked, and don't batch several improvements into one
+   silent branch. **Agents never merge to `main` — Austin does.** Your job ends
+   at "green PR is open and linked in the wrap-up (§7)"; Austin reviews and
+   merges. One improvement → one PR.
 5. **Leave a trace.** When you finish something meaningful, add a one-paragraph
    entry to the `HANDOFF.md` changelog (what changed + why) and update this
    board. That paragraph *is* your message to the next agent.
@@ -175,10 +182,11 @@ Assets that are committed but not yet referenced by code. Claude picks from here
 1. Read this file, then `GAME_PLAN.md` and the relevant section of `HANDOFF.md`.
 2. Pick the top **▶ Next up** you're suited for; set it 🔨 with your name.
 3. Build it small, keep the suite green, keep it playable.
-4. Commit on your own branch; PR to `main` when green.
+4. Commit on your own branch and **open a PR to `main` (automatically, every
+   improvement — §2 rule 4).** Agents don't merge; Austin does.
 5. Set it ✅, add a changelog paragraph to `HANDOFF.md`, update this board, and
    surface anything you unblocked (e.g. R1 done → PL1 becomes ▶).
-6. **End with the human wrap-up message to Austin (§7).**
+6. **End with the human wrap-up message to Austin (§7) — include the PR link.**
 
 ---
 
@@ -210,6 +218,7 @@ is the human-readable one. **Do both — the trace does not replace the message.
    — <state: suite green? playable? committed to which branch?>
 
 ▶ Next steps
+   — PR: <link to the pull request you opened for this work — Austin merges it>
    — <the obvious next move, and who should take it — you, another agent, or a
       decision only Austin can make>
    — <anything you unblocked, or anything you need from Austin to proceed>

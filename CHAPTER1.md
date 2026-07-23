@@ -53,7 +53,7 @@ First appearance: cuts into the wanted-level chatter the first time the
   player hits 3 stars (see §7 for the hook).
 Arc / payoff: Running gag across the whole game. A good Chapter 2+ beat:
   he nearly catches Turbo and it costs him everything, which deepens the
-  parody rather than resolving it.
+  bit rather than resolving it.
 Gags: Talks about donuts the way noir narrators talk about old flames
   ("One bite and I'm nineteen again"); monologues into his own radio like
   it's a diary no one's listening to.
