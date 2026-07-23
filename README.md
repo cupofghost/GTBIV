@@ -7,9 +7,10 @@ fly helis, dodge cops, and cause chaos in San Chaos City.
 
 Built as a single self-contained HTML5 page using [three.js](https://threejs.org)
 for the 3D world and the Web Audio API for engine sounds, a fully procedural 80s
-**synthwave soundtrack** (sidechain-pumped, reverb-drenched radio — 9 songs
-across 3 stations, and the score leans hotter the more stars you've got), and
-recorded voiceover. Designed for **landscape** phones and installable as a PWA.
+**synthwave soundtrack** (sidechain-pumped, reverb-drenched radio — 12 songs
+across 3 stations, each with its own "chase mix" and ambient wash loop that
+swap in as your wanted stars rise and fall), and recorded voiceover. Designed
+for **landscape** phones and installable as a PWA.
 
 <p align="center"><img src="icon-512.png" width="140" alt="GTB IV icon"></p>
 

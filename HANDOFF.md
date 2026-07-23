@@ -254,7 +254,7 @@ colliders in this cheap analytic style.
 - **`sfx`** is an object of one-shot synth effects (`sfx.crash`, `sfx.coin`,
   `sfx.jump`, `sfx.mission`, `sfx.fail`, …). Add new effects here.
 - Radio is a procedural **synthwave soundtrack**: each `STATIONS[]` entry is a
-  playlist of songs from `SW_SONGS` (**9 songs, 3 per station** — VICE FM /
+  playlist of songs from `SW_SONGS` (**12 songs, 4 per station** — VICE FM /
   TURBO FM / MIRAGE 105). `scheduleMusic()` clocks ahead of the audio clock and
   hands each 16th to `stepSong()`, which reads the current song's arrangement
   (`sections` with an `e`nergy that morphs the drum kit + filter brightness),
@@ -265,13 +265,25 @@ colliders in this cheap analytic style.
   append to `SW_SONGS`** (never insert — `STATIONS[].songs` reference it by
   index, and those indices must stay stable) and reference it from a station's
   `songs`.
-- **Wanted-level heat reacts on top of the current song**: `updateHeatLevel()`
-  (called once per `scheduleMusic()` tick) smoothly tracks `G.stars` into
-  `heatLevel` (0..1 — fast rise, slower cooldown) and `heatEnergy(sec)` blends
-  it into each section's authored energy, so the kit gets busier/brighter, an
-  extra off-beat kick pulse kicks in past `heatLevel>0.55`, and a tension
-  `swChaseStab` cuts in past `heatLevel>0.8` — all **without switching tracks**,
-  so a chase makes whatever's already playing hit harder.
+- **Wanted-level heat reacts on top of the current song two ways.** First, in
+  place: `updateHeatLevel()` (called once per `scheduleMusic()` tick) smoothly
+  tracks `G.stars` into `heatLevel` (0..1 — fast rise, slower cooldown; it also
+  maintains `calmT`, seconds spent clean) and `heatEnergy(sec)` blends it into
+  each section's authored energy, so the kit gets busier/brighter, an extra
+  off-beat kick pulse kicks in past `heatLevel>0.55`, and a tension
+  `swChaseStab` cuts in past `heatLevel>0.8`. Second, **every song can hand off
+  to a dedicated loop variant** — `song.hotLoop` (a tight, hard-hitting 4-bar
+  vamp built from that song's own chords, via `makeHotLoop`/bespoke for a few
+  flagships) and `song.calmLoop` (a sparse ambient wash, via `makeCalmLoop`).
+  `desiredSwMode()` picks `'normal' | 'hot' | 'calm'` with hysteresis (hot
+  enters >0.65, exits <0.45; calm needs `calmT>6` — not just low heat, so a
+  fresh boot doesn't start in the ambient loop instead of the authored
+  arrangement) and `scheduleMusic()` only swaps at a bar boundary, **freezing
+  the normal arrangement's position** while a loop plays so it resumes exactly
+  where it left off once the heat settles. A `swCrash()` stings the entrance
+  into hot mode. All of this happens **without switching playlist tracks** —
+  a chase makes whatever's already playing hit harder, then hand off to its
+  own "chase mix," then hand back.
 - Voiceover: `speak()` for synth NPC "wah" voice; `playVOFile`/`playVOLine` for
   recorded narration. Any active narration **ducks the radio** via the
   ref-counted `voDuckOn/Off` → `duckMusicForVO` (F4's "music dips during VO").
