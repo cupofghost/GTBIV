@@ -543,6 +543,10 @@
       <button class="qBtn" data-q="medium">MED</button>
       <button class="qBtn" data-q="high">HIGH</button>
     </div></div>
+    <div class="pmRow"><label>VIBRATE</label><div class="qGroup" id="vibrateGroup">
+      <button class="qBtn" data-v="on">ON</button>
+      <button class="qBtn" data-v="off">OFF</button>
+    </div></div>
     <button class="pmBtn" id="pmSetBack">BACK</button>
   </div>
   <div class="pmPanel" id="pmHow" style="display:none">
@@ -4450,6 +4454,7 @@ function doAttack(){
     }
     p.punchT=0.32;
     sfx.gunshot();
+    haptic(15);
     addHeat(4);
     burst(p.x+Math.sin(p.heading)*1.2,1.4,p.z+Math.cos(p.heading)*1.2,4,COL_FIRE,1.5,0.12,0);
     let best=null,bd=30;
@@ -4513,6 +4518,7 @@ function doAttack(){
     if(!DEV_STATE.inf) G.rockets--;
     if(G.rockets<=0) G.weapon='pistol';
     sfx.rocket();
+    haptic(40);
     addHeat(20);
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(0.25,0.25,0.9),
       new THREE.MeshBasicMaterial({color:0xff7a3d}));
@@ -4586,7 +4592,7 @@ function updateFireballs(dt){
   }
 }
 function explode(x,y,z){
-  sfx.bigCrash(); shake(0.8);
+  sfx.bigCrash(); shake(0.8); haptic([40,50,70]);
   G.lastBoom={x,z,t:performance.now()};
   spawnFireball(x,Math.max(y,1),z,4.5);
   burst(x,y,z,42,COL_FIRE,8,1.1,4);
@@ -4597,7 +4603,7 @@ function explode(x,y,z){
 const boomFx=[];      // climbing cloud emitters {x,y,z,t}
 let shockwave=null;   // one reusable expanding ring
 function bigExplosion(x,y,z){
-  sfx.bigCrash(); shake(1.2);
+  sfx.bigCrash(); shake(1.2); haptic([60,40,90,40,120]);
   spawnFireball(x,y+1,z,8.5);
   burst(x,y,z,70,COL_FIRE,12,1.6,4);
   burst(x,y,z,40,COL_FIRE,6,2.2,1);
@@ -4958,7 +4964,7 @@ function carPhysics(car,dt,ctl){
       const impact=Math.abs(car.vy);
       burst(car.x,0.4,car.z,14,COL_SMOKE,3,0.7,2);
       if(car===player.car){
-        if(impact>13){ damageCar(car,(impact-13)*2.2,'crash'); sfx.crash(0.5); }
+        if(impact>13){ damageCar(car,(impact-13)*2.2,'crash'); sfx.crash(0.5); hapticCrash(impact); }
         if(car.airT>0.55){
           addMoney(Math.round(car.airT*110),'AIR TIME '+(car.airT).toFixed(1)+'s');
           if(mission&&mission.type==='style') mission.value+=car.airT*130;
@@ -4991,7 +4997,7 @@ function carPhysics(car,dt,ctl){
       if(impact>6){
         if(car===player.car){
           damageCar(car,impact*1.15,'crash'); shake(Math.min(0.6,impact*0.02));
-          sfx.crash(impact*0.02);
+          sfx.crash(impact*0.02); hapticCrash(impact);
           if(mission&&mission.type==='rampage') mission.value+=impact*14;
           addStyle(impact*1.2);
         } else if(car.driver==='cop'){
@@ -5011,7 +5017,7 @@ function carPhysics(car,dt,ctl){
         car.vel.x-=1.5*vn*th.nx; car.vel.z-=1.5*vn*th.nz;
         const impact=-vn;
         if(impact>5){
-          if(car===player.car){ damageCar(car,impact*0.8,'crash'); shake(Math.min(0.4,impact*0.016)); sfx.crash(impact*0.016); }
+          if(car===player.car){ damageCar(car,impact*0.8,'crash'); shake(Math.min(0.4,impact*0.016)); sfx.crash(impact*0.016); hapticCrash(impact); }
           else car.hp-=impact;
           burst(car.x-th.nx,1.1,car.z-th.nz,7,[[0.18,0.48,0.24],[0.29,0.6,0.29]],2.5,0.5,5);
         }
@@ -5028,7 +5034,7 @@ function carPhysics(car,dt,ctl){
         car.vel.x-=1.5*vn*ph.nx; car.vel.z-=1.5*vn*ph.nz;
         const impact=-vn;
         if(impact>6){
-          if(car===player.car){ damageCar(car,impact*0.7,'crash'); shake(Math.min(0.35,impact*0.014)); sfx.crash(impact*0.014); }
+          if(car===player.car){ damageCar(car,impact*0.7,'crash'); shake(Math.min(0.35,impact*0.014)); sfx.crash(impact*0.014); hapticCrash(impact); }
           else car.hp-=impact*0.8;
           burst(car.x-ph.nx,1,car.z-ph.nz,6,COL_SPARK,2.5,0.35,5);
         }
@@ -6195,7 +6201,7 @@ function respawn(spot){
 }
 function busted(){
   if(G.over) return;
-  sfx.busted();
+  sfx.busted(); haptic(120);
   const fine=Math.floor(G.money*0.12);
   G.money-=fine; $('money').textContent='$'+G.money;
   bigEvent('BUSTED','#4f7ad9','You lost $'+fine);
@@ -6207,7 +6213,7 @@ function busted(){
 function wasted(spot){
   if(G.over) return;
   endBail();
-  sfx.bigCrash();
+  sfx.bigCrash(); haptic([80,60,150]);
   const c=player.car;
   if(c){
     burst(c.x,1,c.z,40,COL_FIRE,7,1.1,4);
@@ -7685,7 +7691,7 @@ function updateReplay(dt){
 // so each sets its own flag and syncPause() is the only writer of G.paused.
 const SET_KEY='gtb4.settings';
 const SETTINGS=(function(){
-  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto' };
+  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true };
   try{ const s=JSON.parse(localStorage.getItem(SET_KEY)); if(s&&s.v===1) Object.assign(d,s); }catch(e){}
   return d;
 })();
@@ -7697,6 +7703,32 @@ function applyVolumes(){
   if(sfxGain) sfxGain.gain.value=SETTINGS.sfx/100;
   if(voiceGain) voiceGain.gain.value=SETTINGS.voice/100;
 }
+
+// ---- haptics (J1): short vibration pulses on impact ----
+// Feature-detected (no-op on desktop/unsupported) and gated by a Settings
+// toggle. Call sites scale the pattern to impact so the buzz reads as "hit
+// strength" rather than a fixed click.
+function haptic(pattern){
+  if(!SETTINGS.vibrate||!navigator.vibrate) return;
+  try{ navigator.vibrate(pattern); }catch(e){}
+}
+function hapticCrash(impact){ haptic(Math.min(200,30+impact*4)); }
+function refreshVibrateButtons(){
+  const g=$('vibrateGroup'); if(!g) return;
+  g.querySelectorAll('.qBtn').forEach(b=>b.classList.toggle('on',(b.dataset.v==='on')===!!SETTINGS.vibrate));
+}
+function setVibrateMode(on){
+  SETTINGS.vibrate=on; saveSettings(); refreshVibrateButtons();
+  if(on) haptic(25);   // confirm the toggle with a tiny buzz
+}
+(function initVibrateUI(){
+  const g=$('vibrateGroup'); if(!g) return;
+  refreshVibrateButtons();
+  g.querySelectorAll('.qBtn').forEach(b=>{
+    b.addEventListener('click',()=>setVibrateMode(b.dataset.v==='on'));
+    b.addEventListener('touchend',e=>{ e.preventDefault(); setVibrateMode(b.dataset.v==='on'); });
+  });
+})();
 
 // ---- adaptive graphics quality (F3): Low/Med/High tiers + fps-driven auto ----
 // Levers kept deliberately cheap: renderer pixel ratio, traffic/ped population
