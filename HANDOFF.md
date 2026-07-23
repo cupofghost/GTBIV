@@ -1327,3 +1327,31 @@ Verified: `cd tests && node run.js` — 36/36 green, zero console errors.
 Headless Playwright smoke pass at 800×390 landscape — boots, starts, zero
 page/console errors, football field renders (turf, bleachers) and is
 reachable on foot.
+
+---
+
+## 12. Changelog — mobile black-bar / left-shift fix (Claude, 2026-07-23)
+
+Portrait phones self-present landscape by rotating `body` 90° in CSS
+(`html.gtb-rotated`). That rotated box was sized in **CSS `100vh`/`100vw`
+units**, but the WebGL canvas is sized in **`window.innerHeight`/`innerWidth`
+pixels** (via `vw()`/`vh()` → `renderer.setSize`). On iOS Safari those two
+metrics disagree — `viewport-fit=cover`, the `black-translucent` status bar,
+and the collapsing address-bar toolbar all make CSS viewport units track the
+*large* viewport while `innerHeight/innerWidth` track the *visual* one. The
+canvas therefore filled a different rectangle than its rotated container,
+leaving a **black bar** and a **left shift** on load.
+
+Fix (layout only, no game logic touched):
+
+- The rotated `body` box is now sized off `var(--lvw)`/`var(--lvh)` — the
+  custom properties `updateOrientationMode()` already keeps in lockstep with
+  `innerWidth/innerHeight` — instead of `100vh/100vw`. Canvas and container
+  now share one pixel source of truth, so they can't drift apart. `100vh/100vw`
+  remain only as a fallback for the single synchronous frame before JS first
+  sets the vars.
+- `fitScreen()` (the visualViewport-resize + 1s watchdog that re-fits the
+  canvas) now also calls `updateOrientationMode()` whenever it resizes, so a
+  toolbar collapse/expand can't reintroduce the mismatch mid-session.
+
+Verified: `cd tests && node run.js` — 43/43 green, zero console errors.
