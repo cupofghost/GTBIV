@@ -3736,6 +3736,7 @@ function tapSafeCrack(){
       G.heist.cracked=true; G.heist.phase=3; G.heist.loot=loot;
       burst(player.x,1,player.z,20,COL_CASH,3,0.8,4);
       toast('SAFE CRACKED! +$'+loot,'gold'); sfx.mission();
+      turboSay('robbery_take');   // the take lands — Turbo counts down the debt
       addHeat(15);
     } else nextSafeStage();
   } else {
@@ -4449,6 +4450,7 @@ function doAttack(){
       burst(mark.x,1.2,mark.z,12,COL_CASH,2.5,0.7,4);
       blip(500,900,0.12,0.12,'triangle');
       toast('STICKUP! +$'+loot,'gold');
+      turboSay('robbery');   // the polite-stickup patter
       addHeat(12);
       return;
     }
@@ -7442,6 +7444,26 @@ const TURBO_LINES={
     {src:null, text:"Tonight. She said tonight. Very specific woman, my ex."},
     {src:null, text:"Somewhere out there, a kid thinks I'm cooler than this. Gotta keep that going."},
     {src:null, text:"$800. Not $799. She counted."},
+  ],
+  // sticking up a store/register at gunpoint — the polite-stickup patter
+  robbery:[
+    {src:'voice/turbo/story/robbery/robbery_01_polite-stickup.mp3', text:"This is a stickup. A polite one."},
+    {src:'voice/turbo/story/robbery/robbery_02_cash-can-move.mp3', text:"Nobody move. Except the cash. The cash can move."},
+    {src:'voice/turbo/story/robbery/robbery_03_donation-to-me.mp3', text:"Consider this a donation. To me."},
+    {src:'voice/turbo/story/robbery/robbery_04_scratcher.mp3', text:"I'll take the drawer and a lottery ticket. Scratcher, not Powerball — I'm not greedy."},
+    {src:'voice/turbo/story/robbery/robbery_05_hands-register.mp3', text:"Hands where I can see the register."},
+    {src:'voice/turbo/story/robbery/robbery_06_nobodys-a-hero.mp3', text:"This'll go a lot faster if nobody's a hero."},
+    {src:'voice/turbo/story/robbery/robbery_07_kid-to-feed.mp3', text:"I've got a kid to feed. Don't look at me like that, it's TRUE."},
+    {src:'voice/turbo/story/robbery/robbery_08_its-insured.mp3', text:"Relax, it's insured. Probably."},
+    {src:'voice/turbo/story/robbery/robbery_09_between-me-and-register.mp3', text:"This is between me and the register. You're just standing near it."},
+  ],
+  // the take lands — Turbo counts his progress against Deb's $800
+  robbery_take:[
+    {src:'voice/turbo/story/robbery_take/robbery_take_01_daddy-pays-rent.mp3', text:"And that's how Daddy pays rent. Sort of."},
+    {src:'voice/turbo/story/robbery_take/robbery_take_02_four-hundred-to-go.mp3', text:"Four hundred to go. Feels like four thousand."},
+    {src:'voice/turbo/story/robbery_take/robbery_take_03_never-here.mp3', text:"Anyone asks, I was never here. I was very obviously here."},
+    {src:'voice/turbo/story/robbery_take/robbery_take_04_one-store-down.mp3', text:"One store down. San Chaos has, what, a hundred more?"},
+    {src:'voice/turbo/story/robbery_take/robbery_take_05_cha-ching.mp3', text:"Cha-ching. Minus the ching. It's all quiet, actually."},
   ],
 };
 let turboCool=0;

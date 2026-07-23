@@ -1327,3 +1327,34 @@ Verified: `cd tests && node run.js` — 36/36 green, zero console errors.
 Headless Playwright smoke pass at 800×390 landscape — boots, starts, zero
 page/console errors, football field renders (turf, bleachers) and is
 reachable on foot.
+
+---
+
+## 12. Changelog — voice wiring: robbery barks (Claude, 2026-07-23)
+
+First slice of the **VOICE** task (wiring the ~90 staged `voice/turbo/story/`
+lines that were recorded but referenced nowhere). Two bark pools pulled out of
+the staged pile and hooked to the triggers they were written for:
+
+- **`robbery`** (9 lines, `voice/turbo/story/robbery/`) → fires on the
+  point-blank **stickup** in `doAttack()` (pistol, point-blank on a ped → they
+  surrender their cash). The polite-stickup patter ("This is a stickup. A
+  polite one.").
+- **`robbery_take`** (5 lines, `voice/turbo/story/robbery_take/`) → fires when
+  the **safe crack lands** in `tapSafeCrack()`. Turbo counts the take against
+  Deb's $800 ("Four hundred to go.").
+
+Both go through the existing `turboSay(cat)` dispatch (recorded-only, 2.2s
+cooldown, preloaded via the `TURBO_LINES` warm-up), so no new audio plumbing —
+just two `TURBO_LINES` categories and two one-line call sites. Additive, no
+save-format change, no new system.
+
+New regression guard: `tests/cases/voice-wiring.test.js` asserts every wired
+story pool exists, is non-empty, and each `src` resolves to a real committed
+mp3 — the net for the rest of the staged lines as they get wired.
+
+Still staged / next in this task: `pizza_jack` (story variant), `paying_deb`,
+`approach_deb`, `idle_debt`/`idle_backstory`, the `cutscenes/` VO, and
+`backstory_intro/`.
+
+Verified: `cd tests && node run.js` — green, zero console errors.
