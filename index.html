@@ -535,6 +535,8 @@
     <h2>SETTINGS</h2>
     <div class="pmRow"><label for="volMaster">MASTER</label><input type="range" id="volMaster" min="0" max="100" step="5"><span class="pmVal" id="volMasterVal"></span></div>
     <div class="pmRow"><label for="volMusic">MUSIC</label><input type="range" id="volMusic" min="0" max="100" step="5"><span class="pmVal" id="volMusicVal"></span></div>
+    <div class="pmRow"><label for="volSfx">SFX</label><input type="range" id="volSfx" min="0" max="100" step="5"><span class="pmVal" id="volSfxVal"></span></div>
+    <div class="pmRow"><label for="volVoice">VOICE</label><input type="range" id="volVoice" min="0" max="100" step="5"><span class="pmVal" id="volVoiceVal"></span></div>
     <div class="pmRow"><label>QUALITY</label><div class="qGroup" id="qualityGroup">
       <button class="qBtn" data-q="auto">AUTO</button>
       <button class="qBtn" data-q="low">LOW</button>
@@ -641,7 +643,7 @@ WORLD.half=(WORLD.blocks*WORLD.pitch+WORLD.road)/2;
 WORLD.size=WORLD.half*2+40;
 
 // ================= AUDIO =================
-let AC=null, masterGain, engineOsc, engineGain, engineLP, skidGain,
+let AC=null, masterGain, sfxGain, voiceGain, engineOsc, engineGain, engineLP, skidGain,
     sirenOsc, sirenGain, musicGain, musicStep=0, nextNoteTime=0;
 // --- synthwave FX rack + soundtrack playhead (built lazily in initAudio) ---
 let musicVODuck,            // ducks the whole radio while Turbo/Deb talk
@@ -653,20 +655,25 @@ function initAudio(){
   initVoiceOver();
   AC=new (window.AudioContext||window.webkitAudioContext)();
   masterGain=AC.createGain(); masterGain.gain.value=0.9*SETTINGS.master/100; masterGain.connect(AC.destination);
+  // SFX and Voice sub-buses sit between their per-sound nodes and masterGain,
+  // so the Settings sliders can mix/mute each category independently of the
+  // radio (musicGain) and each other.
+  sfxGain=AC.createGain(); sfxGain.gain.value=SETTINGS.sfx/100; sfxGain.connect(masterGain);
+  voiceGain=AC.createGain(); voiceGain.gain.value=SETTINGS.voice/100; voiceGain.connect(masterGain);
   engineOsc=AC.createOscillator(); engineOsc.type='sawtooth'; engineOsc.frequency.value=50;
   engineLP=AC.createBiquadFilter(); engineLP.type='lowpass'; engineLP.frequency.value=500;
   engineGain=AC.createGain(); engineGain.gain.value=0;
-  engineOsc.connect(engineLP); engineLP.connect(engineGain); engineGain.connect(masterGain);
+  engineOsc.connect(engineLP); engineLP.connect(engineGain); engineGain.connect(sfxGain);
   engineOsc.start();
   const nb=AC.createBuffer(1,AC.sampleRate,AC.sampleRate), nd=nb.getChannelData(0);
   for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1;
   const skid=AC.createBufferSource(); skid.buffer=nb; skid.loop=true;
   const skF=AC.createBiquadFilter(); skF.type='bandpass'; skF.frequency.value=900; skF.Q.value=1.2;
   skidGain=AC.createGain(); skidGain.gain.value=0;
-  skid.connect(skF); skF.connect(skidGain); skidGain.connect(masterGain); skid.start();
+  skid.connect(skF); skF.connect(skidGain); skidGain.connect(sfxGain); skid.start();
   sirenOsc=AC.createOscillator(); sirenOsc.type='triangle'; sirenOsc.frequency.value=700;
   sirenGain=AC.createGain(); sirenGain.gain.value=0;
-  sirenOsc.connect(sirenGain); sirenGain.connect(masterGain); sirenOsc.start();
+  sirenOsc.connect(sirenGain); sirenGain.connect(sfxGain); sirenOsc.start();
   // Radio signal path:  [instruments] -> musicGain (volume) -> musicVODuck -> masterGain
   // musicVODuck sits under the slider so dialogue can dip the music without touching it.
   musicGain=AC.createGain(); musicGain.gain.value=musicVolVal();
@@ -771,7 +778,7 @@ function blip(f0,f1,dur,vol,type){
   o.frequency.exponentialRampToValueAtTime(Math.max(1,f1),AC.currentTime+dur);
   g.gain.setValueAtTime(vol,AC.currentTime);
   g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
-  o.connect(g); g.connect(masterGain); o.start(); o.stop(AC.currentTime+dur+0.02);
+  o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime+dur+0.02);
 }
 function noiseBurst(dur,vol,freq,q){
   if(!AC) return;
@@ -781,7 +788,7 @@ function noiseBurst(dur,vol,freq,q){
   const s=AC.createBufferSource(); s.buffer=b;
   const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=freq; f.Q.value=q;
   const g=AC.createGain(); g.gain.value=vol;
-  s.connect(f); f.connect(g); g.connect(masterGain); s.start();
+  s.connect(f); f.connect(g); g.connect(sfxGain); s.start();
 }
 const sfx={
   coin(){ blip(880,1320,0.09,0.18); setTimeout(()=>blip(1320,1760,0.12,0.15),70); },
@@ -4334,7 +4341,7 @@ function wahVoice(pitch,x,z){
     g.gain.setValueAtTime(0.0001,t);
     g.gain.exponentialRampToValueAtTime(0.05,t+0.02);
     g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(f); f.connect(g); g.connect(masterGain);
+    o.connect(f); f.connect(g); g.connect(voiceGain);
     o.start(t); o.stop(t+dur+0.02);
     t+=dur+rand(0.02,0.06);
   }
@@ -7068,7 +7075,7 @@ function speakLine(text,gender,opts){
   if(v) u.voice=v;
   u.pitch=opts.pitch||(gender==='female'?1.15:0.82);
   u.rate=opts.rate||(gender==='female'?1.05:0.92);
-  u.volume=opts.volume!==undefined?opts.volume:0.9;
+  u.volume=(opts.volume!==undefined?opts.volume:0.9)*SETTINGS.voice/100;
   u.onend=()=>{ VOCurrent=null; voDuckOff(); processVOQueue(); };
   VOQueue.push(u);
   if(!VOCurrent) processVOQueue();
@@ -7101,7 +7108,7 @@ function procVoice(text,pitchBase,rate){
     g.gain.setValueAtTime(0.0001,t);
     g.gain.exponentialRampToValueAtTime(0.08,t+0.03);
     g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(f); f.connect(g); g.connect(masterGain);
+    o.connect(f); f.connect(g); g.connect(voiceGain);
     o.start(t); o.stop(t+dur+0.02);
     t+=dur+0.05;
   });
@@ -7157,7 +7164,7 @@ function playVOLine(i){
   if(!AC||!voBuffers[i]) return false;
   const src=AC.createBufferSource(); src.buffer=voBuffers[i];
   const g=AC.createGain(); g.gain.value=1.0;
-  src.connect(g); g.connect(masterGain);
+  src.connect(g); g.connect(voiceGain);
   voDuckOn(); src.onended=voDuckOff; src.start();
   voCurrentSrc=src;
   return true;
@@ -7181,7 +7188,7 @@ function playVOFile(src,rate,gain){
   const s=AC.createBufferSource(); s.buffer=voExtra[src];
   if(rate) s.playbackRate.value=rate;
   const g=AC.createGain(); g.gain.value=gain||0.95;
-  s.connect(g); g.connect(masterGain);
+  s.connect(g); g.connect(voiceGain);
   voDuckOn(); s.onended=voDuckOff; s.start();
   voCurrentSrc=s;
   return true;
@@ -7574,7 +7581,7 @@ function updateReplay(dt){
 // so each sets its own flag and syncPause() is the only writer of G.paused.
 const SET_KEY='gtb4.settings';
 const SETTINGS=(function(){
-  const d={ v:1, master:100, music:100, quality:'auto' };
+  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto' };
   try{ const s=JSON.parse(localStorage.getItem(SET_KEY)); if(s&&s.v===1) Object.assign(d,s); }catch(e){}
   return d;
 })();
@@ -7583,6 +7590,8 @@ const musicVolVal=()=>0.5*SETTINGS.music/100; // radio's stock 0.5 gain scaled b
 function applyVolumes(){
   if(masterGain) masterGain.gain.value=0.9*SETTINGS.master/100;
   if(musicGain) musicGain.gain.value=STATIONS[G.station]?musicVolVal():0;
+  if(sfxGain) sfxGain.gain.value=SETTINGS.sfx/100;
+  if(voiceGain) voiceGain.gain.value=SETTINGS.voice/100;
 }
 
 // ---- adaptive graphics quality (F3): Low/Med/High tiers + fps-driven auto ----
@@ -7706,6 +7715,7 @@ function showPausePanel(id){ ['pmMain','pmSettings','pmHow'].forEach(p=>{ $(p).s
     el.addEventListener('change',saveSettings); // persist on release, not every drag tick
   };
   slider('volMaster','master'); slider('volMusic','music');
+  slider('volSfx','sfx'); slider('volVoice','voice');
 })();
 
 // ================= SAVE SYSTEM =================
