@@ -90,10 +90,10 @@ Status legend: **⬜ Backlog** · **▶ Next up** · **🔨 In progress** · **�
 ### Highest leverage — do these next
 | ID | Task | Status | Owner | Notes / unblocks |
 | --- | --- | --- | --- | --- |
-| **R1** | Dispose GPU resources on entity removal (`disposeMesh`) | ▶ Next up | — | `P0`. Stops the mobile memory leak. **Prerequisite for PL1.** |
-| **VOICE** | Wire the ~90 staged voice lines (`voice/turbo/story/`, `cutscenes/`, `backstory_intro/`) into their triggers | ▶ Next up | — | Recorded, unused, high polish-per-hour, low risk. Claude's lane. |
-| **F3** | Adaptive graphics quality (Low/Med/High tiers, auto off fps) | ▶ Next up | — | `P0`. Biggest raw mobile win. |
-| **PL1** | Places & Loading system (`loadPlace`/`transitionWithScreen`), port pizza interior to it | ⬜ Backlog | — | From `GAME_PLAN.md §4`. **Blocked on R1.** Needs a card in `HANDOFF.md`. |
+| **VOICE** | Wire the ~70 staged voice lines (`voice/turbo/story/` 47, `cutscenes/` 12, `backstory_intro/` 13) into their triggers | ▶ Next up | — | Recorded, unused, high polish-per-hour, low risk. Claude's lane. The standout P0 now that R1/F3 are shipped. |
+| **PL1** | Places & Loading system (`loadPlace`/`transitionWithScreen`), port pizza interior to it | ▶ Next up | — | From `GAME_PLAN.md §4`. **Unblocked — R1 shipped.** Needs a card in `HANDOFF.md`. |
+| R1 | Dispose GPU resources on entity removal (`disposeMesh`) | ✅ Done | (other session) | Verified in code on `main`. Unblocked PL1. |
+| F3 | Adaptive graphics quality (Low/Med/High tiers, auto off fps) | ✅ Done | (other session) | Verified in code on `main`. |
 
 ### Football saga (Phase 7) — arc payoff
 | ID | Task | Status | Owner | Notes |
@@ -107,10 +107,10 @@ Status legend: **⬜ Backlog** · **▶ Next up** · **🔨 In progress** · **�
 ### Mobile robustness & feel
 | ID | Task | Status | Owner | Notes |
 | --- | --- | --- | --- | --- |
-| F4 | SFX/Voice sub-buses + sliders | ⛔ Partial | — | Ducking done; dedicated `sfxGain`/`voiceGain` remain. |
-| R2 | Pool traffic/peds | ⬜ Backlog | — | Smoother frame times. Pairs with F3 caps + R1. |
+| F4 | SFX/Voice sub-buses + sliders | ✅ Done | (other session) | `sfxGain`/`voiceGain` verified live on `main`. |
+| J1 | Haptics & impact feedback | ✅ Done | (other session) | `navigator.vibrate` verified live on `main`. |
+| R2 | Pool traffic/peds | ⬜ Backlog | — | Smoother frame times. Pairs with F3 caps (done) + R1 (done). |
 | R3 | Anti-stuck / spawn safety | ⬜ Backlog | — | No wedged states / NPCs in walls. |
-| J1 | Haptics & impact feedback | ⬜ Backlog | — | `navigator.vibrate`, cheap feel win. |
 | J2/J3/J4 | Hitstop+shake / camera options / reverse-brake clarity | ⬜ Backlog | — | J4 dead-zone done; rest open. |
 
 ### Progression, UX, content
@@ -122,6 +122,7 @@ Status legend: **⬜ Backlog** · **▶ Next up** · **🔨 In progress** · **�
 | U2 / U3 | Onboarding / death-respawn flow | ⬜ Backlog | — | — |
 | A2 | Accessibility options | ⬜ Backlog | — | Reduce-motion, high-contrast HUD. |
 | CH2 | Design Chapter 2 (currently a "coming soon" card) | ⬜ Backlog | — | Design in `STORY_BIBLE.md` first. |
+| RV1 | Mama Rat core mechanics (Phase 8 — Rat Vengeance) | ⛔ Partial | — | Shipped as a placeholder model. See `HANDOFF.md` Phase 8 for the real-model follow-up card. Not in this board's original scope — added on reconciliation. |
 
 ### Character / cutscene track (see `CHARACTERS.md`)
 | ID | Task | Status | Owner | Notes |
@@ -171,9 +172,10 @@ reference the game never loads. Getting the kind right is what keeps art cheap.
 
 Assets that are committed but not yet referenced by code. Claude picks from here.
 
-- **The ~90 staged voice lines** (`voice/turbo/story/`, `cutscenes/`,
-  `backstory_intro/`) — recorded, committed, **not wired**. See the `VOICE`
+- **The ~70 staged voice lines** (`voice/turbo/story/` 47, `cutscenes/` 12,
+  `backstory_intro/` 13) — recorded, committed, **not wired**. See the `VOICE`
   task on the board. This is the biggest ready-to-wire item today.
+  (`promo/` 2 + `raw/` 3 are non-gameplay reference audio, not for wiring.)
 
 ---
 
