@@ -83,7 +83,7 @@ Status legend: **⬜ Backlog** · **▶ Next up** · **🔨 In progress** · **�
 | ID | Task | Status | Owner | Notes / unblocks |
 | --- | --- | --- | --- | --- |
 | **R1** | Dispose GPU resources on entity removal (`disposeMesh`) | ▶ Next up | — | `P0`. Stops the mobile memory leak. **Prerequisite for PL1.** |
-| **VOICE** | Wire the ~90 staged voice lines (`voice/turbo/story/`, `cutscenes/`, `backstory_intro/`) into their triggers | ▶ Next up | — | Recorded, unused, high polish-per-hour, low risk. Claude's lane. |
+| **VOICE** | Wire the ~70 staged voice lines (`voice/turbo/story/` 47, `cutscenes/` 12, `backstory_intro/` 13) into their triggers | ▶ Next up | — | Recorded, unused, high polish-per-hour, low risk. Claude's lane. |
 | **F3** | Adaptive graphics quality (Low/Med/High tiers, auto off fps) | ▶ Next up | — | `P0`. Biggest raw mobile win. |
 | **PL1** | Places & Loading system (`loadPlace`/`transitionWithScreen`), port pizza interior to it | ⬜ Backlog | — | From `GAME_PLAN.md §4`. **Blocked on R1.** Needs a card in `HANDOFF.md`. |
 
@@ -155,9 +155,10 @@ tile-checked, sized, and compressed first. (Full budget: `GAME_PLAN.md §6.4`.)
 
 Assets that are committed but not yet referenced by code. Claude picks from here.
 
-- **The ~90 staged voice lines** (`voice/turbo/story/`, `cutscenes/`,
-  `backstory_intro/`) — recorded, committed, **not wired**. See the `VOICE`
+- **The ~70 staged voice lines** (`voice/turbo/story/` 47, `cutscenes/` 12,
+  `backstory_intro/` 13) — recorded, committed, **not wired**. See the `VOICE`
   task on the board. This is the biggest ready-to-wire item today.
+  (`promo/` 2 + `raw/` 3 are non-gameplay reference audio, not for wiring.)
 
 ---
 

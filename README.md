@@ -90,7 +90,7 @@ plain relative paths.
 | `manifest.json` | PWA manifest — name, icons, fullscreen/landscape |
 | `icon-512.png`, `apple-touch-icon.png` | App / home-screen icons |
 | `title-bg.jpg` | Title-screen background art |
-| `panel1.jpg`, `panel2.jpg`, `panel3.jpg` | Legacy key-art panels (no longer referenced) |
+| `art/` | Committed game art (facades, sky, loading splashes, UI) — see `art/README.md` for the layout + mobile texture budget. `art/legacy/` holds the retired `panel1-3.jpg` key-art placeholders (no longer referenced) |
 | `voice/` | All recorded voice audio — see below |
 
 ### Voice audio layout (`voice/turbo/…`)

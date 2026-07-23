@@ -81,10 +81,10 @@ It is playable start-to-finish today.
 
 | Gap | Impact | Effort |
 | --- | --- | --- |
-| **~90 recorded Turbo voice lines are staged but not wired.** `voice/turbo/story/`, `voice/turbo/cutscenes/`, `voice/turbo/backstory_intro/` are recorded and organized but **zero** of them are referenced in code — only `intro/` + `ambient/` play. | **Huge.** The single highest polish-per-hour win in the game. Robbery, pay-Deb, pizza-jack, and all five football cutscene VO already exist as audio; they just need `{src:…}` wiring. | Low–Med |
+| **~70 recorded Turbo voice lines are staged but not wired.** `voice/turbo/story/` (47) + `voice/turbo/cutscenes/` (12) + `voice/turbo/backstory_intro/` (13) are recorded and organized but **zero** of them are referenced in code — only `intro/` (4) + `ambient/` (71) play. | **Huge.** The single highest polish-per-hour win in the game. Robbery, pay-Deb, pizza-jack, and all five football cutscene VO already exist as audio; they just need `{src:…}` wiring. | Low–Med |
 | **FB3–FB5** — the football payoff the whole backstory builds toward. All voice + field already exist. | High (narrative payoff) | Med–High |
 | **Chapter 2 is a title card, not content.** The game ends on "coming soon." | Defines the next content beat | (Design first) |
-| **No memory leak cleanup (R1).** `.dispose()` is never called; long mobile sessions climb until the tab dies. | High on phones | Med |
+| **No memory leak cleanup (R1).** Entities are never disposed on removal (only one lone `.dispose()` exists, for an effect material); long mobile sessions climb until the tab dies. | High on phones | Med |
 | **No adaptive graphics quality (F3).** Pixel ratio set once; weak phones just chug. | Highest raw mobile win | Med |
 
 Full backlog and acceptance criteria live in `HANDOFF.md §8`. The suggested
@@ -355,7 +355,7 @@ In leverage order — each is small, verifiable, and keeps the game shippable:
 - **Persistence keys:** `gtb4.save`, `gtb4.settings`.
 - **Voice wired:** only `voice/turbo/intro/` + `voice/turbo/ambient/*/`.
   **Staged (recorded, unwired):** `story/`, `cutscenes/`, `backstory_intro/`
-  (~90 lines).
+  (~70 lines: story 47 + cutscenes 12 + backstory 13).
 - **New folder this plan introduces:** `art/` (committed, relative-path art —
   created when the first real texture lands).
 - **New systems this plan introduces (not yet built):** `PLACES` /
