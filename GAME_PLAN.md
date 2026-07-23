@@ -84,12 +84,17 @@ It is playable start-to-finish today.
 | **~70 recorded Turbo voice lines are staged but not wired.** `voice/turbo/story/` (47) + `voice/turbo/cutscenes/` (12) + `voice/turbo/backstory_intro/` (13) are recorded and organized but **zero** of them are referenced in code — only `intro/` (4) + `ambient/` (71) play. | **Huge.** The single highest polish-per-hour win in the game. Robbery, pay-Deb, pizza-jack, and all five football cutscene VO already exist as audio; they just need `{src:…}` wiring. | Low–Med |
 | **FB3–FB5** — the football payoff the whole backstory builds toward. All voice + field already exist. | High (narrative payoff) | Med–High |
 | **Chapter 2 is a title card, not content.** The game ends on "coming soon." | Defines the next content beat | (Design first) |
-| **No memory leak cleanup (R1).** Entities are never disposed on removal (only one lone `.dispose()` exists, for an effect material); long mobile sessions climb until the tab dies. | High on phones | Med |
-| **No adaptive graphics quality (F3).** Pixel ratio set once; weak phones just chug. | Highest raw mobile win | Med |
 
-Full backlog and acceptance criteria live in `HANDOFF.md §8`. The suggested
-order there still holds: **R1 (stop the leak) → F3 (adaptive quality)** are the
-two P0s, and **wiring the staged voice** should slot in right beside them
+> **R1** (dispose-on-removal) and **F3** (adaptive graphics quality) — both
+> listed here as the top mobile gaps in the original pass of this report — have
+> since **shipped** (other agent sessions, verified in code: `disposeMesh` and
+> quality-tier auto-downshift are both live on `main`). Same for **F4**'s
+> remaining sub-buses and **J1** haptics. `AGENTS.md` is the live board — check
+> there for current status before trusting this dated snapshot on backlog state.
+
+Full backlog and acceptance criteria live in `HANDOFF.md §8`. **Wiring the
+staged voice** is now the standout P0 — it's the highest-leverage item left
+that nobody's picked up
 because the payoff is so high for so little risk.
 
 ---
@@ -326,25 +331,25 @@ Design beat (STORY_BIBLE / this doc)
 
 ## 7. Recommended next 10 moves
 
-In leverage order — each is small, verifiable, and keeps the game shippable:
+In leverage order — each is small, verifiable, and keeps the game shippable.
+(**R1** and **F3**, originally #1 and #3 here, have since shipped — see the
+note in §2. Renumbered; check `AGENTS.md`'s live board before starting one of
+these in case it's moved again.)
 
-1. **R1 — dispose GPU resources on removal.** Stops the mobile memory leak and
-   unblocks the Places system. `P0`.
-2. **Wire the staged robbery + pay-Deb VO** (`voice/turbo/story/robbery/`,
+1. **Wire the staged robbery + pay-Deb VO** (`voice/turbo/story/robbery/`,
    `robbery_take/`, `paying_deb/`, `pizza_jack/`). Recorded, unused, high impact,
-   low risk.
-3. **F3 — adaptive graphics quality.** Biggest raw phone win. `P0`.
-4. **PL1 — Places & Loading system** (§4). Build it, port the pizza interior to
-   it. Unblocks all future areas.
-5. **FB3 — "Revenge on Coach" mission** (cutscene + fight, sets `G.coachBeaten`).
+   low risk. `P0` — the standout gap now that R1/F3 are done.
+2. **PL1 — Places & Loading system** (§4). R1 (its prerequisite) is done, so
+   this is unblocked — build it, port the pizza interior to it.
+3. **FB3 — "Revenge on Coach" mission** (cutscene + fight, sets `G.coachBeaten`).
    Its VO (`voice/turbo/cutscenes/coach_*`) already exists.
-6. **FB4 — football minigame** as the first heavy Place (proves PL1 on real
+4. **FB4 — football minigame** as the first heavy Place (proves PL1 on real
    content). VO staged in `turbo_bowl_*`.
-7. **FB5 — cheerleaders cutscene** — closes the football arc.
-8. **U1 — objective clarity / HUD readability** for small screens.
-9. **First art pass through the pipeline (§6):** a proper skybox + 2–3 facade
+5. **FB5 — cheerleaders cutscene** — closes the football arc.
+6. **U1 — objective clarity / HUD readability** for small screens.
+7. **First art pass through the pipeline (§6):** a proper skybox + 2–3 facade
    textures + a per-place loading splash — proving the graphics workflow.
-10. **Design Chapter 2** in `STORY_BIBLE.md` so "coming soon" becomes a plan.
+8. **Design Chapter 2** in `STORY_BIBLE.md` so "coming soon" becomes a plan.
 
 ---
 
