@@ -12,6 +12,61 @@
 
 ---
 
+## 0. Tooling & Workflow Friction — fix these to speed every future session
+
+> Compiled from real time/token sinks hit while implementing tasks. These are
+> **meta-tasks**: none change the game, but each one recurs on *every* piece of
+> work, so paying them down once pays off across all later chats. Pick them up
+> like any backlog card. Ordered by how often they bite.
+
+- **W1 — Reconcile the backlog against the actual code (recurring drift).**
+  `P0 · Risk: Low`. Tasks get implemented in `index.html` but their §8 card and
+  the §10 order list don't get the `DONE` marker (hit this session: **F3** and
+  **R1** were fully shipped in commits `8aa7cfc`/`20593e0` yet still read as
+  open). The next agent then can't trust the doc and has to `git log`/`git show`
+  to reverse-engineer what's real — slow and token-heavy. *Fix:* one pass that,
+  for every card, greps the code for the feature and sets status to match; then
+  going forward, **treat "update the card + §10 line to DONE" as part of the
+  task, not optional.** Consider a tiny `tests/handoff-sync` check that fails if
+  a card says DONE but a named function is missing (or vice-versa).
+
+- **W2 — The single ~8k-line `index.html` taxes every edit.** `P1 · Risk: High`
+  (this is **X1**, but the cost is felt on *all* tasks, not just refactors). One
+  328 KB `<script>` block means every Grep/Read/Edit fights the file size and it
+  never fits in context; locating a function is always grep-for-line then
+  read-a-window. *Cheap interim win without the full modular split:* commit a
+  **code map** (a `CODEMAP.md` or a comment index near the top: section name →
+  line range, major function → line) and keep it current, so navigation is a
+  lookup instead of a search. The full ordered-`<script src>` split (X1) is the
+  real fix when approved.
+
+- **W3 — No fast pre-flight; the only check is slow Playwright.** `P1 · Risk:
+  Low`. The suite launches headless Chromium with an ~800 ms settle per case and
+  relaunches contexts; the **full run exceeds 120 s** (it timed out a foreground
+  call this session and had to be backgrounded). There's no sub-10 s "did I
+  break the syntax / does it still boot" gate, so I hand-rolled a
+  `new Function(scriptBody)` parse check to catch typos in seconds. *Fix:* commit
+  that as `tests/syntax-check.js` (extract the `<script>` body, `new Function`
+  it, exit non-zero on `SyntaxError`) **and** a single-boot smoke test that just
+  loads the page and asserts zero console errors. Wire both as a fast tier run
+  before the full suite.
+
+- **W4 — Speed up the full suite itself.** `P2 · Risk: Low`. Beyond W3's fast
+  tier, the suite is slow because every case pays a fresh context + page reload
+  and headless rAF throttling forces manual `updateX(dt)` stepping. *Fix:* share
+  one booted page across the read-only cases, and/or run the `cases/*.test.js`
+  files in parallel workers. Cuts the feedback loop on every future change.
+
+- **W5 — "Work the next item" requires archaeology.** `P2 · Risk: Low`. The
+  README says read HANDOFF and do the next item, but finding it means opening
+  this file, grepping phase headers, and cross-referencing §10's order list
+  against per-card DONE markers — which (see W1) can disagree with the code.
+  *Fix:* keep a single authoritative **`NEXT: <task id>`** line at the top of §10
+  (or here) updated as the last step of every task, so the next chat starts in
+  one read instead of five.
+
+---
+
 ## 1. TL;DR
 
 - The **entire game is one file**: `index.html` (~5,000 lines). Markup + CSS +
@@ -633,7 +688,18 @@ leaves engine + SFX + VO intact.
 
 ### Phase 2 — Game Feel & Juice
 
-#### J1 — Haptics & impact feedback `P1 · Risk: Low`
+#### J1 — Haptics & impact feedback `P1 · Risk: Low` `DONE`
+**Status: implemented & verified** (Claude). New `haptics (J1)` block in
+`PAUSE MENU & SETTINGS` adds `haptic(pattern)` — feature-detected
+(`navigator.vibrate`) and gated by `SETTINGS.vibrate` (default `true`,
+persisted in the same blob as the volume sliders/quality mode) — plus
+`hapticCrash(impact)` scaling a single pulse (`30+impact*4`, capped 200ms) for
+physical hits. Wired into: all four `carPhysics` impact sites (building, tree,
+street-furniture, hard ramp landing); the pistol shot and RPG launch in
+`doAttack`; `explode`/`bigExplosion` (short double/triple pulses); and
+`busted`/`wasted` (a solid buzz vs. a strong double-buzz for death). A
+**VIBRATE ON/OFF** row sits in the Settings panel next to QUALITY, same
+`qGroup`/`qBtn` button pattern, wired through `setVibrateMode()`.
 **Why:** No `navigator.vibrate` anywhere; crashes/gunshots/hits have no physical
 punch on mobile. Cheap, huge feel upgrade.
 **Where:** collision resolution in `carPhysics`/`damageCar`, `doAttack`/`explode`,
@@ -644,6 +710,10 @@ explosion, ramp landing, bust. Scale to impact where it makes sense. Add a
 **"Vibration" on/off** setting (default on).
 **Acceptance:** On a device/emulator that supports vibration, crashes and shots
 buzz; toggling it off silences all haptics. No errors on desktop/unsupported.
+Verified: `tests/cases/haptics.test.js` (4 cases: fires on enabled/supported,
+silenced when the setting is off, never throws when `navigator.vibrate` is
+absent, and the setting round-trips a reload) plus the full headless suite
+green (43/43, up from 39 with the four new haptics cases).
 
 #### J2 — Hitstop + refined screen shake `P2 · Risk: Med`
 **Why:** Big impacts read as "meh". A few frames of freeze + a tuned shake curve
@@ -1120,8 +1190,8 @@ throughout:
 ✔ R1  Dispose on removal         DONE
 ✔ F3  Adaptive quality           DONE
 ✔ F4  Audio mix + ducking        DONE
+✔ J1  Haptics & impact feedback  DONE
 U1  Objective clarity/HUD       ← NEXT
-J1  Haptics
 P1  Mission variety
 J3  Camera options
 J4  Control feel
