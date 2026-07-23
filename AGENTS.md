@@ -108,6 +108,7 @@ Status legend: **⬜ Backlog** · **▶ Next up** · **🔨 In progress** · **�
 | ID | Task | Status | Owner | Notes |
 | --- | --- | --- | --- | --- |
 | F4 | SFX/Voice sub-buses + sliders | ✅ Done | (other session) | `sfxGain`/`voiceGain` verified live on `main`. |
+| MUS1 | 80s synthwave soundtrack rebuild (12 songs, sidechain/reverb/delay rack, wanted-heat layer, hot/calm loop variants) | ✅ Done | Claude | `HANDOFF.md §13`. Radio ducks under VO — the plumbing F4's buses route through. |
 | J1 | Haptics & impact feedback | ✅ Done | (other session) | `navigator.vibrate` verified live on `main`. |
 | R2 | Pool traffic/peds | ⬜ Backlog | — | Smoother frame times. Pairs with F3 caps (done) + R1 (done). |
 | R3 | Anti-stuck / spawn safety | ⬜ Backlog | — | No wedged states / NPCs in walls. |
