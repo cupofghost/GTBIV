@@ -77,6 +77,11 @@ Design beat (STORY_BIBLE / GAME_PLAN)
    board. That paragraph *is* your message to the next agent.
 6. **Ask before new systems / big refactors / save-format changes.** Flag it for
    Austin, don't guess. (`HANDOFF.md §2.8`.)
+7. **Push ASAP.** The repo is the message bus, so push the moment a change is
+   committed and green — don't sit on local commits. Other agents and sessions
+   read the *pushed* branch/PR for current state; unpushed work is invisible to
+   them and invites collisions on `index.html`. Commit small, push immediately,
+   open/refresh the PR right away (rule 4).
 
 ---
 
@@ -91,7 +96,7 @@ Status legend: **⬜ Backlog** · **▶ Next up** · **🔨 In progress** · **�
 | ID | Task | Status | Owner | Notes / unblocks |
 | --- | --- | --- | --- | --- |
 | **R1** | Dispose GPU resources on entity removal (`disposeMesh`) | ▶ Next up | — | `P0`. Stops the mobile memory leak. **Prerequisite for PL1.** |
-| **VOICE** | Wire the ~90 staged voice lines (`voice/turbo/story/`, `cutscenes/`, `backstory_intro/`) into their triggers | ▶ Next up | — | Recorded, unused, high polish-per-hour, low risk. Claude's lane. |
+| **VOICE** | Wire the ~90 staged voice lines (`voice/turbo/story/`, `cutscenes/`, `backstory_intro/`) into their triggers | 🔨 In progress | Claude | **`robbery` + `robbery_take` wired** (stickup + safe-crack, `HANDOFF.md §12`). Next: `pizza_jack`/`paying_deb`/`approach_deb`, idle barks, `cutscenes/`, `backstory_intro/`. Claude's lane. |
 | **F3** | Adaptive graphics quality (Low/Med/High tiers, auto off fps) | ▶ Next up | — | `P0`. Biggest raw mobile win. |
 | **PL1** | Places & Loading system (`loadPlace`/`transitionWithScreen`), port pizza interior to it | ⬜ Backlog | — | From `GAME_PLAN.md §4`. **Blocked on R1.** Needs a card in `HANDOFF.md`. |
 
@@ -171,9 +176,10 @@ reference the game never loads. Getting the kind right is what keeps art cheap.
 
 Assets that are committed but not yet referenced by code. Claude picks from here.
 
-- **The ~90 staged voice lines** (`voice/turbo/story/`, `cutscenes/`,
-  `backstory_intro/`) — recorded, committed, **not wired**. See the `VOICE`
-  task on the board. This is the biggest ready-to-wire item today.
+- **The staged voice lines** (`voice/turbo/story/`, `cutscenes/`,
+  `backstory_intro/`) — recorded, committed. `robbery` + `robbery_take` are now
+  **wired** (`HANDOFF.md §12`); the rest remain staged. See the `VOICE` task on
+  the board. Still the biggest ready-to-wire pile today.
 
 ---
 
