@@ -174,8 +174,15 @@
      page ourselves via CSS (see html.gtb-rotated below) — the game just always
      presents landscape. touchAndPortraitOnly. */
   html.gtb-rotated, html.gtb-rotated body { margin:0; padding:0; overflow:hidden; }
+  /* Size the rotated body off the SAME pixel metrics the WebGL canvas uses
+     (--lvw/--lvh, kept in sync with innerWidth/innerHeight by
+     updateOrientationMode). CSS 100vh/100vw units disagree with
+     window.innerHeight/innerWidth on iOS Safari (viewport-fit=cover +
+     translucent status bar + the collapsing toolbar), and that mismatch is
+     what produced the black bar + left shift. The 100vh/100vw fallbacks only
+     apply for the one synchronous frame before JS first sets the vars. */
   html.gtb-rotated body { position:fixed; top:0; left:0;
-    width:100vh; height:100vw;
+    width:var(--lvw,100vh); height:var(--lvh,100vw);
     transform-origin:top left; transform:rotate(90deg) translateY(-100%); }
   /* touch-only vs desktop-only control affordances (see IS_TOUCH in the boot script) */
   html.is-desktop #joy, html.is-desktop #btns, html.is-desktop #btnHorn,
@@ -653,7 +660,8 @@ let AC=null, masterGain, sfxGain, voiceGain, engineOsc, engineGain, engineLP, sk
 let musicVODuck,            // ducks the whole radio while Turbo/Deb talk
     musicPump,              // sidechain bus: pads/bass/arps pump on every kick
     musicVerbIn, musicVerbWet, musicDelayL, musicDelayR, musicDelayIn, musicDelayWet,
-    swSongIdx=0, swStationRef=-1, swNowPlaying='';
+    swSongIdx=0, swStationRef=-1, swNowPlaying='',
+    swMode='normal', swLoopStep=0; // 'normal' (through-composed) | 'hot' | 'calm' loop variant
 function initAudio(){
   if(AC){ AC.resume(); return; }
   initVoiceOver();
@@ -948,6 +956,58 @@ function swLead(freq,t,len){ // singing detuned saw lead — sits on top (not du
   o.start(t); o2.start(t); lfo.start(t);
   o.stop(t+len+0.05); o2.stop(t+len+0.05); lfo.stop(t+len+0.05);
 }
+function swChaseStab(chord,t){ // tension stab — only cuts in once the wanted heat runs hot
+  const g=AC.createGain(), f=AC.createBiquadFilter();
+  f.type='bandpass'; f.frequency.value=1100; f.Q.value=2.2;
+  g.gain.setValueAtTime(0.10,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.24);
+  f.connect(g); g.connect(musicPump); g.connect(musicVerbIn);
+  chord.forEach(n=>{
+    const o=AC.createOscillator(); o.type='sawtooth'; o.frequency.value=mtof(n+12);
+    o.connect(f); o.start(t); o.stop(t+0.26);
+  });
+}
+// --- wanted-level heat: smoothly tracks G.stars into a 0..1 knob that leans
+// the currently-playing song hotter (busier kit, brighter filters, a chase
+// stab), and — alongside calmT below — decides whether the currently playing
+// song should hand off to one of its dedicated hot/calm LOOP variants
+// (see makeHotLoop/makeCalmLoop) instead of just nudging its own energy.
+let heatLevel=0, heatLastT=0, calmT=0;
+function updateHeatLevel(){
+  if(!AC) return;
+  const now=AC.currentTime;
+  const dt=heatLastT?Math.min(0.3,now-heatLastT):0; heatLastT=now;
+  const target=Math.min(1,(G.stars||0)/5);
+  const k=target>heatLevel?1.8:0.5; // ramps up fast when cops notice, cools off slower
+  heatLevel+=(target-heatLevel)*Math.min(1,dt*k);
+  calmT=(G.stars>0)?0:calmT+dt; // seconds spent clean — gates the calm loop so a fresh boot doesn't start there
+}
+function heatEnergy(sec){ return clamp(sec.e+heatLevel*(sec.drum?0.3:0.12),0,1); }
+// Decide which variant of the current song should be playing. Hysteresis on
+// the 'hot' exit (0.65 in / 0.45 out) stops it flickering bar-to-bar right at
+// the threshold; calm requires several real seconds clean, not just heatLevel
+// being low, so a fresh boot (heatLevel===0 from frame one) doesn't sit in the
+// ambient loop instead of the authored arrangement.
+function desiredSwMode(song){
+  if(swMode==='hot') return heatLevel>0.45?'hot':(calmT>6&&song.calmLoop&&heatLevel<0.15?'calm':'normal');
+  if(heatLevel>0.65 && song.hotLoop) return 'hot';
+  if(calmT>6 && song.calmLoop && heatLevel<0.15) return 'calm';
+  return 'normal';
+}
+// --- loop-variant authoring: small self-contained "songs" (own prog/section)
+// that the scheduler can loop indefinitely in place of the normal arrangement,
+// built from chords drawn from the parent song's own progression so they stay
+// in its harmonic world. bpm is inherited from whatever song is currently
+// playing (the scheduler passes the parent's spb), so these never need one.
+function makeCalmLoop(chords,e){
+  return { prog:chords,
+    bass:[0,null,null,null,null,null,null,null,0,null,null,null,null,null,null,null],
+    sections:[{bars:4, e:e||0.12, pad:1, arp:1}] };
+}
+function makeHotLoop(chords,e){
+  return { prog:chords,
+    bass:[0,null,12,null,0,null,12,null,0,null,12,null,7,null,10,null],
+    sections:[{bars:4, e:e||0.92, drum:1, pad:1, bass:1, arp:1}] };
+}
 // arpeggio note for a step: up-and-back over chord tones + an octave
 const SW_ARP=[0,1,2,3,4,3,2,1];
 function arpNote(chord,step){
@@ -979,7 +1039,14 @@ const SW_SONGS=[
      {bars:4, e:0.30, pad:1, arp:1},
      {bars:4, e:0.55, drum:1, pad:1, bass:1, arp:1},
      {bars:8, e:1.00, drum:1, pad:1, bass:1, arp:1, lead:1},
-     {bars:4, e:0.24, pad:1, arp:1} ] },
+     {bars:4, e:0.24, pad:1, arp:1} ],
+   // low-heat ambient wash + a bespoke "chase mix" of the theme (own lead riff, not the cruise one)
+   calmLoop:makeCalmLoop([[57,60,64],[52,55,59]]),
+   hotLoop:{ prog:[[57,60,64],[53,57,60],[55,59,62],[52,55,59]],
+     bass:[0,null,12,null,0,null,12,null,0,null,12,null,7,null,10,null],
+     lead:[[76,2],[74,2],[72,2],[69,2],[72,4],[74,4], [69,4],[72,4],[74,4],[76,4],
+           [72,2],[74,2],[76,2],[79,2],[76,4],[72,4], [69,8],[72,4],[74,4]],
+     sections:[{bars:4, e:1.0, drum:1, pad:1, bass:1, arp:1, lead:1}] } },
  { name:'Ocean Drive', bpm:100,         // slower, dreamy cruise in D minor
    prog:[[50,53,57],[46,50,53],[53,57,60],[48,52,55],[50,53,57],[46,50,53],[55,58,62],[45,49,52]],
    bass:[0,null,0,null,0,null,0,7,0,null,0,null,5,null,7,null],
@@ -993,25 +1060,35 @@ const SW_SONGS=[
      {bars:8, e:0.86, drum:1, pad:1, bass:1, arp:1, lead:1},
      {bars:4, e:0.28, pad:1, arp:1},
      {bars:8, e:0.96, drum:1, pad:1, bass:1, arp:1, lead:1},
-     {bars:4, e:0.22, pad:1} ] },
+     {bars:4, e:0.22, pad:1} ],
+   calmLoop:makeCalmLoop([[50,53,57],[48,52,55]]),
+   hotLoop:makeHotLoop([[50,53,57],[46,50,53],[53,57,60],[48,52,55]]) },
  // ---- TURBO FM (outrun — faster, driving instrumentals) ----
  { name:'Redline', bpm:124,
    prog:[[45,48,52],[45,48,52],[43,47,50],[41,44,48],[45,48,52],[45,48,52],[46,50,53],[47,50,54]],
    bass:[0,null,12,null,0,null,12,null,0,null,12,null,7,null,10,null],
+   lead:[[69,4],[72,2],[76,2],[74,4],[72,4], [72,4],[69,4],[67,4],[65,4],
+         [69,4],[72,4],[74,4],[76,4], [79,4],[76,4],[74,4],[72,4]],
    sections:[
      {bars:4, e:0.42, drum:1, bass:1, arp:1},
-     {bars:8, e:0.82, drum:1, pad:1, bass:1, arp:1},
+     {bars:8, e:0.82, drum:1, pad:1, bass:1, arp:1, lead:1},
      {bars:4, e:0.30, pad:1, arp:1},
-     {bars:8, e:0.98, drum:1, pad:1, bass:1, arp:1},
-     {bars:4, e:0.5, drum:1, bass:1, arp:1} ] },
+     {bars:8, e:0.98, drum:1, pad:1, bass:1, arp:1, lead:1},
+     {bars:4, e:0.5, drum:1, bass:1, arp:1} ],
+   calmLoop:makeCalmLoop([[45,48,52],[46,50,53]]),
+   hotLoop:makeHotLoop([[45,48,52],[43,47,50],[41,44,48],[46,50,53]]) },
  { name:'Nightcrawler', bpm:132,
    prog:[[40,43,47],[40,43,47],[45,48,52],[43,46,50],[40,43,47],[40,43,47],[38,41,45],[42,45,49]],
    bass:[0,0,null,0,12,null,0,0,null,0,12,null,0,7,10,null],
+   lead:[[64,2],[67,2],[71,4],[69,2],[67,2],[64,4], [69,2],[72,2],[76,4],[74,2],[72,2],[69,4],
+         [64,4],[67,4],[71,4],[74,4], [76,4],[74,4],[71,4],[67,4]],
    sections:[
      {bars:4, e:0.5, drum:1, bass:1, arp:1},
-     {bars:8, e:0.9, drum:1, pad:1, bass:1, arp:1},
+     {bars:8, e:0.9, drum:1, pad:1, bass:1, arp:1, lead:1},
      {bars:4, e:0.34, pad:1, arp:1},
-     {bars:8, e:1.0, drum:1, pad:1, bass:1, arp:1} ] },
+     {bars:8, e:1.0, drum:1, pad:1, bass:1, arp:1, lead:1} ],
+   calmLoop:makeCalmLoop([[40,43,47],[43,46,50]]),
+   hotLoop:makeHotLoop([[40,43,47],[45,48,52],[43,46,50],[38,41,45]]) },
  // ---- MIRAGE 105 (chillwave — slow, dreamy night cruise) ----
  { name:'Afterglow', bpm:92,
    prog:[[48,52,55],[45,48,52],[50,53,57],[43,47,50],[48,52,55],[45,48,52],[41,45,48],[43,47,50]],
@@ -1024,7 +1101,9 @@ const SW_SONGS=[
      {bars:8, e:0.7, drum:1, pad:1, bass:1, arp:1, lead:1},
      {bars:4, e:0.22, pad:1, arp:1},
      {bars:8, e:0.82, drum:1, pad:1, bass:1, arp:1, lead:1},
-     {bars:4, e:0.18, pad:1} ] },
+     {bars:4, e:0.18, pad:1} ],
+   calmLoop:makeCalmLoop([[48,52,55],[45,48,52]]),
+   hotLoop:makeHotLoop([[48,52,55],[50,53,57],[43,47,50],[41,45,48]],0.85) },
  { name:'Distant Signal', bpm:84,
    prog:[[41,45,48],[43,46,50],[45,48,52],[40,43,47],[41,45,48],[43,46,50],[48,51,55],[43,47,50]],
    bass:[0,null,null,null,0,null,null,null,0,null,null,null,7,null,null,null],
@@ -1033,13 +1112,115 @@ const SW_SONGS=[
      {bars:8, e:0.5, drum:1, pad:1, bass:1, arp:1},
      {bars:4, e:0.24, pad:1, arp:1},
      {bars:8, e:0.66, drum:1, pad:1, bass:1, arp:1},
-     {bars:4, e:0.14, pad:1} ] },
+     {bars:4, e:0.14, pad:1} ],
+   calmLoop:makeCalmLoop([[41,45,48],[40,43,47]]),
+   hotLoop:makeHotLoop([[41,45,48],[43,46,50],[45,48,52],[48,51,55]],0.85) },
+ // ---- second wave: one more song per station, appended so existing indices below never shift ----
+ { name:'Chrome Skyline', bpm:118,         // VICE FM — bright major-key cruise
+   prog:[[60,64,67],[55,59,62],[57,60,64],[53,57,60],[60,64,67],[55,59,62],[52,55,59],[53,57,60]],
+   bass:[0,null,0,null,7,null,0,null,0,null,0,null,7,null,12,null],
+   lead:[[79,4],[77,2],[76,2],[74,4],[72,4], [74,4],[76,4],[77,2],[79,2],[81,4],
+         [79,4],[77,4],[76,4],[74,4], [72,8],[74,4],[76,4],
+         [76,4],[77,2],[79,2],[81,4],[79,4], [77,4],[76,4],[74,4],[72,4],
+         [74,4],[76,4],[77,4],[79,4], [81,8],[79,4],[77,4]],
+   sections:[
+     {bars:4, e:0.22, pad:1, arp:1},
+     {bars:4, e:0.50, drum:1, pad:1, bass:1, arp:1},
+     {bars:8, e:0.95, drum:1, pad:1, bass:1, arp:1, lead:1},
+     {bars:4, e:0.30, pad:1, arp:1},
+     {bars:4, e:0.58, drum:1, pad:1, bass:1, arp:1},
+     {bars:8, e:1.00, drum:1, pad:1, bass:1, arp:1, lead:1},
+     {bars:4, e:0.22, pad:1} ],
+   // bespoke chase remix — I-V-vi-IV drawn from the song's own prog, own riff
+   calmLoop:makeCalmLoop([[60,64,67],[53,57,60]]),
+   hotLoop:{ prog:[[60,64,67],[55,59,62],[57,60,64],[53,57,60]],
+     bass:[0,null,12,null,0,null,12,null,0,null,12,null,7,null,10,null],
+     lead:[[81,2],[79,2],[76,4],[74,4],[76,4], [79,4],[76,4],[74,4],[72,4],
+           [74,4],[76,4],[79,4],[81,4], [84,8],[81,4],[79,4]],
+     sections:[{bars:4, e:1.0, drum:1, pad:1, bass:1, arp:1, lead:1}] } },
+ { name:'Vector Chase', bpm:128,          // TURBO FM — the pursuit track
+   prog:[[50,53,57],[50,53,57],[46,50,53],[48,52,55],[50,53,57],[50,53,57],[45,48,52],[43,46,50]],
+   bass:[0,null,12,null,0,null,12,null,0,null,12,null,7,null,10,null],
+   lead:[[74,2],[72,2],[70,2],[69,2],[67,4],[65,4], [69,4],[67,4],[65,4],[64,4],
+         [62,4],[65,4],[69,4],[72,4], [74,8],[72,4],[69,4]],
+   sections:[
+     {bars:4, e:0.45, drum:1, bass:1, arp:1},
+     {bars:8, e:0.85, drum:1, pad:1, bass:1, arp:1, lead:1},
+     {bars:4, e:0.30, pad:1, arp:1},
+     {bars:8, e:1.00, drum:1, pad:1, bass:1, arp:1, lead:1},
+     {bars:4, e:0.5, drum:1, bass:1, arp:1} ],
+   calmLoop:makeCalmLoop([[50,53,57],[48,52,55]]),
+   hotLoop:makeHotLoop([[50,53,57],[46,50,53],[48,52,55],[45,48,52]],1.0) },
+ { name:'Static Hours', bpm:78,           // MIRAGE 105 — the after-hours come-down
+   prog:[[53,57,60],[50,53,57],[46,50,53],[48,52,55],[53,57,60],[50,53,57],[45,48,52],[46,50,53]],
+   bass:[0,null,null,null,null,null,null,null,0,null,null,null,7,null,null,null],
+   lead:[[77,16],[74,16],[72,16],[69,16]],
+   sections:[
+     {bars:4, e:0.12, pad:1},
+     {bars:4, e:0.28, drum:1, pad:1, bass:1},
+     {bars:8, e:0.55, drum:1, pad:1, bass:1, arp:1, lead:1},
+     {bars:4, e:0.18, pad:1},
+     {bars:8, e:0.62, drum:1, pad:1, bass:1, arp:1, lead:1},
+     {bars:4, e:0.12, pad:1} ],
+   calmLoop:makeCalmLoop([[53,57,60],[46,50,53]]),
+   hotLoop:makeHotLoop([[53,57,60],[50,53,57],[48,52,55],[45,48,52]],0.85) },
+ // ---- third wave: one more song per station again, still appended-only ----
+ { name:'Velvet Static', bpm:106,          // VICE FM — moody minor-key night drive
+   prog:[[59,62,66],[55,59,62],[50,54,57],[57,61,64],[59,62,66],[55,59,62],[52,55,59],[54,57,61]],
+   bass:[0,null,0,null,0,null,7,null,0,null,0,null,7,null,10,null],
+   lead:[[78,4],[76,2],[74,2],[71,4],[74,4], [74,4],[76,4],[78,2],[81,2],[79,4],
+         [78,4],[76,4],[74,4],[71,4], [69,8],[71,4],[74,4],
+         [74,4],[76,2],[78,2],[81,4],[79,4], [76,4],[74,4],[71,4],[69,4],
+         [71,4],[74,4],[76,4],[78,4], [81,8],[79,4],[76,4]],
+   sections:[
+     {bars:4, e:0.18, pad:1, arp:1},
+     {bars:4, e:0.42, drum:1, pad:1, bass:1, arp:1},
+     {bars:8, e:0.90, drum:1, pad:1, bass:1, arp:1, lead:1},
+     {bars:4, e:0.26, pad:1, arp:1},
+     {bars:4, e:0.50, drum:1, pad:1, bass:1, arp:1},
+     {bars:8, e:1.00, drum:1, pad:1, bass:1, arp:1, lead:1},
+     {bars:4, e:0.20, pad:1} ],
+   calmLoop:makeCalmLoop([[59,62,66],[57,61,64]]),
+   hotLoop:makeHotLoop([[59,62,66],[55,59,62],[50,54,57],[57,61,64]]) },
+ { name:'Overdrive', bpm:136,             // TURBO FM — the fastest thing on the dial
+   prog:[[43,46,50],[43,46,50],[41,44,48],[39,43,46],[43,46,50],[43,46,50],[36,39,43],[38,42,45]],
+   bass:[0,null,12,null,0,null,12,null,0,null,12,null,7,null,10,null],
+   lead:[[74,2],[72,2],[70,2],[69,2],[67,4],[65,4], [69,4],[67,4],[65,4],[63,4],
+         [62,4],[65,4],[69,4],[72,4], [74,8],[72,4],[69,4]],
+   sections:[
+     {bars:4, e:0.5, drum:1, bass:1, arp:1},
+     {bars:8, e:0.88, drum:1, pad:1, bass:1, arp:1, lead:1},
+     {bars:4, e:0.32, pad:1, arp:1},
+     {bars:8, e:1.0, drum:1, pad:1, bass:1, arp:1, lead:1},
+     {bars:4, e:0.55, drum:1, bass:1, arp:1} ],
+   calmLoop:makeCalmLoop([[43,46,50],[39,43,46]]),
+   // bespoke chase remix with its own punchier 2-bar motif, not just a repeat of the main lead
+   hotLoop:{ prog:[[43,46,50],[41,44,48],[39,43,46],[36,39,43]],
+     bass:[0,null,12,null,0,null,12,null,0,null,12,null,7,null,10,null],
+     lead:[[70,2],[70,2],[72,2],[70,2],[67,4],[65,4], [63,2],[65,2],[67,2],[69,2],[70,4],[72,4],
+           [74,4],[72,4],[70,4],[67,4], [65,8],[67,4],[70,4]],
+     sections:[{bars:4, e:1.0, drum:1, pad:1, bass:1, arp:1, lead:1}] } },
+ { name:'Coastal Haze', bpm:88,           // MIRAGE 105 — warm major-key late-night haze
+   prog:[[57,61,64],[52,56,59],[54,57,61],[50,54,57],[57,61,64],[52,56,59],[59,62,66],[54,57,61]],
+   bass:[0,null,null,null,0,null,null,7,0,null,null,null,5,null,7,null],
+   lead:[[76,8],[78,8], [73,4],[76,4],[78,8], [80,6],[78,2],[76,8], [74,8],[73,8],
+         [76,8],[80,8], [78,4],[76,4],[73,8], [80,6],[78,2],[74,8], [73,8],[69,8]],
+   sections:[
+     {bars:4, e:0.14, pad:1},
+     {bars:4, e:0.30, drum:1, pad:1, bass:1, arp:1},
+     {bars:8, e:0.62, drum:1, pad:1, bass:1, arp:1, lead:1},
+     {bars:4, e:0.20, pad:1, arp:1},
+     {bars:8, e:0.72, drum:1, pad:1, bass:1, arp:1, lead:1},
+     {bars:4, e:0.14, pad:1} ],
+   calmLoop:makeCalmLoop([[57,61,64],[50,54,57]]),
+   hotLoop:makeHotLoop([[57,61,64],[52,56,59],[54,57,61],[59,62,66]],0.85) },
 ];
 // Each station is a playlist referencing songs by index into SW_SONGS.
+// New songs are appended to SW_SONGS (never inserted) so these indices stay stable.
 const STATIONS=[
-  { name:'VICE FM · synthwave', songs:[SW_SONGS[0], SW_SONGS[1]] },
-  { name:'TURBO FM · outrun',   songs:[SW_SONGS[2], SW_SONGS[3]] },
-  { name:'MIRAGE 105 · chill',  songs:[SW_SONGS[4], SW_SONGS[5]] },
+  { name:'VICE FM · synthwave', songs:[SW_SONGS[0], SW_SONGS[1], SW_SONGS[6], SW_SONGS[9]] },
+  { name:'TURBO FM · outrun',   songs:[SW_SONGS[2], SW_SONGS[3], SW_SONGS[7], SW_SONGS[10]] },
+  { name:'MIRAGE 105 · chill',  songs:[SW_SONGS[4], SW_SONGS[5], SW_SONGS[8], SW_SONGS[11]] },
 ];
 // prep a song the first time it plays: bake section starts, total length, lead map
 function prepSong(song){
@@ -1053,6 +1234,7 @@ function prepSong(song){
 function loadSong(song){
   if(!song) return;
   prepSong(song);
+  swMode='normal'; swLoopStep=0; // a freshly-loaded song always starts in its authored arrangement
   if(musicDelayL){ const dt=0.75*60/song.bpm; musicDelayL.delayTime.value=dt; musicDelayR.delayTime.value=dt; } // dotted-8th echo
   swNowPlaying=song.name;
   if(typeof toast==='function' && G.started && !G.intro && !activeCutscene) toast('♪ '+song.name,'gold');
@@ -1064,32 +1246,36 @@ function sectionAt(song,bar){
 }
 function stepSong(song,step,t,spb){
   const bar=Math.floor(step/16), s16=step%16;
-  const at=sectionAt(song,bar), sec=at.sec, e=sec.e;
+  const at=sectionAt(song,bar), sec=at.sec, e=sec.e, eff=heatEnergy(sec);
   const chord=song.prog[bar%song.prog.length], root=chord[0];
   const lastBarOfSec=(bar===song._secStart[at.idx]+sec.bars-1);
   const firstBarOfSec=(bar===song._secStart[at.idx]);
   const nextSec=song.sections[(at.idx+1)%song.sections.length];
   const prevSec=song.sections[(at.idx-1+song.sections.length)%song.sections.length];
   // transitions: riser into a bigger section, crash on the downbeat of a drop
+  // (gated on the authored energy, not the heat-boosted one, so a chase doesn't spam fake drops)
   if(s16===0 && lastBarOfSec && nextSec.e-e>=0.3) swRiser(t,spb*16);
   if(s16===0 && firstBarOfSec && e>=0.75 && e-prevSec.e>=0.25) swCrash(t);
-  // --- drums (kit assembled from energy) ---
+  // --- drums (kit assembled from energy, hotter/busier the higher the wanted heat runs) ---
   if(sec.drum){
     if(s16%4===0){ swKick(t,1); swPump(t,spb*3.6); }
-    if(e>=0.5){ if(s16===4||s16===12) swClap(t); }
-    else if(e>=0.32 && (s16===4||s16===12)) swSnare(t,0.5);
-    if(e>=0.28 && s16%2===1) swHat(t, e>=0.6?0.14:0.08, false);
-    if(e>=0.7 && s16%8===6) swHat(t,0.1,true);
-    if(e>=0.55 && bar%4===3 && s16>=12) swTom(t, mtof(root-12+[0,3,5][(s16-12)%3]), 0.9);
+    if(eff>=0.5){ if(s16===4||s16===12) swClap(t); }
+    else if(eff>=0.32 && (s16===4||s16===12)) swSnare(t,0.5);
+    if(eff>=0.28 && s16%2===1) swHat(t, eff>=0.6?0.14:0.08, false);
+    if(eff>=0.7 && s16%8===6) swHat(t,0.1,true);
+    if(eff>=0.55 && bar%4===3 && s16>=12) swTom(t, mtof(root-12+[0,3,5][(s16-12)%3]), 0.9);
+    // wanted-level pulse + tension stab — kicks in once cops are actively on you
+    if(heatLevel>0.55 && s16%4===2){ swKick(t,0.4+0.4*heatLevel); swPump(t,spb*1.6); }
+    if(heatLevel>0.8 && s16===0 && bar%2===0) swChaseStab(chord,t);
   }
   // --- bass (pulsing 8ths, ducked) ---
   if(sec.bass && s16%2===0){
     let off=0, play=true;
     if(song.bass){ const v=song.bass[s16]; if(v===null||v===undefined) play=false; else off=v; }
-    if(play) swBass(mtof(root-12+off), t, spb*2*0.92, e);
+    if(play) swBass(mtof(root-12+off), t, spb*2*0.92, eff);
   }
   // --- pad, arp, lead ---
-  if(sec.pad && s16===0) swPad(chord, t, spb*16, e);
+  if(sec.pad && s16===0) swPad(chord, t, spb*16, eff);
   if(sec.arp) swArp(mtof(arpNote(chord,step)), t, spb);
   if(sec.lead && song.leadMap){
     // phrase restarts at the top of each lead section so the hook lands on the drop
@@ -1100,15 +1286,36 @@ function stepSong(song,step,t,spb){
 }
 function scheduleMusic(){
   if(!AC) return;
+  updateHeatLevel();
   const st=STATIONS[G.station];
   if(!st){ if(nextNoteTime<AC.currentTime) nextNoteTime=AC.currentTime+0.1; return; }
   if(G.station!==swStationRef){ swStationRef=G.station; swSongIdx=0; musicStep=0; loadSong(st.songs[0]); }
   while(nextNoteTime<AC.currentTime+0.2){
     let song=st.songs[swSongIdx];
     const spb=60/song.bpm/4, t=nextNoteTime;
-    stepSong(song, musicStep, t, spb);
-    musicStep++; nextNoteTime+=spb;
-    if(musicStep>=song.bars*16){ swSongIdx=(swSongIdx+1)%st.songs.length; musicStep=0; loadSong(st.songs[swSongIdx]); }
+    // only re-evaluate hot/calm at a bar boundary of whichever stream is currently
+    // advancing, so a variant switch never lands mid-bar
+    const atBar = swMode==='normal' ? (musicStep%16===0) : (swLoopStep%16===0);
+    if(atBar){
+      const want=desiredSwMode(song);
+      if(want!==swMode){
+        if(want==='hot') swCrash(t); // a sting to mark the drop into the chase mix
+        swMode=want; swLoopStep=0;
+      }
+    }
+    if(swMode==='hot'||swMode==='calm'){
+      // the normal arrangement's position freezes while a loop variant plays,
+      // so it picks back up exactly where it left off once the heat settles
+      const loop=swMode==='hot'?song.hotLoop:song.calmLoop;
+      prepSong(loop);
+      stepSong(loop, swLoopStep%(loop.bars*16), t, spb);
+      swLoopStep=(swLoopStep+1)%(loop.bars*16);
+    } else {
+      stepSong(song, musicStep, t, spb);
+      musicStep++;
+      if(musicStep>=song.bars*16){ swSongIdx=(swSongIdx+1)%st.songs.length; musicStep=0; loadSong(st.songs[swSongIdx]); }
+    }
+    nextNoteTime+=spb;
   }
 }
 
@@ -6562,6 +6769,9 @@ function fitScreen(){
   if(c.style.width!==w+'px'||c.style.height!==h+'px'||camera.aspect!==w/h){
     renderer.setSize(w,h);
     camera.aspect=w/h; camera.updateProjectionMatrix();
+    // Re-sync --lvw/--lvh so the rotated body-box tracks the pixels the canvas
+    // just took — otherwise a toolbar collapse/expand reintroduces the black bar.
+    updateOrientationMode();
   }
 }
 if(window.visualViewport) window.visualViewport.addEventListener('resize',()=>setTimeout(fitScreen,60));

@@ -309,14 +309,36 @@ colliders in this cheap analytic style.
 - **`sfx`** is an object of one-shot synth effects (`sfx.crash`, `sfx.coin`,
   `sfx.jump`, `sfx.mission`, `sfx.fail`, …). Add new effects here.
 - Radio is a procedural **synthwave soundtrack**: each `STATIONS[]` entry is a
-  playlist of songs from `SW_SONGS`. `scheduleMusic()` clocks ahead of the audio
-  clock and hands each 16th to `stepSong()`, which reads the current song's
-  arrangement (`sections` with an `e`nergy that morphs the drum kit + filter
-  brightness), chord `prog`, `bass`, and `lead` melody, then triggers the `sw*`
-  instruments. Everything routes through the FX rack built in `initAudio`
-  (`musicPump` sidechain, `musicVerbIn` reverb send, `musicDelayIn` ping-pong,
-  a bus compressor) → `musicGain` → `musicVODuck` → `masterGain`. To add a song,
-  push to `SW_SONGS` and reference it from a station's `songs`.
+  playlist of songs from `SW_SONGS` (**12 songs, 4 per station** — VICE FM /
+  TURBO FM / MIRAGE 105). `scheduleMusic()` clocks ahead of the audio clock and
+  hands each 16th to `stepSong()`, which reads the current song's arrangement
+  (`sections` with an `e`nergy that morphs the drum kit + filter brightness),
+  chord `prog`, `bass`, and `lead` melody, then triggers the `sw*` instruments.
+  Everything routes through the FX rack built in `initAudio` (`musicPump`
+  sidechain, `musicVerbIn` reverb send, `musicDelayIn` ping-pong, a bus
+  compressor) → `musicGain` → `musicVODuck` → `masterGain`. **To add a song,
+  append to `SW_SONGS`** (never insert — `STATIONS[].songs` reference it by
+  index, and those indices must stay stable) and reference it from a station's
+  `songs`.
+- **Wanted-level heat reacts on top of the current song two ways.** First, in
+  place: `updateHeatLevel()` (called once per `scheduleMusic()` tick) smoothly
+  tracks `G.stars` into `heatLevel` (0..1 — fast rise, slower cooldown; it also
+  maintains `calmT`, seconds spent clean) and `heatEnergy(sec)` blends it into
+  each section's authored energy, so the kit gets busier/brighter, an extra
+  off-beat kick pulse kicks in past `heatLevel>0.55`, and a tension
+  `swChaseStab` cuts in past `heatLevel>0.8`. Second, **every song can hand off
+  to a dedicated loop variant** — `song.hotLoop` (a tight, hard-hitting 4-bar
+  vamp built from that song's own chords, via `makeHotLoop`/bespoke for a few
+  flagships) and `song.calmLoop` (a sparse ambient wash, via `makeCalmLoop`).
+  `desiredSwMode()` picks `'normal' | 'hot' | 'calm'` with hysteresis (hot
+  enters >0.65, exits <0.45; calm needs `calmT>6` — not just low heat, so a
+  fresh boot doesn't start in the ambient loop instead of the authored
+  arrangement) and `scheduleMusic()` only swaps at a bar boundary, **freezing
+  the normal arrangement's position** while a loop plays so it resumes exactly
+  where it left off once the heat settles. A `swCrash()` stings the entrance
+  into hot mode. All of this happens **without switching playlist tracks** —
+  a chase makes whatever's already playing hit harder, then hand off to its
+  own "chase mix," then hand back.
 - Voiceover: `speak()` for synth NPC "wah" voice; `playVOFile`/`playVOLine` for
   recorded narration. Any active narration **ducks the radio** via the
   ref-counted `voDuckOn/Off` → `duckMusicForVO` (F4's "music dips during VO").
@@ -1172,7 +1194,8 @@ Before committing **any** task:
 *why* if non-obvious. The game must be playable at every commit.
 
 **Branch:** work on `claude/game-improvements-architecture-hyuk48` (or the branch
-Austin points you to). Push there. **Do not open a PR unless Austin asks.**
+Austin points you to). Push there, then **always open a PR into `main`** —
+don't push/fast-forward `main` directly.
 
 ---
 
@@ -1330,7 +1353,92 @@ reachable on foot.
 
 ---
 
-## 12. Changelog — voice wiring: robbery barks (Claude, 2026-07-23)
+## 12. Changelog — mobile black-bar / left-shift fix (Claude, 2026-07-23)
+
+Portrait phones self-present landscape by rotating `body` 90° in CSS
+(`html.gtb-rotated`). That rotated box was sized in **CSS `100vh`/`100vw`
+units**, but the WebGL canvas is sized in **`window.innerHeight`/`innerWidth`
+pixels** (via `vw()`/`vh()` → `renderer.setSize`). On iOS Safari those two
+metrics disagree — `viewport-fit=cover`, the `black-translucent` status bar,
+and the collapsing address-bar toolbar all make CSS viewport units track the
+*large* viewport while `innerHeight/innerWidth` track the *visual* one. The
+canvas therefore filled a different rectangle than its rotated container,
+leaving a **black bar** and a **left shift** on load.
+
+Fix (layout only, no game logic touched):
+
+- The rotated `body` box is now sized off `var(--lvw)`/`var(--lvh)` — the
+  custom properties `updateOrientationMode()` already keeps in lockstep with
+  `innerWidth/innerHeight` — instead of `100vh/100vw`. Canvas and container
+  now share one pixel source of truth, so they can't drift apart. `100vh/100vw`
+  remain only as a fallback for the single synchronous frame before JS first
+  sets the vars.
+- `fitScreen()` (the visualViewport-resize + 1s watchdog that re-fits the
+  canvas) now also calls `updateOrientationMode()` whenever it resizes, so a
+  toolbar collapse/expand can't reintroduce the mismatch mid-session.
+
+Verified: `cd tests && node run.js` — 43/43 green, zero console errors.
+
+---
+
+## 13. Changelog — 80s synthwave soundtrack rebuild (Claude, 2026-07-23)
+
+The radio was three static 16-step loops. Rebuilt into a full procedural
+80s synthwave soundtrack, in three passes:
+
+1. **Engine + FX rack.** Replaced the flat instrument set with `sw*`
+   synths (kick, layered clap, snare, hats, toms, crash, riser, sub+saw
+   bass, detuned-unison "supersaw" pad, plucky arp, vibrato lead) routed
+   through a shared rack built in `initAudio`: sidechain **pump**
+   (`musicPump`, ducks on every kick), convolver **reverb** send, ping-pong
+   **delay** send tuned to each song's tempo, and a bus compressor.
+   `musicGain → musicVODuck → masterGain`; the radio now **ducks under
+   Turbo/Deb voiceover** (ref-counted `voDuckOn/Off` → `duckMusicForVO`,
+   both the mp3 and TTS paths) — this is what F4 built its `sfxGain`/
+   `voiceGain` split on top of afterward.
+2. **Through-composed songs + wanted-heat layer.** Each station became a
+   *playlist* of songs (`SW_SONGS`) with real arrangements (`sections`:
+   intro/build/drop/breakdown, an `e`nergy that morphs the kit + filter
+   brightness), chord progressions, basslines, and authored lead melodies.
+   `updateHeatLevel()` smoothly tracks `G.stars` into `heatLevel` (fast
+   rise, slower cooldown) and `heatEnergy(sec)` leans the *current* song
+   hotter as a chase escalates — busier kit, an off-beat kick pulse past
+   `heatLevel>0.55`, a `swChaseStab` past `heatLevel>0.8` — without
+   switching tracks.
+3. **12 songs + hot/calm loop variants.** Grew the dial to 12 songs (4 per
+   station: VICE FM / TURBO FM / MIRAGE 105). Every song now also defines
+   a `calmLoop` (sparse ambient wash) and `hotLoop` (tight 4-bar chase
+   remix, built from that song's own chords via `makeCalmLoop`/
+   `makeHotLoop`; three flagships get a bespoke `hotLoop` with its own
+   riff). `desiredSwMode()` picks `'normal' | 'hot' | 'calm'` with
+   hysteresis (hot enters `heatLevel>0.65`, exits `<0.45`; calm needs
+   `calmT>6` real seconds clean — not just low heat, so a fresh boot
+   doesn't sit in the ambient loop instead of the authored arrangement).
+   `scheduleMusic()` only swaps at a bar boundary, **freezes the normal
+   arrangement's position while a loop plays**, and stings the entrance
+   into hot mode with `swCrash()` — so a chase makes whatever's already
+   playing hit harder, hands off to its own chase mix, then hands back
+   exactly where it left off.
+
+Merged with the F4 (SFX/Voice buses), F3 (adaptive quality), J1
+(haptics), R1 (dispose-on-removal), and rat-vengeance work landed on
+`main` in parallel — the merge was clean (F4's buses build directly on
+this work's `musicGain`/`voDuckOn` plumbing, just rerouting `sfx.*`/VO
+through the new `sfxGain`/`voiceGain` sub-buses).
+
+Added `tests/cases/soundtrack.test.js`: validates all 12 songs + their
+loop variants are well-formed, schedules every song/variant through the
+FX rack without throwing, checks the heat layer raises effective energy
+without breaking the clamp, and drives the hot-loop state machine through
+a full entry/freeze/cooldown/resume cycle.
+
+Verified: `cd tests && node run.js` (all 9 case files run individually,
+avoiding a container-load flake seen on the combined run) — 41/41 green,
+zero console errors.
+
+---
+
+## 14. Changelog — voice wiring: robbery barks (Claude, 2026-07-23)
 
 First slice of the **VOICE** task (wiring the ~90 staged `voice/turbo/story/`
 lines that were recorded but referenced nowhere). Two bark pools pulled out of

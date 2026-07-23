@@ -95,10 +95,10 @@ Status legend: **⬜ Backlog** · **▶ Next up** · **🔨 In progress** · **�
 ### Highest leverage — do these next
 | ID | Task | Status | Owner | Notes / unblocks |
 | --- | --- | --- | --- | --- |
-| **R1** | Dispose GPU resources on entity removal (`disposeMesh`) | ▶ Next up | — | `P0`. Stops the mobile memory leak. **Prerequisite for PL1.** |
-| **VOICE** | Wire the ~90 staged voice lines (`voice/turbo/story/`, `cutscenes/`, `backstory_intro/`) into their triggers | 🔨 In progress | Claude | **Wired: `robbery`, `robbery_take`, `pizza_jack`, `debt_grumble`, `idle_backstory`** (`HANDOFF.md §12`; the latter two share one slow timer by design — no wall of sound). Next: `paying_deb`/`approach_deb` (need cutscene sequencing), `cutscenes/`, `backstory_intro/`. Claude's lane. |
-| **F3** | Adaptive graphics quality (Low/Med/High tiers, auto off fps) | ▶ Next up | — | `P0`. Biggest raw mobile win. |
-| **PL1** | Places & Loading system (`loadPlace`/`transitionWithScreen`), port pizza interior to it | ⬜ Backlog | — | From `GAME_PLAN.md §4`. **Blocked on R1.** Needs a card in `HANDOFF.md`. |
+| **VOICE** | Wire the ~90 staged voice lines (`voice/turbo/story/`, `cutscenes/`, `backstory_intro/`) into their triggers | 🔨 In progress | Claude | **Wired: `robbery`, `robbery_take`, `pizza_jack`, `debt_grumble`, `idle_backstory`** (`HANDOFF.md §14`; the latter two share one slow timer by design — no wall of sound). Next: `paying_deb`/`approach_deb` (need cutscene sequencing), `cutscenes/`, `backstory_intro/`. Claude's lane. |
+| **PL1** | Places & Loading system (`loadPlace`/`transitionWithScreen`), port pizza interior to it | ▶ Next up | — | From `GAME_PLAN.md §4`. **Unblocked — R1 shipped.** Needs a card in `HANDOFF.md`. |
+| R1 | Dispose GPU resources on entity removal (`disposeMesh`) | ✅ Done | (other session) | Verified in code on `main`. Unblocked PL1. |
+| F3 | Adaptive graphics quality (Low/Med/High tiers, auto off fps) | ✅ Done | (other session) | Verified in code on `main`. |
 
 ### Football saga (Phase 7) — arc payoff
 | ID | Task | Status | Owner | Notes |
@@ -112,10 +112,11 @@ Status legend: **⬜ Backlog** · **▶ Next up** · **🔨 In progress** · **�
 ### Mobile robustness & feel
 | ID | Task | Status | Owner | Notes |
 | --- | --- | --- | --- | --- |
-| F4 | SFX/Voice sub-buses + sliders | ⛔ Partial | — | Ducking done; dedicated `sfxGain`/`voiceGain` remain. |
-| R2 | Pool traffic/peds | ⬜ Backlog | — | Smoother frame times. Pairs with F3 caps + R1. |
+| F4 | SFX/Voice sub-buses + sliders | ✅ Done | (other session) | `sfxGain`/`voiceGain` verified live on `main`. |
+| MUS1 | 80s synthwave soundtrack rebuild (12 songs, sidechain/reverb/delay rack, wanted-heat layer, hot/calm loop variants) | ✅ Done | Claude | `HANDOFF.md §13`. Radio ducks under VO — the plumbing F4's buses route through. |
+| J1 | Haptics & impact feedback | ✅ Done | (other session) | `navigator.vibrate` verified live on `main`. |
+| R2 | Pool traffic/peds | ⬜ Backlog | — | Smoother frame times. Pairs with F3 caps (done) + R1 (done). |
 | R3 | Anti-stuck / spawn safety | ⬜ Backlog | — | No wedged states / NPCs in walls. |
-| J1 | Haptics & impact feedback | ⬜ Backlog | — | `navigator.vibrate`, cheap feel win. |
 | J2/J3/J4 | Hitstop+shake / camera options / reverse-brake clarity | ⬜ Backlog | — | J4 dead-zone done; rest open. |
 
 ### Progression, UX, content
@@ -127,6 +128,7 @@ Status legend: **⬜ Backlog** · **▶ Next up** · **🔨 In progress** · **�
 | U2 / U3 | Onboarding / death-respawn flow | ⬜ Backlog | — | — |
 | A2 | Accessibility options | ⬜ Backlog | — | Reduce-motion, high-contrast HUD. |
 | CH2 | Design Chapter 2 (currently a "coming soon" card) | ⬜ Backlog | — | Design in `STORY_BIBLE.md` first. |
+| RV1 | Mama Rat core mechanics (Phase 8 — Rat Vengeance) | ⛔ Partial | — | Shipped as a placeholder model. See `HANDOFF.md` Phase 8 for the real-model follow-up card. Not in this board's original scope — added on reconciliation. |
 
 ### Character / cutscene track (see `CHARACTERS.md`)
 | ID | Task | Status | Owner | Notes |
@@ -177,9 +179,11 @@ reference the game never loads. Getting the kind right is what keeps art cheap.
 Assets that are committed but not yet referenced by code. Claude picks from here.
 
 - **The staged voice lines** (`voice/turbo/story/`, `cutscenes/`,
-  `backstory_intro/`) — recorded, committed. `robbery` + `robbery_take` are now
-  **wired** (`HANDOFF.md §12`); the rest remain staged. See the `VOICE` task on
-  the board. Still the biggest ready-to-wire pile today.
+  `backstory_intro/`) — recorded, committed. `robbery`, `robbery_take`,
+  `pizza_jack`, `debt_grumble`, and `idle_backstory` are now **wired**
+  (`HANDOFF.md §14`); the rest remain staged. See the `VOICE` task on the
+  board. Still the biggest ready-to-wire pile today.
+  (`promo/` + `raw/` are non-gameplay reference audio, not for wiring.)
 
 ---
 

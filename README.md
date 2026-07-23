@@ -1,15 +1,17 @@
 # Grand Turbo Boost IV: San Chaos
 
-A neon-soaked, top-down/3D open-world action game for mobile browsers. Play as
-**Turbo Jones**, fresh out of minimum security with twelve dollars and a bus
-pass — and an ex-wife who wants $800 in child support by tonight. Steal cars,
-fly helis, dodge cops, and cause chaos in San Chaos City.
+A neon-soaked, 3D open-world crime sandbox for mobile browsers. Play as
+**Turbo Jones**, a small-time crook trying to get his life together in **San
+Chaos City** — steal cars, fly helis, dodge cops, and cause chaos, all wrapped
+in an evolving story told in chapters. The premise is absurd; it's played
+completely straight (see `STORY_BIBLE.md` for the tone and canon).
 
 Built as a single self-contained HTML5 page using [three.js](https://threejs.org)
 for the 3D world and the Web Audio API for engine sounds, a fully procedural 80s
-**synthwave soundtrack** (sidechain-pumped, reverb-drenched radio with a song
-per station), and recorded voiceover. Designed for **landscape** phones and
-installable as a PWA.
+**synthwave soundtrack** (sidechain-pumped, reverb-drenched radio — 12 songs
+across 3 stations, each with its own "chase mix" and ambient wash loop that
+swap in as your wanted stars rise and fall), and recorded voiceover. Designed
+for **landscape** phones and installable as a PWA.
 
 <p align="center"><img src="icon-512.png" width="140" alt="GTB IV icon"></p>
 
@@ -67,8 +69,24 @@ see a phone joystick on a desktop browser, or keyboard hints on a phone.
 The game never asks a phone to physically rotate — a portrait touch device
 self-rotates the page to landscape instead (see `HANDOFF.md` §6.7 for how).
 
-Objectives: stick people up with the pistol, rob glowing stores, and pay Deb her
-$800 before the cops catch up. Your wanted level climbs with every crime.
+## Core loop
+
+The permanent, always-on gameplay — this doesn't change chapter to chapter:
+
+- **Make money.** Stick people up with the pistol, rob glowing stores, run
+  pizza deliveries, and take on side-missions (`delivery`, `style`,
+  `checkpoints`, `rampage`, `heat`) for cash.
+- **Manage heat.** Every crime raises your wanted level; cops (and cop helis)
+  escalate with it. Break line of sight or lay low in a rooftop hideout to cool
+  off.
+- **Explore & cause chaos.** A full procedural city — streets, an elevated
+  light rail, rooftops and fire escapes, a beach and open water — driveable by
+  car, bike, or helicopter, on foot, or on a rampage.
+- **Follow the story.** A running narrative delivers goals, cutscenes, and
+  rival characters on top of the sandbox. The **current chapter's specific
+  objectives** live in-game (follow the HUD/beacon) and in `STORY_BIBLE.md` /
+  `CHAPTER1.md` — those evolve as the story grows, so they're not duplicated
+  here. Progress (money, story flags, settings) is saved automatically.
 
 ## Repo layout
 
@@ -91,7 +109,7 @@ plain relative paths.
 | `manifest.json` | PWA manifest — name, icons, fullscreen/landscape |
 | `icon-512.png`, `apple-touch-icon.png` | App / home-screen icons |
 | `title-bg.jpg` | Title-screen background art |
-| `panel1.jpg`, `panel2.jpg`, `panel3.jpg` | Legacy key-art panels (no longer referenced) |
+| `art/` | Committed game art (facades, sky, loading splashes, UI) — see `art/README.md` for the layout + mobile texture budget. `art/legacy/` holds the retired `panel1-3.jpg` key-art placeholders (no longer referenced) |
 | `voice/` | All recorded voice audio — see below |
 
 ### Voice audio layout (`voice/turbo/…`)
@@ -140,10 +158,11 @@ page is cached.
 
 ### Placeholder art
 
-`panel1–3.jpg` and the two app icons in this commit are **synthwave placeholders**
-generated to match the game's aesthetic so nothing renders blank. Drop the final
-concept-art files in at the same paths/filenames to replace them — no code
-changes needed.
+The app icons (`icon-512.png`, `apple-touch-icon.png`) and `title-bg.jpg` are
+**synthwave placeholders** generated to match the game's aesthetic so nothing
+renders blank. Drop final art in at the same paths/filenames to replace them —
+no code changes needed. New art beyond these (facades, sky, UI, etc.) goes
+under `art/` — see `art/README.md` for the layout and mobile texture budget.
 
 ## Credits
 
