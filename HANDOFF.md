@@ -415,7 +415,19 @@ cutscene on load. Optional `?mode=car|heli` to start already driving/flying.
 `?cutscene=deb_confrontation` plays that scene immediately; normal load
 (no flag) is unchanged.
 
-#### D3 — Debug HUD overlay `P1 · Risk: Low`
+#### D3 — Debug HUD overlay `P1 · Risk: Low` `DONE`
+**Status: implemented & verified** (Claude). A `#debugHud` panel (top-right,
+below the minimap — clear of the joystick/pedals/buttons) shown only when
+`DEV_STATE.hud` is on; toggled by the `Z` key (`?dev=1` only) or the dev
+panel's "Debug HUD (Z)" button. `updateDebugHud()` runs once per frame from
+`loop()` (gated `if(DEV)`, cheap template-literal string build, no work at all
+when off) and reports player pos/heading/`G.mode`, money/heat/stars, live
+counts (`cars`/`traffic`/`peds`/`cops`/`jocks`/`gangMembers`/`helis`/active
+particles out of `P_MAX`), the active `mission.type` or Pizza Wars/heist phase,
+camera position, and per-frame time in ms. Verified: `tests/` suite green
+36/36; a standalone Playwright smoke check confirmed the panel starts hidden,
+`toggleDebugHud()` shows it with live-updating text that changes as the
+player moves, and toggling off hides it again — zero console errors.
 **Why:** The lone `fps` readout isn't enough to diagnose behaviour.
 **Where:** extend the fps block in `MAIN LOOP`; gated on `?dev=1` or a toggle.
 **Approach:** A corner overlay showing player pos/heading, `G.mode`, money/heat/
@@ -976,8 +988,8 @@ throughout:
 ✔ D2  Fast-boot & scene-jump     DONE
 ✔ F1  Save/restore               DONE
 ✔ F2  Pause + Settings menu      DONE
-D3  Debug HUD                  ← NEXT: cheap, speeds up bug-hunting
-R1  Dispose on removal          ← stop the memory leak early
+✔ D3  Debug HUD                  DONE
+R1  Dispose on removal          ← NEXT: stop the memory leak early
 F3  Adaptive quality            ← biggest mobile win
 ~ F4  Audio mix + ducking      ← ducking DONE; sfx/voice buses remain
 U1  Objective clarity/HUD
