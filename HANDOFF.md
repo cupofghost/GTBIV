@@ -1369,3 +1369,15 @@ paths, no code change beyond the data:
 Both added to the `voice-wiring.test.js` guard. `paying_deb`/`approach_deb` are
 deliberately held: their moments already run a cutscene with its own VO, so
 they need sequencing (not a drop-in) — a later slice.
+
+**Update (same day, pacing pass):** wired **`idle_backstory`** (5 lines,
+`voice/turbo/story/idle_backstory/`) — general backstory-callback musings, not
+debt-specific. Rather than give it its own independent timer stacked on top of
+`debt_grumble`'s, the two now **share one slow timer** (`idleBarkT`, renamed
+from `debtGrumbleT`) that alternates which pool fires. Net effect: the total
+rate of unprompted Turbo chatter *doesn't* go up just because a category was
+added — if anything it eases slightly (interval widened from `rand(30,50)` to
+`rand(35,60)`s). Explicit design intent: keep ambient barks rare, let the game
+breathe. Guarded by a new pacing assertion in `voice-wiring.test.js` (timer
+must start >= 30s) so a future change can't quietly tighten it into a wall of
+sound.

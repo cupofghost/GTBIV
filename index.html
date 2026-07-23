@@ -6706,7 +6706,10 @@ const DONNA_REPEAT_LINES=[
   "Somebody bring me a box. A big one.",
   "Last time was a conversation. This time is a delivery — of a different kind.",
 ];
-let debtGrumbleT=rand(30,50); // ambient idle bark while the debt is unpaid
+// shared ambient-idle-bark timer: one slow, unhurried cadence, alternating
+// between the debt grumble and the general backstory musings so the total
+// rate of unprompted chatter never goes up just because a category was added
+let idleBarkT=rand(35,60);
 function makePillar(color,r,h){
   const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,10,1,true),
     new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.32,side:THREE.DoubleSide,depthWrite:false}));
@@ -6801,8 +6804,11 @@ function updateStory(dt){
       G.story.pizzaWarned=true; queueSave();
       playCutscene('pizza_warning', player.x, player.z);
     } else {
-      debtGrumbleT-=dt;
-      if(debtGrumbleT<=0){ turboSay('debt_grumble'); debtGrumbleT=rand(30,50); }
+      idleBarkT-=dt;
+      if(idleBarkT<=0){
+        turboSay(Math.random()<0.5?'debt_grumble':'idle_backstory');
+        idleBarkT=rand(35,60);
+      }
     }
   }
   if(G.story.debt>0&&d<3&&G.mode==='foot'&&G.money>=G.story.debt&&!activeCutscene){
@@ -7444,6 +7450,15 @@ const TURBO_LINES={
     {src:'voice/turbo/story/idle_debt/idle_debt_05_tonight.mp3', text:"Tonight. She said tonight. Very specific woman, my ex."},
     {src:'voice/turbo/story/idle_debt/idle_debt_06_kid-thinks-im-cool.mp3', text:"Somewhere out there, a kid thinks I'm cooler than this. Gotta keep that going."},
     {src:'voice/turbo/story/idle_debt/idle_debt_07_she-counted.mp3', text:"$800. Not $799. She counted."},
+  ],
+  // rare ambient musing — backstory callbacks, alternates with debt_grumble
+  // off the shared idleBarkT timer (CHAPTER1.md §8)
+  idle_backstory:[
+    {src:'voice/turbo/story/idle_backstory/idle_backstory_01_hot-dog-opinions.mp3', text:"Two years, three hot dogs a day. I have OPINIONS about hot dogs now."},
+    {src:'voice/turbo/story/idle_backstory/idle_backstory_02_i-see-a-pattern.mp3', text:"Church camp took my cheerleaders. Coach took my locker room. Deb's taking my money. I see a pattern and I don't like it."},
+    {src:'voice/turbo/story/idle_backstory/idle_backstory_03_wrestling-match.mp3', text:"I didn't lose my temper. I lost a WRESTLING MATCH. Slight difference."},
+    {src:'voice/turbo/story/idle_backstory/idle_backstory_04_thats-history.mp3', text:"Fast, strong, handsome. That's not bragging, Coach, that's HISTORY."},
+    {src:'voice/turbo/story/idle_backstory/idle_backstory_05_get-creative.mp3', text:"Just gotta get creative. Always gotta get creative."},
   ],
   // sticking up a store/register at gunpoint — the polite-stickup patter
   robbery:[
