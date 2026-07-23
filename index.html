@@ -275,6 +275,11 @@
   .pmRow label { color:#9be7ff; font-size:11px; font-family:Arial,sans-serif; letter-spacing:1px; width:58px; flex:none; }
   .pmRow input[type=range] { flex:1; accent-color:#ff3ea0; min-height:26px; }
   .pmRow .pmVal { color:#ffd23e; font-size:11px; font-family:monospace; width:36px; text-align:right; flex:none; }
+  .qGroup { flex:1; display:flex; gap:6px; }
+  .qBtn { flex:1; font-size:10px; font-weight:900; color:#fff; font-family:Arial,sans-serif;
+    letter-spacing:1px; cursor:pointer; background:rgba(40,16,70,.85);
+    border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:7px 2px; text-align:center; }
+  .qBtn.on { background:rgba(255,62,160,.55); border-color:#ff3ea0; }
   .pmHowTxt { color:#e8e8f0; font-family:Arial,sans-serif; font-size:12px; line-height:1.8; text-align:left; }
   .pmHowTxt b { color:#ffd23e; }
 
@@ -530,6 +535,12 @@
     <h2>SETTINGS</h2>
     <div class="pmRow"><label for="volMaster">MASTER</label><input type="range" id="volMaster" min="0" max="100" step="5"><span class="pmVal" id="volMasterVal"></span></div>
     <div class="pmRow"><label for="volMusic">MUSIC</label><input type="range" id="volMusic" min="0" max="100" step="5"><span class="pmVal" id="volMusicVal"></span></div>
+    <div class="pmRow"><label>QUALITY</label><div class="qGroup" id="qualityGroup">
+      <button class="qBtn" data-q="auto">AUTO</button>
+      <button class="qBtn" data-q="low">LOW</button>
+      <button class="qBtn" data-q="medium">MED</button>
+      <button class="qBtn" data-q="high">HIGH</button>
+    </div></div>
     <button class="pmBtn" id="pmSetBack">BACK</button>
   </div>
   <div class="pmPanel" id="pmHow" style="display:none">
@@ -572,6 +583,12 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const TAU=Math.PI*2;
 function angDiff(a,b){let d=(b-a)%TAU; if(d>Math.PI)d-=TAU; if(d<-Math.PI)d+=TAU; return d;}
 const $=id=>document.getElementById(id);
+
+// Adaptive-quality knobs (see ADAPTIVE QUALITY section) — declared up top so
+// every system that spawns/renders can read the current tier's limits without
+// caring where in the file quality.js-style logic lives. Defaults are the
+// 'high' tier; applyQuality() overwrites them at boot and on any tier change.
+let TRAFFIC_CAP=16, PED_CAP=34, PARTICLE_SCALE=1, GFX_TIER='high';
 
 // ================= DEVICE / ORIENTATION =================
 // Coarse pointer == touch is the primary input (robust vs. UA-sniffing or
@@ -2167,6 +2184,7 @@ function spawnP(x,y,z,vx,vy,vz,life,r,g,b,grav){
   pPos[i*3]=x; pPos[i*3+1]=y; pPos[i*3+2]=z;
 }
 function burst(x,y,z,n,cols,speed,life,grav){
+  n=Math.max(1,Math.round(n*PARTICLE_SCALE));
   for(let k=0;k<n;k++){
     const a=rand(0,TAU), s=rand(0.3,1)*speed, c=pick(cols);
     spawnP(x+rand(-0.5,0.5),y+rand(0,0.6),z+rand(-0.5,0.5),
@@ -5050,7 +5068,7 @@ function killCar(car,boom){
   if(car.driver==='cop'&&Math.random()<0.35) spawnPickup('rpg',car.x+rand(-1,1),car.z+rand(-1,1));
   const ci=cars.indexOf(car); if(ci>=0) cars.splice(ci,1);
   const ti=traffic.indexOf(car); if(ti>=0) traffic.splice(ti,1);
-  setTimeout(()=>{ if(traffic.length<16) spawnTraffic(1); },4000);
+  setTimeout(()=>{ if(traffic.length<TRAFFIC_CAP) spawnTraffic(1); },4000);
 }
 function addStyle(n){ if(mission&&mission.type==='style') mission.value+=n; }
 
@@ -5909,7 +5927,7 @@ function updatePeds(dt){
         if(ped.bub) ped.bub.remove();
         peds.splice(i,1);
         if(ped.kind==='chat'&&ped.partner) ped.partner.kind='local';
-        spawnPed(pick(blockInfo));
+        if(peds.length<PED_CAP) spawnPed(pick(blockInfo));
       }
       continue;
     }
@@ -6362,7 +6380,7 @@ function loop(){
     positionBubble();
     if(turboCool>0) turboCool-=dt;
     fpsAcc+=dt; fpsN++; fpsT+=dt;
-    if(fpsT>2){ $('fpsWarn').textContent=Math.round(fpsN/fpsAcc)+' fps'; fpsAcc=0; fpsN=0; fpsT=0; }
+    if(fpsT>2){ const fps=fpsN/fpsAcc; $('fpsWarn').textContent=Math.round(fps)+' fps'; autoQualityTick(fps); fpsAcc=0; fpsN=0; fpsT=0; }
   }
   renderer.render(scene,camera);
 }
@@ -7556,7 +7574,7 @@ function updateReplay(dt){
 // so each sets its own flag and syncPause() is the only writer of G.paused.
 const SET_KEY='gtb4.settings';
 const SETTINGS=(function(){
-  const d={ v:1, master:100, music:100 };
+  const d={ v:1, master:100, music:100, quality:'auto' };
   try{ const s=JSON.parse(localStorage.getItem(SET_KEY)); if(s&&s.v===1) Object.assign(d,s); }catch(e){}
   return d;
 })();
@@ -7566,6 +7584,84 @@ function applyVolumes(){
   if(masterGain) masterGain.gain.value=0.9*SETTINGS.master/100;
   if(musicGain) musicGain.gain.value=STATIONS[G.station]?musicVolVal():0;
 }
+
+// ---- adaptive graphics quality (F3): Low/Med/High tiers + fps-driven auto ----
+// Levers kept deliberately cheap: renderer pixel ratio, traffic/ped population
+// caps (trimmed live via disposeMesh — see R1 — when a downshift needs to
+// shed entities right now), and particle-burst size. Persisted alongside the
+// volume sliders in the same SETTINGS blob.
+const QUALITY_TIERS={
+  low:   { pixelRatio:1.0,  trafficCap:8,  pedCap:16, particleScale:0.5,  fogNear:70,  fogFar:280 },
+  medium:{ pixelRatio:1.35, trafficCap:12, pedCap:24, particleScale:0.75, fogNear:95,  fogFar:420 },
+  high:  { pixelRatio:1.75, trafficCap:16, pedCap:34, particleScale:1,    fogNear:120, fogFar:560 },
+};
+let qualityMode=SETTINGS.quality||'auto';   // 'auto'|'low'|'medium'|'high' — the user's choice
+let autoLowStreak=0, autoHighStreak=0;
+function trimToCaps(){
+  while(traffic.length>TRAFFIC_CAP){
+    let fi=-1,fd=-1;
+    for(let i=0;i<traffic.length;i++){ const c=traffic[i]; const d=Math.hypot(c.x-px0(),c.z-pz0()); if(d>fd){fd=d;fi=i;} }
+    if(fi<0) break;
+    const c=traffic[fi];
+    scene.remove(c.mesh); disposeMesh(c.mesh);
+    const ci=cars.indexOf(c); if(ci>=0) cars.splice(ci,1);
+    traffic.splice(fi,1);
+  }
+  while(peds.length>PED_CAP){
+    let fi=-1,fd=-1;
+    for(let i=0;i<peds.length;i++){ const p=peds[i]; if(p.state==='down') continue; const d=Math.hypot(p.x-px0(),p.z-pz0()); if(d>fd){fd=d;fi=i;} }
+    if(fi<0) break;
+    const p=peds[fi];
+    scene.remove(p.mesh); disposeMesh(p.mesh);
+    if(p.bub) p.bub.remove();
+    peds.splice(fi,1);
+  }
+}
+function applyQuality(tier){
+  const cfg=QUALITY_TIERS[tier]; if(!cfg) return;
+  GFX_TIER=tier;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,cfg.pixelRatio));
+  TRAFFIC_CAP=cfg.trafficCap; PED_CAP=cfg.pedCap; PARTICLE_SCALE=cfg.particleScale;
+  if(scene.fog){ scene.fog.near=cfg.fogNear; scene.fog.far=cfg.fogFar; }
+  trimToCaps();
+}
+function refreshQualityButtons(){
+  const g=$('qualityGroup'); if(!g) return;
+  g.querySelectorAll('.qBtn').forEach(b=>b.classList.toggle('on',b.dataset.q===qualityMode));
+}
+function setQualityMode(mode){
+  qualityMode=mode; SETTINGS.quality=mode; saveSettings();
+  autoLowStreak=0; autoHighStreak=0;
+  applyQuality(mode==='auto'?'high':mode);
+  refreshQualityButtons();
+}
+// fps-driven auto tier: two consecutive ~2s windows under 40fps steps down;
+// six consecutive windows pinned at 56+ steps back up. No-op outside 'auto'.
+function autoQualityTick(fps){
+  if(qualityMode!=='auto') return;
+  if(fps<40){ autoLowStreak++; autoHighStreak=0; }
+  else if(fps>=56){ autoHighStreak++; autoLowStreak=0; }
+  else { autoLowStreak=0; autoHighStreak=0; }
+  if(autoLowStreak>=2){
+    autoLowStreak=0;
+    if(GFX_TIER==='high') applyQuality('medium');
+    else if(GFX_TIER==='medium') applyQuality('low');
+  } else if(autoHighStreak>=6){
+    autoHighStreak=0;
+    if(GFX_TIER==='low') applyQuality('medium');
+    else if(GFX_TIER==='medium') applyQuality('high');
+  }
+}
+applyQuality(qualityMode==='auto'?'high':qualityMode);
+(function initQualityUI(){
+  const g=$('qualityGroup'); if(!g) return;
+  refreshQualityButtons();
+  g.querySelectorAll('.qBtn').forEach(b=>{
+    b.addEventListener('click',()=>setQualityMode(b.dataset.q));
+    b.addEventListener('touchend',e=>{ e.preventDefault(); setQualityMode(b.dataset.q); });
+  });
+})();
+
 function syncPause(){ G.paused=G.started&&G.menuPaused; }
 function pauseGame(){
   if(G.menuPaused||!G.started||G.over||G.intro||activeCutscene||G.replay) return;
