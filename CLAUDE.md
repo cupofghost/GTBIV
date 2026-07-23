@@ -11,11 +11,14 @@ Art work: `ASSETS.md`.
 
 ## The always-on rules (do these without being asked)
 
-1. **Open a PR to `main` after every improvement — automatically.** The moment a
-   unit of work is committed and green (`cd tests && node run.js`), open a pull
-   request to `main` (or push onto the branch of the PR already open for this
-   task). One improvement → one PR. **Never merge to `main` yourself — Austin
-   merges.** Full rule: `AGENTS.md §2` rule 4.
+1. **Open a PR to `main` after every improvement — automatically — then
+   squash-merge it yourself once it's mergeable.** The moment a unit of work is
+   committed and green (`cd tests && node run.js`), open a pull request to
+   `main` (or push onto the branch of the PR already open for this task). One
+   improvement → one PR. Required approvals are 0 and there's no CI configured
+   to wait on, so nothing blocks you from merging your own PR the moment it's
+   current with `main`. Full rule + GitHub settings: `AGENTS.md §2` rule 4 and
+   `AGENTS.md §2.1`.
 
 2. **Push ASAP so other agents have current info.** The repo is the message bus.
    Push the instant a change is committed and green — don't hoard local commits.

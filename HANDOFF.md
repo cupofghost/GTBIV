@@ -1489,3 +1489,27 @@ added — if anything it eases slightly (interval widened from `rand(30,50)` to
 breathe. Guarded by a new pacing assertion in `voice-wiring.test.js` (timer
 must start >= 30s) so a future change can't quietly tighten it into a wall of
 sound.
+
+---
+
+## 15. Changelog — GitHub branch-protection settings baked into docs (Claude, 2026-07-23)
+
+Austin shared the repo's actual GitHub settings (`main` protected, PRs
+required, **0 required approvals**, squash-only merge, linear history
+required, force pushes blocked, head branches auto-delete, no CI/status
+checks configured, no required reviewers/code owners/signed commits, branch
+naming `<agent-name>/<short-feature-description>`) so agents stop guessing at
+what's enforced. Docs updated to match:
+
+- **`AGENTS.md`** gets a new **§2.1** with the full settings list, and rule 4
+  (plus the flow diagram, the quick-start in §6, and the wrap-up template in
+  §7) now say agents **squash-merge their own PR once it's mergeable**, since
+  0 required approvals means nothing blocks it. This flips the prior "Austin
+  merges, agents never do" rule — that rule predated confirmation of the
+  actual branch-protection config.
+- **`CLAUDE.md`** rule 1 updated to match.
+
+No code changed; suite untouched (still green as of the last code commit).
+
+Next: agents doing PR work should merge their own PRs going forward instead
+of leaving them open for Austin.

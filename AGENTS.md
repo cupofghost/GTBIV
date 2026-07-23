@@ -51,8 +51,9 @@ Design beat (STORY_BIBLE / GAME_PLAN)
         → art request filed here (§4) → Nano Banana / Midjourney produce to spec
            → Austin/Claude size to the mobile budget + commit at the fixed path
               → Claude wires any staged VO, reviews, runs the suite
-                 → commit (green + playable) → open PR to main → update this
-                    board → wrap-up to Austin (§7) → Austin merges → repeat
+                 → commit (green + playable) → open PR to main → squash-merge
+                    it yourself once mergeable → update this board → wrap-up
+                    to Austin (§7) → repeat
 ```
 
 **Rules every agent follows (these are the golden rules, enforced):**
@@ -64,14 +65,17 @@ Design beat (STORY_BIBLE / GAME_PLAN)
 3. **One logical change per commit, always playable.** Run `cd tests &&
    node run.js` (must be green) before every commit.
 4. **Work on your own branch, and open a PR to `main` after every improvement —
-   automatically, every time.** Each session/agent gets its own `claude/…` or
-   `kimi/…` branch; don't push to someone else's active branch. The moment a unit
-   of work is green + playable and committed, **open a pull request to `main`**
-   (or push the new commit to the branch of the PR you already opened for this
-   task). Don't wait to be asked, and don't batch several improvements into one
-   silent branch. **Agents never merge to `main` — Austin does.** Your job ends
-   at "green PR is open and linked in the wrap-up (§7)"; Austin reviews and
-   merges. One improvement → one PR.
+   automatically, every time.** Each session/agent gets its own
+   `<agent-name>/<short-feature-description>` branch (e.g. `claude/…` or
+   `kimi/…`), branched off the latest `main`; don't push to someone else's
+   active branch. The moment a unit of work is green + playable and committed,
+   **open a pull request to `main`** (or push the new commit to the branch of
+   the PR you already opened for this task). Don't wait to be asked, and don't
+   batch several improvements into one silent branch. **Squash-merge it
+   yourself once it's mergeable** — the repo requires 0 approvals and has no CI
+   checks configured (full settings: §2.1), so there's nothing else to wait on.
+   Your job ends at "PR opened, merged, and linked in the wrap-up (§7)." One
+   improvement → one PR → one merge.
 5. **Leave a trace.** When you finish something meaningful, add a one-paragraph
    entry to the `HANDOFF.md` changelog (what changed + why) and update this
    board. That paragraph *is* your message to the next agent.
@@ -82,6 +86,29 @@ Design beat (STORY_BIBLE / GAME_PLAN)
    read the *pushed* branch/PR for current state; unpushed work is invisible to
    them and invites collisions on `index.html`. Commit small, push immediately,
    open/refresh the PR right away (rule 4).
+
+### 2.1 GitHub repository settings (how PRs actually behave here)
+
+These are configured on GitHub itself, not just convention — they're already
+set, don't try to change them, just work within them:
+
+- **`main` is protected.** PRs are required before merging; direct pushes to
+  `main` are rejected by GitHub.
+- **Required approvals: 0.** You're authorized to squash-merge your own PR the
+  moment it's mergeable — no one else has to review or approve it first.
+- **Merge method: squash only.** Merge commits and rebase-merge are disabled;
+  every PR lands on `main` as a single squashed commit.
+- **Linear history is required** and **force pushes are blocked.** If `main`
+  moved under your branch, merge/rebase `main` into it and push a new commit —
+  don't force-push.
+- **Head branches auto-delete after merge.** Don't bother cleaning up your
+  branch post-merge; GitHub does it.
+- **No CI/status checks are configured.** The local suite (`cd tests && node
+  run.js`, rule 3) is the only gate — don't stall a PR waiting for a check
+  that doesn't exist.
+- **No required signed commits, no required reviewers, no code owners.**
+- **Branch naming:** `<agent-name>/<short-feature-description>`, branched off
+  the latest `main`.
 
 ---
 
@@ -193,7 +220,8 @@ Assets that are committed but not yet referenced by code. Claude picks from here
 2. Pick the top **▶ Next up** you're suited for; set it 🔨 with your name.
 3. Build it small, keep the suite green, keep it playable.
 4. Commit on your own branch and **open a PR to `main` (automatically, every
-   improvement — §2 rule 4).** Agents don't merge; Austin does.
+   improvement — §2 rule 4), then squash-merge it yourself once it's
+   mergeable** (0 approvals required, no CI to wait on — §2.1).
 5. Set it ✅, add a changelog paragraph to `HANDOFF.md`, update this board, and
    surface anything you unblocked (e.g. R1 done → PL1 becomes ▶).
 6. **End with the human wrap-up message to Austin (§7) — include the PR link.**
@@ -228,7 +256,8 @@ is the human-readable one. **Do both — the trace does not replace the message.
    — <state: suite green? playable? committed to which branch?>
 
 ▶ Next steps
-   — PR: <link to the pull request you opened for this work — Austin merges it>
+   — PR: <link to the pull request you opened (and merged, once mergeable) for
+      this work>
    — <the obvious next move, and who should take it — you, another agent, or a
       decision only Austin can make>
    — <anything you unblocked, or anything you need from Austin to proceed>
