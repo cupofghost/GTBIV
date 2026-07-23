@@ -128,6 +128,10 @@
     filter:drop-shadow(0 6px 0 #000) drop-shadow(0 0 30px currentColor); }
   #bigEventSub { color:#fff; font-size:18px; margin-top:10px; text-shadow:0 2px 6px #000; }
   #fpsWarn { position:fixed; bottom:2px; left:6px; color:#ffffff55; font-size:10px; z-index:5; font-family:monospace; }
+  #debugHud { display:none; position:fixed; top:calc(166px + env(safe-area-inset-top)); right:12px;
+    z-index:5; font-family:monospace; font-size:10px; line-height:1.5; color:#9be7ff; white-space:pre;
+    background:rgba(6,2,16,.7); border:1px solid #9be7ff44; border-radius:6px; padding:6px 8px;
+    pointer-events:none; text-shadow:0 1px 2px #000; }
   #loadWrap { width:min(calc(var(--lvw)*0.62),360px); height:12px; border-radius:8px; margin-top:14px;
     border:2px solid #ffd23e; background:rgba(0,0,0,.55); overflow:hidden;
     box-shadow:0 0 14px #ff3ea066; }
@@ -511,6 +515,7 @@
 <div class="tbtn" id="btnCrouch">CROUCH</div>
 
 <div id="fpsWarn"></div>
+<div id="debugHud"></div>
 <div id="devPanel"><h2>DEV MENU</h2></div>
 <div id="devHint">` dev</div>
 <div id="pauseMenu">
@@ -607,7 +612,7 @@ const G={ mode:'foot', money:0, heat:0, stars:0, carHP:100, boost:100,
 const WORLD={ blocks:10, block:50, road:16 };
 const _PARAMS=new URLSearchParams(location.search);
 const DEV=_PARAMS.get('dev')==='1';
-const DEV_STATE={ open:false, god:false, inf:false };
+const DEV_STATE={ open:false, god:false, inf:false, hud:false };
 const QS={
   skipintro:DEV||_PARAMS.has('skipintro'),
   scene:(_PARAMS.get('scene')||'').toLowerCase(),
@@ -4729,6 +4734,7 @@ document.addEventListener('keydown',e=>{
   if(e.code==='KeyN') toggleNight();
   if(e.code==='KeyM'&&G.mode==='foot'&&!pizzaWars) startPizzaWars();
   if(DEV&&e.code==='Backquote') toggleDevMenu();
+  if(DEV&&e.code==='KeyZ') toggleDebugHud();
 });
 document.addEventListener('keyup',e=>{ keys[e.code]=false; });
 function pollKeys(){
@@ -6325,6 +6331,7 @@ function loop(){
       }
     }
     drawMinimap();
+    if(DEV) updateDebugHud(dt);
     positionBubble();
     if(turboCool>0) turboCool-=dt;
     fpsAcc+=dt; fpsN++; fpsT+=dt;
@@ -7350,6 +7357,8 @@ showDialogue=function(speaker,text,duration){
   row('CUTSCENE', btn('Deb Confront','devAct',()=>playCutscene('deb_confrontation',player.x,player.z)), btn('Deb Payoff','devAct',()=>playCutscene('deb_payoff',player.x,player.z)), btn('Pizza Wars','devAct',()=>startPizzaWars()));
   row('CH1 STORY', btn('First Score','devAct',()=>playCutscene('first_score',player.x,player.z)), btn('Pizza Warning','devAct',()=>playCutscene('pizza_warning',player.x,player.z)), btn('+3 Pizza Heat','devAct',()=>{ G.story.pizzaHeat+=3; toast('pizzaHeat='+G.story.pizzaHeat,'gold'); }), btn('Reset Ch1 Flags','devBad',()=>{ Object.assign(G.story,{pizzaHeat:0,pizzaWarned:false,pizzaRepeatWarned:false,firstScoreShown:false,hardcastleShown:false}); toast('CH1 FLAGS RESET','bad'); }));
   row('SAVE', btn('Wipe Save','devBad',()=>{ localStorage.removeItem('gtb4.save'); toast('SAVE WIPED','bad'); }));
+  const hudBtn=btn('Debug HUD (Z)','devTog',()=>{ toggleDebugHud(); hudBtn.classList.toggle('on',DEV_STATE.hud); });
+  row('DEBUG', hudBtn);
   row('', btn('Close','',()=>toggleDevMenu()));
 
   function spawnCarAtPlayer(type){
@@ -7368,6 +7377,28 @@ showDialogue=function(speaker,text,duration){
     else { player.x=x; player.z=z; if(player.mesh) player.mesh.position.set(x,player.y||0,z); }
   }
   window.toggleDevMenu=()=>{ DEV_STATE.open=!DEV_STATE.open; panel.style.display=DEV_STATE.open?'block':'none'; };
+
+  // Debug HUD: live pos/mode/counts/frame-time overlay, ?dev=1 only (D3)
+  const debugHudEl=$('debugHud');
+  window.toggleDebugHud=()=>{
+    DEV_STATE.hud=!DEV_STATE.hud;
+    debugHudEl.style.display=DEV_STATE.hud?'block':'none';
+    toast('DEV: Debug HUD '+(DEV_STATE.hud?'ON':'OFF'),'gold');
+  };
+  window.updateDebugHud=(dt)=>{
+    if(!DEV_STATE.hud) return;
+    let liveParts=0; for(let i=0;i<P_MAX;i++) if(parts[i].life>0) liveParts++;
+    const missionStr=mission?mission.type:(pizzaWars?'pizzawars':'-');
+    const heistStr=G.heist?HEIST_PHASES[G.heist.phase]:'-';
+    debugHudEl.textContent=
+      `POS ${player.x.toFixed(1)}, ${player.z.toFixed(1)}  HDG ${Math.round(player.heading*180/Math.PI)%360}\xB0  MODE ${G.mode}\n`+
+      `$${G.money}  HEAT ${G.heat.toFixed(0)}  STARS ${G.stars}\n`+
+      `CARS ${cars.length} TRAF ${traffic.length} PEDS ${peds.length} COPS ${cops.length}\n`+
+      `JOCK ${jocks.length} GANG ${gangMembers.length} HELI ${helis.length} PART ${liveParts}/${P_MAX}\n`+
+      `MISSION ${missionStr}  HEIST ${heistStr}\n`+
+      `CAM ${camera.position.x.toFixed(1)}, ${camera.position.y.toFixed(1)}, ${camera.position.z.toFixed(1)}\n`+
+      `FRAME ${(dt*1000).toFixed(1)}ms`;
+  };
 })();
 // ================= END DEV TOOLS =================
 
