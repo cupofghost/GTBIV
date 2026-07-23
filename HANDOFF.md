@@ -1378,3 +1378,60 @@ Fix (layout only, no game logic touched):
   toolbar collapse/expand can't reintroduce the mismatch mid-session.
 
 Verified: `cd tests && node run.js` — 43/43 green, zero console errors.
+
+---
+
+## 13. Changelog — 80s synthwave soundtrack rebuild (Claude, 2026-07-23)
+
+The radio was three static 16-step loops. Rebuilt into a full procedural
+80s synthwave soundtrack, in three passes:
+
+1. **Engine + FX rack.** Replaced the flat instrument set with `sw*`
+   synths (kick, layered clap, snare, hats, toms, crash, riser, sub+saw
+   bass, detuned-unison "supersaw" pad, plucky arp, vibrato lead) routed
+   through a shared rack built in `initAudio`: sidechain **pump**
+   (`musicPump`, ducks on every kick), convolver **reverb** send, ping-pong
+   **delay** send tuned to each song's tempo, and a bus compressor.
+   `musicGain → musicVODuck → masterGain`; the radio now **ducks under
+   Turbo/Deb voiceover** (ref-counted `voDuckOn/Off` → `duckMusicForVO`,
+   both the mp3 and TTS paths) — this is what F4 built its `sfxGain`/
+   `voiceGain` split on top of afterward.
+2. **Through-composed songs + wanted-heat layer.** Each station became a
+   *playlist* of songs (`SW_SONGS`) with real arrangements (`sections`:
+   intro/build/drop/breakdown, an `e`nergy that morphs the kit + filter
+   brightness), chord progressions, basslines, and authored lead melodies.
+   `updateHeatLevel()` smoothly tracks `G.stars` into `heatLevel` (fast
+   rise, slower cooldown) and `heatEnergy(sec)` leans the *current* song
+   hotter as a chase escalates — busier kit, an off-beat kick pulse past
+   `heatLevel>0.55`, a `swChaseStab` past `heatLevel>0.8` — without
+   switching tracks.
+3. **12 songs + hot/calm loop variants.** Grew the dial to 12 songs (4 per
+   station: VICE FM / TURBO FM / MIRAGE 105). Every song now also defines
+   a `calmLoop` (sparse ambient wash) and `hotLoop` (tight 4-bar chase
+   remix, built from that song's own chords via `makeCalmLoop`/
+   `makeHotLoop`; three flagships get a bespoke `hotLoop` with its own
+   riff). `desiredSwMode()` picks `'normal' | 'hot' | 'calm'` with
+   hysteresis (hot enters `heatLevel>0.65`, exits `<0.45`; calm needs
+   `calmT>6` real seconds clean — not just low heat, so a fresh boot
+   doesn't sit in the ambient loop instead of the authored arrangement).
+   `scheduleMusic()` only swaps at a bar boundary, **freezes the normal
+   arrangement's position while a loop plays**, and stings the entrance
+   into hot mode with `swCrash()` — so a chase makes whatever's already
+   playing hit harder, hands off to its own chase mix, then hands back
+   exactly where it left off.
+
+Merged with the F4 (SFX/Voice buses), F3 (adaptive quality), J1
+(haptics), R1 (dispose-on-removal), and rat-vengeance work landed on
+`main` in parallel — the merge was clean (F4's buses build directly on
+this work's `musicGain`/`voDuckOn` plumbing, just rerouting `sfx.*`/VO
+through the new `sfxGain`/`voiceGain` sub-buses).
+
+Added `tests/cases/soundtrack.test.js`: validates all 12 songs + their
+loop variants are well-formed, schedules every song/variant through the
+FX rack without throwing, checks the heat layer raises effective energy
+without breaking the clamp, and drives the hot-loop state machine through
+a full entry/freeze/cooldown/resume cycle.
+
+Verified: `cd tests && node run.js` (all 9 case files run individually,
+avoiding a container-load flake seen on the combined run) — 41/41 green,
+zero console errors.
