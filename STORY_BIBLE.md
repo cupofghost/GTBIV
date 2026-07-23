@@ -40,12 +40,18 @@ deadline you might not make.
 
 ## 2. Tone, rating & style
 
-- **Play it straight.** This is the one rule the whole bible hangs on. The
-  premise is absurd; the delivery never is. Every system is treated as real and
-  serious — the cops mean it, the debt is real, the deadline is real, the rival
-  gang genuinely wants Turbo gone. The absurdity lands **because** everyone in
-  the world commits to it with a completely straight face. Never write toward a
-  laugh; never signal that a moment is meant to be funny.
+- **It's an homage, not a parody.** San Chaos is a love letter to the 80s
+  open-world crime sandbox and neon-noir action cinema — built with real craft
+  and real stakes, not to mock the genre but to honor it. Never treat the game,
+  its characters, or its world as a send-up of anything. (If you're describing
+  the project anywhere, "homage" and "tribute," never "parody" or "spoof.")
+- **Play it straight.** This is the one rule the whole bible hangs on, and it's
+  how the homage works. The premise is absurd; the delivery never is. Every
+  system is treated as real and serious — the cops mean it, the debt is real,
+  the deadline is real, the rival gang genuinely wants Turbo gone. The absurdity
+  lands **because** everyone in the world commits to it with a completely
+  straight face. Never write toward a laugh; never signal that a moment is meant
+  to be funny.
 - **80s neon-noir** dressing: synthwave, sunset gradients, palm trees, VHS grain,
   Turbo's own running commentary in place of a movie-trailer voiceover. Style is
   loud and pink/cyan.

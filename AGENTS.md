@@ -11,8 +11,9 @@
 > `HANDOFF.md` changelogs.)
 
 **The doc map (what to read for what):**
-- **`AGENTS.md`** (this file) — roles, protocol, the live task board. Start here.
+- **`AGENTS.md`** (this file) — roles, protocol, the live task board, the human wrap-up rule (§7). Start here.
 - `GAME_PLAN.md` — strategy: state report, the Places/loading growth plan, the asset pipeline.
+- `ASSETS.md` — **how to actually generate art** (Midjourney/Nano Banana/Kimi): style DNA, per-subject prompt recipes, mobile budget. Read before making or requesting any image.
 - `HANDOFF.md` — the engineering backlog + architecture + code map. The *how* of the code.
 - `STORY_BIBLE.md` / `CHAPTER1.md` / `FOOTBALL_STRAND.md` — narrative canon, scripts, tone.
 - `CHARACTERS.md` — character-model / creator / cutscene plan.
@@ -50,7 +51,8 @@ Design beat (STORY_BIBLE / GAME_PLAN)
         → art request filed here (§4) → Nano Banana / Midjourney produce to spec
            → Austin/Claude size to the mobile budget + commit at the fixed path
               → Claude wires any staged VO, reviews, runs the suite
-                 → commit (green + playable) → update this board → repeat
+                 → commit (green + playable) → open PR to main → update this
+                    board → wrap-up to Austin (§7) → Austin merges → repeat
 ```
 
 **Rules every agent follows (these are the golden rules, enforced):**
@@ -61,9 +63,15 @@ Design beat (STORY_BIBLE / GAME_PLAN)
    (§3) with your name, so two agents don't collide on the 355 KB `index.html`.
 3. **One logical change per commit, always playable.** Run `cd tests &&
    node run.js` (must be green) before every commit.
-4. **Work on your own branch**, PR to `main` when green. Don't push to someone
-   else's active branch. (Each session/agent gets its own `claude/…` or
-   `kimi/…` branch.)
+4. **Work on your own branch, and open a PR to `main` after every improvement —
+   automatically, every time.** Each session/agent gets its own `claude/…` or
+   `kimi/…` branch; don't push to someone else's active branch. The moment a unit
+   of work is green + playable and committed, **open a pull request to `main`**
+   (or push the new commit to the branch of the PR you already opened for this
+   task). Don't wait to be asked, and don't batch several improvements into one
+   silent branch. **Agents never merge to `main` — Austin does.** Your job ends
+   at "green PR is open and linked in the wrap-up (§7)"; Austin reviews and
+   merges. One improvement → one PR.
 5. **Leave a trace.** When you finish something meaningful, add a one-paragraph
    entry to the `HANDOFF.md` changelog (what changed + why) and update this
    board. That paragraph *is* your message to the next agent.
@@ -144,10 +152,18 @@ art is delivered + committed, move it to §5 for wiring, then delete the row.
 - *(example)* `[ ]` Skybox mood plate → `art/sky/dusk.jpg` · 1024² · not tileable · synthwave dusk gradient, city silhouette · for: world polish
 
 **Standing conventions:** one folder per drop (`art/facades/`, `art/sky/`,
-`art/loading/`, `art/ui/`), descriptive lowercase names (mirrors the `voice/`
-layout). JPG for opaque plates, PNG only for alpha. Props ≤512², hero/sky/
-loading ≤1024². Raw generator output is never committed directly — it's cropped,
-tile-checked, sized, and compressed first. (Full budget: `GAME_PLAN.md §6.4`.)
+`art/loading/`, `art/ui/`, `art/sprites/`, `art/decals/`, `art/concept/`),
+descriptive lowercase names (mirrors the `voice/` layout). JPG for opaque plates,
+PNG only for alpha. Props/sprites ≤512², hero/sky/loading ≤1024². Raw generator
+output is never committed directly — it's cropped, tile-checked, sized, and
+compressed first. (Full budget: `GAME_PLAN.md §6.4`.)
+
+**How to actually make the art → `ASSETS.md`.** That doc has the San Chaos style
+suffix to paste into every prompt, which generator to use for what, and a
+ready-to-paste recipe per subject (cars, people, trees, buildings, signage,
+sky, UI…). When you file a row above, tag its **output kind**: **(A)** tiling/
+detail texture, **(B)** billboard sprite for the far layer, or **(C)** concept
+reference the game never loads. Getting the kind right is what keeps art cheap.
 
 ---
 
@@ -166,6 +182,58 @@ Assets that are committed but not yet referenced by code. Claude picks from here
 1. Read this file, then `GAME_PLAN.md` and the relevant section of `HANDOFF.md`.
 2. Pick the top **▶ Next up** you're suited for; set it 🔨 with your name.
 3. Build it small, keep the suite green, keep it playable.
-4. Commit on your own branch; PR to `main` when green.
+4. Commit on your own branch and **open a PR to `main` (automatically, every
+   improvement — §2 rule 4).** Agents don't merge; Austin does.
 5. Set it ✅, add a changelog paragraph to `HANDOFF.md`, update this board, and
    surface anything you unblocked (e.g. R1 done → PL1 becomes ▶).
+6. **End with the human wrap-up message to Austin (§7) — include the PR link.**
+
+---
+
+## 7. The wrap-up message — always report back to Austin (human-facing)
+
+**Every agent ends every task with a short, plain-language message to Austin
+telling him what was delivered and what comes next.** This is a hard rule, not a
+nicety — Austin is the router, and this message is how he stays in the loop
+without reading diffs.
+
+**Keep these two audiences separate — they are different messages:**
+
+| | Written **for the next agent** | Written **for Austin (human)** |
+| --- | --- | --- |
+| **Where** | `HANDOFF.md` changelog + the §3 board | The chat reply at the end of the task |
+| **Voice** | Technical: files, functions, flags, IDs | Plain English: what changed, what he'd notice |
+| **Purpose** | So work can be picked up | So Austin can decide + feel progress |
+
+The repo trace (`HANDOFF.md`/board) is the machine-readable handoff. The wrap-up
+is the human-readable one. **Do both — the trace does not replace the message.**
+
+**The wrap-up format (use this every time):**
+
+```
+✅ Delivered
+   — <what you actually did, 1–3 plain-language bullets: the player-facing or
+      Austin-facing result, not the code mechanics>
+   — <where it lives / what changed, in human terms>
+   — <state: suite green? playable? committed to which branch?>
+
+▶ Next steps
+   — PR: <link to the pull request you opened for this work — Austin merges it>
+   — <the obvious next move, and who should take it — you, another agent, or a
+      decision only Austin can make>
+   — <anything you unblocked, or anything you need from Austin to proceed>
+
+⚠ Heads-up  (only if there is one)
+   — <caveats, risks, things that look off, decisions you made that he might
+      want to revisit>
+```
+
+Rules for the wrap-up:
+- **Lead with the result Austin cares about**, not the implementation. "Turbo now
+  taunts cops when chased" beats "wired 11 `{src}` entries into `ambient/chased`."
+- **Be honest about state.** If the suite failed, a step was skipped, or you
+  guessed at something under-specified, say so here — don't bury it.
+- **Always give a real next step.** Even "nothing's blocked; pick the next ▶"
+  is a valid next step. Never end with a dead stop.
+- **Flag anything needing Austin's call** (new systems, big refactors, save-format
+  changes — see §2 rule 6) explicitly in *Next steps* or *Heads-up*.

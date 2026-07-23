@@ -166,7 +166,7 @@ Relationship to Turbo: none personally — pure ambient narration during
   Turbo Bowl.
 First appearance: Turbo Bowl, first "Play Ball" trigger.
 Gags: reads increasingly absurd fake local-business ads between plays
-  (more "zero trademarks harmed" parody territory); can't settle on
+  (more "zero trademarks harmed" invented-brand territory); can't settle on
   Turbo's name ("Turbo... Jonas? Jones? The bus-pass guy!").
 ```
 

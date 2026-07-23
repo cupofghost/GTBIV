@@ -80,6 +80,7 @@ plain relative paths.
 | `index.html` | The entire game (markup, styles, and logic) |
 | `AGENTS.md` | **Mission control — read first.** Agent roster, the repo-as-message-bus handoff protocol, and the live task board every agent/human works from |
 | `GAME_PLAN.md` | Top-level map — verified state-of-the-game report, the Places & Loading growth architecture, and the multi-agent (code + graphics) asset pipeline |
+| `ASSETS.md` | Art-generation guide — San Chaos style DNA, which image tool (Midjourney/Nano Banana/Kimi) to use for what, per-subject prompt recipes (cars, people, trees, buildings…), and the mobile texture budget |
 | `HANDOFF.md` | Engineering handoff — architecture, code map, and the prioritised improvement backlog for contributors |
 | `CHARACTERS.md` | Character-model, paint/creator, and cutscene-rendering plan (companion to `HANDOFF.md`) |
 | `STORY_BIBLE.md` | Story & script-writing framework — canon, voice, world, and mission/cutscene templates for narrative work |
