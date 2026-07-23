@@ -960,7 +960,8 @@ Before committing **any** task:
 *why* if non-obvious. The game must be playable at every commit.
 
 **Branch:** work on `claude/game-improvements-architecture-hyuk48` (or the branch
-Austin points you to). Push there. **Do not open a PR unless Austin asks.**
+Austin points you to). Push there, then **always open a PR into `main`** —
+don't push/fast-forward `main` directly.
 
 ---
 
