@@ -4414,6 +4414,8 @@ function doAttack(){
     cars.forEach(c=>{ if(!c.dead) consider(c.x,c.z,c,'car'); });
     strayDogs.forEach(d=>consider(d.x,d.z,d,'dog'));
     if(copHeli&&!copHeli.dead) consider(copHeli.x,copHeli.z,copHeli,'heli');
+    RAT_POOL.forEach(rt=>{ if(rt.state==='go'||rt.state==='eat') consider(rt.x,rt.z,rt,'rat'); });
+    if(mamaRat&&mamaRat.state!=='dying') consider(mamaRat.x,mamaRat.z,mamaRat,'mamarat');
     if(best){
       if(best.kind==='dog'){
         burst(best.ref.x,0.4,best.ref.z,6,[[1,0.4,0.4]],2,0.4,4);
@@ -4437,6 +4439,14 @@ function doAttack(){
         best.ref.hp-=20;
         burst(best.ref.x,best.ref.y,best.ref.z,4,COL_SPARK,2,0.3,0);
         if(best.ref.hp<=0) best.ref.dead=true;
+      } else if(best.kind==='rat'){
+        // you don't just kill the one rat in your sights — you spook the
+        // whole swarm and a random chunk of it goes down, which is exactly
+        // what wakes up whatever's actually living down that manhole
+        const killed=killSomeRats(best.ref.tgt);
+        if(killed){ toast('RATS DOWN: '+killed,'bad'); spawnMamaRat(best.ref.home); }
+      } else if(best.kind==='mamarat'){
+        damageMamaRat(34);
       }
     }
     for(const ped of peds){
@@ -4579,6 +4589,10 @@ function damageArea(x,z,rad,dmg){
     if(h.dead) continue;
     const d=Math.hypot(h.x-x,h.z-z);
     if(d<rad&&h.y<3) damageHeli(h,dmg*(1-d/rad));
+  }
+  if(mamaRat&&mamaRat.state!=='dying'){
+    const d=Math.hypot(mamaRat.x-x,mamaRat.z-z);
+    if(d<rad) damageMamaRat(dmg*(1-d/rad));
   }
   if(G.mode==='foot'&&Math.hypot(player.x-x,player.z-z)<3&&!DEV_STATE.god) wasted();
   addHeat(25);
@@ -5615,6 +5629,24 @@ function losClear(x1,z1,x2,z2){
 // a body hits the pavement near a manhole and the sewers answer: rats pour out
 // and carry it off piece by piece
 const RAT_POOL=[];
+// shared rat model — scale is a uniform multiplier so the swarm and mama rat
+// (see MAMA RAT below) come from the same builder
+function makeRatMesh(scale){
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.SphereGeometry(0.16,6,5),
+    new THREE.MeshLambertMaterial({color:0x4a3a30}));
+  body.scale.set(1.6,0.9,1); body.position.y=0.14; g.add(body);
+  const tail=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.035,0.42,4),
+    new THREE.MeshLambertMaterial({color:0xc08a80}));
+  tail.rotation.z=Math.PI/2; tail.position.set(-0.3,0.08,0); g.add(tail);
+  [0.06,-0.06].forEach(off=>{
+    const ear=new THREE.Mesh(new THREE.SphereGeometry(0.05,4,4),
+      new THREE.MeshLambertMaterial({color:0x6a5040}));
+    ear.position.set(0.16,0.27,off); g.add(ear);
+  });
+  if(scale&&scale!==1) g.scale.set(scale,scale,scale);
+  return g;
+}
 function corpseGone(c){
   return !c||c.eaten||c.state!=='down'||(peds.indexOf(c)<0&&footCops.indexOf(c)<0);
 }
@@ -5641,18 +5673,7 @@ function updateRats(dt){
   if(!RAT_POOL.length){
     // build the swarm lazily so boot stays fast
     for(let k=0;k<16;k++){
-      const g=new THREE.Group();
-      const body=new THREE.Mesh(new THREE.SphereGeometry(0.16,6,5),
-        new THREE.MeshLambertMaterial({color:0x4a3a30}));
-      body.scale.set(1.6,0.9,1); body.position.y=0.14; g.add(body);
-      const tail=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.035,0.42,4),
-        new THREE.MeshLambertMaterial({color:0xc08a80}));
-      tail.rotation.z=Math.PI/2; tail.position.set(-0.3,0.08,0); g.add(tail);
-      [0.06,-0.06].forEach(off=>{
-        const ear=new THREE.Mesh(new THREE.SphereGeometry(0.05,4,4),
-          new THREE.MeshLambertMaterial({color:0x6a5040}));
-        ear.position.set(0.16,0.27,off); g.add(ear);
-      });
+      const g=makeRatMesh(1);
       g.visible=false; scene.add(g);
       RAT_POOL.push({mesh:g,x:0,z:0,state:'idle',tgt:null,home:null,phase:rand(0,TAU),eatT:0,offA:0});
     }
@@ -5720,6 +5741,88 @@ function updateRats(dt){
     rt.phase+=dt*18;
     rt.mesh.position.set(rt.x,groundH(rt.x,rt.z)+Math.abs(Math.sin(rt.phase))*0.03,rt.z);
   }
+}
+// ================= MAMA RAT (rat vengeance) — PLACEHOLDER =================
+// Shoot into a feeding swarm and you don't just scatter it — a random 1-50%
+// of it dies right there, and that's enough to summon what's actually living
+// down there: a mama rat, three times Turbo's height, who climbs out of that
+// same manhole and comes for him at a slow, relentless walk. Basic mechanics
+// only for now (spawn, approach, bite, can be shot down) — the model/anim
+// here is a stand-in; see HANDOFF.md's Rat Vengeance section for the design
+// pass this is waiting on.
+let mamaRat=null;
+function turboHeight(){
+  const box=new THREE.Box3().setFromObject(player.mesh);
+  return (box.max.y-box.min.y)||1.8;
+}
+const RAT_BASE_H=0.32;   // approx world-height of a normal swarm rat (see makeRatMesh)
+// gunfire into a swarm doesn't pick off one rat at a time — it panics the
+// whole cluster and a random slice of it (1%-50%) goes down at once
+function killSomeRats(swarmC){
+  const live=RAT_POOL.filter(r=>r.tgt===swarmC&&(r.state==='go'||r.state==='eat'));
+  if(!live.length) return 0;
+  const n=Math.max(1,Math.round(live.length*rand(0.01,0.5)));
+  for(let k=0;k<n;k++){
+    const rt=live[k];
+    burst(rt.x,0.2,rt.z,4,[[0.6,0.1,0.1]],1.5,0.35,3);
+    rt.state='idle'; rt.mesh.visible=false; rt.tgt=null;
+  }
+  return n;
+}
+function spawnMamaRat(mh){
+  if(mamaRat||!mh) return;
+  const h=turboHeight()*3, s=h/RAT_BASE_H;
+  const mesh=makeRatMesh(s);
+  const groundY=groundH(mh.x,mh.z);
+  mesh.position.set(mh.x,groundY-h*0.55,mh.z);
+  scene.add(mesh);
+  mamaRat={mesh,x:mh.x,z:mh.z,y:groundY-h*0.55,riseFrom:groundY-h*0.55,riseTo:groundY,
+    heading:0,home:mh,state:'emerge',t:0,hp:260,speed:2,phase:0,biteT:0,scale:s,h};
+  sfx.bigCrash(); shake(0.4);
+  toast('SOMETHING HUGE IS COMING UP FROM THE SEWER','bad');
+}
+function damageMamaRat(amt){
+  const mr=mamaRat; if(!mr||mr.state==='dying') return;
+  mr.hp-=amt;
+  burst(mr.x,mr.h*0.4,mr.z,6,[[0.6,0.1,0.1],[0.4,0.05,0.05]],2,0.4,4);
+  if(mr.hp<=0){ mr.state='dying'; mr.t=0; toast('MAMA RAT DOWN','gold'); addMoney(150,'RAT SLAYER'); }
+}
+function updateMamaRat(dt){
+  const mr=mamaRat; if(!mr) return;
+  if(mr.state==='dying'){
+    mr.t+=dt;
+    const k=Math.max(0,1-mr.t/0.6);
+    mr.mesh.scale.setScalar(mr.scale*k);
+    if(mr.t>0.6){ scene.remove(mr.mesh); mamaRat=null; }
+    return;
+  }
+  const px=px0(), pz=pz0();
+  if(mr.state==='emerge'){
+    mr.t+=dt;
+    const k=Math.min(1,mr.t/1.8);
+    mr.y=lerp(mr.riseFrom,mr.riseTo,k);
+    mr.phase+=dt*4;
+    if(k>=1) mr.state='hunt';
+  } else {   // hunt: slow, relentless, always closing
+    const dx=px-mr.x, dz=pz-mr.z, d=Math.hypot(dx,dz)||1;
+    mr.heading=Math.atan2(dx,dz);
+    if(d>mr.h*0.55){
+      mr.x+=dx/d*mr.speed*dt; mr.z+=dz/d*mr.speed*dt;
+      mr.y=groundH(mr.x,mr.z);
+      mr.phase+=dt*2.2;
+    } else {
+      mr.biteT-=dt;
+      if(mr.biteT<=0&&G.mode==='foot'&&!DEV_STATE.god){
+        mr.biteT=1;
+        sfx.punch();
+        damagePlayer(randi(8,16));
+        shake(0.35);
+        burst(px,1.2,pz,8,[[1,0.4,0.4],[0.9,0.2,0.2]],2.5,0.5,4);
+      }
+    }
+  }
+  mr.mesh.position.set(mr.x,mr.y+Math.abs(Math.sin(mr.phase))*0.06*mr.scale,mr.z);
+  mr.mesh.rotation.y=mr.heading;
 }
 function updateFootCops(dt){
   const pxx=px0(), pzz=pz0();
@@ -6270,6 +6373,7 @@ function loop(){
         updateCops(sdt);
         updateFootCops(sdt);
         updateRats(sdt);
+        updateMamaRat(sdt);
         updateRail(sdt);
         updatePeds(sdt);
         updateWanted(sdt);

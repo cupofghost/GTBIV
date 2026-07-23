@@ -949,6 +949,103 @@ replay of the minigame (or does, deliberately — confirm with Austin which).
 
 ---
 
+### Phase 8 — Rat Vengeance `ongoing`
+
+The sewer rats (§11's "Foot cops & sewer rats" note) used to be purely
+atmospheric — a downed ped/cop near a manhole draws a swarm (`RAT_POOL`) that
+hauls the body off, no gameplay effect. **They now bite back.** This phase
+turns the rat swarm into a real threat with a boss-lite payoff, built in the
+same "mechanics first, model later" order as the football saga.
+
+#### RV1 — Mama Rat core mechanics `P2 · Risk: Med` `DONE (placeholder)`
+**Status: implemented & verified** (Claude, 2026-07-23). Shoot into a feeding
+swarm (pistol only targets rats in `state==='go'|'eat'` via the `'rat'` kind in
+`doAttack`'s `consider()`) and `killSomeRats(swarmC)` drops a random **1%–50%**
+of that swarm at once (not just the rat under the crosshair — the whole
+cluster panics) and, in the same shot, `spawnMamaRat(rt.home)` summons the
+swarm's manhole's mama rat: **3× Turbo's current height** (`turboHeight()`,
+a live `THREE.Box3` measurement of `player.mesh` so it tracks his randomized
+per-boot height rather than a hardcoded constant), built from the same
+`makeRatMesh(scale)` factory as the regular swarm (refactored out of the old
+inline pool-init loop so both share one model). She rises out of the manhole
+over ~1.8s (`state:'emerge'`), then walks straight at the player at a slow,
+constant 2 u/s (`state:'hunt'`, well under the player's 4.6–8.2 u/s foot
+speed — she's meant to be outrun, not outraced), and on contact bites for
+8–16 HP roughly once a second (`damagePlayer`, gated to `G.mode==='foot'` and
+`!DEV_STATE.god`). She's a real target: 260 HP, hittable by the pistol
+(`'mamarat'` kind, 34 dmg/shot) and by RPG splash (`damageArea` now checks her
+too), dies with a short shrink-out and a `$150` "RAT SLAYER" payout, and only
+one exists at a time (`spawnMamaRat` no-ops while `mamaRat` is set). New
+section `MAMA RAT (rat vengeance) — PLACEHOLDER` sits directly after
+`updateRats`; `updateMamaRat(sdt)` runs in the main-loop substep next to
+`updateRats(sdt)`. Covered by `tests/cases/rat-vengeance.test.js` (3 cases:
+swarm-shot → kill-count → spawn; 3×-height + emerge→hunt distance-closing;
+bite-on-contact + shot-down-and-removed) — full suite 39/39 green, verified
+in a live headless smoke pass (screenshot-checked, zero console errors) that
+the model renders at the right scale relative to the street.
+**Explicitly a placeholder model/animation** — a scaled-up copy of the tiny
+swarm rat (sphere body, two ear-balls, cylinder tail), uniformly scaled by
+height ratio, so she reads as a giant blob-rat rather than a designed
+creature. **This is intentionally left for Kimi to redesign** — a real mama
+rat model (proper proportions instead of uniform scale blowing out length,
+a crawl/lunge animation instead of a sliding lerp, a bite animation instead
+of a stationary bump-and-flash) is the next step; keep reusing `makeRatMesh`'s
+call sites (`spawnMamaRat`) so swapping the model is a localized change.
+**Known placeholder limitations (by design, not bugs):** no obstacle
+avoidance — she beelines through buildings, unlike `resolveFootCollision`-
+using entities; no car interaction — driving over her doesn't hurt her and
+she doesn't damage or push a car she reaches, she just stands there (the
+"eat you" bite is foot-mode only); no despawn/timeout — once summoned she
+persists (by design, for the "vengeance" framing) until killed or the page
+reloads, including across `respawn()` after a bust/waste.
+**Why this exists:** requested as a direct extension of the existing atmospheric
+rat system — the swarm already existed, the ask was to make shooting it
+consequential instead of just being a corpse-cleanup animation.
+**Where:** `SEWER RATS` section (`makeRatMesh`, `RAT_POOL`, `updateRats`) and
+the new `MAMA RAT` block immediately after it; `doAttack`'s pistol branch
+(`WEAPONS` section) for the `'rat'`/`'mamarat'` target kinds; `damageArea`
+(also `WEAPONS`) for RPG splash; the main loop's substep for `updateMamaRat`.
+
+#### RV2 — Final creature design `P2 · Risk: Low` `next up for Kimi`
+**Why:** RV1 deliberately shipped the mechanics with a throwaway model so the
+system could be tested and tuned without blocking on art. The placeholder
+blob-rat is not the intended final look.
+**Where:** `makeRatMesh` (shared by the swarm and mama rat) — build the real
+model here, or fork a `makeMamaRatMesh` if mama rat ends up needing rig
+features the tiny swarm rat doesn't (visible bite/lunge joints, etc.).
+**Approach:** Design a real low-poly rat that holds up both tiny (swarm,
+~0.3u) and huge (mama rat, 3×Turbo) — proper body/leg/tail proportions
+instead of a uniformly-scaled sphere-and-cylinder blob, a idle/walk
+animation cycle (today she just slides with a bob), and a lunge/bite
+animation for the contact state instead of the current stationary
+flash-and-shake. If it's a real rig (not a fixed mesh), reuse the
+`mesh.userData` joint-exposure pattern from `js/person.js` so `updateMamaRat`
+can drive it the way `updateFoot`/`updateFootCops` drive their `legL/legR/
+armL/armR` joints.
+**Acceptance:** swarm rats and mama rat both use the new model; mama rat
+still measures out to 3× `turboHeight()`; no regression in
+`tests/cases/rat-vengeance.test.js` or the rest of the suite; holds framerate
+with a swarm on screen (the pool is 16 rats, cheap instancing/geometry
+matters more there than for the single mama rat).
+
+#### RV3 — Follow-on polish (not yet scoped) `P3 · Risk: Low`
+**Why:** RV1 is a minimum-viable vengeance loop. Once RV2's model lands there's
+room to make her a proper set-piece encounter instead of a slow blob that
+either bites you or doesn't.
+**Ideas, unscoped, pick up only after RV1/RV2 are solid:** building/prop
+avoidance so she can't be trivially juked through a wall; a growl/screech
+`sfx` cue and dedicated voice/bark line instead of reused `sfx.punch()`/
+`sfx.bigCrash()`; car interaction (run her over, or she flips/damages a car
+that gets too close); heat/wanted interaction (does summoning her raise
+`G.heat`, the way shooting a ped already does via `addHeat(18)` in the
+`'ped'` branch — right now `'rat'` doesn't call `addHeat` at all beyond the
+flat `addHeat(4)` every pistol shot already applies); a cap or cooldown if
+repeat testing shows player-summoned mama rats becoming a farmable money
+loop (`$150` "RAT SLAYER" payout on kill has no gate today). Ask Austin
+before committing to any of these — they're ideas, not approved scope.
+
+---
+
 ## 9. Verification & Definition of Done
 
 Before committing **any** task:
@@ -1020,6 +1117,12 @@ for the persistent unlock flag, and ideally the `CUTSCENES` system) → `FB4`
 minigame → `FB5` cutscene (benefits from `C8`'s actor/pose work, but
 can ship camera-only if that's not ready yet). See `STORY_BIBLE.md` for every
 narrative beat this track needs.
+
+**Rat Vengeance track** (Phase 8, above) is a small ongoing side-track — `RV1`
+(shoot the swarm → mama rat spawns, hunts, bites, and can be killed) is done
+with a throwaway placeholder model. Next up is `RV2`: give her (and the regular
+swarm) a real model/animation in `makeRatMesh`. `RV3` is unscoped follow-on
+polish — don't start it without checking in first.
 
 Pick the top unclaimed task, read its card, check the acceptance criteria, build
 it small, verify (§9), commit. When in doubt about a design decision, ask.
