@@ -1435,3 +1435,57 @@ a full entry/freeze/cooldown/resume cycle.
 Verified: `cd tests && node run.js` (all 9 case files run individually,
 avoiding a container-load flake seen on the combined run) — 41/41 green,
 zero console errors.
+
+---
+
+## 14. Changelog — voice wiring: robbery barks (Claude, 2026-07-23)
+
+First slice of the **VOICE** task (wiring the ~90 staged `voice/turbo/story/`
+lines that were recorded but referenced nowhere). Two bark pools pulled out of
+the staged pile and hooked to the triggers they were written for:
+
+- **`robbery`** (9 lines, `voice/turbo/story/robbery/`) → fires on the
+  point-blank **stickup** in `doAttack()` (pistol, point-blank on a ped → they
+  surrender their cash). The polite-stickup patter ("This is a stickup. A
+  polite one.").
+- **`robbery_take`** (5 lines, `voice/turbo/story/robbery_take/`) → fires when
+  the **safe crack lands** in `tapSafeCrack()`. Turbo counts the take against
+  Deb's $800 ("Four hundred to go.").
+
+Both go through the existing `turboSay(cat)` dispatch (recorded-only, 2.2s
+cooldown, preloaded via the `TURBO_LINES` warm-up), so no new audio plumbing —
+just two `TURBO_LINES` categories and two one-line call sites. Additive, no
+save-format change, no new system.
+
+New regression guard: `tests/cases/voice-wiring.test.js` asserts every wired
+story pool exists, is non-empty, and each `src` resolves to a real committed
+mp3 — the net for the rest of the staged lines as they get wired.
+
+Still staged / next in this task: `paying_deb`,
+`approach_deb`, `idle_backstory`, the `cutscenes/` VO, and
+`backstory_intro/`.
+
+Verified: `cd tests && node run.js` — green, zero console errors.
+
+**Update (same day):** two more pools were already wired to triggers but sat on
+`src:null` (silent TTS) with their recordings on disk unused — filled in the
+paths, no code change beyond the data:
+- **`pizza_jack`** (7 lines, `voice/turbo/story/pizza_jack/`) — already fires in
+  `doPizzaJack()` when you jack a marked delivery car.
+- **`debt_grumble`** (7 lines, `voice/turbo/story/idle_debt/`) — the ambient
+  mutter while the $800 is unpaid (`updateStory`).
+Both added to the `voice-wiring.test.js` guard. `paying_deb`/`approach_deb` are
+deliberately held: their moments already run a cutscene with its own VO, so
+they need sequencing (not a drop-in) — a later slice.
+
+**Update (same day, pacing pass):** wired **`idle_backstory`** (5 lines,
+`voice/turbo/story/idle_backstory/`) — general backstory-callback musings, not
+debt-specific. Rather than give it its own independent timer stacked on top of
+`debt_grumble`'s, the two now **share one slow timer** (`idleBarkT`, renamed
+from `debtGrumbleT`) that alternates which pool fires. Net effect: the total
+rate of unprompted Turbo chatter *doesn't* go up just because a category was
+added — if anything it eases slightly (interval widened from `rand(30,50)` to
+`rand(35,60)`s). Explicit design intent: keep ambient barks rare, let the game
+breathe. Guarded by a new pacing assertion in `voice-wiring.test.js` (timer
+must start >= 30s) so a future change can't quietly tighten it into a wall of
+sound.

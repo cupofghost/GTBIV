@@ -77,6 +77,11 @@ Design beat (STORY_BIBLE / GAME_PLAN)
    board. That paragraph *is* your message to the next agent.
 6. **Ask before new systems / big refactors / save-format changes.** Flag it for
    Austin, don't guess. (`HANDOFF.md §2.8`.)
+7. **Push ASAP.** The repo is the message bus, so push the moment a change is
+   committed and green — don't sit on local commits. Other agents and sessions
+   read the *pushed* branch/PR for current state; unpushed work is invisible to
+   them and invites collisions on `index.html`. Commit small, push immediately,
+   open/refresh the PR right away (rule 4).
 
 ---
 
@@ -90,7 +95,7 @@ Status legend: **⬜ Backlog** · **▶ Next up** · **🔨 In progress** · **�
 ### Highest leverage — do these next
 | ID | Task | Status | Owner | Notes / unblocks |
 | --- | --- | --- | --- | --- |
-| **VOICE** | Wire the ~70 staged voice lines (`voice/turbo/story/` 47, `cutscenes/` 12, `backstory_intro/` 13) into their triggers | ▶ Next up | — | Recorded, unused, high polish-per-hour, low risk. Claude's lane. The standout P0 now that R1/F3 are shipped. |
+| **VOICE** | Wire the ~90 staged voice lines (`voice/turbo/story/`, `cutscenes/`, `backstory_intro/`) into their triggers | 🔨 In progress | Claude | **Wired: `robbery`, `robbery_take`, `pizza_jack`, `debt_grumble`, `idle_backstory`** (`HANDOFF.md §14`; the latter two share one slow timer by design — no wall of sound). Next: `paying_deb`/`approach_deb` (need cutscene sequencing), `cutscenes/`, `backstory_intro/`. Claude's lane. |
 | **PL1** | Places & Loading system (`loadPlace`/`transitionWithScreen`), port pizza interior to it | ▶ Next up | — | From `GAME_PLAN.md §4`. **Unblocked — R1 shipped.** Needs a card in `HANDOFF.md`. |
 | R1 | Dispose GPU resources on entity removal (`disposeMesh`) | ✅ Done | (other session) | Verified in code on `main`. Unblocked PL1. |
 | F3 | Adaptive graphics quality (Low/Med/High tiers, auto off fps) | ✅ Done | (other session) | Verified in code on `main`. |
@@ -173,10 +178,12 @@ reference the game never loads. Getting the kind right is what keeps art cheap.
 
 Assets that are committed but not yet referenced by code. Claude picks from here.
 
-- **The ~70 staged voice lines** (`voice/turbo/story/` 47, `cutscenes/` 12,
-  `backstory_intro/` 13) — recorded, committed, **not wired**. See the `VOICE`
-  task on the board. This is the biggest ready-to-wire item today.
-  (`promo/` 2 + `raw/` 3 are non-gameplay reference audio, not for wiring.)
+- **The staged voice lines** (`voice/turbo/story/`, `cutscenes/`,
+  `backstory_intro/`) — recorded, committed. `robbery`, `robbery_take`,
+  `pizza_jack`, `debt_grumble`, and `idle_backstory` are now **wired**
+  (`HANDOFF.md §14`); the rest remain staged. See the `VOICE` task on the
+  board. Still the biggest ready-to-wire pile today.
+  (`promo/` + `raw/` are non-gameplay reference audio, not for wiring.)
 
 ---
 

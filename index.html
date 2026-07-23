@@ -3943,6 +3943,7 @@ function tapSafeCrack(){
       G.heist.cracked=true; G.heist.phase=3; G.heist.loot=loot;
       burst(player.x,1,player.z,20,COL_CASH,3,0.8,4);
       toast('SAFE CRACKED! +$'+loot,'gold'); sfx.mission();
+      turboSay('robbery_take');   // the take lands — Turbo counts down the debt
       addHeat(15);
     } else nextSafeStage();
   } else {
@@ -4656,6 +4657,7 @@ function doAttack(){
       burst(mark.x,1.2,mark.z,12,COL_CASH,2.5,0.7,4);
       blip(500,900,0.12,0.12,'triangle');
       toast('STICKUP! +$'+loot,'gold');
+      turboSay('robbery');   // the polite-stickup patter
       addHeat(12);
       return;
     }
@@ -6914,7 +6916,10 @@ const DONNA_REPEAT_LINES=[
   "Somebody bring me a box. A big one.",
   "Last time was a conversation. This time is a delivery — of a different kind.",
 ];
-let debtGrumbleT=rand(30,50); // ambient idle bark while the debt is unpaid
+// shared ambient-idle-bark timer: one slow, unhurried cadence, alternating
+// between the debt grumble and the general backstory musings so the total
+// rate of unprompted chatter never goes up just because a category was added
+let idleBarkT=rand(35,60);
 function makePillar(color,r,h){
   const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,10,1,true),
     new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.32,side:THREE.DoubleSide,depthWrite:false}));
@@ -7009,8 +7014,11 @@ function updateStory(dt){
       G.story.pizzaWarned=true; queueSave();
       playCutscene('pizza_warning', player.x, player.z);
     } else {
-      debtGrumbleT-=dt;
-      if(debtGrumbleT<=0){ turboSay('debt_grumble'); debtGrumbleT=rand(30,50); }
+      idleBarkT-=dt;
+      if(idleBarkT<=0){
+        turboSay(Math.random()<0.5?'debt_grumble':'idle_backstory');
+        idleBarkT=rand(35,60);
+      }
     }
   }
   if(G.story.debt>0&&d<3&&G.mode==='foot'&&G.money>=G.story.debt&&!activeCutscene){
@@ -7635,23 +7643,52 @@ const TURBO_LINES={
   ],
   // jacking a marked pizza delivery car specifically (CHAPTER1.md §8)
   pizza_jack:[
-    {src:null, text:"Extra hot, extra stolen."},
-    {src:null, text:"Thirty minutes or it's free. Actually, it's already free."},
-    {src:null, text:"Do I look like a delivery boy? Don't answer that."},
-    {src:null, text:"Special delivery: nothing, to nowhere, on your dime."},
-    {src:null, text:"This one's for the tip jar. My tip jar. Which is my pocket."},
-    {src:null, text:"Objection! I'm allergic to paying for pizza."},
-    {src:null, text:"Fresh outta the oven and outta your parking lot."},
+    {src:'voice/turbo/story/pizza_jack/pizza_jack_01_extra-hot-extra-stolen.mp3', text:"Extra hot, extra stolen."},
+    {src:'voice/turbo/story/pizza_jack/pizza_jack_02_already-free.mp3', text:"Thirty minutes or it's free. Actually, it's already free."},
+    {src:'voice/turbo/story/pizza_jack/pizza_jack_03_delivery-boy.mp3', text:"Do I look like a delivery boy? Don't answer that."},
+    {src:'voice/turbo/story/pizza_jack/pizza_jack_04_special-delivery.mp3', text:"Special delivery: nothing, to nowhere, on your dime."},
+    {src:'voice/turbo/story/pizza_jack/pizza_jack_05_tip-jar.mp3', text:"This one's for the tip jar. My tip jar. Which is my pocket."},
+    {src:'voice/turbo/story/pizza_jack/pizza_jack_06_allergic-to-paying.mp3', text:"Objection! I'm allergic to paying for pizza."},
+    {src:'voice/turbo/story/pizza_jack/pizza_jack_07_outta-your-parking-lot.mp3', text:"Fresh outta the oven and outta your parking lot."},
   ],
   // rare ambient mutter while the $800 is still unpaid (CHAPTER1.md §8)
   debt_grumble:[
-    {src:null, text:"Eight hundred bucks. That's a lot of quarters."},
-    {src:null, text:"Note to self: don't marry someone smarter than you."},
-    {src:null, text:"Deb's clock is louder than my conscience, and that's saying something."},
-    {src:null, text:"If I had a dollar for every dollar I owe, I wouldn't owe it."},
-    {src:null, text:"Tonight. She said tonight. Very specific woman, my ex."},
-    {src:null, text:"Somewhere out there, a kid thinks I'm cooler than this. Gotta keep that going."},
-    {src:null, text:"$800. Not $799. She counted."},
+    {src:'voice/turbo/story/idle_debt/idle_debt_01_lot-of-quarters.mp3', text:"Eight hundred bucks. That's a lot of quarters."},
+    {src:'voice/turbo/story/idle_debt/idle_debt_02_dont-marry-smarter.mp3', text:"Note to self: don't marry someone smarter than you."},
+    {src:'voice/turbo/story/idle_debt/idle_debt_03_debs-clock.mp3', text:"Deb's clock is louder than my conscience, and that's saying something."},
+    {src:'voice/turbo/story/idle_debt/idle_debt_04_dollar-for-every-dollar.mp3', text:"If I had a dollar for every dollar I owe, I wouldn't owe it."},
+    {src:'voice/turbo/story/idle_debt/idle_debt_05_tonight.mp3', text:"Tonight. She said tonight. Very specific woman, my ex."},
+    {src:'voice/turbo/story/idle_debt/idle_debt_06_kid-thinks-im-cool.mp3', text:"Somewhere out there, a kid thinks I'm cooler than this. Gotta keep that going."},
+    {src:'voice/turbo/story/idle_debt/idle_debt_07_she-counted.mp3', text:"$800. Not $799. She counted."},
+  ],
+  // rare ambient musing — backstory callbacks, alternates with debt_grumble
+  // off the shared idleBarkT timer (CHAPTER1.md §8)
+  idle_backstory:[
+    {src:'voice/turbo/story/idle_backstory/idle_backstory_01_hot-dog-opinions.mp3', text:"Two years, three hot dogs a day. I have OPINIONS about hot dogs now."},
+    {src:'voice/turbo/story/idle_backstory/idle_backstory_02_i-see-a-pattern.mp3', text:"Church camp took my cheerleaders. Coach took my locker room. Deb's taking my money. I see a pattern and I don't like it."},
+    {src:'voice/turbo/story/idle_backstory/idle_backstory_03_wrestling-match.mp3', text:"I didn't lose my temper. I lost a WRESTLING MATCH. Slight difference."},
+    {src:'voice/turbo/story/idle_backstory/idle_backstory_04_thats-history.mp3', text:"Fast, strong, handsome. That's not bragging, Coach, that's HISTORY."},
+    {src:'voice/turbo/story/idle_backstory/idle_backstory_05_get-creative.mp3', text:"Just gotta get creative. Always gotta get creative."},
+  ],
+  // sticking up a store/register at gunpoint — the polite-stickup patter
+  robbery:[
+    {src:'voice/turbo/story/robbery/robbery_01_polite-stickup.mp3', text:"This is a stickup. A polite one."},
+    {src:'voice/turbo/story/robbery/robbery_02_cash-can-move.mp3', text:"Nobody move. Except the cash. The cash can move."},
+    {src:'voice/turbo/story/robbery/robbery_03_donation-to-me.mp3', text:"Consider this a donation. To me."},
+    {src:'voice/turbo/story/robbery/robbery_04_scratcher.mp3', text:"I'll take the drawer and a lottery ticket. Scratcher, not Powerball — I'm not greedy."},
+    {src:'voice/turbo/story/robbery/robbery_05_hands-register.mp3', text:"Hands where I can see the register."},
+    {src:'voice/turbo/story/robbery/robbery_06_nobodys-a-hero.mp3', text:"This'll go a lot faster if nobody's a hero."},
+    {src:'voice/turbo/story/robbery/robbery_07_kid-to-feed.mp3', text:"I've got a kid to feed. Don't look at me like that, it's TRUE."},
+    {src:'voice/turbo/story/robbery/robbery_08_its-insured.mp3', text:"Relax, it's insured. Probably."},
+    {src:'voice/turbo/story/robbery/robbery_09_between-me-and-register.mp3', text:"This is between me and the register. You're just standing near it."},
+  ],
+  // the take lands — Turbo counts his progress against Deb's $800
+  robbery_take:[
+    {src:'voice/turbo/story/robbery_take/robbery_take_01_daddy-pays-rent.mp3', text:"And that's how Daddy pays rent. Sort of."},
+    {src:'voice/turbo/story/robbery_take/robbery_take_02_four-hundred-to-go.mp3', text:"Four hundred to go. Feels like four thousand."},
+    {src:'voice/turbo/story/robbery_take/robbery_take_03_never-here.mp3', text:"Anyone asks, I was never here. I was very obviously here."},
+    {src:'voice/turbo/story/robbery_take/robbery_take_04_one-store-down.mp3', text:"One store down. San Chaos has, what, a hundred more?"},
+    {src:'voice/turbo/story/robbery_take/robbery_take_05_cha-ching.mp3', text:"Cha-ching. Minus the ching. It's all quiet, actually."},
   ],
 };
 let turboCool=0;
