@@ -1353,8 +1353,19 @@ New regression guard: `tests/cases/voice-wiring.test.js` asserts every wired
 story pool exists, is non-empty, and each `src` resolves to a real committed
 mp3 — the net for the rest of the staged lines as they get wired.
 
-Still staged / next in this task: `pizza_jack` (story variant), `paying_deb`,
-`approach_deb`, `idle_debt`/`idle_backstory`, the `cutscenes/` VO, and
+Still staged / next in this task: `paying_deb`,
+`approach_deb`, `idle_backstory`, the `cutscenes/` VO, and
 `backstory_intro/`.
 
 Verified: `cd tests && node run.js` — green, zero console errors.
+
+**Update (same day):** two more pools were already wired to triggers but sat on
+`src:null` (silent TTS) with their recordings on disk unused — filled in the
+paths, no code change beyond the data:
+- **`pizza_jack`** (7 lines, `voice/turbo/story/pizza_jack/`) — already fires in
+  `doPizzaJack()` when you jack a marked delivery car.
+- **`debt_grumble`** (7 lines, `voice/turbo/story/idle_debt/`) — the ambient
+  mutter while the $800 is unpaid (`updateStory`).
+Both added to the `voice-wiring.test.js` guard. `paying_deb`/`approach_deb` are
+deliberately held: their moments already run a cutscene with its own VO, so
+they need sequencing (not a drop-in) — a later slice.

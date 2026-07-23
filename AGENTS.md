@@ -96,7 +96,7 @@ Status legend: **⬜ Backlog** · **▶ Next up** · **🔨 In progress** · **�
 | ID | Task | Status | Owner | Notes / unblocks |
 | --- | --- | --- | --- | --- |
 | **R1** | Dispose GPU resources on entity removal (`disposeMesh`) | ▶ Next up | — | `P0`. Stops the mobile memory leak. **Prerequisite for PL1.** |
-| **VOICE** | Wire the ~90 staged voice lines (`voice/turbo/story/`, `cutscenes/`, `backstory_intro/`) into their triggers | 🔨 In progress | Claude | **`robbery` + `robbery_take` wired** (stickup + safe-crack, `HANDOFF.md §12`). Next: `pizza_jack`/`paying_deb`/`approach_deb`, idle barks, `cutscenes/`, `backstory_intro/`. Claude's lane. |
+| **VOICE** | Wire the ~90 staged voice lines (`voice/turbo/story/`, `cutscenes/`, `backstory_intro/`) into their triggers | 🔨 In progress | Claude | **Wired: `robbery`, `robbery_take`, `pizza_jack`, `debt_grumble`** (`HANDOFF.md §12`). Next: `paying_deb`/`approach_deb` (need cutscene sequencing), `idle_backstory`, `cutscenes/`, `backstory_intro/`. Claude's lane. |
 | **F3** | Adaptive graphics quality (Low/Med/High tiers, auto off fps) | ▶ Next up | — | `P0`. Biggest raw mobile win. |
 | **PL1** | Places & Loading system (`loadPlace`/`transitionWithScreen`), port pizza interior to it | ⬜ Backlog | — | From `GAME_PLAN.md §4`. **Blocked on R1.** Needs a card in `HANDOFF.md`. |
 

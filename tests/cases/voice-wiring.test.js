@@ -12,6 +12,8 @@ const ROOT = path.join(__dirname, '..', '..');
 const WIRED = {
   robbery: { min: 9, trigger: 'point-blank stickup in doAttack()' },
   robbery_take: { min: 5, trigger: 'safe-crack payoff in tapSafeCrack()' },
+  pizza_jack: { min: 7, trigger: 'jacking a marked pizza car in doPizzaJack()' },
+  debt_grumble: { min: 7, trigger: 'ambient mutter while the $800 is unpaid' },
 };
 
 module.exports = [
