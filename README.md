@@ -78,6 +78,7 @@ plain relative paths.
 | File | Purpose |
 | --- | --- |
 | `index.html` | The entire game (markup, styles, and logic) |
+| `GAME_PLAN.md` | Top-level map — verified state-of-the-game report, the Places & Loading growth architecture, and the multi-agent (code + graphics) asset pipeline |
 | `HANDOFF.md` | Engineering handoff — architecture, code map, and the prioritised improvement backlog for contributors |
 | `CHARACTERS.md` | Character-model, paint/creator, and cutscene-rendering plan (companion to `HANDOFF.md`) |
 | `STORY_BIBLE.md` | Story & script-writing framework — canon, voice, world, and mission/cutscene templates for narrative work |
