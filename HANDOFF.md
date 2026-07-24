@@ -210,7 +210,7 @@ Sections, in file order, with what lives in each:
 | pickups | `pickups`, `pickupDefs`, `scatterPickups`, `collectPickups` |
 | `HELICOPTERS` | Player heli + `spawnCopHeli`/`updateCopHeli` |
 | `TALKING PEDS` | Speech bubbles, `wahVoice`, `doTalk` |
-| `WEAPONS` | `cycleWeapon`, `doAttack`, rockets, `explode`, `damageArea` |
+| `WEAPONS` | `cycleWeapon`, `doAttack`, rockets, `explode`, `damageArea`, `WEAPON_SFX` (per-weapon fire/reload synth registry), `reloadPistol`, `startMissileFlight` (spatialized flight-loop sound) |
 | input | `joyStart/Move/End`, `doJump`, `applyLook`, `pollKeys` |
 | `WANTED` | `addHeat`, `clearHeat`, `spawnCop`, `updateWanted` |
 | `CAR PHYSICS` | `carPhysics`, `damageCar` |
@@ -239,7 +239,8 @@ Two global objects hold nearly all mutable state:
 ```js
 const G = { mode:'foot'|'car'|'heli', money, heat, stars, carHP, boost,
             escapeT, bustT, missionsDone, over, started, paused,
-            station, weapon:'fists'|'pistol'|'rpg', rockets };
+            station, weapon:'fists'|'pistol'|'rpg', rockets,
+            pistolAmmo, reloading };  // pistol magazine (12) + auto-reload lockout, see WEAPONS
 const WORLD = { blocks:10, block:50, road:16, pitch, half, size };
 ```
 

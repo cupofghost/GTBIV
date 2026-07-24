@@ -5,12 +5,14 @@ Last consolidation: 2026-07-24 — Signed: Claude Code | Sonnet 5 | medium
 ## Active work
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-24 | WEAPONS / AUDIO (`index.html`: WEAPONS + AUDIO sections) | Weapon sound synthesis system: pistol crack, RPG launch/flight/boom, reload SFX, flexible per-weapon registry. Done — implemented, tested (52/52 headless suite incl. 3 new cases), pushed. | Signed: Claude Code \| Sonnet 5 \| medium |
 
 ## Shared-file touches
-(list file + what changed + signature)
+- `HANDOFF.md`: updated the `WEAPONS` code-map table row (§5) and the `G` state snippet (§6.1) to list the new `WEAPON_SFX`/`reloadPistol`/`startMissileFlight`/`pistolAmmo`/`reloading` additions. Smallest-possible factual sync, no content restructuring. — 2026-07-24, Signed: Claude Code | Sonnet 5 | medium
 
 ## Known issues
 - Duplicate `## 10.` heading in HANDOFF.md: "10. Suggested Order of Work" (line ~1202) and "10. Changelog — polish pass (Kimi3, 2026-07-22)" (line ~1256) share a number — pre-existing, predates this consolidation (confirmed present as of commit `9f4e220`). Cosmetic only (doesn't break the NEXT-marker workflow), left unrenumbered pending Austin's OK to touch another agent's changelog section. — 2026-07-24, Sonnet 5
+- `index.html`'s top-of-file CODE MAP (§5 in HANDOFF.md, the `// CODE MAP` comment block ~line 608) was already ~58 lines out of sync with real section banners before this session (e.g. it claims `AUDIO (656–818)`, the real banner is at 714); this session's ~100-line addition to WEAPONS drifts it further. Not fixed here — a full recompute is a mechanical but sizeable edit outside this session's claimed area (weapon audio, not navigation tooling). Worth a pass next consolidation. — 2026-07-24, Sonnet 5
 
 ## Archive
 2026-07-24 | NPC types — Batches 1–8 | Created 303 total character types across 8 batches: workers, professionals, styles, service, entertainment, tech, creative, transport, health, media, design, wellness, hobbies, subculture, outdoor, music, gaming, cultural, martial, fashion, academic. Comprehensive system for diverse NPC spawning. | Signed: Claude Code | Haiku 4.5 | low
