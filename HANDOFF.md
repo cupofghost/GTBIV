@@ -750,10 +750,18 @@ disables both.
 fast; gentle bumps do almost nothing. No input lag introduced. Reduce-motion off
 switch works.
 
-#### J3 — Camera polish (foot + car) `P2 · Risk: Med`
+#### J3 — Camera polish (foot + car) `P2 · Risk: Med` `PARTIAL`
+**Status:** sensitivity/invert-Y and the low-speed car-cam follow-rate
+shipped — see `§18`. The foot-camera-while-strafing smoothing bullet is
+feel-tuning that needs an actual playtest to judge (this suite explicitly
+can't — see `tests/README.md`); reviewed the existing `moveMag>0.12` +
+`lookHoldT` gating and it already reads as reasonable on inspection, so left
+untouched rather than guess at a change with no way to verify it helped.
+Revisit with a real device/playtest pass if it still reads as whippy.
 **Why:** The camera is already thoughtful (collision pull-in, look-hold, speed
 FOV). Small tuning + options make it feel pro.
-**Where:** `CAMERA` (`updateCamera`, `cameraCollide`).
+**Where:** `CAMERA` (`updateCamera`, `cameraCollide`), `applyLook`, Settings
+(F2) panel.
 **Approach:** Add a **look-sensitivity** slider and **invert-Y** toggle (Settings,
 F2), applied in `applyLook`. Smooth the foot camera when strafing; make sure the
 car camera doesn't feel sluggish at low speed. Don't regress the wall pull-in.
@@ -1228,8 +1236,8 @@ throughout:
 ✔ U1  Objective clarity/HUD      DONE (story-goal half; see §16)
 ✔ P1  Mission variety            DONE
 ✔ J4  Control feel               DONE
-J3  Camera options              ← NEXT
-P3  Wanted + difficulty
+✔ J3  Camera options             DONE (sens/invert/low-speed follow; see §18)
+P3  Wanted + difficulty         ← NEXT
 P2  Economy tuning
 J2  Hitstop + shake
 U2  Onboarding
@@ -1627,6 +1635,57 @@ guard) and `tests/cases/control-feel.test.js` (2 cases: pedal relabel/class
 toggle, dash label appends/drops `REV`).
 
 Full suite: `cd tests && node run.js` — **65/65 green** (up from 53; 12 new
+cases), zero console errors.
+
+Signed: Claude Code | Sonnet 5 | medium
+
+---
+
+## 18. Changelog — J3 camera polish: sensitivity, invert-Y, low-speed follow (Claude, 2026-07-24)
+
+Picked up **J3** next per `§10`. Landed the concrete, verifiable half of the
+card; deferred the one feel-tuning bullet (see the card's new `PARTIAL`
+status note above) rather than guess at a change this suite can't judge.
+
+- **Look-sensitivity slider + invert-Y toggle** (Settings → F2, new
+  `#volLookSens` range input and `#invertYGroup` on/off pair, styled
+  identically to the existing volume sliders and the `VIBRATE` toggle).
+  Both persist in the same `SETTINGS` blob (`gtb4.settings`) — `lookSens`
+  defaults to `100` (%), `invertY` to `false`. Applied at the single choke
+  point every look input already funnels through, `applyLook(dx,dy)`: yaw
+  and pitch deltas are scaled by `SETTINGS.lookSens/100`, and pitch is
+  negated when `invertY` is on. Touch drag, mouse drag, and replay-camera
+  scrubbing all call `applyLook`, so this covers every input path without
+  touching the touch/mouse listeners themselves.
+  - Generalized the settings-panel `slider(id,key)` helper to take an
+    optional `onInput` callback (defaults to the existing `applyVolumes`,
+    so the four volume sliders are untouched) since a look-sensitivity
+    change has nothing to "apply" beyond the `SETTINGS` write `applyLook`
+    already reads live.
+- **Low-speed car-camera follow rate.** The chase-cam's ease-back-out lerp
+  used a fixed `5/s` rate regardless of speed; pulling out from a stop (or a
+  tight three-point turn) meant the camera visibly lagged the car's new
+  heading for a beat. It now ramps up to `8/s` as speed drops to zero
+  (`followRate=5+3*(1-clamp(|speed|/8,0,1))`) and eases back to the original
+  `5/s` above ~8 u/s, so normal-speed driving feels identical. The instant
+  "never clip into a wall" snap branch (`cameraCollide` pulling the camera in
+  when a building gets between it and the car) is untouched — this only
+  changes the ease-back-out rate.
+- Foot-camera-while-strafing smoothing and "no motion sickness spikes" are
+  feel-tuning with no automated way to verify improvement (`tests/README.md`
+  is explicit that this suite tests state/logic, not feel) — reviewed the
+  existing `moveMag>0.12`/`lookHoldT` gate in `updateCamera`'s foot branch,
+  didn't find a concrete issue on inspection, left it as-is rather than churn
+  numbers with no way to confirm they helped. Flagged on the card for a real
+  playtest pass.
+
+New `tests/cases/camera-polish.test.js` (5 cases): default settings values,
+`applyLook` scaling proportionally with `lookSens`, `invertY` flipping pitch
+sign, both settings surviving a reload, and the low-speed-vs-speed car-camera
+follow-rate comparison (same synthetic offset, same `dt`, asserts the
+low-speed case closes more distance in one frame).
+
+Full suite: `cd tests && node run.js` — **70/70 green** (up from 65; 5 new
 cases), zero console errors.
 
 Signed: Claude Code | Sonnet 5 | medium

@@ -287,7 +287,7 @@
   #pmResume { background:rgba(20,90,40,.85); border-color:#7dff8a; }
   #pmRestart { background:rgba(110,20,20,.85); border-color:#ff6b6b; }
   .pmRow { display:flex; align-items:center; gap:10px; margin:14px 0; text-align:left; }
-  .pmRow label { color:#9be7ff; font-size:11px; font-family:Arial,sans-serif; letter-spacing:1px; width:58px; flex:none; }
+  .pmRow label { color:#9be7ff; font-size:11px; font-family:Arial,sans-serif; letter-spacing:1px; width:80px; flex:none; }
   .pmRow input[type=range] { flex:1; accent-color:#ff3ea0; min-height:26px; }
   .pmRow .pmVal { color:#ffd23e; font-size:11px; font-family:monospace; width:36px; text-align:right; flex:none; }
   .qGroup { flex:1; display:flex; gap:6px; }
@@ -566,6 +566,11 @@
       <button class="qBtn" data-q="high">HIGH</button>
     </div></div>
     <div class="pmRow"><label>VIBRATE</label><div class="qGroup" id="vibrateGroup">
+      <button class="qBtn" data-v="on">ON</button>
+      <button class="qBtn" data-v="off">OFF</button>
+    </div></div>
+    <div class="pmRow"><label for="volLookSens">LOOK SENS.</label><input type="range" id="volLookSens" min="50" max="200" step="10"><span class="pmVal" id="volLookSensVal"></span></div>
+    <div class="pmRow"><label>INVERT Y</label><div class="qGroup" id="invertYGroup">
       <button class="qBtn" data-v="on">ON</button>
       <button class="qBtn" data-v="off">OFF</button>
     </div></div>
@@ -4942,7 +4947,8 @@ let lookTouch=null, lookLX=0, lookLY=0;
 let camYawOff=0, camPitch=0, lookHoldT=0; // camYawOff orbits car/heli cam; foot mode writes footCamYaw
 function applyLook(dx,dy){
   if(G.replay&&replay){ replay.cam.yaw-=dx*0.0048; replay.cam.pitch=clamp(replay.cam.pitch-dy*0.005,-1.2,1.2); return; }
-  const yaw=-dx*0.0048, pit=dy*0.006;
+  const sens=(SETTINGS.lookSens||100)/100;
+  const yaw=-dx*0.0048*sens, pit=dy*0.006*sens*(SETTINGS.invertY?-1:1);
   if(G.mode==='foot'){
     footCamYaw+=yaw;
     camPitch=clamp(camPitch+pit,-1.45,1.45);   // nearly straight up / straight down
@@ -6595,8 +6601,12 @@ function updateCamera(dt){
     const dist=9.5+Math.abs(c.speed)*0.07, h=4.3+camPitch*2.2;
     const bx=-Math.sin(a), bz=-Math.cos(a);
     const tgt=cameraCollide(c.x,c.y+1.5,c.z,c.x+bx*dist,c.y+h,c.z+bz*dist);
-    // snap in instantly so we never clip the wall, ease back out gently
-    camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-5*dt));
+    // snap in instantly so we never clip the wall, ease back out gently —
+    // and catch up a bit faster at low speed, so pulling out from a stop
+    // (or a tight parking-lot three-point turn) doesn't feel like the
+    // camera is dragging a beat behind the wheel
+    const followRate=5+3*(1-clamp(Math.abs(c.speed)/8,0,1));
+    camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-followRate*dt));
     const sr=Math.abs(c.speed)/CARTYPES[c.type].top;
     camera.fov=lerp(camera.fov,62+sr*13+(input.boost&&G.boost>0?5:0),0.1);
     camera.updateProjectionMatrix();
@@ -8075,7 +8085,7 @@ function updateReplay(dt){
 // so each sets its own flag and syncPause() is the only writer of G.paused.
 const SET_KEY='gtb4.settings';
 const SETTINGS=(function(){
-  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true };
+  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true, lookSens:100, invertY:false };
   try{ const s=JSON.parse(localStorage.getItem(SET_KEY)); if(s&&s.v===1) Object.assign(d,s); }catch(e){}
   return d;
 })();
@@ -8111,6 +8121,21 @@ function setVibrateMode(on){
   g.querySelectorAll('.qBtn').forEach(b=>{
     b.addEventListener('click',()=>setVibrateMode(b.dataset.v==='on'));
     b.addEventListener('touchend',e=>{ e.preventDefault(); setVibrateMode(b.dataset.v==='on'); });
+  });
+})();
+
+// ---- J3: look-sensitivity + invert-Y (applied directly in applyLook) ----
+function refreshInvertYButtons(){
+  const g=$('invertYGroup'); if(!g) return;
+  g.querySelectorAll('.qBtn').forEach(b=>b.classList.toggle('on',(b.dataset.v==='on')===!!SETTINGS.invertY));
+}
+function setInvertY(on){ SETTINGS.invertY=on; saveSettings(); refreshInvertYButtons(); }
+(function initInvertYUI(){
+  const g=$('invertYGroup'); if(!g) return;
+  refreshInvertYButtons();
+  g.querySelectorAll('.qBtn').forEach(b=>{
+    b.addEventListener('click',()=>setInvertY(b.dataset.v==='on'));
+    b.addEventListener('touchend',e=>{ e.preventDefault(); setInvertY(b.dataset.v==='on'); });
   });
 })();
 
@@ -8228,14 +8253,15 @@ function showPausePanel(id){ ['pmMain','pmSettings','pmHow'].forEach(p=>{ $(p).s
     $('pmRestart').textContent='SURE? TAP AGAIN';
     setTimeout(()=>{ $('pmRestart').textContent='RESTART GAME'; armT=0; },2500);
   });
-  const slider=(id,key)=>{
+  const slider=(id,key,onInput)=>{
     const el=$(id), val=$(id+'Val');
     el.value=SETTINGS[key]; val.textContent=SETTINGS[key]+'%';
-    el.addEventListener('input',()=>{ SETTINGS[key]=+el.value; val.textContent=el.value+'%'; applyVolumes(); });
+    el.addEventListener('input',()=>{ SETTINGS[key]=+el.value; val.textContent=el.value+'%'; (onInput||applyVolumes)(); });
     el.addEventListener('change',saveSettings); // persist on release, not every drag tick
   };
   slider('volMaster','master'); slider('volMusic','music');
   slider('volSfx','sfx'); slider('volVoice','voice');
+  slider('volLookSens','lookSens',()=>{}); // read live off SETTINGS in applyLook, nothing to re-apply
 })();
 
 // ================= SAVE SYSTEM =================
