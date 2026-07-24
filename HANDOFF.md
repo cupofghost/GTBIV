@@ -550,7 +550,7 @@ math. Great for composing cutscene shots (feeds D-work in CHARACTERS.md).
 **Acceptance:** Toggle → camera detaches and flies smoothly anywhere; toggle back
 → returns to normal follow-cam exactly.
 
-#### D5 — Time controls (pause-step / slow-mo / fast-forward) `P2 · Risk: Low`
+#### D5 — Time controls (pause-step / slow-mo / fast-forward) `P2 · Risk: Low` `OPEN`
 **Why:** Inspecting animations, physics, and cutscene timing needs sub-real-time
 control.
 **Where:** `MAIN LOOP` — introduce a `timeScale` applied to `dt` for simulation
@@ -584,7 +584,7 @@ point) so you can eyeball the rig. This *is* the creator's preview surface.
 updates the model live; poses play correctly. Uses the same builder the game
 uses (no forked model code).
 
-#### D7 — Deterministic seed (optional) `P2 · Risk: Med`
+#### D7 — Deterministic seed (optional) `P2 · Risk: Med` `OPEN`
 **Why:** `Math.random()` is used everywhere, so bugs aren't reproducible.
 **Where:** central RNG; city/traffic/ped/mission spawns.
 **Approach:** When `?seed=<n>` is present, route randomness through a small
@@ -737,7 +737,7 @@ silenced when the setting is off, never throws when `navigator.vibrate` is
 absent, and the setting round-trips a reload) plus the full headless suite
 green (43/43, up from 39 with the four new haptics cases).
 
-#### J2 — Hitstop + refined screen shake `P2 · Risk: Med`
+#### J2 — Hitstop + refined screen shake `P2 · Risk: Med` `OPEN`
 **Why:** Big impacts read as "meh". A few frames of freeze + a tuned shake curve
 makes collisions and explosions land.
 **Where:** `CAMERA` (`shake`, already exists), `MAIN LOOP`, `carPhysics`/`explode`.
@@ -750,7 +750,7 @@ disables both.
 fast; gentle bumps do almost nothing. No input lag introduced. Reduce-motion off
 switch works.
 
-#### J3 — Camera polish (foot + car) `P2 · Risk: Med`
+#### J3 — Camera polish (foot + car) `P2 · Risk: Med` `OPEN`
 **Why:** The camera is already thoughtful (collision pull-in, look-hold, speed
 FOV). Small tuning + options make it feel pro.
 **Where:** `CAMERA` (`updateCamera`, `cameraCollide`).
@@ -806,7 +806,7 @@ feel big). Don't touch the debt mechanic itself, just the numbers + feedback.
 **Acceptance:** A test playthrough to $800 feels earned (not 2 minutes, not an
 hour). Every income source is reachable and worth doing.
 
-#### P3 — Wanted-system feel + difficulty options `P2 · Risk: Med`
+#### P3 — Wanted-system feel + difficulty options `P2 · Risk: Med` `OPEN`
 **Why:** Heat/stars escalation and cop pressure drive the fun; expose it and
 tune it.
 **Where:** `WANTED` (`addHeat`, `clearHeat`, `updateWanted`, `spawnCop`),
@@ -836,7 +836,7 @@ screens.
 minimap blips are self-explanatory; HUD is legible at phone size in bright and
 dark scenes.
 
-#### U2 — Onboarding / How-to-Play `P2 · Risk: Low`
+#### U2 — Onboarding / How-to-Play `P2 · Risk: Low` `OPEN`
 **Why:** Controls are only a one-line hint; a short first-run guide lowers the
 bounce rate.
 **Where:** start flow, `controlsHint`, pause menu (F2) "How to Play".
@@ -857,7 +857,7 @@ quick to dismiss.
 **Acceptance:** Getting busted/wasted never loses saved progress, always respawns
 you playable (not inside a wall, not carless with no options), and reads clearly.
 
-#### A2 — Accessibility options `P3 · Risk: Low`
+#### A2 — Accessibility options `P3 · Risk: Low` `OPEN`
 **Why:** Small settings widen the audience and reduce motion sickness.
 **Where:** Settings (F2), `CAMERA`, `updateStarsHUD`/minimap colours.
 **Approach:** Add **Reduce Motion** (caps shake/hitstop/FOV kick — J2/J3 respect
@@ -898,7 +898,7 @@ suite green (36/36), plus a standalone Playwright smoke pass confirming
 disposed meshes revive cleanly when the Replay system re-adds a recently-killed
 entity mid-scrub (no console errors, clean exit).
 
-#### R2 — Pool traffic / peds instead of churning them `P2 · Risk: Med`
+#### R2 — Pool traffic / peds instead of churning them `P2 · Risk: Med` `OPEN`
 **Why:** Cars and peds are spliced and re-`spawn`ed via timeouts, creating and
 GC-ing meshes constantly. Pooling smooths frame times.
 **Where:** `spawnTraffic`, `spawnPed`, `damageCar` respawn, `updateTraffic`/
@@ -911,7 +911,7 @@ disposed until teardown).
 devtools Performance); population still feels alive; no "ghost" recycled entities
 appearing wrong.
 
-#### R3 — Anti-stuck & spawn-safety `P2 · Risk: Med`
+#### R3 — Anti-stuck & spawn-safety `P2 · Risk: Med` `OPEN`
 **Why:** Analytic collision can occasionally wedge the player in geometry or
 spawn NPCs inside buildings.
 **Where:** `resolveFootCollision`, `respawn`, `spawnPed`/`spawnTraffic`,
@@ -1020,7 +1020,7 @@ once this exists, same as gang members stay near `CHAOS`).
 **Acceptance:** the field is visible and reachable on foot/by car, shows on
 the minimap, doesn't break existing block/road generation, holds framerate.
 
-#### FB3 — "Revenge on Coach" mission `P1 · Risk: Med`
+#### FB3 — "Revenge on Coach" mission `P1 · Risk: Med` `OPEN`
 **Why:** The dramatic payoff of the backstory — Turbo settles the score with
 the man who ended his football career.
 **Where:** a new mission, built like the existing heist system
@@ -1038,7 +1038,7 @@ wire into the save system, `F1`) that unlocks **FB4**.
 a clear win state, sets the unlock flag, persists across reload (once `F1`
 exists), and doesn't re-trigger after being beaten.
 
-#### FB4 — Football minigame `P2 · Risk: High`
+#### FB4 — Football minigame `P2 · Risk: High` `OPEN`
 **Why:** The reward for beating Coach — Turbo gets to play again. This is the
 biggest single new system in the arc; scope it deliberately, don't let it
 balloon into a full sports sim.
@@ -1056,7 +1056,7 @@ on a win.
 feel good, stop and check in rather than over-building — the FB5 cutscene
 is the actual payoff, not the football mechanics themselves.
 
-#### FB5 — Cheerleaders cutscene (solo Turbo, no Dad on-screen) `P2 · Risk: Med`
+#### FB5 — Cheerleaders cutscene (solo Turbo, no Dad on-screen) `P2 · Risk: Med` `OPEN`
 **Why:** The character beat the whole arc is building to.
 **Where:** triggered on winning **FB4**; another `CUTSCENES` entry, using the
 new actor/pose work from `CHARACTERS.md` (**C8**) if that's landed yet, or a
@@ -1214,19 +1214,29 @@ throughout:
 ✔ F3  Adaptive quality           DONE
 ✔ F4  Audio mix + ducking        DONE
 ✔ J1  Haptics & impact feedback  DONE
-U1  Objective clarity/HUD       ← NEXT
-P1  Mission variety
-J3  Camera options
-J4  Control feel
-P3  Wanted + difficulty
-P2  Economy tuning
-J2  Hitstop + shake
-U2  Onboarding
-U3  Death/respawn flow
-R2  Pooling
-R3  Anti-stuck
-A2  Accessibility
-X1  (only if approved) modular split
+✔ U1  Objective clarity/HUD      DONE
+✔ P1  Mission variety (base)     DONE
+✔ FB1 Jock NPCs                  DONE
+✔ FB2 Football field             DONE
+✔ RV1 Mama rat mechanics         DONE (placeholder)
+—  D5  Time controls             OPEN (dev tool)
+—  D7  Deterministic seed        OPEN (dev tool)
+—  J2  Hitstop + shake           OPEN
+—  J3  Camera options            OPEN
+—  J4  Brake/reverse clarity     OPEN (dead-zone done)
+—  P3  Wanted + difficulty       OPEN
+—  P2  Economy tuning            OPEN
+—  U2  Onboarding                OPEN
+—  U3  Death/respawn flow        OPEN
+—  R2  Pooling traffic/peds      OPEN
+—  R3  Anti-stuck & spawn-safety OPEN
+—  A2  Accessibility             OPEN
+—  FB3 Coach mission             OPEN
+—  FB4 Football minigame         OPEN
+—  FB5 Cheerleaders cutscene     OPEN
+—  RV2 Mama rat model            OPEN
+—  RV3 Rat vengeance polish      OPEN (unscoped)
+—  X1  Modular split (if approved) OPEN
 ```
 
 **Character / cutscene track** (see `CHARACTERS.md`) runs in parallel and shares
