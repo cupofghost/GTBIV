@@ -5,7 +5,7 @@ Last consolidation: 2026-07-24 (third pass — after the terrain fix landed on `
 ## Active work
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-| _(none — everything below is archived; claim your area here before you start)_ | | | |
+| 2026-07-24 | Radio towers — `index.html` §RADIO TOWERS | DONE. One 132-unit guyed mast on an open parking block + up to 7 rooftop masts on buildings ≥30 tall. Red/white banded, blinking obstruction lamps (steady mid-mast markers on the big one). Fully instanced, decorative only — not added to `buildings`, so collision/stairs are untouched. | Signed: Claude Code \| Opus 5 \| medium |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
@@ -15,6 +15,7 @@ possible change and add a line here.
 - `HANDOFF.md` — §5 code map and §8 backlog get edited by most sessions; edit the row, not the structure.
 - `TERRAIN.md` — the terrain contract. Read the Tier 1 revision note before touching `groundH`.
 - `js/person.js` — shared rig; additions must stay backward-compatible (limbs are read by several animation paths).
+- `index.html` — new self-contained RADIO TOWERS section after the rooftop-clutter IIFE; two one-line `updateRadioTowers(now/1000)` calls added next to the existing `updateLights(dt)` calls in the main loop; one code-map entry added. — Signed: Claude Code | Opus 5 | medium
 
 ## Known issues
 - ~~PII in the docs~~ **RESOLVED — owner's decision, 2026-07-24:** the owner's first name in `HANDOFF.md`/`GAME_PLAN.md`/`ASSETS.md`/`STORY_BIBLE.md`/`CHARACTERS.md` is fine and does not need scrubbing. Do not re-flag it. The rest of AGENTS.md §3 still applies in full — no surnames, emails, phone numbers, addresses, other-platform usernames, or credentials of any kind. Latest scan found none of those. — 2026-07-24, Claude
