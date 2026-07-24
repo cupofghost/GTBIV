@@ -1,6 +1,7 @@
 # STATUS
 
 Last consolidation: (never)
+Last audit: 2026-07-24 — Signed: Claude Code | claude-haiku-4-5-20251001 | low
 
 ## Active work
 | Date | Area / files | Task & state (≤3 lines) | Signature |
