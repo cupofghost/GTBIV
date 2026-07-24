@@ -17,6 +17,16 @@ const WIRED = {
   idle_backstory: { min: 5, trigger: 'ambient backstory musing (shared idleBarkT timer)' },
 };
 
+// Story cutscenes that now carry recorded Turbo VO on a shot's `dialogue.voice`
+// (the synth voice is only a fallback until the mp3 decodes). Keeps the cutscene
+// hookup honest: the id must exist, expose the wired mp3(s), and every file must
+// resolve on disk.
+const CUTSCENE_VO = {
+  first_score: { min: 2, note: 'both Turbo lines at the $200 milestone' },
+  deb_confrontation: { min: 1, note: "Turbo's nervous pre-beat (turbo_meets_deb)" },
+  deb_payoff: { min: 1, note: "Turbo's pay-off pre-beat (turbo_pays_deb)" },
+};
+
 module.exports = [
   {
     name: 'wired story barks exist and every mp3 resolves to a real file',
@@ -40,6 +50,39 @@ module.exports = [
             `${cat} line should be a recorded story mp3, got ${src}`);
           assert(fs.existsSync(path.join(ROOT, src)),
             `${cat} references a missing file: ${src}`);
+        });
+      }
+    },
+  },
+  {
+    name: 'story cutscenes carry recorded Turbo VO and every mp3 resolves',
+    run: async (page, { assert }) => {
+      const data = await page.evaluate((ids) => {
+        const out = {};
+        for (const id of ids) {
+          const cs = (typeof CUTSCENES !== 'undefined' && CUTSCENES[id]) || null;
+          if (!cs || !Array.isArray(cs.shots)) { out[id] = null; continue; }
+          const voices = [];
+          cs.shots.forEach(s => {
+            const v = s.dialogue && s.dialogue.voice;
+            if (!v) return;
+            (Array.isArray(v) ? v : [v]).forEach(src => voices.push(src));
+          });
+          out[id] = voices;
+        }
+        return out;
+      }, Object.keys(CUTSCENE_VO));
+
+      for (const [id, spec] of Object.entries(CUTSCENE_VO)) {
+        const voices = data[id];
+        assert(Array.isArray(voices), `CUTSCENES.${id} should exist with shots (${spec.note})`);
+        assert(voices.length >= spec.min,
+          `${id} should wire >= ${spec.min} recorded VO src(s) (${spec.note}), got ${voices.length}`);
+        voices.forEach(src => {
+          assert(typeof src === 'string' && /^voice\/turbo\/(cutscenes|story)\//.test(src),
+            `${id} voice should be a recorded cutscene/story mp3, got ${src}`);
+          assert(fs.existsSync(path.join(ROOT, src)),
+            `${id} references a missing VO file: ${src}`);
         });
       }
     },

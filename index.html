@@ -7146,7 +7146,13 @@ const CUTSCENES={
   deb_confrontation:{
     onStart(){ sfx.mission(); blip(200,100,0.6,0.18,'sine'); },
     shots:[
-      { duration:2.8, pos:[9,7,9], lookAt:[0,1.2,0], fov:68, dialogue:null, transition:'smooth' },
+      // Turbo's nervous pre-beat (turbo_meets_deb) — his jokes visibly don't land
+      // on Deb, so it's one quick line before her locked confrontation lines.
+      { duration:3.3, pos:[9,7,9], lookAt:[0,1.2,0], fov:68,
+        dialogue:{speaker:'TURBO', text:"Hey Deb. You're looking... like you want to kill me. Cool, cool.",
+          voice:['voice/turbo/story/approach_deb/approach_deb_01_looking-like-you-want-to-kill-me.mp3',
+                 'voice/turbo/story/approach_deb/approach_deb_02_furious-but-great.mp3',
+                 'voice/turbo/story/approach_deb/approach_deb_03_funny-story.mp3']}, transition:'smooth' },
       { duration:4.2, pos:[1.4,1.5,1.8], lookAt:[0,1.55,0], fov:32,
         dialogue:{speaker:'DEB',text:'Turbo. We need to talk.'}, transition:'cut', shake:0.15 },
       { duration:4.0, pos:[-1.6,1.5,1.6], lookAt:[0,1.55,0], fov:32,
@@ -7159,8 +7165,15 @@ const CUTSCENES={
   deb_payoff:{
     onStart(){ blip(400,600,0.4,0.15,'triangle'); },
     shots:[
+      // Turbo's pay-off pre-beat (turbo_pays_deb) — proud of himself, a touch too
+      // proud; the chapter's first sincere beat, one line before Deb's locked lines.
+      { duration:3.0, pos:[2.4,1.5,2.6], lookAt:[0,1.35,0], fov:40,
+        dialogue:{speaker:'TURBO', text:"There. Eight hundred, exact change, no confetti.",
+          voice:['voice/turbo/story/paying_deb/paying_deb_01_exact-change.mp3',
+                 'voice/turbo/story/paying_deb/paying_deb_02_functioning-adult.mp3',
+                 'voice/turbo/story/paying_deb/paying_deb_03_spend-it-on-the-kid.mp3']}, transition:'smooth' },
       { duration:3.2, pos:[0,0.7,2.8], lookAt:[0,1.45,0], fov:38,
-        dialogue:{speaker:'DEB',text:'...wow. You actually paid.'}, transition:'smooth' },
+        dialogue:{speaker:'DEB',text:'...wow. You actually paid.'}, transition:'cut' },
       { duration:3.8, pos:[5,2.2,5], lookAt:[0,1,0], fov:56,
         dialogue:{speaker:'DEB',text:'Later, Turbo.'}, transition:'smooth' },
       { duration:2.5, pos:[0,3,12], lookAt:[0,0.8,0], fov:62, dialogue:null, transition:'fade' }
@@ -7168,12 +7181,15 @@ const CUTSCENES={
   },
   // CHAPTER1.md §6 — fires once cumulative Chapter-1 earnings cross ~$200
   first_score:{
-    onStart(){ sfx.coin(); setTimeout(()=>blip(300,340,0.12,0.08,'sine'),2200); },
+    // the phone-ring blip lands on the shot-2 boundary, cueing "I'll call her back"
+    onStart(){ sfx.coin(); setTimeout(()=>blip(300,340,0.12,0.08,'sine'),2900); },
     shots:[
-      { duration:2.2, pos:[2.2,1.6,2.6], lookAt:[0,1.3,0], fov:42,
-        dialogue:{speaker:'TURBO',text:'Two hundred down. Six hundred to go. Piece of cake.'}, transition:'smooth' },
-      { duration:2.6, pos:[1.1,1.55,1.3], lookAt:[0,1.55,0], fov:30,
-        dialogue:{speaker:'TURBO',text:"...I'll call her back. After the cake."}, transition:'cut' },
+      { duration:2.9, pos:[2.2,1.6,2.6], lookAt:[0,1.3,0], fov:42,
+        dialogue:{speaker:'TURBO',text:'Two hundred down. Six hundred to go. Piece of cake.',
+          voice:'voice/turbo/cutscenes/first_score/cutscene_first_score_01_piece-of-cake.mp3'}, transition:'smooth' },
+      { duration:2.7, pos:[1.1,1.55,1.3], lookAt:[0,1.55,0], fov:30,
+        dialogue:{speaker:'TURBO',text:"...I'll call her back. After the cake.",
+          voice:'voice/turbo/cutscenes/first_score/cutscene_first_score_02_call-her-back.mp3'}, transition:'cut' },
       { duration:1.6, pos:[0,3,9], lookAt:[0,1,0], fov:58, dialogue:null, transition:'fade' }
     ]
   },
@@ -7236,8 +7252,8 @@ function initShot(idx){
   const lookDir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
   activeCutscene.startLookAt=camera.position.clone().add(lookDir);
   activeCutscene.startFov=camera.fov;
-  // Handle dialogue
-  if(shot.dialogue) showDialogue(shot.dialogue.speaker, shot.dialogue.text, shot.duration);
+  // Handle dialogue (a shot may carry a recorded VO src on dialogue.voice)
+  if(shot.dialogue) showDialogue(shot.dialogue.speaker, shot.dialogue.text, shot.duration, shot.dialogue.voice);
   else hideDialogue();
   // Handle fade
   if(shot.transition==='fade'){
@@ -7302,6 +7318,7 @@ function updateCutscene(dt){
 function endCutscene(){
   if(!activeCutscene) return;
   stopVoiceOver();
+  stopIntroVO(); // also silence a recorded cutscene line if we're skipping mid-VO
   activeCutscene=null;
   G.cutscene=false;
   hideDialogue();
@@ -7484,6 +7501,20 @@ function loadVOFiles(){
       voExtra[l.src]=null;
       fetch(l.src).then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab))
         .then(buf=>{ voExtra[l.src]=buf; }).catch(()=>{});
+    });
+  });
+  // recorded story-cutscene VO (Turbo's lines in the Chapter-1 cutscenes) —
+  // preload every shot's dialogue.voice so the real voice is ready the instant
+  // a cutscene fires, instead of falling back to the synth voice on first play
+  Object.values(CUTSCENES).forEach(cs=>{
+    (cs.shots||[]).forEach(s=>{
+      const v=s.dialogue&&s.dialogue.voice; if(!v) return;
+      (Array.isArray(v)?v:[v]).forEach(src=>{
+        if(voExtra[src]!==undefined) return;
+        voExtra[src]=null;
+        fetch(src).then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab))
+          .then(buf=>{ voExtra[src]=buf; }).catch(()=>{});
+      });
     });
   });
 }
@@ -7724,8 +7755,15 @@ function updateIntroNarration(dt){
 
 // Override showDialogue to also speak the line
 const _origShowDialogue=showDialogue;
-showDialogue=function(speaker,text,duration){
+showDialogue=function(speaker,text,duration,voice){
   _origShowDialogue(speaker,text,duration);
+  // Story cutscenes can hang a recorded Turbo line (or a small pool of takes)
+  // on the shot's dialogue.voice — play the real mp3 when it's decoded, and only
+  // fall back to the synth voice if it hasn't loaded yet, so a line is never silent.
+  if(voice){
+    const src=Array.isArray(voice)?pick(voice):voice;
+    if(playVOFile(src,1.0,0.95)) return;
+  }
   const gender=speaker==='DEB'?'female':'male';
   const opts=speaker==='DEB'?{pitch:1.18,rate:1.08,volume:0.95}:{pitch:0.82,rate:0.92,volume:0.9};
   speak(text,gender,opts);
