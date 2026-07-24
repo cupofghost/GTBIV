@@ -105,6 +105,24 @@ module.exports = [
     },
   },
   {
+    name: 'antagonizing a dog pack growls and turns it angry; bite is a distinct voice from a punch',
+    run: async (page, { assert }) => {
+      const r = await page.evaluate(() => {
+        if (!AC) initAudio();
+        const mesh = makeDog(); scene.add(mesh);
+        makeStray({ mesh, x: player.x + 1, z: player.z, phase: 0 });
+        const d = strayDogs[strayDogs.length - 1];
+        let threw = null;
+        try { antagonizeDogs(d.x, d.z, 3); sfx.dogBite(); } catch (e) { threw = e.message; }
+        return { threw, angry: !!(d.gang && d.gang.state === 'angry'),
+          distinct: sfx.dogGrowl !== sfx.punch && sfx.dogBite !== sfx.punch };
+      });
+      assert(r.threw === null, 'dog sfx should never throw, got: ' + r.threw);
+      assert(r.angry, 'antagonizeDogs should turn the nearby pack angry');
+      assert(r.distinct, 'expected dogGrowl/dogBite as distinct functions from the generic punch sound');
+    },
+  },
+  {
     name: 'jocks wear letterman jackets and collide instead of melding',
     run: async (page, { assert }) => {
       const r = await page.evaluate(() => {

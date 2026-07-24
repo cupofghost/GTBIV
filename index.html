@@ -887,6 +887,11 @@ const sfx={
   ratScreech(){ noiseBurst(0.6,0.45,500,0.8); blip(250,1600,0.4,0.3,'sawtooth'); noiseBurst(0.3,0.25,2600,1.5,'highpass'); },
   ratBite(){ noiseBurst(0.09,0.4,700,1.1,'bandpass'); blip(220,80,0.12,0.22,'sawtooth'); },
   ratDeath(){ blip(1400,120,0.5,0.3,'sawtooth'); noiseBurst(0.4,0.25,600,0.7); },
+  // stray-dog pack voice: a rumble when a pack turns hostile (antagonizeDogs),
+  // a sharper snap on contact — bigger/lower than ratBite so a dog reads as
+  // a bigger animal than a sewer rat
+  dogGrowl(){ noiseBurst(0.22,0.3,380,1.4,'bandpass'); blip(180,90,0.16,0.16,'sawtooth'); },
+  dogBite(){ noiseBurst(0.07,0.35,450,1.3,'bandpass'); blip(140,60,0.1,0.22,'sawtooth'); },
 };
 // ================= PROCEDURAL 80s SYNTHWAVE SOUNDTRACK =================
 // Each radio station is a *playlist* of through-composed songs. A song is a
@@ -3377,12 +3382,15 @@ function dogBtnPressed(){
   feedDogs();
 }
 function antagonizeDogs(x,z,r){
+  let hit=false;
   for(const d of strayDogs){
     if(Math.hypot(d.x-x,d.z-z)<r){
+      hit=true;
       let g=d.gang; if(!g) g=makeGang([d]);
       g.state='angry'; g.stateT=12; g.trust=0;   // even a loyal pack turns on a kicker
     }
   }
+  if(hit) sfx.dogGrowl();
 }
 function updateStrayDogs(dt){
   // lone strays gravitate together and band into packs
@@ -3462,7 +3470,7 @@ function updateStrayDogs(dt){
     // an antagonized pack bites
     if(g&&g.state==='angry'&&G.mode==='foot'&&!player.bailing){
       if(Math.hypot(player.x-d.x,player.z-d.z)<0.9&&d.biteT<=0){
-        d.biteT=1.2; shake(0.3); sfx.punch();
+        d.biteT=1.2; shake(0.3); sfx.dogBite();
         player.stunT=Math.max(player.stunT||0,0.5);
         toast('DOG BITE!','bad');
       }
