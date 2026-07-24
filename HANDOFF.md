@@ -201,6 +201,7 @@ Sections, in file order, with what lives in each:
 | `PROCEDURAL 80s SYNTHWAVE SOUNDTRACK` | `SW_SONGS`, `STATIONS`, `scheduleMusic`/`stepSong`, `sw*` instruments, hot-loop swap under heat |
 | `THREE SETUP` | `scene`, `camera`, `renderer`, sky/sun textures, lights |
 | `CITY` | Procedural block/building/road generation, `intersections`, **terrain** (`VERT_H`, `groundH`, `terrainLines`/`terrainGeo` ground + beach meshes — see `TERRAIN.md`), water, ramps, street furniture, collision helpers (`buildingHit`, `rampHit`, `resolveFootCollision`) |
+| `RADIO TOWERS` (inside `CITY`) | One tall guyed mast on an open block + rooftop masts on the tallest buildings, `updateRadioTowers` blinking obstruction lamps. Decorative — never added to `buildings` |
 | `FOOTBALL FIELD` | Wildcats turf, goalposts, bleachers, scoreboard |
 | `ELEVATED LIGHT RAIL` | `RAILPATH`, stations, variable-length pillars, the animated train |
 | `STAIRS & FIRE ESCAPES` | `STAIR_RUNS`, `stairHitRun`/`stairH` — climbable runs the feet follow |
@@ -244,7 +245,8 @@ Sections, in file order, with what lives in each:
 | `CUTSCENE SYSTEM` | `CUTSCENES`, `playCutscene`, dialogue box |
 | `VOICEOVER SYSTEM` / `INTRO NARRATION` | `speak`, recorded VO (`loadVOFiles`, `playVOFile`), trailer/turbo lines |
 | `DEV TOOLS` | `?dev=1` panel, cheats, god mode, teleports |
-| `REPLAY SYSTEM` | `enterReplay`, `updateReplay`, free-fly camera, ring buffer |
+| `CINEMA MODE (was REPLAY)` | `enterReplay`/`exitReplay`, `updateCinemaCam`, `cinemaCamStep` free-fly camera, the `REC_DUR` ring buffer + scrub, HIDE HUD |
+| `CINEMA: SCENES & STAGING` | `cinemaPlayScene` and the scene menu — `cinemaIntro`, `cinemaCutscene`, `stageJockFight`, `stageCarBoom`, `stageShootPed`, `stageRatMother`, `cinemaStartReplay`, plus `cinemaFrame`/`cinemaClearStaged` helpers |
 | `PAUSE MENU & SETTINGS` | Pause menu, volume/quality sliders |
 | `SAVE SYSTEM` | `queueSave`, `restoreSave`, the localStorage blob |
 | `START / RESIZE` | Boot, resize, event wiring |
@@ -535,30 +537,56 @@ with a key.
 **Acceptance:** Numbers update live and match reality; toggling off removes it;
 no measurable fps cost.
 
-#### D4 — Free-fly / spectator camera `P1 · Risk: Med` `DONE (via Replay)`
-**Status: delivered as part of the Replay System** (Kimi3). The replay's fly-cam
-is a full spectator camera: joystick/WASD moves in the look plane, right-side
+#### D4 — Free-fly / spectator camera `P1 · Risk: Med` `DONE (via Cinema Mode)`
+**Status: delivered as part of Cinema Mode** (originally the Replay System,
+Kimi3). The cinema fly-cam is a full spectator camera: joystick/WASD moves in
+the look plane, right-side
 drag orbits, `E`/`Q` (or UP/DN touch buttons) for altitude, Shift for speed —
 and it returns cleanly to the normal follow-cam on exit. A standalone
 dev-mode detach toggle can still be added later if wanted, but the capability
 (and the cutscene-shot-composition use case) is covered.
 
-**REPLAY SYSTEM** (player-facing, ships in normal sessions — not dev-gated):
-a `REC_DUR=30s` ring buffer (`recBuf`, 15Hz snapshots of the player + every
-entity in `cars/peds/cops/helis/gangMembers/jocks/chaosDrivers`) is recorded
-once per frame inside the `!G.over` gameplay branch. `enterReplay()` (HUD
-**REPLAY** button / `R` key) freezes the sim via a dedicated `G.replay` branch
-at the top of `loop()`, hands the camera to `updateReplay()`, and plays back
-snapshots lerped between frames. Entities despawned mid-window are temporarily
-re-added to the scene (`_ra` flag) and original mesh visibility is preserved
-(`_pv`) and restored on `exitReplay()`; meshes of live entities snap back to
-their authoritative sim state on exit. UI: `#replayBar` (play/pause, -5s,
-scrub slider, "Ns ago", UP/DN, EXIT) plus **Turbo photo-op controls**: `TALK`
-toggles a jaw-flap animation (`userData.jaw`/`mouth`, exposed on the
-`makePerson` rig), `🕶 ON/OFF` slides a sunglasses prop on/off his face (built
-onto Turbo's `headG` at boot, `userData.shades`, player-only; state survives
-exiting replay, jaw always resets to neutral). No recording during
-intro/cutscenes/pause; needs ≥1s of buffer to enter.
+**CINEMA MODE** (player-facing, ships in normal sessions — not dev-gated;
+the old REPLAY SYSTEM grown into a director. Two banners: `CINEMA MODE (was
+REPLAY)` and `CINEMA: SCENES & STAGING`):
+`enterReplay()` (HUD **🎬 CINEMA** button / `R` key) sets `G.replay` and enters
+**live** — the sim keeps running underneath and the camera detaches into a
+free-fly director (`replay.live=true`, `cinemaCamStep`/`updateCinemaCam`:
+stick/WASD in the look plane, drag to orbit, `E`/`Q` or the UP/DN buttons for
+altitude, Shift for speed). The director is a ghost while filming —
+`DEV_STATE.god` is forced on and its previous value restored on exit — so a
+staged explosion or the rat mother can't waste him mid-shot. Gameplay HUD
+(`btns`, `pedals`, `mission`, `heistHUD`, `pauseBtn`) is hidden on entry and
+restored from `dataset.rv` on exit.
+
+The `#cinemaScene` dropdown drives everything (`cinemaPlayScene`): Free-Roam
+Camera, Intro Flythrough (`cinemaIntro`/`updateCinemaIntro`), four scripted
+convos replayed through the normal cutscene system (`cinemaCutscene` — Deb
+Confrontation, Deb Payoff, First Score, Pizza Warning), five staged action
+beats (`stageJockFight`, `stageCarBoom` for a civilian or cop car,
+`stageShootPed`, `stageRatMother`), and **Replay (last 30s)**. Staged actors
+are tracked in `replay.staged` and torn out of `jocks`/`peds`/`cars` by
+`cinemaClearStaged()` before the next scene, so scenes don't accumulate;
+`cinemaFrame`/`cinemaFrameOnPlayer` swing the camera onto the subject from a
+3/4 angle. `HIDE HUD` (`#cinemaHud`) drops the cinema bar itself for clean
+recording, leaving a small `#cinemaShow` button to bring it back.
+
+**Replay (last 30s)** is the one scene that still freezes: a `REC_DUR=30s`
+ring buffer (`recBuf`, 15Hz snapshots of the player + every entity in
+`cars/peds/cops/helis/gangMembers/jocks/chaosDrivers`) recorded once per frame
+inside the `!G.over` gameplay branch. `cinemaStartReplay()` clears `live`,
+reveals `#cinemaScrub` (play/pause, -5s, scrub slider, "Ns ago") and plays
+back snapshots lerped between frames. Entities despawned mid-window are
+temporarily re-added to the scene (`_ra` flag), original mesh visibility is
+preserved (`_pv`), and `restoreReplayEntities()` snaps every live entity back
+to its authoritative sim state when the scene ends or on `exitReplay()`.
+Needs ≥1s of buffer; no recording during intro/cutscenes/pause.
+
+**Turbo photo-op controls** (available in any scene): `TALK` toggles a
+jaw-flap animation (`userData.jaw`/`mouth`, exposed on the `makePerson` rig),
+`🕶 ON/OFF` slides a sunglasses prop on/off his face (built onto Turbo's
+`headG` at boot, `userData.shades`, player-only; state survives exiting
+cinema, jaw always resets to neutral).
 **Camera note:** the fly-cam right vector is `(-cos yaw, 0, sin yaw)` —
 screen-right for this codebase's `dir=(sin h,0,cos h)` +Z convention. Don't
 "fix" it back; the naive `(cos, 0, -sin)` form inverts A/D.
