@@ -2102,6 +2102,241 @@ window.NPC_TYPES = {
     hairColors: [0x8a8a8a, 0xd9d9d9],
   }),
 
+  // === CULTURAL / SPIRITUAL ===
+  buddhist_monk_aesthetic: createNPCType('buddhist_monk_aesthetic', {
+    palette: {
+      shirts: [0x9a7a4a, 0xb88a60],
+      pants: [0x8a7a5a, 0xa08a6a],
+      shoes: [0x6b5a4a, 0x7a6a5a],
+    },
+    buildRange: [0.88, 1.1],
+  }),
+
+  jewish_traditional: createNPCType('jewish_traditional', {
+    genderBias: 'guy',
+    palette: PALETTES.business,
+    buildRange: [0.88, 1.15],
+    hairStyles: ['short', 'buzz'],
+  }),
+
+  hindu_festival_goer: createNPCType('hindu_festival_goer', {
+    palette: {
+      shirts: [0xff6b9d, 0xffd23e, 0x6bc8ff],
+      pants: [0x2a3a5c, 0x4a3a5c],
+      shoes: [0xf0f0f0, 0x1a1a1a],
+    },
+    buildRange: [0.88, 1.15],
+  }),
+
+  muslim_modest_dresser: createNPCType('muslim_modest_dresser', {
+    palette: PALETTES.upscale,
+    buildRange: [0.88, 1.15],
+    tank: 0,
+  }),
+
+  // === MARTIAL ARTS ===
+  karate_kid: createNPCType('karate_kid', {
+    palette: PALETTES.athletic,
+    buildRange: [0.88, 1.05],
+    shorts: true,
+    tank: 0.6,
+  }),
+
+  kung_fu_master: createNPCType('kung_fu_master', {
+    palette: PALETTES.athletic,
+    buildRange: [0.95, 1.15],
+    hairStyles: ['short', 'bald', 'buzz'],
+  }),
+
+  tai_chi_enthusiast: createNPCType('tai_chi_enthusiast', {
+    palette: PALETTES.hippie,
+    buildRange: [0.88, 1.12],
+    shorts: 0.5,
+    tank: 0.4,
+  }),
+
+  // === FASHION AESTHETICS ===
+  grunge_chic: createNPCType('grunge_chic', {
+    palette: PALETTES.vintage,
+    buildRange: [0.88, 1.1],
+    hairColors: [0x1a1a1a, 0x8a6030],
+    hairStyles: ['long', 'short'],
+  }),
+
+  cottagecore: createNPCType('cottagecore', {
+    genderBias: 'girl',
+    palette: {
+      shirts: [0xf0e8d8, 0xd9b890, 0xb88a60],
+      pants: [0x6b5a4a, 0x5a4a3a],
+      shoes: [0x8a6030, 0x6b5a4a],
+    },
+    buildRange: [0.88, 1.08],
+  }),
+
+  dark_academia: createNPCType('dark_academia', {
+    palette: PALETTES.business,
+    buildRange: [0.88, 1.08],
+    tank: 0,
+    hairColors: [0x1a1a1a, 0x8a8a8a],
+  }),
+
+  fairycore: createNPCType('fairycore', {
+    genderBias: 'girl',
+    palette: PALETTES.neon,
+    buildRange: [0.85, 1.05],
+    hairColors: [0xff00ff, 0x00ffff],
+  }),
+
+  // === RETRO AESTHETIC ===
+  80s_enthusiast: createNPCType('80s_enthusiast', {
+    palette: PALETTES.neon,
+    buildRange: [0.88, 1.12],
+    shorts: 0.5,
+    tank: 0.4,
+  }),
+
+  90s_kid: createNPCType('90s_kid', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+    shorts: 0.4,
+  }),
+
+  70s_throwback: createNPCType('70s_throwback', {
+    palette: PALETTES.hippie,
+    buildRange: [0.95, 1.2],
+    shorts: true,
+  }),
+
+  // === ACADEMIC ===
+  philosophy_student: createNPCType('philosophy_student', {
+    palette: PALETTES.dark,
+    buildRange: [0.85, 1.08],
+  }),
+
+  physics_nerd: createNPCType('physics_nerd', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+    hairColors: [0x1a1a1a, 0x8a8a8a],
+  }),
+
+  chemistry_student: createNPCType('chemistry_student', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.08],
+  }),
+
+  biology_nerd: createNPCType('biology_nerd', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+  }),
+
+  // === SERVICE / HOSPITALITY ===
+  concierge: createNPCType('concierge', {
+    palette: PALETTES.business,
+    buildRange: [0.88, 1.08],
+    tank: 0,
+  }),
+
+  hotel_manager: createNPCType('hotel_manager', {
+    palette: PALETTES.upscale,
+    buildRange: [0.9, 1.1],
+    tank: 0,
+  }),
+
+  resort_staff: createNPCType('resort_staff', {
+    palette: {
+      shirts: [0xf0f0f0, 0xf0e8d8, 0x6b7c9e],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0x1a1a1a, 0xf0f0f0],
+    },
+    buildRange: [0.88, 1.08],
+  }),
+
+  cruise_ship_worker: createNPCType('cruise_ship_worker', {
+    palette: PALETTES.business,
+    buildRange: [0.9, 1.1],
+    tank: 0,
+  }),
+
+  theme_park_employee: createNPCType('theme_park_employee', {
+    palette: {
+      shirts: [0xff6b9d, 0x6bc8ff, 0xffd23e],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0xf0f0f0, 0x1a1a1a],
+    },
+    buildRange: [0.88, 1.1],
+  }),
+
+  // === MEMORY / EMOTION TYPES ===
+  nostalgic: createNPCType('nostalgic', {
+    palette: PALETTES.vintage,
+    buildRange: [0.88, 1.15],
+    hairColors: [0x8a8a8a, 0xd9d9d9],
+  }),
+
+  perpetually_cheerful: createNPCType('perpetually_cheerful', {
+    palette: PALETTES.neon,
+    buildRange: [0.88, 1.05],
+    hairColors: [0xd9b44f, 0x6bc8ff],
+  }),
+
+  always_tired: createNPCType('always_tired', {
+    palette: PALETTES.casual,
+    buildRange: [0.85, 1.15],
+    hairColors: [0x1a1a1a, 0x8a8a8a],
+  }),
+
+  eternally_optimistic: createNPCType('eternally_optimistic', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.08],
+  }),
+
+  // === FINAL DISTINCTIVE TYPES ===
+  identical_twin: createNPCType('identical_twin', {
+    palette: PALETTES.casual,
+    buildRange: [0.94, 0.96],
+    hairColors: [0x6b4a2f],
+  }),
+
+  signature_outfit_person: createNPCType('signature_outfit_person', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+  }),
+
+  color_coordinated: createNPCType('color_coordinated', {
+    palette: PALETTES.upscale,
+    buildRange: [0.88, 1.08],
+  }),
+
+  monochrome_dresser: createNPCType('monochrome_dresser', {
+    palette: {
+      shirts: [0x1a1a1a, 0xf0f0f0],
+      pants: [0x1a1a1a, 0xf0f0f0],
+      shoes: [0x1a1a1a, 0xf0f0f0],
+    },
+    buildRange: [0.88, 1.1],
+  }),
+
+  rainbow_dresser: createNPCType('rainbow_dresser', {
+    palette: PALETTES.neon,
+    buildRange: [0.88, 1.1],
+    hairColors: [0xff00ff, 0x00ffff, 0xffff00],
+  }),
+
+  leather_enthusiast: createNPCType('leather_enthusiast', {
+    palette: PALETTES.dark,
+    buildRange: [0.95, 1.15],
+    shorts: 0.1,
+  }),
+
+  denim_lover: createNPCType('denim_lover', {
+    palette: {
+      shirts: [0x2a3a5c, 0x3a4a5c],
+      pants: [0x2a3a5c, 0x3a4a5c],
+      shoes: [0x1a1a1a, 0xf0f0f0],
+    },
+    buildRange: [0.88, 1.15],
+  }),
+
   // === MISC ===
   none: createNPCType('none', {
     // Truly random
