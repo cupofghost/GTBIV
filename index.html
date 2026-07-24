@@ -5377,15 +5377,38 @@ function updateFoot(dt){
   p.mesh.position.set(p.x,p.y+Math.abs(Math.sin(p.phase))*0.06,p.z);
   p.mesh.rotation.y=p.heading;
   const u=p.mesh.userData;
-  const airborne=p.y>0.02;
-  const sw=airborne?0:Math.sin(p.phase)*0.55;
-  u.legL.rotation.x=airborne?-0.5:sw; u.legR.rotation.x=airborne?0.35:-sw;
-  u.armL.rotation.x=airborne?-2.4:-sw; u.armR.rotation.x=airborne?-2.4:sw;
-  u.head.rotation.x=airborne?-0.15:0;
-  // torso articulation: twist + lean into the stride
-  if(u.torso){
-    u.torso.rotation.y=Math.sin(p.phase)*0.12*mag;
-    u.torso.rotation.x=airborne?0.12:mag*0.07;
+  // Climbing wins over the jump pose: on a sloped run, hugging its surface, and
+  // moving = a climb, even though the per-frame slope/gravity overshoot leaves
+  // p.y a hair above the step (a real leap clears sh by far more than this).
+  const climbing=onStairs&&st.r.topH!==st.r.baseH&&mag>0.12&&p.y<sh+0.6;
+  // "airborne" = genuinely off the deck (jump/fall), measured against the floor
+  // under his feet — so standing on elevated stairs or a roof no longer reads as
+  // a jump (that bug froze Turbo mid-leap while climbing).
+  const airborne=p.y>ground+0.08&&!climbing;
+  if(climbing){
+    // stair climb: legs alternate a high-knee step, arms pump opposite, and he
+    // leans into the slope with his eyes up the run.
+    const ph=p.phase;
+    const liftL=Math.max(0,Math.sin(ph)), liftR=Math.max(0,Math.sin(ph+Math.PI));
+    u.legL.rotation.x=-0.18-liftL*0.72;   // thigh drives forward+up on the rising leg
+    u.legR.rotation.x=-0.18-liftR*0.72;
+    if(u.kneeL) u.kneeL.rotation.x=0.25+liftL*1.20;   // knee folds to clear the next step
+    if(u.kneeR) u.kneeR.rotation.x=0.25+liftR*1.20;
+    const asw=Math.sin(ph)*0.5;
+    u.armL.rotation.x=asw; u.armR.rotation.x=-asw;
+    u.head.rotation.x=0.12;
+    if(u.torso){ u.torso.rotation.y=Math.sin(ph)*0.08; u.torso.rotation.x=0.2; }
+  } else {
+    const sw=airborne?0:Math.sin(p.phase)*0.55;
+    u.legL.rotation.x=airborne?-0.5:sw; u.legR.rotation.x=airborne?0.35:-sw;
+    if(u.kneeL) u.kneeL.rotation.x=0; if(u.kneeR) u.kneeR.rotation.x=0;   // knees straight off the stairs
+    u.armL.rotation.x=airborne?-2.4:-sw; u.armR.rotation.x=airborne?-2.4:sw;
+    u.head.rotation.x=airborne?-0.15:0;
+    // torso articulation: twist + lean into the stride
+    if(u.torso){
+      u.torso.rotation.y=Math.sin(p.phase)*0.12*mag;
+      u.torso.rotation.x=airborne?0.12:mag*0.07;
+    }
   }
   if(G.weapon==='pistol'||G.weapon==='rpg'){
     // twin-stick: Turbo faces wherever the camera aims, gun arm leveled —
