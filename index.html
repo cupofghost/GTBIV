@@ -3705,6 +3705,71 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
   PIZZA.iDoorX=0; PIZZA.iDoorZ=PIZZA.interiorY+id/2-2;
 })();
 
+// ================= SIDEWALKS & STOREFRONT AWNINGS =================
+// Cosmetic street dressing: curb strips along block edges + small canopies
+// over some ground floors. Downtown (near map center, same radius the
+// skyline height split uses) gets them on every block/building; the outer
+// ring gets them too, just sparser — reads as a real density gradient
+// instead of a hard city-limits line. Curbs are thin (0.16u) so they stay
+// cosmetic, not a collision hazard, and are seated via groundH per TERRAIN.md.
+(function(){
+  const DOWNTOWN_R=170;
+  const curbSpots=[];
+  blockInfo.forEach(b=>{
+    const downtown=Math.hypot(b.cx,b.cz)<DOWNTOWN_R;
+    const chance=downtown?1:0.4;
+    const half=BLOCK/2;
+    [[b.cx,b.cz-half,0],[b.cx,b.cz+half,0],[b.cx-half,b.cz,1],[b.cx+half,b.cz,1]]
+      .forEach(([x,z,axis])=>{ if(Math.random()<chance) curbSpots.push({x,z,axis}); });
+  });
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
+        pos=new THREE.Vector3(), scl=new THREE.Vector3(1,1,1), col=new THREE.Color();
+  if(curbSpots.length){
+    const curbGeo=new THREE.BoxGeometry(BLOCK-1,0.16,1.1); curbGeo.translate(0,0.08,0);
+    const curbInst=new THREE.InstancedMesh(curbGeo,new THREE.MeshLambertMaterial({color:0x9691a3}),curbSpots.length);
+    curbSpots.forEach((s,i)=>{
+      e.set(0,s.axis?Math.PI/2:0,0); q.setFromEuler(e);
+      pos.set(s.x,groundH(s.x,s.z),s.z);
+      m.compose(pos,q,scl); curbInst.setMatrixAt(i,m);
+    });
+    curbInst.instanceMatrix.needsUpdate=true; scene.add(curbInst);
+  }
+
+  // storefront awnings — small fabric canopies over a fraction of ground floors
+  const awningSpots=[];
+  buildings.forEach(b=>{
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
+    if(CHAOS.x!==undefined&&Math.abs(cx-CHAOS.x)<3&&Math.abs(cz-CHAOS.z)<3) return; // already has one
+    if(PIZZA.x!==undefined&&Math.abs(cx-PIZZA.x)<3&&Math.abs(cz-PIZZA.z)<3) return; // already has one
+    const chance=Math.hypot(cx,cz)<DOWNTOWN_R?0.55:0.18;
+    if(Math.random()>=chance) return;
+    const w=b.maxX-b.minX, d=b.maxZ-b.minZ, depth=1.6;
+    const aw=Math.min(w,d)*rand(0.55,0.85), hgt=rand(3.2,4.2);
+    let x=cx,z=cz,ry=0;
+    switch(randi(0,3)){
+      case 0: z=b.maxZ+depth/2; ry=0; break;
+      case 1: z=b.minZ-depth/2; ry=Math.PI; break;
+      case 2: x=b.maxX+depth/2; ry=Math.PI/2; break;
+      default: x=b.minX-depth/2; ry=-Math.PI/2;
+    }
+    awningSpots.push({x,z,ry,w:aw,h:hgt});
+  });
+  if(awningSpots.length){
+    const awnColors=[0xd93a3a,0xffd23e,0x37c8ff,0x2a6b3a,0xff7a3d,0xb04dff,0xf0f0f0];
+    const awnGeo=new THREE.BoxGeometry(1,0.5,1.6); awnGeo.translate(0,0.25,0);
+    const awnInst=new THREE.InstancedMesh(awnGeo,new THREE.MeshLambertMaterial({color:0xffffff}),awningSpots.length);
+    awningSpots.forEach((s,i)=>{
+      e.set(0,s.ry,0); q.setFromEuler(e);
+      pos.set(s.x,groundH(s.x,s.z)+s.h,s.z); scl.set(s.w,1,1);
+      m.compose(pos,q,scl); awnInst.setMatrixAt(i,m);
+      col.setHex(pick(awnColors)); awnInst.setColorAt(i,col);
+    });
+    awnInst.instanceMatrix.needsUpdate=true;
+    if(awnInst.instanceColor) awnInst.instanceColor.needsUpdate=true;
+    scene.add(awnInst);
+  }
+})();
+
 // Interior state
 G.interior=false;
 function enterPizzaPlace(){
