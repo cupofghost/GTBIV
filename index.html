@@ -2287,6 +2287,30 @@ function addHideout(x,z,r,y){
   };
   mk(stepGeo,stepMats,stepCols); mk(platGeo,platMats,null);
 })();
+// ================= WALL LADDERS =================
+// bolt-on steel ladders up the side of some buildings — a straight vertical
+// climb to the roof for anyone willing to go hand-over-hand. Each is a climb
+// line at (x,z) with an outward-facing normal `ang`; the mechanic lives in
+// updateClimb().
+// Populated by the builder below the ramps — it needs every static obstacle
+// (buildings, trees, poles, dumpsters, benches, hydrants, rail pillars, ramps,
+// stair runs) to already exist so it can keep each ladder's climb corridor clear.
+const LADDERS=[];   // {x,z,ang,baseH,topH}
+// nearest ladder the player can grab from where they're standing, or null.
+// Bottom grab = pushing into the wall near the base; top grab = stepping off
+// the roof edge into the climb line.
+function ladderGrab(px,pz,py,moveAng){
+  const mvx=Math.sin(moveAng), mvz=Math.cos(moveAng);
+  for(const L of LADDERS){
+    const nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
+    const cX=L.x+nX*0.45, cZ=L.z+nZ*0.45;        // the climb line, out off the wall
+    if(Math.hypot(px-cX,pz-cZ)>1.25) continue;
+    const toward=mvx*nX+mvz*nZ;                    // <0 into the wall, >0 out toward the edge
+    if(py<=L.baseH+1.7 && toward<-0.25) return {L,from:'bottom'};
+    if(py>=L.topH-1.7 && toward>0.25) return {L,from:'top'};
+  }
+  return null;
+}
 // street-level hideouts: under every El station + behind the stadium bleachers
 RAIL_STATIONS.length&&[[0,-198],[198,0],[0,198],[-198,0]].forEach(st=>addHideout(st[0]+rand(-4,4),st[1]+rand(-4,4),7));
 if(FOOTBALL) addHideout(FOOTBALL.x,FOOTBALL.z+18,8);
@@ -2310,6 +2334,86 @@ blockInfo.forEach(b=>{ if(b.type==='park'&&!b.helipad) addRamp(b.cx+rand(-8,8),b
 addRamp(roadLines[2],roadLines[5]+PITCH/2,Math.PI/2);
 addRamp(roadLines[6],roadLines[3]-PITCH/2,-Math.PI/2);
 addRamp(roadLines[4]+PITCH/2,roadLines[4],0);
+
+// ---- wall-ladder placement: only where the climb corridor is provably clear ----
+// Runs after every static obstacle exists. For each candidate building it tries
+// all four walls and keeps the ladder only if the vertical corridor Turbo's body
+// sweeps (out from the wall, a little to each side) hits nothing else.
+(function(){
+  const rungGeo=new THREE.BoxGeometry(0.52,0.045,0.045);
+  const railGeo=new THREE.BoxGeometry(0.05,1,0.05);   // scaled to run height per instance
+  const rungMats=[], railMats=[];
+  const m4=new THREE.Matrix4(), q4=new THREE.Quaternion(), e4=new THREE.Euler(),
+        p4=new THREE.Vector3(), s4=new THREE.Vector3(1,1,1);
+  // is the climb corridor off this wall clear of everything but the host building?
+  function corridorClear(x,z,ang,host){
+    const nX=Math.sin(ang), nZ=Math.cos(ang), tX=Math.cos(ang), tZ=-Math.sin(ang);
+    const near=(sx,sz,arr,rad)=>{ const rr=rad*rad;
+      for(let i=0;i<arr.length;i++){ const dx=sx-arr[i].x, dz=sz-arr[i].z; if(dx*dx+dz*dz<rr) return true; } return false; };
+    // sample the corridor: several steps out from the wall, and a bit to each side
+    for(let di=0;di<4;di++){
+      const d=0.3+di*0.4;                       // 0.3 .. 1.5 out from the wall
+      for(let si=-1;si<=1;si++){
+        const sx=x+nX*d+tX*0.45*si, sz=z+nZ*d+tZ*0.45*si;
+        for(const b of buildings){ if(b===host) continue;
+          if(sx>b.minX-0.3&&sx<b.maxX+0.3&&sz>b.minZ-0.3&&sz<b.maxZ+0.3) return false; }
+        if(near(sx,sz,treeSpots,0.95)||near(sx,sz,palmSpots,0.95)) return false;
+        if(near(sx,sz,poleSpots,0.7)||near(sx,sz,HYDRANT_SPOTS,0.7)) return false;
+        if(near(sx,sz,DUMPSTER_SPOTS,1.35)||near(sx,sz,BENCH_SPOTS,1.2)) return false;
+        if(near(sx,sz,RAIL_PILLARS,1.2)) return false;
+        for(const rp of ramps){ if(orientedBoxHit(sx,sz,0.4,rp.x,rp.z,rp.dir,3.2,4.2)) return false; }
+        // don't spawn a ladder on top of an existing stair / fire-escape run
+        for(const r of STAIR_RUNS){
+          const rn=Math.sin(r.ang), rc=Math.cos(r.ang);
+          const lz=(sx-r.x)*rn+(sz-r.z)*rc, lx=(sx-r.x)*rc-(sz-r.z)*rn;
+          if(Math.abs(lx)<1.7&&lz>-0.8&&lz<r.len+0.8) return false;
+        }
+      }
+    }
+    return true;
+  }
+  function wallFor(b,side){
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
+    if(side===0) return {x:b.minX,z:cz,ang:-Math.PI/2};   // -x wall
+    if(side===1) return {x:b.maxX,z:cz,ang:Math.PI/2};    // +x wall
+    if(side===2) return {x:cx,z:b.minZ,ang:Math.PI};      // -z wall
+    return {x:cx,z:b.maxZ,ang:0};                          // +z wall
+  }
+  const candidates=buildings.filter(b=>b.h>6&&b.h<46);
+  const used=new Set();
+  let placed=0;
+  for(let attempt=0;attempt<80&&placed<12&&candidates.length;attempt++){
+    const b=pick(candidates), bkey=b.minX+','+b.minZ;
+    if(used.has(bkey)) continue;
+    // try all four walls in random order; take the first clear one
+    const sides=[0,1,2,3]; for(let i=sides.length-1;i>0;i--){ const j=randi(0,i); const t=sides[i]; sides[i]=sides[j]; sides[j]=t; }
+    let W=null;
+    for(const side of sides){ const w=wallFor(b,side); if(corridorClear(w.x,w.z,w.ang,b)){ W=w; break; } }
+    if(!W) continue;
+    used.add(bkey);
+    const nX=Math.sin(W.ang), nZ=Math.cos(W.ang);
+    const baseH=groundH(W.x+nX*0.5,W.z+nZ*0.5), topH=b.h;
+    if(topH-baseH<4) continue;
+    LADDERS.push({x:W.x,z:W.z,ang:W.ang,baseH,topH}); placed++;
+    // rungs + rails, nudged just proud of the wall face so they read
+    const tX=Math.cos(W.ang), tZ=-Math.sin(W.ang), fx=W.x+nX*0.07, fz=W.z+nZ*0.07;
+    e4.set(0,W.ang,0); q4.setFromEuler(e4);
+    [-1,1].forEach(s=>{
+      p4.set(fx+tX*0.24*s,(baseH+topH)/2,fz+tZ*0.24*s);
+      s4.set(1,topH-baseH,1); m4.compose(p4,q4,s4); railMats.push(m4.clone());
+    });
+    s4.set(1,1,1);
+    const n=Math.floor((topH-baseH)/0.42);
+    for(let i=1;i<n;i++){ p4.set(fx,baseH+i*0.42,fz); m4.compose(p4,q4,s4); rungMats.push(m4.clone()); }
+  }
+  const mk=(geo,mats,col)=>{
+    if(!mats.length) return;
+    const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:col}),mats.length);
+    mats.forEach((mm,i)=>im.setMatrixAt(i,mm));
+    im.instanceMatrix.needsUpdate=true; scene.add(im);
+  };
+  mk(rungGeo,rungMats,0x3a3f47); mk(railGeo,railMats,0x23272e);
+})();
 
 // circle vs building AABBs
 function buildingHit(x,z,r){
@@ -3581,6 +3685,7 @@ updatePizzaDelivery=function(dt){
 const player={
   mesh:makePerson(0x37c8ff,'guy'), x:roadLines[4]+6, z:roadLines[4]+6,
   heading:0, phase:0, punchT:0, car:null, vy:0, y:0,
+  climb:null, climbPhase:0,   // set to {L} while hand-over-handing a wall ladder
 };
 scene.add(player.mesh);
 // Turbo's sunglasses — replay photo-op prop, slides on/off his face
@@ -5171,6 +5276,7 @@ Object.keys(btnMap).forEach(id=>{
 });
 function doJump(){
   if(!G.started||G.over||G.mode!=='foot') return;
+  if(player.climb){ bailLadder(); return; }   // push off the rungs
   if(player.y<=0.02&&player.vy<=0){
     player.vy=8.6; player.y=0.03;
     blip(300,520,0.12,0.12,'triangle');
@@ -5601,12 +5707,16 @@ function updateFoot(dt){
     if(p.stunT<=0) p.mesh.rotation.x=0;
     return;
   }
+  if(p.climb){ updateClimb(dt); return; }   // on a wall ladder — vertical rules take over
   const mx=input.jx, mz=input.jy;
   const mag=Math.min(1,Math.hypot(mx,mz));
   p.moveMag=mag;
   if(mag>0.12){
     const camYaw=Math.atan2(camera.position.x-p.x,camera.position.z-p.z);
     const moveAng=Math.atan2(-mx,-mz)+camYaw+Math.PI;
+    // walk into the foot of a ladder (or step off the roof edge onto one) to grab on
+    const grab=ladderGrab(p.x,p.z,p.y,moveAng);
+    if(grab){ mountLadder(grab); return; }
     const sp=mag>0.85?8.2:4.6;
     let nx=p.x+Math.sin(moveAng)*sp*mag*dt, nz=p.z+Math.cos(moveAng)*sp*mag*dt;
     // on a sloped staircase your feet find the steps: movement follows the climb
@@ -5649,15 +5759,38 @@ function updateFoot(dt){
   p.mesh.position.set(p.x,p.y+Math.abs(Math.sin(p.phase))*0.06,p.z);
   p.mesh.rotation.y=p.heading;
   const u=p.mesh.userData;
-  const airborne=p.y>0.02;
-  const sw=airborne?0:Math.sin(p.phase)*0.55;
-  u.legL.rotation.x=airborne?-0.5:sw; u.legR.rotation.x=airborne?0.35:-sw;
-  u.armL.rotation.x=airborne?-2.4:-sw; u.armR.rotation.x=airborne?-2.4:sw;
-  u.head.rotation.x=airborne?-0.15:0;
-  // torso articulation: twist + lean into the stride
-  if(u.torso){
-    u.torso.rotation.y=Math.sin(p.phase)*0.12*mag;
-    u.torso.rotation.x=airborne?0.12:mag*0.07;
+  // Climbing wins over the jump pose: on a sloped run, hugging its surface, and
+  // moving = a climb, even though the per-frame slope/gravity overshoot leaves
+  // p.y a hair above the step (a real leap clears sh by far more than this).
+  const climbing=onStairs&&st.r.topH!==st.r.baseH&&mag>0.12&&p.y<sh+0.6;
+  // "airborne" = genuinely off the deck (jump/fall), measured against the floor
+  // under his feet — so standing on elevated stairs or a roof no longer reads as
+  // a jump (that bug froze Turbo mid-leap while climbing).
+  const airborne=p.y>ground+0.08&&!climbing;
+  if(climbing){
+    // stair climb: legs alternate a high-knee step, arms pump opposite, and he
+    // leans into the slope with his eyes up the run.
+    const ph=p.phase;
+    const liftL=Math.max(0,Math.sin(ph)), liftR=Math.max(0,Math.sin(ph+Math.PI));
+    u.legL.rotation.x=-0.18-liftL*0.72;   // thigh drives forward+up on the rising leg
+    u.legR.rotation.x=-0.18-liftR*0.72;
+    if(u.kneeL) u.kneeL.rotation.x=0.25+liftL*1.20;   // knee folds to clear the next step
+    if(u.kneeR) u.kneeR.rotation.x=0.25+liftR*1.20;
+    const asw=Math.sin(ph)*0.5;
+    u.armL.rotation.x=asw; u.armR.rotation.x=-asw;
+    u.head.rotation.x=0.12;
+    if(u.torso){ u.torso.rotation.y=Math.sin(ph)*0.08; u.torso.rotation.x=0.2; }
+  } else {
+    const sw=airborne?0:Math.sin(p.phase)*0.55;
+    u.legL.rotation.x=airborne?-0.5:sw; u.legR.rotation.x=airborne?0.35:-sw;
+    if(u.kneeL) u.kneeL.rotation.x=0; if(u.kneeR) u.kneeR.rotation.x=0;   // knees straight off the stairs
+    u.armL.rotation.x=airborne?-2.4:-sw; u.armR.rotation.x=airborne?-2.4:sw;
+    u.head.rotation.x=airborne?-0.15:0;
+    // torso articulation: twist + lean into the stride
+    if(u.torso){
+      u.torso.rotation.y=Math.sin(p.phase)*0.12*mag;
+      u.torso.rotation.x=airborne?0.12:mag*0.07;
+    }
   }
   if(G.weapon==='pistol'||G.weapon==='rpg'){
     // twin-stick: Turbo faces wherever the camera aims, gun arm leveled —
@@ -5704,6 +5837,49 @@ function updateFoot(dt){
   fhp.style.display='block';
   $('footHpFill').style.width=Math.max(0,G.hp)+'%';
   collectPickups(p.x,p.z,1.6);
+}
+// ---- wall-ladder climbing ----
+function mountLadder(grab){
+  const p=player, L=grab.L, nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
+  p.climb={L}; p.vy=0;
+  p.x=L.x+nX*0.45; p.z=L.z+nZ*0.45;
+  p.y=clamp(p.y,L.baseH,L.topH);
+  p.heading=L.ang+Math.PI;   // chest to the wall
+  p.mesh.rotation.y=p.heading;
+  blip(240,320,0.09,0.1,'triangle');
+}
+function bailLadder(){   // shove off the rungs into a short backward hop
+  const p=player; if(!p.climb) return;
+  const L=p.climb.L, nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
+  p.x=L.x+nX*1.15; p.z=L.z+nZ*1.15; p.vy=4.4; p.climb=null;
+  blip(260,170,0.1,0.12,'sine');
+}
+function updateClimb(dt){
+  const p=player, L=p.climb.L, u=p.mesh.userData;
+  const nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
+  // glued to the climb line, facing the wall
+  p.x=L.x+nX*0.45; p.z=L.z+nZ*0.45; p.vy=0;
+  p.heading=L.ang+Math.PI;
+  // W climbs, S descends; nothing pressed = hang in place
+  const up=-input.jy, spd=2.8, moved=up*spd*dt;
+  p.y=clamp(p.y+moved,L.baseH,L.topH);
+  p.climbPhase+=Math.abs(moved)*6.5;
+  // top out onto the roof, or step down off the bottom onto the street
+  if(p.y>=L.topH-0.02&&up>0.1){ p.x=L.x-nX*1.5; p.z=L.z-nZ*1.5; p.y=L.topH; p.climb=null; }
+  else if(p.y<=L.baseH+0.02&&up<-0.1){ p.x=L.x+nX*0.9; p.z=L.z+nZ*0.9; p.y=L.baseH; p.climb=null; }
+  // place + pose (hand-over-hand: opposite hand and foot rise together)
+  p.mesh.position.set(p.x,p.y,p.z);
+  p.mesh.rotation.y=p.heading;
+  const ph=p.climbPhase, rL=Math.sin(ph), rR=-rL;
+  u.armL.rotation.x=-2.30-Math.max(0,rL)*0.55;   // reaching hand stretches higher
+  u.armR.rotation.x=-2.30-Math.max(0,rR)*0.55;
+  const liftL=Math.max(0,rR), liftR=Math.max(0,rL);   // contralateral to the arms
+  u.legL.rotation.x=-0.14-liftL*0.60;
+  u.legR.rotation.x=-0.14-liftR*0.60;
+  if(u.kneeL) u.kneeL.rotation.x=0.20+liftL*0.85;
+  if(u.kneeR) u.kneeR.rotation.x=0.20+liftR*0.85;
+  u.head.rotation.x=0.16;   // eyes up the climb
+  if(u.torso){ u.torso.rotation.y=Math.sin(ph)*0.06; u.torso.rotation.x=0.05; }
 }
 function doEnterExit(){
   if(!G.started||G.over) return;
