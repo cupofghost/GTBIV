@@ -712,6 +712,7 @@ WORLD.size=WORLD.half*2+40;
 
 // ================= AUDIO =================
 let AC=null, masterGain, sfxGain, voiceGain, engineOsc, engineGain, engineLP, skidGain,
+    engineSubOsc, engineSubGain, engineGritFilter, engineGritGain, turboOsc, turboFilter, turboGain,
     sirenOsc, sirenGain, musicGain, musicStep=0, nextNoteTime=0;
 // --- synthwave FX rack + soundtrack playhead (built lazily in initAudio) ---
 let musicVODuck,            // ducks the whole radio while Turbo/Deb talk
@@ -734,6 +735,22 @@ function initAudio(){
   engineGain=AC.createGain(); engineGain.gain.value=0;
   engineOsc.connect(engineLP); engineLP.connect(engineGain); engineGain.connect(sfxGain);
   engineOsc.start();
+  // sub-bass rumble layer — shadows the main tone an octave down, weighted per car by snd.sub
+  engineSubOsc=AC.createOscillator(); engineSubOsc.type='sine'; engineSubOsc.frequency.value=25;
+  engineSubGain=AC.createGain(); engineSubGain.gain.value=0;
+  engineSubOsc.connect(engineSubGain); engineSubGain.connect(sfxGain); engineSubOsc.start();
+  // mechanical grit layer — filtered noise floor; baseline per car (snd.grit), worse when damaged
+  const egb=AC.createBuffer(1,AC.sampleRate,AC.sampleRate), egd=egb.getChannelData(0);
+  for(let i=0;i<egd.length;i++) egd[i]=Math.random()*2-1;
+  const egSrc=AC.createBufferSource(); egSrc.buffer=egb; egSrc.loop=true;
+  engineGritFilter=AC.createBiquadFilter(); engineGritFilter.type='bandpass'; engineGritFilter.frequency.value=350; engineGritFilter.Q.value=0.7;
+  engineGritGain=AC.createGain(); engineGritGain.gain.value=0;
+  egSrc.connect(engineGritFilter); engineGritFilter.connect(engineGritGain); engineGritGain.connect(sfxGain); egSrc.start();
+  // turbo spool layer — resonant whine that rises with revs/boost; silent on naturally-aspirated cars (snd.turbo=0)
+  turboOsc=AC.createOscillator(); turboOsc.type='sawtooth'; turboOsc.frequency.value=900;
+  turboFilter=AC.createBiquadFilter(); turboFilter.type='bandpass'; turboFilter.frequency.value=2200; turboFilter.Q.value=5;
+  turboGain=AC.createGain(); turboGain.gain.value=0;
+  turboOsc.connect(turboFilter); turboFilter.connect(turboGain); turboGain.connect(sfxGain); turboOsc.start();
   const nb=AC.createBuffer(1,AC.sampleRate,AC.sampleRate), nd=nb.getChannelData(0);
   for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1;
   const skid=AC.createBufferSource(); skid.buffer=nb; skid.loop=true;
@@ -858,6 +875,16 @@ function noiseBurst(dur,vol,freq,q){
   const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=freq; f.Q.value=q;
   const g=AC.createGain(); g.gain.value=vol;
   s.connect(f); f.connect(g); g.connect(sfxGain); s.start();
+}
+// badly damaged engine skips a beat — a sharp low pop, worse the closer to death
+function engineMisfire(dmg){
+  blip(140,35,0.055,0.1+dmg*0.18,'square');
+  if(Math.random()<0.5) noiseBurst(0.04,0.06+dmg*0.1,1200,1);
+}
+// turbo dump valve — the classic "pssh" when you lift off the boost
+function turboBlowOff(amt){
+  noiseBurst(0.18,0.08+amt*0.12,3200,1.4);
+  blip(1500,350,0.15,0.05+amt*0.07,'sine');
 }
 const sfx={
   coin(){ blip(880,1320,0.09,0.18); setTimeout(()=>blip(1320,1760,0.12,0.15),70); },
@@ -2736,16 +2763,18 @@ function disposeMesh(obj){
 }
 
 // ================= CARS =================
+// snd.sub = sub-bass rumble weight, snd.grit = baseline mechanical noise floor,
+// snd.turbo = turbo whine/blow-off strength (0 = naturally aspirated, silent).
 const CARTYPES={
-  sedan:{top:30,accel:16,grip:8,hp:100,w:1.9,l:4.3,snd:{wave:'sawtooth',base:50,mult:150,lp:900}},
-  taxi:{top:32,accel:18,grip:8.5,hp:100,w:1.9,l:4.3,snd:{wave:'sawtooth',base:52,mult:155,lp:950}},
-  sports:{top:42,accel:24,grip:10,hp:80,w:1.85,l:4.1,snd:{wave:'sawtooth',base:70,mult:215,lp:1500}},
-  muscle:{top:40,accel:26,grip:7,hp:110,w:1.95,l:4.4,snd:{wave:'square',base:38,mult:110,lp:480}},
-  pickup:{top:26,accel:13,grip:6.5,hp:140,w:2.0,l:4.6,snd:{wave:'square',base:34,mult:95,lp:450}},
-  van:{top:24,accel:11,grip:6,hp:160,w:2.1,l:4.8,snd:{wave:'square',base:32,mult:88,lp:420}},
-  compact:{top:28,accel:15,grip:9,hp:80,w:1.75,l:3.6,snd:{wave:'triangle',base:58,mult:165,lp:1150}},
-  moto:{top:46,accel:30,grip:11,hp:50,w:0.8,l:2.3,snd:{wave:'sawtooth',base:95,mult:265,lp:1900}},
-  cop:{top:38,accel:22,grip:9.5,hp:120,w:1.9,l:4.3,snd:{wave:'sawtooth',base:55,mult:160,lp:1000}},
+  sedan:{top:30,accel:16,grip:8,hp:100,w:1.9,l:4.3,snd:{wave:'sawtooth',base:50,mult:150,lp:900,sub:0.22,grit:0.10,turbo:0}},
+  taxi:{top:32,accel:18,grip:8.5,hp:100,w:1.9,l:4.3,snd:{wave:'sawtooth',base:52,mult:155,lp:950,sub:0.22,grit:0.13,turbo:0}},
+  sports:{top:42,accel:24,grip:10,hp:80,w:1.85,l:4.1,snd:{wave:'sawtooth',base:70,mult:215,lp:1500,sub:0.08,grit:0.06,turbo:0.55}},
+  muscle:{top:40,accel:26,grip:7,hp:110,w:1.95,l:4.4,snd:{wave:'square',base:38,mult:110,lp:480,sub:0.55,grit:0.30,turbo:0}},
+  pickup:{top:26,accel:13,grip:6.5,hp:140,w:2.0,l:4.6,snd:{wave:'square',base:34,mult:95,lp:450,sub:0.50,grit:0.28,turbo:0.2}},
+  van:{top:24,accel:11,grip:6,hp:160,w:2.1,l:4.8,snd:{wave:'square',base:32,mult:88,lp:420,sub:0.45,grit:0.26,turbo:0}},
+  compact:{top:28,accel:15,grip:9,hp:80,w:1.75,l:3.6,snd:{wave:'triangle',base:58,mult:165,lp:1150,sub:0.14,grit:0.08,turbo:0.35}},
+  moto:{top:46,accel:30,grip:11,hp:50,w:0.8,l:2.3,snd:{wave:'sawtooth',base:95,mult:265,lp:1900,sub:0.05,grit:0.05,turbo:0}},
+  cop:{top:38,accel:22,grip:9.5,hp:120,w:1.9,l:4.3,snd:{wave:'sawtooth',base:55,mult:160,lp:1000,sub:0.28,grit:0.14,turbo:0.45}},
 };
 const CARCOLS=[0xd94f4f,0x4f7ad9,0x4fd97a,0xd9c44f,0xb44fd9,0x4fd9c8,0xd97a4f,0xe8e8e8,0x30303a];
 const cars=[];
@@ -6041,6 +6070,9 @@ function exitCar(){
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
   if(skidGain) skidGain.gain.value=0;
+  if(engineSubGain) engineSubGain.gain.value=0;
+  if(engineGritGain) engineGritGain.gain.value=0;
+  if(turboGain) turboGain.gain.value=0;
 }
 function updateCarMode(dt){
   const c=player.car;
@@ -6089,6 +6121,9 @@ function updateCarMode(dt){
     toast('YOU DROVE INTO THE OCEAN!','bad');
     if(engineGain) engineGain.gain.value=0;
     if(skidGain) skidGain.gain.value=0;
+    if(engineSubGain) engineSubGain.gain.value=0;
+    if(engineGritGain) engineGritGain.gain.value=0;
+    if(turboGain) turboGain.gain.value=0;
   }
   if(c.sinking){
     c.sinkT+=dt;
@@ -6133,6 +6168,23 @@ function updateCarMode(dt){
     engineOsc.frequency.value=lerp(engineOsc.frequency.value,target,1-Math.exp(-(c.shiftT>0?4:9)*dt));
     engineLP.frequency.value=300+rpm*950+g*90;   // warmer top end — no shrill static
     skidGain.gain.value=ctl.drift&&Math.abs(c.speed)>9?0.14:0;
+    // --- sub-bass rumble: shadows the main tone an octave down, weighted per car ---
+    engineSubOsc.frequency.value=engineOsc.frequency.value*0.5;
+    engineSubGain.gain.value=lerp(engineSubGain.gain.value,snd.sub*(0.05+sr*0.06),0.15);
+    // --- mechanical grit: baseline texture, roughens further as the car takes damage ---
+    const dmg=1-clamp(c.hp/c.maxhp,0,1);
+    engineGritFilter.frequency.value=180+rpm*260;
+    engineGritGain.gain.value=lerp(engineGritGain.gain.value,(snd.grit*0.05+dmg*0.09)*(0.3+sr*0.7),0.15);
+    // --- turbo spool: whistle rises with revs/boost, dumps with a "pssh" when you lift off ---
+    const boosted=ctl.boost&&G.boost>0;
+    if(snd.turbo>0){
+      turboOsc.frequency.value=lerp(turboOsc.frequency.value,900+rpm*2200+(boosted?900:0),0.12);
+      turboGain.gain.value=lerp(turboGain.gain.value,snd.turbo*(rpm*0.05+(boosted?0.05:0)),0.2);
+      if(c.turboOn&&!boosted) turboBlowOff(snd.turbo);
+      c.turboOn=boosted;
+    } else turboGain.gain.value=lerp(turboGain.gain.value,0,0.2);
+    // --- damage misfire: engine skips a beat, more often the closer to death ---
+    if(dmg>0.45&&Math.random()<dt*(dmg-0.45)*7) engineMisfire(dmg);
   }
   for(const ped of peds){
     if(ped.state==='down') continue;
@@ -6954,6 +7006,9 @@ function exitCarSoft(){
   G.mode='foot';
   if(engineGain) engineGain.gain.value=0;
   if(skidGain) skidGain.gain.value=0;
+  if(engineSubGain) engineSubGain.gain.value=0;
+  if(engineGritGain) engineGritGain.gain.value=0;
+  if(turboGain) turboGain.gain.value=0;
 }
 function respawn(spot){
   G.over=true;
