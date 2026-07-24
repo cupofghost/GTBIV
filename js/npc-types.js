@@ -2188,20 +2188,20 @@ window.NPC_TYPES = {
   }),
 
   // === RETRO AESTHETIC ===
-  80s_enthusiast: createNPCType('80s_enthusiast', {
+  '80s_enthusiast': createNPCType('80s_enthusiast', {
     palette: PALETTES.neon,
     buildRange: [0.88, 1.12],
     shorts: 0.5,
     tank: 0.4,
   }),
 
-  90s_kid: createNPCType('90s_kid', {
+  '90s_kid': createNPCType('90s_kid', {
     palette: PALETTES.casual,
     buildRange: [0.88, 1.1],
     shorts: 0.4,
   }),
 
-  70s_throwback: createNPCType('70s_throwback', {
+  '70s_throwback': createNPCType('70s_throwback', {
     palette: PALETTES.hippie,
     buildRange: [0.95, 1.2],
     shorts: true,
