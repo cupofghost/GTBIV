@@ -4,28 +4,68 @@
 module.exports = {
   cases: [
     {
-      name: 'groundH is finite and continuous (no cliffs) across the map',
+      name: 'groundH is finite everywhere on the map',
       query: '?dev=1&skipintro=1',
       run: async (page, { assert }) => {
         const r = await page.evaluate(() => {
-          let bad = 0, maxDelta = 0, samples = 0;
+          let bad = 0, samples = 0;
           const step = 8;
-          for (let x = -H; x <= H; x += step) {
-            let prev = null;
-            for (let z = -H; z <= H; z += step) {
-              const h = groundH(x, z);
-              samples++;
-              if (!Number.isFinite(h)) bad++;
-              if (prev !== null) maxDelta = Math.max(maxDelta, Math.abs(h - prev));
-              prev = h;
-            }
+          for (let x = -H; x <= H; x += step) for (let z = -H; z <= H; z += step) {
+            samples++;
+            if (!Number.isFinite(groundH(x, z))) bad++;
           }
-          return { bad, maxDelta, samples };
+          return { bad, samples };
         });
         assert(r.samples > 100, 'expected a real grid sample, got ' + r.samples);
         assert(r.bad === 0, 'groundH returned a non-finite value at ' + r.bad + ' points');
-        // step is 8u; a cliff would show up as a huge jump between neighbors
-        assert(r.maxDelta < 4, 'groundH has a cliff: max neighbor delta ' + r.maxDelta.toFixed(2) + 'u over an 8u step');
+      },
+    },
+    {
+      name: 'streets never bank sideways — constant height across a road\'s width',
+      query: '?dev=1&skipintro=1',
+      run: async (page, { assert }) => {
+        const r = await page.evaluate(() => {
+          let worstNS = 0, worstEW = 0, checkedNS = 0, checkedEW = 0;
+          for (let i = 0; i <= WORLD.blocks; i++) {
+            const rx = roadLines[i];
+            // N/S street at x=rx: walk its length, and at each point sample
+            // straight across its width (varying x only) — must be flat.
+            for (let z = -H + 10; z <= H - 10; z += 20) {
+              const across = [-6, -3, 0, 3, 6].map(dx => groundH(rx + dx, z));
+              worstNS = Math.max(worstNS, Math.max(...across) - Math.min(...across));
+              checkedNS++;
+            }
+            const rz = roadLines[i];
+            for (let x = -H + 10; x <= H - 10; x += 20) {
+              const across = [-6, -3, 0, 3, 6].map(dz => groundH(x, rz + dz));
+              worstEW = Math.max(worstEW, Math.max(...across) - Math.min(...across));
+              checkedEW++;
+            }
+          }
+          return { worstNS, worstEW, checkedNS, checkedEW };
+        });
+        assert(r.checkedNS > 20 && r.checkedEW > 20, 'expected a real sample of road points');
+        assert(r.worstNS < 0.01, 'a N/S street tilts sideways across its width by ' + r.worstNS.toFixed(3) + 'u');
+        assert(r.worstEW < 0.01, 'an E/W street tilts sideways across its width by ' + r.worstEW.toFixed(3) + 'u');
+      },
+    },
+    {
+      name: 'block interiors sit on a flat pad (buildings never tilt)',
+      query: '?dev=1&skipintro=1',
+      run: async (page, { assert }) => {
+        const r = await page.evaluate(() => {
+          // non-park blocks have no knolls, so their interior must be dead flat
+          const sample = blockInfo.filter(b => b.type === 'bldg').slice(0, 30);
+          let worst = 0;
+          for (const b of sample) {
+            const pts = [[-15, -15], [15, -15], [-15, 15], [15, 15], [0, 0]]
+              .map(([dx, dz]) => groundH(b.cx + dx, b.cz + dz));
+            worst = Math.max(worst, Math.max(...pts) - Math.min(...pts));
+          }
+          return { count: sample.length, worst };
+        });
+        assert(r.count > 5, 'expected several bldg-type blocks to sample');
+        assert(r.worst < 0.01, 'a block interior is not flat, spread of ' + r.worst.toFixed(3) + 'u');
       },
     },
     {
@@ -70,6 +110,32 @@ module.exports = {
         // generous tolerance: city relief + a stray park knoll near the loop can eat into
         // the fixed beam clearance a little, but shouldn't come anywhere close to it
         assert(r.worstOver < 4, 'terrain under the rail loop is eating the beam clearance: worst groundH is ' + r.worstOver.toFixed(2) + 'u above the fixed y=7 beam');
+      },
+    },
+    {
+      name: 'tall pad/street drops get a real climbable stair, not just a wall',
+      query: '?dev=1&skipintro=1',
+      run: async (page, { assert }) => {
+        const r = await page.evaluate(() => {
+          // find a retaining-wall stair (baseH/topH gap > 1.5, pushed by the curb builder)
+          const run = STAIR_RUNS.find(r => r.topH - r.baseH > 1.5 && r.topH - r.baseH < 14);
+          if (!run) return { found: false };
+          // walk the run bottom to top and confirm stairHitRun tracks it continuously
+          let worstJump = 0, prevH = null;
+          for (let t = 0; t <= 1; t += 0.05) {
+            const x = run.x + Math.sin(run.ang) * run.len * t;
+            const z = run.z + Math.cos(run.ang) * run.len * t;
+            const hit = stairHitRun(x, z);
+            if (hit) {
+              if (prevH !== null) worstJump = Math.max(worstJump, Math.abs(hit.h - prevH));
+              prevH = hit.h;
+            }
+          }
+          return { found: true, baseH: run.baseH, topH: run.topH, worstJump, gotStart: prevH !== null };
+        });
+        assert(r.found, 'expected at least one tall retaining-wall gap to have a STAIR_RUN');
+        assert(r.gotStart, 'expected stairHitRun to detect the run along its own length');
+        assert(r.worstJump < 1, 'stair height jumps unexpectedly while climbing it: ' + r.worstJump.toFixed(2));
       },
     },
     {

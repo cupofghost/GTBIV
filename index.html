@@ -1400,9 +1400,15 @@ const helipads=[];
   const fb=parks.find(b=>!b.helipad&&!b.football);
   if(fb) fb.football=true;
 })();
-// ---- terrain: city-wide relief + signature hills, knolls in the parks, dunes on the beach ring ----
-// see TERRAIN.md — groundH stays a single-valued, continuous height field;
-// everything (mesh, roads, buildings, movement) reads its Y from it.
+// ---- terrain: terraced blocks + graded streets, signature hills, knolls in the
+// parks, dunes on the beach ring ----
+// see TERRAIN.md — groundH stays a single-valued height field; every
+// world-placed object reads its Y from it. Real streets don't bank sideways,
+// so this is a lattice, not a raw noise sample: each block is a flat plateau,
+// each road segment grades LINEARLY between the two intersections it connects
+// (constant across the road's width — only the direction of travel slopes),
+// and intersections are shared flat plateaus so adjacent roads always agree.
+// Retaining walls (below) dress the seam where a flat block meets a graded street.
 const KNOLLS=[];
 blockInfo.forEach(b=>{
   if(b.type==='park'&&!b.helipad&&!b.football)
@@ -1420,11 +1426,43 @@ const SIGNATURE_HILLS=[
   {x:-70,z:50,r:65,h:11},
   {x:60,z:-70,r:60,h:9},
 ];
-function groundH(x,z){
-  let h=cityRelief(x,z);
+function hillsAt(x,z){
+  let h=0;
   for(let i=0;i<SIGNATURE_HILLS.length;i++){
     const k=SIGNATURE_HILLS[i], dx=x-k.x, dz=z-k.z, d2=dx*dx+dz*dz;
     if(d2<k.r*k.r) h+=k.h*0.5*(1+Math.cos(Math.PI*Math.sqrt(d2)/k.r));
+  }
+  return h;
+}
+// VERT_H: height at every road intersection, sampled straight off the smooth
+// relief field. PAD_H: each block's flat pad = the average of its 4 corners.
+const VERT_H=[], PAD_H=[];
+for(let i=0;i<=WORLD.blocks;i++){
+  VERT_H[i]=[];
+  for(let j=0;j<=WORLD.blocks;j++) VERT_H[i][j]=cityRelief(roadLines[i],roadLines[j])+hillsAt(roadLines[i],roadLines[j]);
+}
+for(let i=0;i<WORLD.blocks;i++){
+  PAD_H[i]=[];
+  for(let j=0;j<WORLD.blocks;j++) PAD_H[i][j]=(VERT_H[i][j]+VERT_H[i+1][j]+VERT_H[i][j+1]+VERT_H[i+1][j+1])/4;
+}
+function groundH(x,z){
+  const nb=WORLD.blocks;
+  const ci=clamp(Math.floor((x-roadLines[0])/PITCH),0,nb-1);
+  const cj=clamp(Math.floor((z-roadLines[0])/PITCH),0,nb-1);
+  const lx=x-roadLines[ci], lz=z-roadLines[cj];
+  const onRoadX=lx<ROAD/2||lx>PITCH-ROAD/2, onRoadZ=lz<ROAD/2||lz>PITCH-ROAD/2;
+  let h;
+  if(onRoadX&&onRoadZ){
+    const iR=lx<ROAD/2?ci:ci+1, jR=lz<ROAD/2?cj:cj+1;
+    h=VERT_H[iR][jR];                                    // intersections: flat plateaus
+  } else if(onRoadX){
+    const iR=lx<ROAD/2?ci:ci+1, t=clamp((lz-ROAD/2)/(PITCH-ROAD),0,1);
+    h=lerp(VERT_H[iR][cj],VERT_H[iR][cj+1],t);            // N/S street: grades along z only
+  } else if(onRoadZ){
+    const jR=lz<ROAD/2?cj:cj+1, t=clamp((lx-ROAD/2)/(PITCH-ROAD),0,1);
+    h=lerp(VERT_H[ci][jR],VERT_H[ci+1][jR],t);            // E/W street: grades along x only
+  } else {
+    h=PAD_H[ci][cj];                                      // block interior: flat pad
   }
   for(let i=0;i<KNOLLS.length;i++){
     const k=KNOLLS[i], dx=x-k.x, dz=z-k.z, d2=dx*dx+dz*dz;
@@ -1459,6 +1497,53 @@ function stairHitRun(x,z){
   return best;
 }
 function stairH(x,z){ const st=stairHitRun(x,z); return st?st.h:0; }
+// retaining walls / curbs: dressing wherever a block's flat pad doesn't meet
+// its bordering street at the same height, so the seam reads as a designed
+// ledge instead of a glitch. Small steps (a curb) are cosmetic only — cars &
+// feet just follow groundH's little hop. Bigger drops get a real climbable
+// stair cut through the wall, per TERRAIN.md's "retaining walls or stairs."
+(function(){
+  const CURB_WALLS=[];
+  const rampMat=new THREE.MeshLambertMaterial({color:0x565064});
+  const rampGeo=new THREE.BoxGeometry(4.2,0.4,1); rampGeo.translate(0,0,0.5);
+  for(let i=0;i<WORLD.blocks;i++) for(let j=0;j<WORLD.blocks;j++){
+    const pad=PAD_H[i][j];
+    const cx0=roadLines[i]+ROAD/2, cx1=roadLines[i+1]-ROAD/2;
+    const cz0=roadLines[j]+ROAD/2, cz1=roadLines[j+1]-ROAD/2;
+    const edges=[
+      {hA:VERT_H[i][j],  hB:VERT_H[i][j+1],  ex:cx0,        ez:(cz0+cz1)/2, sx:0.5,  sz:BLOCK, blockAng:Math.PI/2},   // west: block is +x
+      {hA:VERT_H[i+1][j],hB:VERT_H[i+1][j+1],ex:cx1,        ez:(cz0+cz1)/2, sx:0.5,  sz:BLOCK, blockAng:-Math.PI/2}, // east: block is -x
+      {hA:VERT_H[i][j],  hB:VERT_H[i+1][j],  ex:(cx0+cx1)/2,ez:cz0,         sx:BLOCK,sz:0.5,   blockAng:0},          // south: block is +z
+      {hA:VERT_H[i][j+1],hB:VERT_H[i+1][j+1],ex:(cx0+cx1)/2,ez:cz1,         sx:BLOCK,sz:0.5,   blockAng:Math.PI},    // north: block is -z
+    ];
+    edges.forEach(e=>{
+      const top=Math.max(pad,e.hA,e.hB), bot=Math.min(pad,e.hA,e.hB), diff=top-bot;
+      if(diff<=0.35) return;
+      if(diff<=1.5){ CURB_WALLS.push([e.ex,bot,e.ez,e.sx,diff,e.sz]); return; }
+      // taller drops get a real, visible stair/ramp run instead of a sheer wall —
+      // running from the low side to the high side, through the seam
+      const ang=pad>(e.hA+e.hB)/2?e.blockAng:e.blockAng+Math.PI;
+      const len=clamp(diff*1.3,3,14);
+      const rx=e.ex-Math.sin(ang)*len/2, rz=e.ez-Math.cos(ang)*len/2;
+      STAIR_RUNS.push({x:rx,z:rz,ang,len,baseH:bot,topH:top});
+      const ramp=new THREE.Mesh(rampGeo,rampMat);
+      ramp.position.set(rx,bot,rz);
+      ramp.rotation.y=ang;
+      ramp.rotation.x=-Math.atan2(top-bot,len);
+      ramp.scale.z=len/Math.cos(Math.atan2(top-bot,len));
+      scene.add(ramp);
+    });
+  }
+  if(!CURB_WALLS.length) return;
+  const geo=new THREE.BoxGeometry(1,1,1); geo.translate(0,0.5,0);
+  const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:0x4a4658}),CURB_WALLS.length);
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), pos=new THREE.Vector3(), scl=new THREE.Vector3();
+  CURB_WALLS.forEach((w,i)=>{
+    pos.set(w[0],w[1],w[2]); scl.set(w[3],w[4],w[5]);
+    m.compose(pos,q,scl); im.setMatrixAt(i,m);
+  });
+  im.instanceMatrix.needsUpdate=true; scene.add(im);
+})();
 const BUILDING_SKIRT=2.5;   // foundation skirt: hides the uphill gap on graded ground
 function footprintBaseY(minX,maxX,minZ,maxZ){
   // lowest of the four corners, so the building never floats on a slope
