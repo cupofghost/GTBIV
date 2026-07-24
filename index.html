@@ -714,6 +714,7 @@ WORLD.size=WORLD.half*2+40;
 // ================= AUDIO =================
 let AC=null, masterGain, sfxGain, voiceGain, engineOsc, engineGain, engineLP, skidGain,
     heliChopFilt, heliChopGain, heliChopDepth, heliChopLFO,
+    engineSubOsc, engineSubGain, engineGritFilter, engineGritGain, turboOsc, turboFilter, turboGain,
     sirenOsc, sirenGain, musicGain, musicStep=0, nextNoteTime=0;
 // --- synthwave FX rack + soundtrack playhead (built lazily in initAudio) ---
 let musicVODuck,            // ducks the whole radio while Turbo/Deb talk
@@ -736,6 +737,22 @@ function initAudio(){
   engineGain=AC.createGain(); engineGain.gain.value=0;
   engineOsc.connect(engineLP); engineLP.connect(engineGain); engineGain.connect(sfxGain);
   engineOsc.start();
+  // sub-bass rumble layer — shadows the main tone an octave down, weighted per car by snd.sub
+  engineSubOsc=AC.createOscillator(); engineSubOsc.type='sine'; engineSubOsc.frequency.value=25;
+  engineSubGain=AC.createGain(); engineSubGain.gain.value=0;
+  engineSubOsc.connect(engineSubGain); engineSubGain.connect(sfxGain); engineSubOsc.start();
+  // mechanical grit layer — filtered noise floor; baseline per car (snd.grit), worse when damaged
+  const egb=AC.createBuffer(1,AC.sampleRate,AC.sampleRate), egd=egb.getChannelData(0);
+  for(let i=0;i<egd.length;i++) egd[i]=Math.random()*2-1;
+  const egSrc=AC.createBufferSource(); egSrc.buffer=egb; egSrc.loop=true;
+  engineGritFilter=AC.createBiquadFilter(); engineGritFilter.type='bandpass'; engineGritFilter.frequency.value=350; engineGritFilter.Q.value=0.7;
+  engineGritGain=AC.createGain(); engineGritGain.gain.value=0;
+  egSrc.connect(engineGritFilter); engineGritFilter.connect(engineGritGain); engineGritGain.connect(sfxGain); egSrc.start();
+  // turbo spool layer — resonant whine that rises with revs/boost; silent on naturally-aspirated cars (snd.turbo=0)
+  turboOsc=AC.createOscillator(); turboOsc.type='sawtooth'; turboOsc.frequency.value=900;
+  turboFilter=AC.createBiquadFilter(); turboFilter.type='bandpass'; turboFilter.frequency.value=2200; turboFilter.Q.value=5;
+  turboGain=AC.createGain(); turboGain.gain.value=0;
+  turboOsc.connect(turboFilter); turboFilter.connect(turboGain); turboGain.connect(sfxGain); turboOsc.start();
   const nb=AC.createBuffer(1,AC.sampleRate,AC.sampleRate), nd=nb.getChannelData(0);
   for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1;
   const skid=AC.createBufferSource(); skid.buffer=nb; skid.loop=true;
@@ -874,6 +891,16 @@ function noiseBurst(dur,vol,freq,q,type){
   const f=AC.createBiquadFilter(); f.type=type||'lowpass'; f.frequency.value=freq; f.Q.value=q;
   const g=AC.createGain(); g.gain.value=vol;
   s.connect(f); f.connect(g); g.connect(sfxGain); s.start();
+}
+// badly damaged engine skips a beat — a sharp low pop, worse the closer to death
+function engineMisfire(dmg){
+  blip(140,35,0.055,0.1+dmg*0.18,'square');
+  if(Math.random()<0.5) noiseBurst(0.04,0.06+dmg*0.1,1200,1);
+}
+// turbo dump valve — the classic "pssh" when you lift off the boost
+function turboBlowOff(amt){
+  noiseBurst(0.18,0.08+amt*0.12,3200,1.4);
+  blip(1500,350,0.15,0.05+amt*0.07,'sine');
 }
 const sfx={
   coin(){ blip(880,1320,0.09,0.18); setTimeout(()=>blip(1320,1760,0.12,0.15),70); },
@@ -1492,14 +1519,70 @@ const helipads=[];
   const fb=parks.find(b=>!b.helipad&&!b.football);
   if(fb) fb.football=true;
 })();
-// ---- terrain: gentle knolls in the parks, dunes out on the beach ring ----
+// ---- terrain: terraced blocks + graded streets, signature hills, knolls in the
+// parks, dunes on the beach ring ----
+// see TERRAIN.md — groundH stays a single-valued height field; every
+// world-placed object reads its Y from it. Real streets don't bank sideways,
+// so this is a lattice, not a raw noise sample: each block is a flat plateau,
+// each road segment grades LINEARLY between the two intersections it connects
+// (constant across the road's width — only the direction of travel slopes),
+// and intersections are shared flat plateaus so adjacent roads always agree.
+// Retaining walls (below) dress the seam where a flat block meets a graded street.
 const KNOLLS=[];
 blockInfo.forEach(b=>{
   if(b.type==='park'&&!b.helipad&&!b.football)
     KNOLLS.push({x:b.cx+rand(-6,6),z:b.cz+rand(-6,6),r:rand(11,15),h:rand(2.0,3.0)});
 });
-function groundH(x,z){
+const CITY_AMP=5.5;   // gentle whole-map roll, capped low so street grade stays drivable
+function cityRelief(x,z){
+  const m=Math.max(Math.abs(x),Math.abs(z));
+  const edge=1-clamp((m-(H-40))/40,0,1);   // fade out approaching the flat dune ring
+  return CITY_AMP*(0.5+0.5*Math.sin(x*0.011+1.3)*Math.cos(z*0.013))*edge;
+}
+// two named hills — kept well inside the elevated rail loop (radius ~172-224) so
+// the rail's variable-length pillars never go negative.
+const SIGNATURE_HILLS=[
+  {x:-70,z:50,r:65,h:11},
+  {x:60,z:-70,r:60,h:9},
+];
+function hillsAt(x,z){
   let h=0;
+  for(let i=0;i<SIGNATURE_HILLS.length;i++){
+    const k=SIGNATURE_HILLS[i], dx=x-k.x, dz=z-k.z, d2=dx*dx+dz*dz;
+    if(d2<k.r*k.r) h+=k.h*0.5*(1+Math.cos(Math.PI*Math.sqrt(d2)/k.r));
+  }
+  return h;
+}
+// VERT_H: height at every road intersection, sampled straight off the smooth
+// relief field. PAD_H: each block's flat pad = the average of its 4 corners.
+const VERT_H=[], PAD_H=[];
+for(let i=0;i<=WORLD.blocks;i++){
+  VERT_H[i]=[];
+  for(let j=0;j<=WORLD.blocks;j++) VERT_H[i][j]=cityRelief(roadLines[i],roadLines[j])+hillsAt(roadLines[i],roadLines[j]);
+}
+for(let i=0;i<WORLD.blocks;i++){
+  PAD_H[i]=[];
+  for(let j=0;j<WORLD.blocks;j++) PAD_H[i][j]=(VERT_H[i][j]+VERT_H[i+1][j]+VERT_H[i][j+1]+VERT_H[i+1][j+1])/4;
+}
+function groundH(x,z){
+  const nb=WORLD.blocks;
+  const ci=clamp(Math.floor((x-roadLines[0])/PITCH),0,nb-1);
+  const cj=clamp(Math.floor((z-roadLines[0])/PITCH),0,nb-1);
+  const lx=x-roadLines[ci], lz=z-roadLines[cj];
+  const onRoadX=lx<ROAD/2||lx>PITCH-ROAD/2, onRoadZ=lz<ROAD/2||lz>PITCH-ROAD/2;
+  let h;
+  if(onRoadX&&onRoadZ){
+    const iR=lx<ROAD/2?ci:ci+1, jR=lz<ROAD/2?cj:cj+1;
+    h=VERT_H[iR][jR];                                    // intersections: flat plateaus
+  } else if(onRoadX){
+    const iR=lx<ROAD/2?ci:ci+1, t=clamp((lz-ROAD/2)/(PITCH-ROAD),0,1);
+    h=lerp(VERT_H[iR][cj],VERT_H[iR][cj+1],t);            // N/S street: grades along z only
+  } else if(onRoadZ){
+    const jR=lz<ROAD/2?cj:cj+1, t=clamp((lx-ROAD/2)/(PITCH-ROAD),0,1);
+    h=lerp(VERT_H[ci][jR],VERT_H[ci+1][jR],t);            // E/W street: grades along x only
+  } else {
+    h=PAD_H[ci][cj];                                      // block interior: flat pad
+  }
   for(let i=0;i<KNOLLS.length;i++){
     const k=KNOLLS[i], dx=x-k.x, dz=z-k.z, d2=dx*dx+dz*dz;
     if(d2<k.r*k.r) h+=k.h*0.5*(1+Math.cos(Math.PI*Math.sqrt(d2)/k.r));
@@ -1533,8 +1616,61 @@ function stairHitRun(x,z){
   return best;
 }
 function stairH(x,z){ const st=stairHitRun(x,z); return st?st.h:0; }
+// retaining walls / curbs: dressing wherever a block's flat pad doesn't meet
+// its bordering street at the same height, so the seam reads as a designed
+// ledge instead of a glitch. Small steps (a curb) are cosmetic only — cars &
+// feet just follow groundH's little hop. Bigger drops get a real climbable
+// stair cut through the wall, per TERRAIN.md's "retaining walls or stairs."
+(function(){
+  const CURB_WALLS=[];
+  const rampMat=new THREE.MeshLambertMaterial({color:0x565064});
+  const rampGeo=new THREE.BoxGeometry(4.2,0.4,1); rampGeo.translate(0,0,0.5);
+  for(let i=0;i<WORLD.blocks;i++) for(let j=0;j<WORLD.blocks;j++){
+    const pad=PAD_H[i][j];
+    const cx0=roadLines[i]+ROAD/2, cx1=roadLines[i+1]-ROAD/2;
+    const cz0=roadLines[j]+ROAD/2, cz1=roadLines[j+1]-ROAD/2;
+    const edges=[
+      {hA:VERT_H[i][j],  hB:VERT_H[i][j+1],  ex:cx0,        ez:(cz0+cz1)/2, sx:0.5,  sz:BLOCK, blockAng:Math.PI/2},   // west: block is +x
+      {hA:VERT_H[i+1][j],hB:VERT_H[i+1][j+1],ex:cx1,        ez:(cz0+cz1)/2, sx:0.5,  sz:BLOCK, blockAng:-Math.PI/2}, // east: block is -x
+      {hA:VERT_H[i][j],  hB:VERT_H[i+1][j],  ex:(cx0+cx1)/2,ez:cz0,         sx:BLOCK,sz:0.5,   blockAng:0},          // south: block is +z
+      {hA:VERT_H[i][j+1],hB:VERT_H[i+1][j+1],ex:(cx0+cx1)/2,ez:cz1,         sx:BLOCK,sz:0.5,   blockAng:Math.PI},    // north: block is -z
+    ];
+    edges.forEach(e=>{
+      const top=Math.max(pad,e.hA,e.hB), bot=Math.min(pad,e.hA,e.hB), diff=top-bot;
+      if(diff<=0.35) return;
+      if(diff<=1.5){ CURB_WALLS.push([e.ex,bot,e.ez,e.sx,diff,e.sz]); return; }
+      // taller drops get a real, visible stair/ramp run instead of a sheer wall —
+      // running from the low side to the high side, through the seam
+      const ang=pad>(e.hA+e.hB)/2?e.blockAng:e.blockAng+Math.PI;
+      const len=clamp(diff*1.3,3,14);
+      const rx=e.ex-Math.sin(ang)*len/2, rz=e.ez-Math.cos(ang)*len/2;
+      STAIR_RUNS.push({x:rx,z:rz,ang,len,baseH:bot,topH:top});
+      const ramp=new THREE.Mesh(rampGeo,rampMat);
+      ramp.position.set(rx,bot,rz);
+      ramp.rotation.y=ang;
+      ramp.rotation.x=-Math.atan2(top-bot,len);
+      ramp.scale.z=len/Math.cos(Math.atan2(top-bot,len));
+      scene.add(ramp);
+    });
+  }
+  if(!CURB_WALLS.length) return;
+  const geo=new THREE.BoxGeometry(1,1,1); geo.translate(0,0.5,0);
+  const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:0x4a4658}),CURB_WALLS.length);
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), pos=new THREE.Vector3(), scl=new THREE.Vector3();
+  CURB_WALLS.forEach((w,i)=>{
+    pos.set(w[0],w[1],w[2]); scl.set(w[3],w[4],w[5]);
+    m.compose(pos,q,scl); im.setMatrixAt(i,m);
+  });
+  im.instanceMatrix.needsUpdate=true; scene.add(im);
+})();
+const BUILDING_SKIRT=2.5;   // foundation skirt: hides the uphill gap on graded ground
+function footprintBaseY(minX,maxX,minZ,maxZ){
+  // lowest of the four corners, so the building never floats on a slope
+  return Math.min(groundH(minX,minZ),groundH(minX,maxZ),groundH(maxX,minZ),groundH(maxX,maxZ));
+}
 function addBuilding(cx,cz,w,d,h){
-  buildings.push({minX:cx-w/2,maxX:cx+w/2,minZ:cz-d/2,maxZ:cz+d/2,h});
+  const minX=cx-w/2,maxX=cx+w/2,minZ=cz-d/2,maxZ=cz+d/2;
+  buildings.push({minX,maxX,minZ,maxZ,h,baseY:footprintBaseY(minX,maxX,minZ,maxZ)});
 }
 blockInfo.forEach(b=>{
   if(b.type!=='bldg') return;
@@ -1730,8 +1866,8 @@ function overWater(x,z){ return Math.abs(x)>WATER_R||Math.abs(z)>WATER_R; }
     const m=new THREE.Matrix4(), q=new THREE.Quaternion(),
           pos=new THREE.Vector3(), scl=new THREE.Vector3(), col=new THREE.Color();
     list.forEach((b,i)=>{
-      pos.set((b.minX+b.maxX)/2,0,(b.minZ+b.maxZ)/2);
-      scl.set(b.maxX-b.minX,b.h,b.maxZ-b.minZ);
+      pos.set((b.minX+b.maxX)/2,b.baseY-BUILDING_SKIRT,(b.minZ+b.maxZ)/2);
+      scl.set(b.maxX-b.minX,b.h+BUILDING_SKIRT,b.maxZ-b.minZ);
       m.compose(pos,q,scl); inst.setMatrixAt(i,m);
       col.setHex(pick(palette)).multiplyScalar(rand(0.45,0.85));
       inst.setColorAt(i,col);
@@ -1743,10 +1879,10 @@ function overWater(x,z){ return Math.abs(x)>WATER_R||Math.abs(z)>WATER_R; }
   // setback crowns on the tall boys + a parapet lip on every roof
   const crowns=[], lips=[];
   buildings.forEach(b=>{
-    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ;
-    lips.push([cx,b.h,cz,w+0.7,0.5,d+0.7]);
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ, roof=b.baseY+b.h;
+    lips.push([cx,roof,cz,w+0.7,0.5,d+0.7]);
     if(b.h>34&&Math.random()<0.6)
-      crowns.push([cx+rand(-1,1),b.h,cz+rand(-1,1),w*rand(0.55,0.75),b.h*rand(0.18,0.3),d*rand(0.55,0.75)]);
+      crowns.push([cx+rand(-1,1),roof,cz+rand(-1,1),w*rand(0.55,0.75),b.h*rand(0.18,0.3),d*rand(0.55,0.75)]);
   });
   function slab(list,color){
     if(!list.length) return;
@@ -1768,11 +1904,11 @@ function overWater(x,z){ return Math.abs(x)>WATER_R||Math.abs(z)>WATER_R; }
   const anGeo=new THREE.CylinderGeometry(0.04,0.06,4.5,4); anGeo.translate(0,2.25,0);
   const acs=[],wts=[],ans=[];
   buildings.forEach(b=>{
-    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ;
-    if(Math.random()<0.8) acs.push([cx+rand(-w/4,w/4),b.h,cz+rand(-d/4,d/4)]);
-    if(Math.random()<0.5) acs.push([cx+rand(-w/4,w/4),b.h,cz+rand(-d/4,d/4)]);
-    if(b.h>18&&Math.random()<0.4) wts.push([cx+rand(-w/6,w/6),b.h,cz+rand(-d/6,d/6)]);
-    if(b.h>26&&Math.random()<0.55) ans.push([cx,b.h,cz]);
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ, roof=b.baseY+b.h;
+    if(Math.random()<0.8) acs.push([cx+rand(-w/4,w/4),roof,cz+rand(-d/4,d/4)]);
+    if(Math.random()<0.5) acs.push([cx+rand(-w/4,w/4),roof,cz+rand(-d/4,d/4)]);
+    if(b.h>18&&Math.random()<0.4) wts.push([cx+rand(-w/6,w/6),roof,cz+rand(-d/6,d/6)]);
+    if(b.h>26&&Math.random()<0.55) ans.push([cx,roof,cz]);
   });
   function inst(geo,color,list){
     if(!list.length) return;
@@ -1815,7 +1951,7 @@ function updateLights(dt){
   const m=new THREE.Matrix4(), q=new THREE.Quaternion(), p=new THREE.Vector3(), s=new THREE.Vector3(1,1,1), col=new THREE.Color();
   const cols=[0xff3333,0xffc233,0x33ff66];
   spots.forEach((sp,i)=>{
-    p.set(sp.x,0,sp.z); m.compose(p,q,s); pi.setMatrixAt(i,m); hi.setMatrixAt(i,m);
+    p.set(sp.x,groundH(sp.x,sp.z),sp.z); m.compose(p,q,s); pi.setMatrixAt(i,m); hi.setMatrixAt(i,m);
     for(let k=0;k<3;k++){
       p.set(sp.x,4.9-k*0.34,sp.z+0.28); m.compose(p,q,s);
       li.setMatrixAt(i*3+k,m); li.setColorAt(i*3+k,col.setHex(cols[k]));
@@ -1891,7 +2027,7 @@ function updateGulls(dt){
   const ci=new THREE.InstancedMesh(coneGeo,new THREE.MeshLambertMaterial({color:0xffffff}),umbs.length);
   umbs.forEach((u,i)=>{
     e.set(0,rand(0,TAU),rand(-0.08,0.08)); q.setFromEuler(e);
-    p.set(u.x,0,u.z); s.set(1,1,1); m.compose(p,q,s);
+    p.set(u.x,groundH(u.x,u.z),u.z); s.set(1,1,1); m.compose(p,q,s);
     pi.setMatrixAt(i,m); ci.setMatrixAt(i,m);
     ci.setColorAt(i,col.setHex(pick([0xff3ea0,0x37c8ff,0xffd23e,0x7dff8a,0xff7a3d])));
   });
@@ -1902,7 +2038,7 @@ function updateGulls(dt){
   const ti=new THREE.InstancedMesh(towGeo,new THREE.MeshLambertMaterial({color:0xffffff}),towels.length);
   towels.forEach((u,i)=>{
     e.set(0,rand(0,TAU),0); q.setFromEuler(e);
-    p.set(u.x,0,u.z); s.set(1,1,1); m.compose(p,q,s);
+    p.set(u.x,groundH(u.x,u.z),u.z); s.set(1,1,1); m.compose(p,q,s);
     ti.setMatrixAt(i,m); ti.setColorAt(i,col.setHex(pick([0xff3ea0,0x37c8ff,0xffd23e,0x7dff8a,0xff7a3d,0xe8e8e8])));
   });
   ti.instanceMatrix.needsUpdate=true;
@@ -2000,7 +2136,7 @@ const poleSpots=[];
   const pi=new THREE.InstancedMesh(poleGeo,poleMat,spots.length);
   const hi=new THREE.InstancedMesh(headGeo,headMat,spots.length);
   const m=new THREE.Matrix4(),pos=new THREE.Vector3(),q=new THREE.Quaternion(),scl=new THREE.Vector3(1,1,1);
-  spots.forEach((p,i)=>{ pos.set(p.x,0,p.z); m.compose(pos,q,scl); pi.setMatrixAt(i,m); hi.setMatrixAt(i,m); });
+  spots.forEach((p,i)=>{ pos.set(p.x,groundH(p.x,p.z),p.z); m.compose(pos,q,scl); pi.setMatrixAt(i,m); hi.setMatrixAt(i,m); });
   pi.instanceMatrix.needsUpdate=true; hi.instanceMatrix.needsUpdate=true;
   scene.add(pi); scene.add(hi);
 })();
@@ -2064,7 +2200,7 @@ const HYDRANT_SPOTS=[], DUMPSTER_SPOTS=[], BENCH_SPOTS=[];
     const mesh=new THREE.Mesh(new THREE.PlaneGeometry(14,6),
       new THREE.MeshBasicMaterial({map:tex}));
     const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
-    const side=randi(0,3), hh=b.h*rand(0.55,0.75);
+    const side=randi(0,3), hh=b.baseY+b.h*rand(0.55,0.75);
     if(side===0){ mesh.position.set(cx,hh,b.maxZ+0.4); }
     else if(side===1){ mesh.position.set(cx,hh,b.minZ-0.4); mesh.rotation.y=Math.PI; }
     else if(side===2){ mesh.position.set(b.maxX+0.4,hh,cz); mesh.rotation.y=Math.PI/2; }
@@ -2117,9 +2253,9 @@ const FOOTBALL=(function(){
   const sbm=new THREE.Mesh(new THREE.PlaneGeometry(12,6),
     new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sb)}));
   const sbPole=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,9,6),bleacherMat);
-  const sbx=F.x, sbz=F.z-15.5;
-  sbPole.position.set(sbx,4.5,sbz); scene.add(sbPole);
-  sbm.position.set(sbx,10.5,sbz+0.4); scene.add(sbm);
+  const sbx=F.x, sbz=F.z-15.5, sbg=groundH(sbx,sbz);
+  sbPole.position.set(sbx,sbg+4.5,sbz); scene.add(sbPole);
+  sbm.position.set(sbx,sbg+10.5,sbz+0.4); scene.add(sbm);
   DUMPSTER_SPOTS.push({x:sbx,z:sbz});
   return F;
 })();
@@ -2170,11 +2306,12 @@ const RAIL_STATIONS=[];     // path indices where the train stops
   for(let i=0;i<RAILPATH.length;i+=13) pilIdx.push(i);
   const pils=new THREE.InstancedMesh(pilGeo,new THREE.MeshLambertMaterial({color:0x6a6a78}),pilIdx.length);
   pilIdx.forEach((pi,i)=>{
-    const pt=RAILPATH[pi];
-    e.set(0,0,0); q.setFromEuler(e); pos.set(pt.x,0,pt.z);
+    const pt=RAILPATH[pi], baseG=groundH(pt.x,pt.z), ph=Math.max(1,y-baseG);
+    e.set(0,0,0); q.setFromEuler(e); pos.set(pt.x,baseG,pt.z); scl.set(1,ph/7,1);
     m.compose(pos,q,scl); pils.setMatrixAt(i,m);
     RAIL_PILLARS.push({x:pt.x,z:pt.z});
   });
+  scl.set(1,1,1);
   pils.instanceMatrix.needsUpdate=true; scene.add(pils);
   // four stations, one per straight: platform + roof + a stair run down to the sidewalk
   const platMat=new THREE.MeshLambertMaterial({color:0x3a3a4c});
@@ -2195,8 +2332,8 @@ const RAIL_STATIONS=[];     // path indices where the train stops
     // walkable: the platform itself + a long stair run to the street
     const plLen=13, longAng=(side===0||side===Math.PI)?Math.PI/2:0;
     STAIR_RUNS.push({x:(sx+ox)-Math.sin(longAng)*plLen/2,z:(sz+oz)-Math.cos(longAng)*plLen/2,ang:longAng,len:plLen,baseH:y+0.45,topH:y+0.45});
-    const stx=sx+ox*2.6, stz=sz+oz*2.6;   // stair foot, out on the sidewalk
-    STAIR_RUNS.push({x:stx,z:stz,ang:Math.atan2(-ox,-oz),len:14,baseH:0,topH:y+0.45});
+    const stx=sx+ox*2.6, stz=sz+oz*2.6, stGround=groundH(stx,stz);   // stair foot, out on the sidewalk
+    STAIR_RUNS.push({x:stx,z:stz,ang:Math.atan2(-ox,-oz),len:14,baseH:stGround,topH:y+0.45});
     // nearest path index = a stop
     let best=0,bd=1e9;
     RAILPATH.forEach((pt,i)=>{ const d=Math.hypot(pt.x-sx,pt.z-sz); if(d<bd){bd=d;best=i;} });
@@ -2205,7 +2342,7 @@ const RAIL_STATIONS=[];     // path indices where the train stops
     for(let k=1;k<8;k++){
       const t=k/8;
       const step=new THREE.Mesh(new THREE.BoxGeometry(2.2,0.18,1.2),platMat);
-      step.position.set(stx-Math.sin(Math.atan2(-ox,-oz))*(-14*t), (y+0.45)*t, stz-Math.cos(Math.atan2(-ox,-oz))*(-14*t));
+      step.position.set(stx-Math.sin(Math.atan2(-ox,-oz))*(-14*t), stGround+(y+0.45-stGround)*t, stz-Math.cos(Math.atan2(-ox,-oz))*(-14*t));
       step.rotation.y=Math.atan2(-ox,-oz)+Math.PI/2;
       scene.add(step);
     }
@@ -2290,26 +2427,27 @@ function addHideout(x,z,r,y){
     else if(side===1){ sx=b.maxX+1.3; sz=cz+d/5; ang=Math.PI; wallLen=d; } // +x wall, climb -z
     else if(side===2){ sx=cx-w/5; sz=b.minZ-1.3; ang=Math.PI/2; wallLen=w; }
     else { sx=cx+w/5; sz=b.maxZ+1.3; ang=-Math.PI/2; wallLen=w; }
+    const roof=b.baseY+b.h;
     if(b.h>=25){
       // fire escape: two zigzag flights + a landing, dark steel
-      const fl=Math.min(14,wallLen*0.55), half=b.h/2;
-      const r1={x:sx,z:sz,ang,len:fl,baseH:0,topH:half};
+      const fl=Math.min(14,wallLen*0.55), half=b.baseY+b.h/2;
+      const r1={x:sx,z:sz,ang,len:fl,baseH:b.baseY,topH:half};
       const lx=sx+Math.sin(ang)*fl, lz=sz+Math.cos(ang)*fl;
       const rLand={x:lx,z:lz,ang,len:2.4,baseH:half,topH:half};
       const fx=lx+Math.sin(ang)*2.4, fz=lz+Math.cos(ang)*2.4;
-      const r2={x:fx,z:fz,ang:ang+Math.PI,len:fl,baseH:half,topH:b.h};
+      const r2={x:fx,z:fz,ang:ang+Math.PI,len:fl,baseH:half,topH:roof};
       STAIR_RUNS.push(r1,rLand,r2);
       stepsFor(r1,true); stepsFor(r2,true);
       landing(lx+Math.sin(ang)*1.2,half,lz+Math.cos(ang)*1.2,ang);
-      landing(fx-Math.sin(ang)*fl*0.99,b.h,fz-Math.cos(ang)*fl*0.99,ang);
+      landing(fx-Math.sin(ang)*fl*0.99,roof,fz-Math.cos(ang)*fl*0.99,ang);
     } else {
       // straight stair to the roof
       const len=Math.min(15,Math.max(8,b.h*1.15));
-      const r1={x:sx,z:sz,ang,len,baseH:0,topH:b.h};
+      const r1={x:sx,z:sz,ang,len,baseH:b.baseY,topH:roof};
       STAIR_RUNS.push(r1); stepsFor(r1,false);
     }
     // the roof of a climbable building makes a great hideout
-    if(Math.random()<0.6) addHideout(cx,cz,Math.min(w,d)*0.45,b.h);
+    if(Math.random()<0.6) addHideout(cx,cz,Math.min(w,d)*0.45,roof);
   }
   const mk=(geo,mats,cols)=>{
     if(!mats.length) return;
@@ -2322,6 +2460,30 @@ function addHideout(x,z,r,y){
   };
   mk(stepGeo,stepMats,stepCols); mk(platGeo,platMats,null);
 })();
+// ================= WALL LADDERS =================
+// bolt-on steel ladders up the side of some buildings — a straight vertical
+// climb to the roof for anyone willing to go hand-over-hand. Each is a climb
+// line at (x,z) with an outward-facing normal `ang`; the mechanic lives in
+// updateClimb().
+// Populated by the builder below the ramps — it needs every static obstacle
+// (buildings, trees, poles, dumpsters, benches, hydrants, rail pillars, ramps,
+// stair runs) to already exist so it can keep each ladder's climb corridor clear.
+const LADDERS=[];   // {x,z,ang,baseH,topH}
+// nearest ladder the player can grab from where they're standing, or null.
+// Bottom grab = pushing into the wall near the base; top grab = stepping off
+// the roof edge into the climb line.
+function ladderGrab(px,pz,py,moveAng){
+  const mvx=Math.sin(moveAng), mvz=Math.cos(moveAng);
+  for(const L of LADDERS){
+    const nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
+    const cX=L.x+nX*0.45, cZ=L.z+nZ*0.45;        // the climb line, out off the wall
+    if(Math.hypot(px-cX,pz-cZ)>1.25) continue;
+    const toward=mvx*nX+mvz*nZ;                    // <0 into the wall, >0 out toward the edge
+    if(py<=L.baseH+1.7 && toward<-0.25) return {L,from:'bottom'};
+    if(py>=L.topH-1.7 && toward>0.25) return {L,from:'top'};
+  }
+  return null;
+}
 // street-level hideouts: under every El station + behind the stadium bleachers
 RAIL_STATIONS.length&&[[0,-198],[198,0],[0,198],[-198,0]].forEach(st=>addHideout(st[0]+rand(-4,4),st[1]+rand(-4,4),7));
 if(FOOTBALL) addHideout(FOOTBALL.x,FOOTBALL.z+18,8);
@@ -2337,7 +2499,7 @@ function addRamp(x,z,dir){
   const lip=new THREE.Mesh(new THREE.BoxGeometry(6,0.3,0.6),
     new THREE.MeshBasicMaterial({color:0xffd23e}));
   lip.position.set(0,2.75,-3.7); grp.add(lip);
-  grp.position.set(x,0,z); grp.rotation.y=dir;
+  grp.position.set(x,groundH(x,z),z); grp.rotation.y=dir;
   scene.add(grp);
   ramps.push({x,z,dir,cool:0});
 }
@@ -2345,6 +2507,86 @@ blockInfo.forEach(b=>{ if(b.type==='park'&&!b.helipad) addRamp(b.cx+rand(-8,8),b
 addRamp(roadLines[2],roadLines[5]+PITCH/2,Math.PI/2);
 addRamp(roadLines[6],roadLines[3]-PITCH/2,-Math.PI/2);
 addRamp(roadLines[4]+PITCH/2,roadLines[4],0);
+
+// ---- wall-ladder placement: only where the climb corridor is provably clear ----
+// Runs after every static obstacle exists. For each candidate building it tries
+// all four walls and keeps the ladder only if the vertical corridor Turbo's body
+// sweeps (out from the wall, a little to each side) hits nothing else.
+(function(){
+  const rungGeo=new THREE.BoxGeometry(0.52,0.045,0.045);
+  const railGeo=new THREE.BoxGeometry(0.05,1,0.05);   // scaled to run height per instance
+  const rungMats=[], railMats=[];
+  const m4=new THREE.Matrix4(), q4=new THREE.Quaternion(), e4=new THREE.Euler(),
+        p4=new THREE.Vector3(), s4=new THREE.Vector3(1,1,1);
+  // is the climb corridor off this wall clear of everything but the host building?
+  function corridorClear(x,z,ang,host){
+    const nX=Math.sin(ang), nZ=Math.cos(ang), tX=Math.cos(ang), tZ=-Math.sin(ang);
+    const near=(sx,sz,arr,rad)=>{ const rr=rad*rad;
+      for(let i=0;i<arr.length;i++){ const dx=sx-arr[i].x, dz=sz-arr[i].z; if(dx*dx+dz*dz<rr) return true; } return false; };
+    // sample the corridor: several steps out from the wall, and a bit to each side
+    for(let di=0;di<4;di++){
+      const d=0.3+di*0.4;                       // 0.3 .. 1.5 out from the wall
+      for(let si=-1;si<=1;si++){
+        const sx=x+nX*d+tX*0.45*si, sz=z+nZ*d+tZ*0.45*si;
+        for(const b of buildings){ if(b===host) continue;
+          if(sx>b.minX-0.3&&sx<b.maxX+0.3&&sz>b.minZ-0.3&&sz<b.maxZ+0.3) return false; }
+        if(near(sx,sz,treeSpots,0.95)||near(sx,sz,palmSpots,0.95)) return false;
+        if(near(sx,sz,poleSpots,0.7)||near(sx,sz,HYDRANT_SPOTS,0.7)) return false;
+        if(near(sx,sz,DUMPSTER_SPOTS,1.35)||near(sx,sz,BENCH_SPOTS,1.2)) return false;
+        if(near(sx,sz,RAIL_PILLARS,1.2)) return false;
+        for(const rp of ramps){ if(orientedBoxHit(sx,sz,0.4,rp.x,rp.z,rp.dir,3.2,4.2)) return false; }
+        // don't spawn a ladder on top of an existing stair / fire-escape run
+        for(const r of STAIR_RUNS){
+          const rn=Math.sin(r.ang), rc=Math.cos(r.ang);
+          const lz=(sx-r.x)*rn+(sz-r.z)*rc, lx=(sx-r.x)*rc-(sz-r.z)*rn;
+          if(Math.abs(lx)<1.7&&lz>-0.8&&lz<r.len+0.8) return false;
+        }
+      }
+    }
+    return true;
+  }
+  function wallFor(b,side){
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
+    if(side===0) return {x:b.minX,z:cz,ang:-Math.PI/2};   // -x wall
+    if(side===1) return {x:b.maxX,z:cz,ang:Math.PI/2};    // +x wall
+    if(side===2) return {x:cx,z:b.minZ,ang:Math.PI};      // -z wall
+    return {x:cx,z:b.maxZ,ang:0};                          // +z wall
+  }
+  const candidates=buildings.filter(b=>b.h>6&&b.h<46);
+  const used=new Set();
+  let placed=0;
+  for(let attempt=0;attempt<80&&placed<12&&candidates.length;attempt++){
+    const b=pick(candidates), bkey=b.minX+','+b.minZ;
+    if(used.has(bkey)) continue;
+    // try all four walls in random order; take the first clear one
+    const sides=[0,1,2,3]; for(let i=sides.length-1;i>0;i--){ const j=randi(0,i); const t=sides[i]; sides[i]=sides[j]; sides[j]=t; }
+    let W=null;
+    for(const side of sides){ const w=wallFor(b,side); if(corridorClear(w.x,w.z,w.ang,b)){ W=w; break; } }
+    if(!W) continue;
+    used.add(bkey);
+    const nX=Math.sin(W.ang), nZ=Math.cos(W.ang);
+    const baseH=groundH(W.x+nX*0.5,W.z+nZ*0.5), topH=b.h;
+    if(topH-baseH<4) continue;
+    LADDERS.push({x:W.x,z:W.z,ang:W.ang,baseH,topH}); placed++;
+    // rungs + rails, nudged just proud of the wall face so they read
+    const tX=Math.cos(W.ang), tZ=-Math.sin(W.ang), fx=W.x+nX*0.07, fz=W.z+nZ*0.07;
+    e4.set(0,W.ang,0); q4.setFromEuler(e4);
+    [-1,1].forEach(s=>{
+      p4.set(fx+tX*0.24*s,(baseH+topH)/2,fz+tZ*0.24*s);
+      s4.set(1,topH-baseH,1); m4.compose(p4,q4,s4); railMats.push(m4.clone());
+    });
+    s4.set(1,1,1);
+    const n=Math.floor((topH-baseH)/0.42);
+    for(let i=1;i<n;i++){ p4.set(fx,baseH+i*0.42,fz); m4.compose(p4,q4,s4); rungMats.push(m4.clone()); }
+  }
+  const mk=(geo,mats,col)=>{
+    if(!mats.length) return;
+    const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:col}),mats.length);
+    mats.forEach((mm,i)=>im.setMatrixAt(i,mm));
+    im.instanceMatrix.needsUpdate=true; scene.add(im);
+  };
+  mk(rungGeo,rungMats,0x3a3f47); mk(railGeo,railMats,0x23272e);
+})();
 
 // circle vs building AABBs
 function buildingHit(x,z,r){
@@ -2372,7 +2614,7 @@ function buildingHit(x,z,r){
 // height of the building roof at a point (0 = open ground)
 function roofAt(x,z){
   for(const b of buildings){
-    if(x>b.minX&&x<b.maxX&&z>b.minZ&&z<b.maxZ) return b.h;
+    if(x>b.minX&&x<b.maxX&&z>b.minZ&&z<b.maxZ) return b.baseY+b.h;
   }
   return 0;
 }
@@ -2556,16 +2798,18 @@ function disposeMesh(obj){
 }
 
 // ================= CARS =================
+// snd.sub = sub-bass rumble weight, snd.grit = baseline mechanical noise floor,
+// snd.turbo = turbo whine/blow-off strength (0 = naturally aspirated, silent).
 const CARTYPES={
-  sedan:{top:30,accel:16,grip:8,hp:100,w:1.9,l:4.3,snd:{wave:'sawtooth',base:50,mult:150,lp:900}},
-  taxi:{top:32,accel:18,grip:8.5,hp:100,w:1.9,l:4.3,snd:{wave:'sawtooth',base:52,mult:155,lp:950}},
-  sports:{top:42,accel:24,grip:10,hp:80,w:1.85,l:4.1,snd:{wave:'sawtooth',base:70,mult:215,lp:1500}},
-  muscle:{top:40,accel:26,grip:7,hp:110,w:1.95,l:4.4,snd:{wave:'square',base:38,mult:110,lp:480}},
-  pickup:{top:26,accel:13,grip:6.5,hp:140,w:2.0,l:4.6,snd:{wave:'square',base:34,mult:95,lp:450}},
-  van:{top:24,accel:11,grip:6,hp:160,w:2.1,l:4.8,snd:{wave:'square',base:32,mult:88,lp:420}},
-  compact:{top:28,accel:15,grip:9,hp:80,w:1.75,l:3.6,snd:{wave:'triangle',base:58,mult:165,lp:1150}},
-  moto:{top:46,accel:30,grip:11,hp:50,w:0.8,l:2.3,snd:{wave:'sawtooth',base:95,mult:265,lp:1900}},
-  cop:{top:38,accel:22,grip:9.5,hp:120,w:1.9,l:4.3,snd:{wave:'sawtooth',base:55,mult:160,lp:1000}},
+  sedan:{top:30,accel:16,grip:8,hp:100,w:1.9,l:4.3,snd:{wave:'sawtooth',base:50,mult:150,lp:900,sub:0.22,grit:0.10,turbo:0}},
+  taxi:{top:32,accel:18,grip:8.5,hp:100,w:1.9,l:4.3,snd:{wave:'sawtooth',base:52,mult:155,lp:950,sub:0.22,grit:0.13,turbo:0}},
+  sports:{top:42,accel:24,grip:10,hp:80,w:1.85,l:4.1,snd:{wave:'sawtooth',base:70,mult:215,lp:1500,sub:0.08,grit:0.06,turbo:0.55}},
+  muscle:{top:40,accel:26,grip:7,hp:110,w:1.95,l:4.4,snd:{wave:'square',base:38,mult:110,lp:480,sub:0.55,grit:0.30,turbo:0}},
+  pickup:{top:26,accel:13,grip:6.5,hp:140,w:2.0,l:4.6,snd:{wave:'square',base:34,mult:95,lp:450,sub:0.50,grit:0.28,turbo:0.2}},
+  van:{top:24,accel:11,grip:6,hp:160,w:2.1,l:4.8,snd:{wave:'square',base:32,mult:88,lp:420,sub:0.45,grit:0.26,turbo:0}},
+  compact:{top:28,accel:15,grip:9,hp:80,w:1.75,l:3.6,snd:{wave:'triangle',base:58,mult:165,lp:1150,sub:0.14,grit:0.08,turbo:0.35}},
+  moto:{top:46,accel:30,grip:11,hp:50,w:0.8,l:2.3,snd:{wave:'sawtooth',base:95,mult:265,lp:1900,sub:0.05,grit:0.05,turbo:0}},
+  cop:{top:38,accel:22,grip:9.5,hp:120,w:1.9,l:4.3,snd:{wave:'sawtooth',base:55,mult:160,lp:1000,sub:0.28,grit:0.14,turbo:0.45}},
 };
 const CARCOLS=[0xd94f4f,0x4f7ad9,0x4fd97a,0xd9c44f,0xb44fd9,0x4fd9c8,0xd97a4f,0xe8e8e8,0x30303a];
 const cars=[];
@@ -3051,10 +3295,11 @@ doEnterExit=function(){
   const signMesh=new THREE.Mesh(new THREE.PlaneGeometry(10,3.2),
     new THREE.MeshBasicMaterial({map:signTex,transparent:true}));
   signMesh.position.set(0,CHAOS.h+1.8,CHAOS.d/2+0.1); grp.add(signMesh);
-  grp.position.set(CHAOS.x,0,CHAOS.z); scene.add(grp);
+  CHAOS.baseY=groundH(CHAOS.x,CHAOS.z);
+  grp.position.set(CHAOS.x,CHAOS.baseY,CHAOS.z); scene.add(grp);
   CHAOS.exterior=grp;
   buildings.push({minX:CHAOS.x-CHAOS.w/2,maxX:CHAOS.x+CHAOS.w/2,
-    minZ:CHAOS.z-CHAOS.d/2,maxZ:CHAOS.z+CHAOS.d/2,h:CHAOS.h});
+    minZ:CHAOS.z-CHAOS.d/2,maxZ:CHAOS.z+CHAOS.d/2,h:CHAOS.h,baseY:CHAOS.baseY});
 })();
 
 // Chaos Pizza drivers - purple cars, aggressive
@@ -3619,6 +3864,7 @@ updatePizzaDelivery=function(dt){
 const player={
   mesh:makePerson(0x37c8ff,'guy'), x:roadLines[4]+6, z:roadLines[4]+6,
   heading:0, phase:0, punchT:0, car:null, vy:0, y:0,
+  climb:null, climbPhase:0,   // set to {L} while hand-over-handing a wall ladder
 };
 scene.add(player.mesh);
 // Turbo's sunglasses — replay photo-op prop, slides on/off his face
@@ -3689,13 +3935,14 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
     new THREE.MeshLambertMaterial({color:0x5c3a2a}));
   frame.position.set(0,2.5,PIZZA.d/2+0.15); grp.add(frame);
 
-  grp.position.set(PIZZA.x,0,PIZZA.z);
+  PIZZA.baseY=groundH(PIZZA.x,PIZZA.z);
+  grp.position.set(PIZZA.x,PIZZA.baseY,PIZZA.z);
   scene.add(grp);
   PIZZA.exterior=grp;
 
   // Add collision box for the building
   buildings.push({minX:PIZZA.x-PIZZA.w/2,maxX:PIZZA.x+PIZZA.w/2,
-    minZ:PIZZA.z-PIZZA.d/2,maxZ:PIZZA.z+PIZZA.d/2,h:PIZZA.h});
+    minZ:PIZZA.z-PIZZA.d/2,maxZ:PIZZA.z+PIZZA.d/2,h:PIZZA.h,baseY:PIZZA.baseY});
 
   // Door trigger zone (front of building)
   PIZZA.doorX=PIZZA.x; PIZZA.doorZ=PIZZA.z+PIZZA.d/2+2.5;
@@ -3798,6 +4045,221 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
 
   // Interior door trigger
   PIZZA.iDoorX=0; PIZZA.iDoorZ=PIZZA.interiorY+id/2-2;
+})();
+
+// ================= SIDEWALKS & STOREFRONT AWNINGS =================
+// Cosmetic street dressing: curb strips along block edges, storefront
+// awnings (flat canopy or sloped wedge/prism), and curbside planters.
+// Downtown (near map center, same radius the skyline height split uses)
+// gets them densest; the outer ring gets them too, just sparser — reads
+// as a real density gradient instead of a hard city-limits line. Curbs
+// are thin (0.16u) so they stay cosmetic, not a collision hazard, and
+// everything is seated via groundH per TERRAIN.md's invariant.
+(function(){
+  const DOWNTOWN_R=170;
+  // unit wedge: x -.5..5 (width), y 0..1 (thickness, bottom=0), z -.5..5
+  // (depth; wall face at -.5, outer tip at +.5) — a sloped canopy/prism.
+  function makeWedgeGeo(){
+    const v=[[-.5,0,-.5],[-.5,1,-.5],[-.5,0,.5],[.5,0,-.5],[.5,1,-.5],[.5,0,.5]];
+    const tris=[[0,2,1],[3,4,5],[0,1,4],[0,4,3],[0,3,5],[0,5,2],[1,5,4],[1,2,5]];
+    const pos=[]; tris.forEach(t=>t.forEach(i=>pos.push(...v[i])));
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    geo.computeVertexNormals();
+    return geo;
+  }
+
+  const curbSpots=[];
+  blockInfo.forEach(b=>{
+    const downtown=Math.hypot(b.cx,b.cz)<DOWNTOWN_R;
+    const chance=downtown?1:0.4;
+    const half=BLOCK/2;
+    [[b.cx,b.cz-half,0],[b.cx,b.cz+half,0],[b.cx-half,b.cz,1],[b.cx+half,b.cz,1]]
+      .forEach(([x,z,axis])=>{ if(Math.random()<chance) curbSpots.push({x,z,axis,cx:b.cx,cz:b.cz,downtown}); });
+  });
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
+        pos=new THREE.Vector3(), scl=new THREE.Vector3(1,1,1), col=new THREE.Color();
+  if(curbSpots.length){
+    const curbGeo=new THREE.BoxGeometry(BLOCK-1,0.16,1.1); curbGeo.translate(0,0.08,0);
+    const curbInst=new THREE.InstancedMesh(curbGeo,new THREE.MeshLambertMaterial({color:0x3d3d42}),curbSpots.length);
+    curbSpots.forEach((s,i)=>{
+      e.set(0,s.axis?Math.PI/2:0,0); q.setFromEuler(e);
+      pos.set(s.x,groundH(s.x,s.z),s.z);
+      m.compose(pos,q,scl); curbInst.setMatrixAt(i,m);
+    });
+    curbInst.instanceMatrix.needsUpdate=true; scene.add(curbInst);
+  }
+
+  // curbside planters — small boxes + a bush, tucked onto the sidewalk
+  // (not the road side), denser downtown, purely decorative like the curbs.
+  const planterSpots=[];
+  curbSpots.forEach(s=>{
+    if(Math.random()>=(s.downtown?0.3:0.08)) return;
+    const t=rand(-BLOCK/2+3,BLOCK/2-3);
+    if(s.axis===0) planterSpots.push({x:s.x+t,z:s.z+Math.sign(s.cz-s.z)*1.3});
+    else planterSpots.push({x:s.x+Math.sign(s.cx-s.x)*1.3,z:s.z+t});
+  });
+  if(planterSpots.length){
+    const boxGeoP=new THREE.BoxGeometry(0.9,0.5,0.9); boxGeoP.translate(0,0.25,0);
+    const bushGeoP=new THREE.IcosahedronGeometry(0.55,1); bushGeoP.scale(1,0.7,1); bushGeoP.translate(0,0.75,0);
+    const boxInst=new THREE.InstancedMesh(boxGeoP,new THREE.MeshLambertMaterial({color:0x5c4a3a}),planterSpots.length);
+    const bushInst=new THREE.InstancedMesh(bushGeoP,new THREE.MeshLambertMaterial({color:0x2f7a42}),planterSpots.length);
+    planterSpots.forEach((p,i)=>{
+      e.set(0,rand(0,TAU),0); q.setFromEuler(e);
+      pos.set(p.x,groundH(p.x,p.z),p.z);
+      m.compose(pos,q,scl); boxInst.setMatrixAt(i,m); bushInst.setMatrixAt(i,m);
+    });
+    boxInst.instanceMatrix.needsUpdate=true; bushInst.instanceMatrix.needsUpdate=true;
+    scene.add(boxInst); scene.add(bushInst);
+  }
+
+  // storefront awnings — flat canopy or sloped wedge/prism, over a fraction
+  // of ground floors. Size varies per awning so some read as a bigger,
+  // fancier storefront statement than the small ones next door.
+  const boxSpots=[], wedgeSpots=[];
+  buildings.forEach(b=>{
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
+    if(CHAOS.x!==undefined&&Math.abs(cx-CHAOS.x)<3&&Math.abs(cz-CHAOS.z)<3) return; // already has one
+    if(PIZZA.x!==undefined&&Math.abs(cx-PIZZA.x)<3&&Math.abs(cz-PIZZA.z)<3) return; // already has one
+    const downtown=Math.hypot(cx,cz)<DOWNTOWN_R;
+    if(Math.random()>=(downtown?0.55:0.18)) return;
+    const w=b.maxX-b.minX, d=b.maxZ-b.minZ;
+    const sizeMul=rand(0.7,1.9);                       // some awnings much bigger than others
+    const aw=Math.min(w,d)*rand(0.5,0.85)*Math.min(sizeMul,1.3);
+    const thick=rand(0.4,0.7)*sizeMul, depth=rand(1.3,2.1)*sizeMul, hgt=rand(2.8,5.4);
+    let x=cx,z=cz,ry=0;
+    switch(randi(0,3)){
+      case 0: z=b.maxZ+depth/2; ry=0; break;
+      case 1: z=b.minZ-depth/2; ry=Math.PI; break;
+      case 2: x=b.maxX+depth/2; ry=Math.PI/2; break;
+      default: x=b.minX-depth/2; ry=-Math.PI/2;
+    }
+    const spot={x,z,ry,w:aw,th:thick,dp:depth,h:hgt};
+    (Math.random()<0.6?wedgeSpots:boxSpots).push(spot);   // most awnings are the sloped prism
+  });
+  const awnColors=[0xd93a3a,0xffd23e,0x37c8ff,0x2a6b3a,0xff7a3d,0xb04dff,0xf0f0f0];
+  function buildAwnings(geo,list){
+    if(!list.length) return;
+    const inst=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:0xffffff}),list.length);
+    list.forEach((s,i)=>{
+      e.set(0,s.ry,0); q.setFromEuler(e);
+      pos.set(s.x,groundH(s.x,s.z)+s.h,s.z); scl.set(s.w,s.th,s.dp);
+      m.compose(pos,q,scl); inst.setMatrixAt(i,m);
+      col.setHex(pick(awnColors)); inst.setColorAt(i,col);
+    });
+    inst.instanceMatrix.needsUpdate=true;
+    if(inst.instanceColor) inst.instanceColor.needsUpdate=true;
+    scene.add(inst);
+  }
+  const boxGeoA=new THREE.BoxGeometry(1,1,1); boxGeoA.translate(0,0.5,0);
+  buildAwnings(boxGeoA,boxSpots);
+  buildAwnings(makeWedgeGeo(),wedgeSpots);
+})();
+
+// ================= MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS =========
+// Sidewalk street trees, café tables/umbrellas outside some storefronts, and
+// banner flags on streetlight poles. Same deal as the block above: all
+// cosmetic-only (no collision) and density-graded, downtown thickest, the
+// outer ring a thinner sprinkling.
+(function(){
+  const DOWNTOWN_R=170;
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
+        pos=new THREE.Vector3(), scl=new THREE.Vector3(1,1,1), col=new THREE.Color();
+
+  // --- sidewalk street trees: trunk + canopy, purely decorative (the
+  // collidable park/street trees are a separate system built earlier) ---
+  const treeDressSpots=[];
+  blockInfo.forEach(b=>{
+    const downtown=Math.hypot(b.cx,b.cz)<DOWNTOWN_R;
+    const n=downtown?randi(2,5):(Math.random()<0.4?randi(0,2):0);
+    const half=BLOCK/2;
+    for(let k=0;k<n;k++){
+      const t=rand(-half+4,half-4);
+      switch(randi(0,3)){
+        case 0: treeDressSpots.push({x:b.cx+t,z:b.cz-half-1.6}); break;
+        case 1: treeDressSpots.push({x:b.cx+t,z:b.cz+half+1.6}); break;
+        case 2: treeDressSpots.push({x:b.cx-half-1.6,z:b.cz+t}); break;
+        default: treeDressSpots.push({x:b.cx+half+1.6,z:b.cz+t});
+      }
+    }
+  });
+  if(treeDressSpots.length){
+    const trunkGeo=new THREE.CylinderGeometry(0.13,0.18,2.2,6); trunkGeo.translate(0,1.1,0);
+    const canopyGeo=new THREE.IcosahedronGeometry(1,1); canopyGeo.translate(0,2.6,0);
+    const trunkInst=new THREE.InstancedMesh(trunkGeo,new THREE.MeshLambertMaterial({color:0x4a3324}),treeDressSpots.length);
+    const canopyInst=new THREE.InstancedMesh(canopyGeo,new THREE.MeshLambertMaterial({color:0xffffff}),treeDressSpots.length);
+    const greens=[0x2f7a42,0x357a3a,0x28683a,0x3a8a4a];
+    treeDressSpots.forEach((p,i)=>{
+      const s=rand(0.8,1.25);
+      e.set(0,rand(0,TAU),0); q.setFromEuler(e);
+      pos.set(p.x,groundH(p.x,p.z),p.z); scl.set(s,s,s);
+      m.compose(pos,q,scl); trunkInst.setMatrixAt(i,m); canopyInst.setMatrixAt(i,m);
+      col.setHex(pick(greens)); canopyInst.setColorAt(i,col);
+    });
+    trunkInst.instanceMatrix.needsUpdate=true; canopyInst.instanceMatrix.needsUpdate=true;
+    if(canopyInst.instanceColor) canopyInst.instanceColor.needsUpdate=true;
+    scene.add(trunkInst); scene.add(canopyInst);
+  }
+
+  // --- sidewalk café tables + umbrellas outside some storefronts ---
+  const cafeSpots=[];
+  buildings.forEach(b=>{
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
+    const downtown=Math.hypot(cx,cz)<DOWNTOWN_R;
+    if(Math.random()>=(downtown?0.22:0.05)) return;
+    const w=b.maxX-b.minX, d=b.maxZ-b.minZ, side=randi(0,3), n=randi(1,3);
+    for(let k=0;k<n;k++){
+      const along=rand(-Math.min(w,d)/2+2,Math.min(w,d)/2-2), out=rand(1.8,3.0);
+      let x=cx,z=cz;
+      if(side===0){ x=cx+along; z=b.maxZ+out; }
+      else if(side===1){ x=cx+along; z=b.minZ-out; }
+      else if(side===2){ x=b.maxX+out; z=cz+along; }
+      else { x=b.minX-out; z=cz+along; }
+      cafeSpots.push({x,z});
+    }
+  });
+  if(cafeSpots.length){
+    const tableGeo=new THREE.CylinderGeometry(0.55,0.5,0.05,10); tableGeo.translate(0,0.75,0);
+    const legGeo=new THREE.CylinderGeometry(0.05,0.05,0.75,6); legGeo.translate(0,0.375,0);
+    const poleGeoC=new THREE.CylinderGeometry(0.03,0.03,1.6,5); poleGeoC.translate(0,1.55,0);
+    const capGeo=new THREE.ConeGeometry(0.85,0.5,8); capGeo.translate(0,2.35,0);
+    const tableInst=new THREE.InstancedMesh(tableGeo,new THREE.MeshLambertMaterial({color:0xe8e0d0}),cafeSpots.length);
+    const legInst=new THREE.InstancedMesh(legGeo,new THREE.MeshLambertMaterial({color:0x2c2c34}),cafeSpots.length);
+    const poleInstC=new THREE.InstancedMesh(poleGeoC,new THREE.MeshLambertMaterial({color:0x2c2c34}),cafeSpots.length);
+    const capInst=new THREE.InstancedMesh(capGeo,new THREE.MeshLambertMaterial({color:0xffffff}),cafeSpots.length);
+    const capColors=[0xd93a3a,0xffd23e,0x37c8ff,0xff7a3d,0xb04dff,0x2a6b3a];
+    cafeSpots.forEach((p,i)=>{
+      e.set(0,rand(0,TAU),0); q.setFromEuler(e);
+      pos.set(p.x,groundH(p.x,p.z),p.z);
+      m.compose(pos,q,scl); tableInst.setMatrixAt(i,m); legInst.setMatrixAt(i,m);
+      poleInstC.setMatrixAt(i,m); capInst.setMatrixAt(i,m);
+      col.setHex(pick(capColors)); capInst.setColorAt(i,col);
+    });
+    [tableInst,legInst,poleInstC,capInst].forEach(inst=>{ inst.instanceMatrix.needsUpdate=true; scene.add(inst); });
+    if(capInst.instanceColor) capInst.instanceColor.needsUpdate=true;
+  }
+
+  // --- banner flags on streetlight poles ---
+  const bannerSpots=[];
+  poleSpots.forEach(p=>{
+    const downtown=Math.hypot(p.x,p.z)<DOWNTOWN_R;
+    if(Math.random()<(downtown?0.3:0.08)) bannerSpots.push(p);
+  });
+  if(bannerSpots.length){
+    const bannerGeo=new THREE.PlaneGeometry(0.6,1.4); bannerGeo.translate(0,-0.7,0);
+    const bannerMat=new THREE.MeshLambertMaterial({color:0xffffff,side:THREE.DoubleSide});
+    const bannerInst=new THREE.InstancedMesh(bannerGeo,bannerMat,bannerSpots.length);
+    const bannerColors=[0xd93a3a,0xffd23e,0x37c8ff,0x7dff8a,0xb04dff,0xff7a3d];
+    bannerSpots.forEach((p,i)=>{
+      e.set(0,rand(0,TAU),0); q.setFromEuler(e);
+      pos.set(p.x,groundH(p.x,p.z)+4.6,p.z);
+      m.compose(pos,q,scl); bannerInst.setMatrixAt(i,m);
+      col.setHex(pick(bannerColors)); bannerInst.setColorAt(i,col);
+    });
+    bannerInst.instanceMatrix.needsUpdate=true;
+    if(bannerInst.instanceColor) bannerInst.instanceColor.needsUpdate=true;
+    scene.add(bannerInst);
+  }
 })();
 
 // Interior state
@@ -4245,7 +4707,7 @@ function updateHeliMode(dt){
   }
   // ground or rooftop landing
   const roof=roofAt(h.x,h.z);
-  const floorY=(roof>0&&h.y>roof-3)?roof:0;
+  const floorY=(roof>0&&h.y>roof-3)?roof:groundH(h.x,h.z);
   if(h.y<=floorY){
     const impact=-h.vy;
     h.y=floorY;
@@ -4260,7 +4722,7 @@ function updateHeliMode(dt){
   if(hit){
     let roof=0;
     for(const b of buildings){
-      if(h.x>b.minX&&h.x<b.maxX&&h.z>b.minZ&&h.z<b.maxZ){ roof=b.h; break; }
+      if(h.x>b.minX&&h.x<b.maxX&&h.z>b.minZ&&h.z<b.maxZ){ roof=b.baseY+b.h; break; }
     }
     if(h.y<roof){
       h.x+=hit.nx*hit.depth; h.z+=hit.nz*hit.depth;
@@ -4354,7 +4816,7 @@ function updatePilotlessHelis(dt){
     h.mesh.userData.rotor.rotation.y+=h.spin*30*dt;
     updateHeliShadow(h);
     const roof=roofAt(h.x,h.z);
-    const floorY=(roof>0&&h.y>roof-3)?roof:0;
+    const floorY=(roof>0&&h.y>roof-3)?roof:groundH(h.x,h.z);
     if(h.y<=floorY){
       burst(h.x,floorY+1,h.z,40,COL_FIRE,8,1.2,4);
       sfx.bigCrash(); shake(0.6);
@@ -5122,6 +5584,7 @@ Object.keys(btnMap).forEach(id=>{
 });
 function doJump(){
   if(!G.started||G.over||G.mode!=='foot') return;
+  if(player.climb){ bailLadder(); return; }   // push off the rungs
   if(player.y<=0.02&&player.vy<=0){
     player.vy=8.6; player.y=0.03;
     blip(300,520,0.12,0.12,'triangle');
@@ -5552,12 +6015,16 @@ function updateFoot(dt){
     if(p.stunT<=0) p.mesh.rotation.x=0;
     return;
   }
+  if(p.climb){ updateClimb(dt); return; }   // on a wall ladder — vertical rules take over
   const mx=input.jx, mz=input.jy;
   const mag=Math.min(1,Math.hypot(mx,mz));
   p.moveMag=mag;
   if(mag>0.12){
     const camYaw=Math.atan2(camera.position.x-p.x,camera.position.z-p.z);
     const moveAng=Math.atan2(-mx,-mz)+camYaw+Math.PI;
+    // walk into the foot of a ladder (or step off the roof edge onto one) to grab on
+    const grab=ladderGrab(p.x,p.z,p.y,moveAng);
+    if(grab){ mountLadder(grab); return; }
     const sp=mag>0.85?8.2:4.6;
     let nx=p.x+Math.sin(moveAng)*sp*mag*dt, nz=p.z+Math.cos(moveAng)*sp*mag*dt;
     // on a sloped staircase your feet find the steps: movement follows the climb
@@ -5600,15 +6067,38 @@ function updateFoot(dt){
   p.mesh.position.set(p.x,p.y+Math.abs(Math.sin(p.phase))*0.06,p.z);
   p.mesh.rotation.y=p.heading;
   const u=p.mesh.userData;
-  const airborne=p.y>0.02;
-  const sw=airborne?0:Math.sin(p.phase)*0.55;
-  u.legL.rotation.x=airborne?-0.5:sw; u.legR.rotation.x=airborne?0.35:-sw;
-  u.armL.rotation.x=airborne?-2.4:-sw; u.armR.rotation.x=airborne?-2.4:sw;
-  u.head.rotation.x=airborne?-0.15:0;
-  // torso articulation: twist + lean into the stride
-  if(u.torso){
-    u.torso.rotation.y=Math.sin(p.phase)*0.12*mag;
-    u.torso.rotation.x=airborne?0.12:mag*0.07;
+  // Climbing wins over the jump pose: on a sloped run, hugging its surface, and
+  // moving = a climb, even though the per-frame slope/gravity overshoot leaves
+  // p.y a hair above the step (a real leap clears sh by far more than this).
+  const climbing=onStairs&&st.r.topH!==st.r.baseH&&mag>0.12&&p.y<sh+0.6;
+  // "airborne" = genuinely off the deck (jump/fall), measured against the floor
+  // under his feet — so standing on elevated stairs or a roof no longer reads as
+  // a jump (that bug froze Turbo mid-leap while climbing).
+  const airborne=p.y>ground+0.08&&!climbing;
+  if(climbing){
+    // stair climb: legs alternate a high-knee step, arms pump opposite, and he
+    // leans into the slope with his eyes up the run.
+    const ph=p.phase;
+    const liftL=Math.max(0,Math.sin(ph)), liftR=Math.max(0,Math.sin(ph+Math.PI));
+    u.legL.rotation.x=-0.18-liftL*0.72;   // thigh drives forward+up on the rising leg
+    u.legR.rotation.x=-0.18-liftR*0.72;
+    if(u.kneeL) u.kneeL.rotation.x=0.25+liftL*1.20;   // knee folds to clear the next step
+    if(u.kneeR) u.kneeR.rotation.x=0.25+liftR*1.20;
+    const asw=Math.sin(ph)*0.5;
+    u.armL.rotation.x=asw; u.armR.rotation.x=-asw;
+    u.head.rotation.x=0.12;
+    if(u.torso){ u.torso.rotation.y=Math.sin(ph)*0.08; u.torso.rotation.x=0.2; }
+  } else {
+    const sw=airborne?0:Math.sin(p.phase)*0.55;
+    u.legL.rotation.x=airborne?-0.5:sw; u.legR.rotation.x=airborne?0.35:-sw;
+    if(u.kneeL) u.kneeL.rotation.x=0; if(u.kneeR) u.kneeR.rotation.x=0;   // knees straight off the stairs
+    u.armL.rotation.x=airborne?-2.4:-sw; u.armR.rotation.x=airborne?-2.4:sw;
+    u.head.rotation.x=airborne?-0.15:0;
+    // torso articulation: twist + lean into the stride
+    if(u.torso){
+      u.torso.rotation.y=Math.sin(p.phase)*0.12*mag;
+      u.torso.rotation.x=airborne?0.12:mag*0.07;
+    }
   }
   if(G.weapon==='pistol'||G.weapon==='rpg'){
     // twin-stick: Turbo faces wherever the camera aims, gun arm leveled —
@@ -5655,6 +6145,49 @@ function updateFoot(dt){
   fhp.style.display='block';
   $('footHpFill').style.width=Math.max(0,G.hp)+'%';
   collectPickups(p.x,p.z,1.6);
+}
+// ---- wall-ladder climbing ----
+function mountLadder(grab){
+  const p=player, L=grab.L, nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
+  p.climb={L}; p.vy=0;
+  p.x=L.x+nX*0.45; p.z=L.z+nZ*0.45;
+  p.y=clamp(p.y,L.baseH,L.topH);
+  p.heading=L.ang+Math.PI;   // chest to the wall
+  p.mesh.rotation.y=p.heading;
+  blip(240,320,0.09,0.1,'triangle');
+}
+function bailLadder(){   // shove off the rungs into a short backward hop
+  const p=player; if(!p.climb) return;
+  const L=p.climb.L, nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
+  p.x=L.x+nX*1.15; p.z=L.z+nZ*1.15; p.vy=4.4; p.climb=null;
+  blip(260,170,0.1,0.12,'sine');
+}
+function updateClimb(dt){
+  const p=player, L=p.climb.L, u=p.mesh.userData;
+  const nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
+  // glued to the climb line, facing the wall
+  p.x=L.x+nX*0.45; p.z=L.z+nZ*0.45; p.vy=0;
+  p.heading=L.ang+Math.PI;
+  // W climbs, S descends; nothing pressed = hang in place
+  const up=-input.jy, spd=2.8, moved=up*spd*dt;
+  p.y=clamp(p.y+moved,L.baseH,L.topH);
+  p.climbPhase+=Math.abs(moved)*6.5;
+  // top out onto the roof, or step down off the bottom onto the street
+  if(p.y>=L.topH-0.02&&up>0.1){ p.x=L.x-nX*1.5; p.z=L.z-nZ*1.5; p.y=L.topH; p.climb=null; }
+  else if(p.y<=L.baseH+0.02&&up<-0.1){ p.x=L.x+nX*0.9; p.z=L.z+nZ*0.9; p.y=L.baseH; p.climb=null; }
+  // place + pose (hand-over-hand: opposite hand and foot rise together)
+  p.mesh.position.set(p.x,p.y,p.z);
+  p.mesh.rotation.y=p.heading;
+  const ph=p.climbPhase, rL=Math.sin(ph), rR=-rL;
+  u.armL.rotation.x=-2.30-Math.max(0,rL)*0.55;   // reaching hand stretches higher
+  u.armR.rotation.x=-2.30-Math.max(0,rR)*0.55;
+  const liftL=Math.max(0,rR), liftR=Math.max(0,rL);   // contralateral to the arms
+  u.legL.rotation.x=-0.14-liftL*0.60;
+  u.legR.rotation.x=-0.14-liftR*0.60;
+  if(u.kneeL) u.kneeL.rotation.x=0.20+liftL*0.85;
+  if(u.kneeR) u.kneeR.rotation.x=0.20+liftR*0.85;
+  u.head.rotation.x=0.16;   // eyes up the climb
+  if(u.torso){ u.torso.rotation.y=Math.sin(ph)*0.06; u.torso.rotation.x=0.05; }
 }
 function doEnterExit(){
   if(!G.started||G.over) return;
@@ -5703,6 +6236,9 @@ function exitCar(){
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
   if(skidGain) skidGain.gain.value=0;
+  if(engineSubGain) engineSubGain.gain.value=0;
+  if(engineGritGain) engineGritGain.gain.value=0;
+  if(turboGain) turboGain.gain.value=0;
 }
 function updateCarMode(dt){
   const c=player.car;
@@ -5751,6 +6287,9 @@ function updateCarMode(dt){
     toast('YOU DROVE INTO THE OCEAN!','bad');
     if(engineGain) engineGain.gain.value=0;
     if(skidGain) skidGain.gain.value=0;
+    if(engineSubGain) engineSubGain.gain.value=0;
+    if(engineGritGain) engineGritGain.gain.value=0;
+    if(turboGain) turboGain.gain.value=0;
   }
   if(c.sinking){
     c.sinkT+=dt;
@@ -5795,6 +6334,23 @@ function updateCarMode(dt){
     engineOsc.frequency.value=lerp(engineOsc.frequency.value,target,1-Math.exp(-(c.shiftT>0?4:9)*dt));
     engineLP.frequency.value=300+rpm*950+g*90;   // warmer top end — no shrill static
     skidGain.gain.value=ctl.drift&&Math.abs(c.speed)>9?0.14:0;
+    // --- sub-bass rumble: shadows the main tone an octave down, weighted per car ---
+    engineSubOsc.frequency.value=engineOsc.frequency.value*0.5;
+    engineSubGain.gain.value=lerp(engineSubGain.gain.value,snd.sub*(0.05+sr*0.06),0.15);
+    // --- mechanical grit: baseline texture, roughens further as the car takes damage ---
+    const dmg=1-clamp(c.hp/c.maxhp,0,1);
+    engineGritFilter.frequency.value=180+rpm*260;
+    engineGritGain.gain.value=lerp(engineGritGain.gain.value,(snd.grit*0.05+dmg*0.09)*(0.3+sr*0.7),0.15);
+    // --- turbo spool: whistle rises with revs/boost, dumps with a "pssh" when you lift off ---
+    const boosted=ctl.boost&&G.boost>0;
+    if(snd.turbo>0){
+      turboOsc.frequency.value=lerp(turboOsc.frequency.value,900+rpm*2200+(boosted?900:0),0.12);
+      turboGain.gain.value=lerp(turboGain.gain.value,snd.turbo*(rpm*0.05+(boosted?0.05:0)),0.2);
+      if(c.turboOn&&!boosted) turboBlowOff(snd.turbo);
+      c.turboOn=boosted;
+    } else turboGain.gain.value=lerp(turboGain.gain.value,0,0.2);
+    // --- damage misfire: engine skips a beat, more often the closer to death ---
+    if(dmg>0.45&&Math.random()<dt*(dmg-0.45)*7) engineMisfire(dmg);
   }
   for(const ped of peds){
     if(ped.state==='down') continue;
@@ -5953,7 +6509,7 @@ const beacon=(function(){
 })();
 function setBeacon(x,z){
   if(x===null){ beacon.visible=false; return; }
-  beacon.visible=true; beacon.position.set(x,0,z);
+  beacon.visible=true; beacon.position.set(x,groundH(x,z),z);
 }
 function startMission(){
   const types=['delivery','style','checkpoints','rampage','heat'];
@@ -6617,6 +7173,9 @@ function exitCarSoft(){
   if(engineGain) engineGain.gain.value=0;
   if(skidGain) skidGain.gain.value=0;
   if(heliChopGain){ heliChopGain.gain.value=0; heliChopDepth.gain.value=0; }
+  if(engineSubGain) engineSubGain.gain.value=0;
+  if(engineGritGain) engineGritGain.gain.value=0;
+  if(turboGain) turboGain.gain.value=0;
 }
 function respawn(spot){
   G.over=true;
@@ -6752,7 +7311,8 @@ function updateCamera(dt){
     const tgt=cameraCollide(p.x,p.y+1.5,p.z,
       p.x-Math.sin(footCamYaw)*6.5,p.y+2.9+camPitch*2.6,p.z-Math.cos(footCamYaw)*6.5);
     camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-4*dt));
-    if(camPos.y<0.45) camPos.y=0.45;   // looking down from below ground is a bad time
+    const camFloor=groundH(camPos.x,camPos.z)+0.45;
+    if(camPos.y<camFloor) camPos.y=camFloor;   // looking down from below ground is a bad time
     camera.fov=lerp(camera.fov,62,0.1);
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
@@ -7170,10 +7730,10 @@ function spawnDeb(){
   });
   const mesh=makePerson(0xff3ea0,'girl');
   deb={mesh,x:best.x+5,z:best.z+5,heading:0,bub:null,bubT:0,lineIdx:0,sayT:1.2,leaving:false,gone:0};
-  mesh.position.set(deb.x,0,deb.z);
+  mesh.position.set(deb.x,groundH(deb.x,deb.z),deb.z);
   scene.add(mesh);
   debBeacon=makePillar(0xff3ea0,1.1,26);
-  debBeacon.position.set(deb.x,0,deb.z);
+  debBeacon.position.set(deb.x,groundH(deb.x,deb.z),deb.z);
   scene.add(debBeacon);
 }
 function updateStory(dt){
@@ -7181,7 +7741,7 @@ function updateStory(dt){
   if(deb.leaving){
     deb.x+=Math.sin(deb.heading)*1.6*dt; deb.z+=Math.cos(deb.heading)*1.6*dt;
     deb.phase=(deb.phase||0)+dt*4;
-    deb.mesh.position.set(deb.x,0,deb.z);
+    deb.mesh.position.set(deb.x,groundH(deb.x,deb.z),deb.z);
     deb.mesh.rotation.y=deb.heading;
     const sw=Math.sin(deb.phase)*0.5, u=deb.mesh.userData;
     u.legL.rotation.x=sw; u.legR.rotation.x=-sw; u.armL.rotation.x=-sw; u.armR.rotation.x=sw;
@@ -7194,7 +7754,7 @@ function updateStory(dt){
   if(d<9) deb.heading=Math.atan2(player.x-deb.x,player.z-deb.z);
   deb.mesh.rotation.y=deb.heading;
   const tNow=performance.now();
-  deb.mesh.position.y=Math.abs(Math.sin(tNow/480))*0.025;
+  deb.mesh.position.y=groundH(deb.x,deb.z)+Math.abs(Math.sin(tNow/480))*0.025;
   if(debBeacon) debBeacon.material.opacity=0.24+Math.sin(tNow/280)*0.12;
   // project her speech bubble
   if(deb.bub&&deb.bubT>0){
@@ -7332,7 +7892,7 @@ const stores=[];
     const b=cand.splice(randi(0,cand.length-1),1)[0];
     const x=(b.minX+b.maxX)/2, z=b.minZ-2.2;
     const beacon=makePillar(0x37c8ff,0.9,7);
-    beacon.position.set(x,0,z); scene.add(beacon);
+    beacon.position.set(x,groundH(x,z),z); scene.add(beacon);
     stores.push({x,z,cool:0,robT:0,warned:false,hinted:false,beacon});
   }
 })();
