@@ -1484,14 +1484,70 @@ const helipads=[];
   const fb=parks.find(b=>!b.helipad&&!b.football);
   if(fb) fb.football=true;
 })();
-// ---- terrain: gentle knolls in the parks, dunes out on the beach ring ----
+// ---- terrain: terraced blocks + graded streets, signature hills, knolls in the
+// parks, dunes on the beach ring ----
+// see TERRAIN.md — groundH stays a single-valued height field; every
+// world-placed object reads its Y from it. Real streets don't bank sideways,
+// so this is a lattice, not a raw noise sample: each block is a flat plateau,
+// each road segment grades LINEARLY between the two intersections it connects
+// (constant across the road's width — only the direction of travel slopes),
+// and intersections are shared flat plateaus so adjacent roads always agree.
+// Retaining walls (below) dress the seam where a flat block meets a graded street.
 const KNOLLS=[];
 blockInfo.forEach(b=>{
   if(b.type==='park'&&!b.helipad&&!b.football)
     KNOLLS.push({x:b.cx+rand(-6,6),z:b.cz+rand(-6,6),r:rand(11,15),h:rand(2.0,3.0)});
 });
-function groundH(x,z){
+const CITY_AMP=5.5;   // gentle whole-map roll, capped low so street grade stays drivable
+function cityRelief(x,z){
+  const m=Math.max(Math.abs(x),Math.abs(z));
+  const edge=1-clamp((m-(H-40))/40,0,1);   // fade out approaching the flat dune ring
+  return CITY_AMP*(0.5+0.5*Math.sin(x*0.011+1.3)*Math.cos(z*0.013))*edge;
+}
+// two named hills — kept well inside the elevated rail loop (radius ~172-224) so
+// the rail's variable-length pillars never go negative.
+const SIGNATURE_HILLS=[
+  {x:-70,z:50,r:65,h:11},
+  {x:60,z:-70,r:60,h:9},
+];
+function hillsAt(x,z){
   let h=0;
+  for(let i=0;i<SIGNATURE_HILLS.length;i++){
+    const k=SIGNATURE_HILLS[i], dx=x-k.x, dz=z-k.z, d2=dx*dx+dz*dz;
+    if(d2<k.r*k.r) h+=k.h*0.5*(1+Math.cos(Math.PI*Math.sqrt(d2)/k.r));
+  }
+  return h;
+}
+// VERT_H: height at every road intersection, sampled straight off the smooth
+// relief field. PAD_H: each block's flat pad = the average of its 4 corners.
+const VERT_H=[], PAD_H=[];
+for(let i=0;i<=WORLD.blocks;i++){
+  VERT_H[i]=[];
+  for(let j=0;j<=WORLD.blocks;j++) VERT_H[i][j]=cityRelief(roadLines[i],roadLines[j])+hillsAt(roadLines[i],roadLines[j]);
+}
+for(let i=0;i<WORLD.blocks;i++){
+  PAD_H[i]=[];
+  for(let j=0;j<WORLD.blocks;j++) PAD_H[i][j]=(VERT_H[i][j]+VERT_H[i+1][j]+VERT_H[i][j+1]+VERT_H[i+1][j+1])/4;
+}
+function groundH(x,z){
+  const nb=WORLD.blocks;
+  const ci=clamp(Math.floor((x-roadLines[0])/PITCH),0,nb-1);
+  const cj=clamp(Math.floor((z-roadLines[0])/PITCH),0,nb-1);
+  const lx=x-roadLines[ci], lz=z-roadLines[cj];
+  const onRoadX=lx<ROAD/2||lx>PITCH-ROAD/2, onRoadZ=lz<ROAD/2||lz>PITCH-ROAD/2;
+  let h;
+  if(onRoadX&&onRoadZ){
+    const iR=lx<ROAD/2?ci:ci+1, jR=lz<ROAD/2?cj:cj+1;
+    h=VERT_H[iR][jR];                                    // intersections: flat plateaus
+  } else if(onRoadX){
+    const iR=lx<ROAD/2?ci:ci+1, t=clamp((lz-ROAD/2)/(PITCH-ROAD),0,1);
+    h=lerp(VERT_H[iR][cj],VERT_H[iR][cj+1],t);            // N/S street: grades along z only
+  } else if(onRoadZ){
+    const jR=lz<ROAD/2?cj:cj+1, t=clamp((lx-ROAD/2)/(PITCH-ROAD),0,1);
+    h=lerp(VERT_H[ci][jR],VERT_H[ci+1][jR],t);            // E/W street: grades along x only
+  } else {
+    h=PAD_H[ci][cj];                                      // block interior: flat pad
+  }
   for(let i=0;i<KNOLLS.length;i++){
     const k=KNOLLS[i], dx=x-k.x, dz=z-k.z, d2=dx*dx+dz*dz;
     if(d2<k.r*k.r) h+=k.h*0.5*(1+Math.cos(Math.PI*Math.sqrt(d2)/k.r));
@@ -1525,8 +1581,61 @@ function stairHitRun(x,z){
   return best;
 }
 function stairH(x,z){ const st=stairHitRun(x,z); return st?st.h:0; }
+// retaining walls / curbs: dressing wherever a block's flat pad doesn't meet
+// its bordering street at the same height, so the seam reads as a designed
+// ledge instead of a glitch. Small steps (a curb) are cosmetic only — cars &
+// feet just follow groundH's little hop. Bigger drops get a real climbable
+// stair cut through the wall, per TERRAIN.md's "retaining walls or stairs."
+(function(){
+  const CURB_WALLS=[];
+  const rampMat=new THREE.MeshLambertMaterial({color:0x565064});
+  const rampGeo=new THREE.BoxGeometry(4.2,0.4,1); rampGeo.translate(0,0,0.5);
+  for(let i=0;i<WORLD.blocks;i++) for(let j=0;j<WORLD.blocks;j++){
+    const pad=PAD_H[i][j];
+    const cx0=roadLines[i]+ROAD/2, cx1=roadLines[i+1]-ROAD/2;
+    const cz0=roadLines[j]+ROAD/2, cz1=roadLines[j+1]-ROAD/2;
+    const edges=[
+      {hA:VERT_H[i][j],  hB:VERT_H[i][j+1],  ex:cx0,        ez:(cz0+cz1)/2, sx:0.5,  sz:BLOCK, blockAng:Math.PI/2},   // west: block is +x
+      {hA:VERT_H[i+1][j],hB:VERT_H[i+1][j+1],ex:cx1,        ez:(cz0+cz1)/2, sx:0.5,  sz:BLOCK, blockAng:-Math.PI/2}, // east: block is -x
+      {hA:VERT_H[i][j],  hB:VERT_H[i+1][j],  ex:(cx0+cx1)/2,ez:cz0,         sx:BLOCK,sz:0.5,   blockAng:0},          // south: block is +z
+      {hA:VERT_H[i][j+1],hB:VERT_H[i+1][j+1],ex:(cx0+cx1)/2,ez:cz1,         sx:BLOCK,sz:0.5,   blockAng:Math.PI},    // north: block is -z
+    ];
+    edges.forEach(e=>{
+      const top=Math.max(pad,e.hA,e.hB), bot=Math.min(pad,e.hA,e.hB), diff=top-bot;
+      if(diff<=0.35) return;
+      if(diff<=1.5){ CURB_WALLS.push([e.ex,bot,e.ez,e.sx,diff,e.sz]); return; }
+      // taller drops get a real, visible stair/ramp run instead of a sheer wall —
+      // running from the low side to the high side, through the seam
+      const ang=pad>(e.hA+e.hB)/2?e.blockAng:e.blockAng+Math.PI;
+      const len=clamp(diff*1.3,3,14);
+      const rx=e.ex-Math.sin(ang)*len/2, rz=e.ez-Math.cos(ang)*len/2;
+      STAIR_RUNS.push({x:rx,z:rz,ang,len,baseH:bot,topH:top});
+      const ramp=new THREE.Mesh(rampGeo,rampMat);
+      ramp.position.set(rx,bot,rz);
+      ramp.rotation.y=ang;
+      ramp.rotation.x=-Math.atan2(top-bot,len);
+      ramp.scale.z=len/Math.cos(Math.atan2(top-bot,len));
+      scene.add(ramp);
+    });
+  }
+  if(!CURB_WALLS.length) return;
+  const geo=new THREE.BoxGeometry(1,1,1); geo.translate(0,0.5,0);
+  const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:0x4a4658}),CURB_WALLS.length);
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), pos=new THREE.Vector3(), scl=new THREE.Vector3();
+  CURB_WALLS.forEach((w,i)=>{
+    pos.set(w[0],w[1],w[2]); scl.set(w[3],w[4],w[5]);
+    m.compose(pos,q,scl); im.setMatrixAt(i,m);
+  });
+  im.instanceMatrix.needsUpdate=true; scene.add(im);
+})();
+const BUILDING_SKIRT=2.5;   // foundation skirt: hides the uphill gap on graded ground
+function footprintBaseY(minX,maxX,minZ,maxZ){
+  // lowest of the four corners, so the building never floats on a slope
+  return Math.min(groundH(minX,minZ),groundH(minX,maxZ),groundH(maxX,minZ),groundH(maxX,maxZ));
+}
 function addBuilding(cx,cz,w,d,h){
-  buildings.push({minX:cx-w/2,maxX:cx+w/2,minZ:cz-d/2,maxZ:cz+d/2,h});
+  const minX=cx-w/2,maxX=cx+w/2,minZ=cz-d/2,maxZ=cz+d/2;
+  buildings.push({minX,maxX,minZ,maxZ,h,baseY:footprintBaseY(minX,maxX,minZ,maxZ)});
 }
 blockInfo.forEach(b=>{
   if(b.type!=='bldg') return;
@@ -1722,8 +1831,8 @@ function overWater(x,z){ return Math.abs(x)>WATER_R||Math.abs(z)>WATER_R; }
     const m=new THREE.Matrix4(), q=new THREE.Quaternion(),
           pos=new THREE.Vector3(), scl=new THREE.Vector3(), col=new THREE.Color();
     list.forEach((b,i)=>{
-      pos.set((b.minX+b.maxX)/2,0,(b.minZ+b.maxZ)/2);
-      scl.set(b.maxX-b.minX,b.h,b.maxZ-b.minZ);
+      pos.set((b.minX+b.maxX)/2,b.baseY-BUILDING_SKIRT,(b.minZ+b.maxZ)/2);
+      scl.set(b.maxX-b.minX,b.h+BUILDING_SKIRT,b.maxZ-b.minZ);
       m.compose(pos,q,scl); inst.setMatrixAt(i,m);
       col.setHex(pick(palette)).multiplyScalar(rand(0.45,0.85));
       inst.setColorAt(i,col);
@@ -1735,10 +1844,10 @@ function overWater(x,z){ return Math.abs(x)>WATER_R||Math.abs(z)>WATER_R; }
   // setback crowns on the tall boys + a parapet lip on every roof
   const crowns=[], lips=[];
   buildings.forEach(b=>{
-    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ;
-    lips.push([cx,b.h,cz,w+0.7,0.5,d+0.7]);
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ, roof=b.baseY+b.h;
+    lips.push([cx,roof,cz,w+0.7,0.5,d+0.7]);
     if(b.h>34&&Math.random()<0.6)
-      crowns.push([cx+rand(-1,1),b.h,cz+rand(-1,1),w*rand(0.55,0.75),b.h*rand(0.18,0.3),d*rand(0.55,0.75)]);
+      crowns.push([cx+rand(-1,1),roof,cz+rand(-1,1),w*rand(0.55,0.75),b.h*rand(0.18,0.3),d*rand(0.55,0.75)]);
   });
   function slab(list,color){
     if(!list.length) return;
@@ -1760,11 +1869,11 @@ function overWater(x,z){ return Math.abs(x)>WATER_R||Math.abs(z)>WATER_R; }
   const anGeo=new THREE.CylinderGeometry(0.04,0.06,4.5,4); anGeo.translate(0,2.25,0);
   const acs=[],wts=[],ans=[];
   buildings.forEach(b=>{
-    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ;
-    if(Math.random()<0.8) acs.push([cx+rand(-w/4,w/4),b.h,cz+rand(-d/4,d/4)]);
-    if(Math.random()<0.5) acs.push([cx+rand(-w/4,w/4),b.h,cz+rand(-d/4,d/4)]);
-    if(b.h>18&&Math.random()<0.4) wts.push([cx+rand(-w/6,w/6),b.h,cz+rand(-d/6,d/6)]);
-    if(b.h>26&&Math.random()<0.55) ans.push([cx,b.h,cz]);
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ, roof=b.baseY+b.h;
+    if(Math.random()<0.8) acs.push([cx+rand(-w/4,w/4),roof,cz+rand(-d/4,d/4)]);
+    if(Math.random()<0.5) acs.push([cx+rand(-w/4,w/4),roof,cz+rand(-d/4,d/4)]);
+    if(b.h>18&&Math.random()<0.4) wts.push([cx+rand(-w/6,w/6),roof,cz+rand(-d/6,d/6)]);
+    if(b.h>26&&Math.random()<0.55) ans.push([cx,roof,cz]);
   });
   function inst(geo,color,list){
     if(!list.length) return;
@@ -1807,7 +1916,7 @@ function updateLights(dt){
   const m=new THREE.Matrix4(), q=new THREE.Quaternion(), p=new THREE.Vector3(), s=new THREE.Vector3(1,1,1), col=new THREE.Color();
   const cols=[0xff3333,0xffc233,0x33ff66];
   spots.forEach((sp,i)=>{
-    p.set(sp.x,0,sp.z); m.compose(p,q,s); pi.setMatrixAt(i,m); hi.setMatrixAt(i,m);
+    p.set(sp.x,groundH(sp.x,sp.z),sp.z); m.compose(p,q,s); pi.setMatrixAt(i,m); hi.setMatrixAt(i,m);
     for(let k=0;k<3;k++){
       p.set(sp.x,4.9-k*0.34,sp.z+0.28); m.compose(p,q,s);
       li.setMatrixAt(i*3+k,m); li.setColorAt(i*3+k,col.setHex(cols[k]));
@@ -1883,7 +1992,7 @@ function updateGulls(dt){
   const ci=new THREE.InstancedMesh(coneGeo,new THREE.MeshLambertMaterial({color:0xffffff}),umbs.length);
   umbs.forEach((u,i)=>{
     e.set(0,rand(0,TAU),rand(-0.08,0.08)); q.setFromEuler(e);
-    p.set(u.x,0,u.z); s.set(1,1,1); m.compose(p,q,s);
+    p.set(u.x,groundH(u.x,u.z),u.z); s.set(1,1,1); m.compose(p,q,s);
     pi.setMatrixAt(i,m); ci.setMatrixAt(i,m);
     ci.setColorAt(i,col.setHex(pick([0xff3ea0,0x37c8ff,0xffd23e,0x7dff8a,0xff7a3d])));
   });
@@ -1894,7 +2003,7 @@ function updateGulls(dt){
   const ti=new THREE.InstancedMesh(towGeo,new THREE.MeshLambertMaterial({color:0xffffff}),towels.length);
   towels.forEach((u,i)=>{
     e.set(0,rand(0,TAU),0); q.setFromEuler(e);
-    p.set(u.x,0,u.z); s.set(1,1,1); m.compose(p,q,s);
+    p.set(u.x,groundH(u.x,u.z),u.z); s.set(1,1,1); m.compose(p,q,s);
     ti.setMatrixAt(i,m); ti.setColorAt(i,col.setHex(pick([0xff3ea0,0x37c8ff,0xffd23e,0x7dff8a,0xff7a3d,0xe8e8e8])));
   });
   ti.instanceMatrix.needsUpdate=true;
@@ -1992,7 +2101,7 @@ const poleSpots=[];
   const pi=new THREE.InstancedMesh(poleGeo,poleMat,spots.length);
   const hi=new THREE.InstancedMesh(headGeo,headMat,spots.length);
   const m=new THREE.Matrix4(),pos=new THREE.Vector3(),q=new THREE.Quaternion(),scl=new THREE.Vector3(1,1,1);
-  spots.forEach((p,i)=>{ pos.set(p.x,0,p.z); m.compose(pos,q,scl); pi.setMatrixAt(i,m); hi.setMatrixAt(i,m); });
+  spots.forEach((p,i)=>{ pos.set(p.x,groundH(p.x,p.z),p.z); m.compose(pos,q,scl); pi.setMatrixAt(i,m); hi.setMatrixAt(i,m); });
   pi.instanceMatrix.needsUpdate=true; hi.instanceMatrix.needsUpdate=true;
   scene.add(pi); scene.add(hi);
 })();
@@ -2056,7 +2165,7 @@ const HYDRANT_SPOTS=[], DUMPSTER_SPOTS=[], BENCH_SPOTS=[];
     const mesh=new THREE.Mesh(new THREE.PlaneGeometry(14,6),
       new THREE.MeshBasicMaterial({map:tex}));
     const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
-    const side=randi(0,3), hh=b.h*rand(0.55,0.75);
+    const side=randi(0,3), hh=b.baseY+b.h*rand(0.55,0.75);
     if(side===0){ mesh.position.set(cx,hh,b.maxZ+0.4); }
     else if(side===1){ mesh.position.set(cx,hh,b.minZ-0.4); mesh.rotation.y=Math.PI; }
     else if(side===2){ mesh.position.set(b.maxX+0.4,hh,cz); mesh.rotation.y=Math.PI/2; }
@@ -2109,9 +2218,9 @@ const FOOTBALL=(function(){
   const sbm=new THREE.Mesh(new THREE.PlaneGeometry(12,6),
     new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sb)}));
   const sbPole=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,9,6),bleacherMat);
-  const sbx=F.x, sbz=F.z-15.5;
-  sbPole.position.set(sbx,4.5,sbz); scene.add(sbPole);
-  sbm.position.set(sbx,10.5,sbz+0.4); scene.add(sbm);
+  const sbx=F.x, sbz=F.z-15.5, sbg=groundH(sbx,sbz);
+  sbPole.position.set(sbx,sbg+4.5,sbz); scene.add(sbPole);
+  sbm.position.set(sbx,sbg+10.5,sbz+0.4); scene.add(sbm);
   DUMPSTER_SPOTS.push({x:sbx,z:sbz});
   return F;
 })();
@@ -2162,11 +2271,12 @@ const RAIL_STATIONS=[];     // path indices where the train stops
   for(let i=0;i<RAILPATH.length;i+=13) pilIdx.push(i);
   const pils=new THREE.InstancedMesh(pilGeo,new THREE.MeshLambertMaterial({color:0x6a6a78}),pilIdx.length);
   pilIdx.forEach((pi,i)=>{
-    const pt=RAILPATH[pi];
-    e.set(0,0,0); q.setFromEuler(e); pos.set(pt.x,0,pt.z);
+    const pt=RAILPATH[pi], baseG=groundH(pt.x,pt.z), ph=Math.max(1,y-baseG);
+    e.set(0,0,0); q.setFromEuler(e); pos.set(pt.x,baseG,pt.z); scl.set(1,ph/7,1);
     m.compose(pos,q,scl); pils.setMatrixAt(i,m);
     RAIL_PILLARS.push({x:pt.x,z:pt.z});
   });
+  scl.set(1,1,1);
   pils.instanceMatrix.needsUpdate=true; scene.add(pils);
   // four stations, one per straight: platform + roof + a stair run down to the sidewalk
   const platMat=new THREE.MeshLambertMaterial({color:0x3a3a4c});
@@ -2187,8 +2297,8 @@ const RAIL_STATIONS=[];     // path indices where the train stops
     // walkable: the platform itself + a long stair run to the street
     const plLen=13, longAng=(side===0||side===Math.PI)?Math.PI/2:0;
     STAIR_RUNS.push({x:(sx+ox)-Math.sin(longAng)*plLen/2,z:(sz+oz)-Math.cos(longAng)*plLen/2,ang:longAng,len:plLen,baseH:y+0.45,topH:y+0.45});
-    const stx=sx+ox*2.6, stz=sz+oz*2.6;   // stair foot, out on the sidewalk
-    STAIR_RUNS.push({x:stx,z:stz,ang:Math.atan2(-ox,-oz),len:14,baseH:0,topH:y+0.45});
+    const stx=sx+ox*2.6, stz=sz+oz*2.6, stGround=groundH(stx,stz);   // stair foot, out on the sidewalk
+    STAIR_RUNS.push({x:stx,z:stz,ang:Math.atan2(-ox,-oz),len:14,baseH:stGround,topH:y+0.45});
     // nearest path index = a stop
     let best=0,bd=1e9;
     RAILPATH.forEach((pt,i)=>{ const d=Math.hypot(pt.x-sx,pt.z-sz); if(d<bd){bd=d;best=i;} });
@@ -2197,7 +2307,7 @@ const RAIL_STATIONS=[];     // path indices where the train stops
     for(let k=1;k<8;k++){
       const t=k/8;
       const step=new THREE.Mesh(new THREE.BoxGeometry(2.2,0.18,1.2),platMat);
-      step.position.set(stx-Math.sin(Math.atan2(-ox,-oz))*(-14*t), (y+0.45)*t, stz-Math.cos(Math.atan2(-ox,-oz))*(-14*t));
+      step.position.set(stx-Math.sin(Math.atan2(-ox,-oz))*(-14*t), stGround+(y+0.45-stGround)*t, stz-Math.cos(Math.atan2(-ox,-oz))*(-14*t));
       step.rotation.y=Math.atan2(-ox,-oz)+Math.PI/2;
       scene.add(step);
     }
@@ -2282,26 +2392,27 @@ function addHideout(x,z,r,y){
     else if(side===1){ sx=b.maxX+1.3; sz=cz+d/5; ang=Math.PI; wallLen=d; } // +x wall, climb -z
     else if(side===2){ sx=cx-w/5; sz=b.minZ-1.3; ang=Math.PI/2; wallLen=w; }
     else { sx=cx+w/5; sz=b.maxZ+1.3; ang=-Math.PI/2; wallLen=w; }
+    const roof=b.baseY+b.h;
     if(b.h>=25){
       // fire escape: two zigzag flights + a landing, dark steel
-      const fl=Math.min(14,wallLen*0.55), half=b.h/2;
-      const r1={x:sx,z:sz,ang,len:fl,baseH:0,topH:half};
+      const fl=Math.min(14,wallLen*0.55), half=b.baseY+b.h/2;
+      const r1={x:sx,z:sz,ang,len:fl,baseH:b.baseY,topH:half};
       const lx=sx+Math.sin(ang)*fl, lz=sz+Math.cos(ang)*fl;
       const rLand={x:lx,z:lz,ang,len:2.4,baseH:half,topH:half};
       const fx=lx+Math.sin(ang)*2.4, fz=lz+Math.cos(ang)*2.4;
-      const r2={x:fx,z:fz,ang:ang+Math.PI,len:fl,baseH:half,topH:b.h};
+      const r2={x:fx,z:fz,ang:ang+Math.PI,len:fl,baseH:half,topH:roof};
       STAIR_RUNS.push(r1,rLand,r2);
       stepsFor(r1,true); stepsFor(r2,true);
       landing(lx+Math.sin(ang)*1.2,half,lz+Math.cos(ang)*1.2,ang);
-      landing(fx-Math.sin(ang)*fl*0.99,b.h,fz-Math.cos(ang)*fl*0.99,ang);
+      landing(fx-Math.sin(ang)*fl*0.99,roof,fz-Math.cos(ang)*fl*0.99,ang);
     } else {
       // straight stair to the roof
       const len=Math.min(15,Math.max(8,b.h*1.15));
-      const r1={x:sx,z:sz,ang,len,baseH:0,topH:b.h};
+      const r1={x:sx,z:sz,ang,len,baseH:b.baseY,topH:roof};
       STAIR_RUNS.push(r1); stepsFor(r1,false);
     }
     // the roof of a climbable building makes a great hideout
-    if(Math.random()<0.6) addHideout(cx,cz,Math.min(w,d)*0.45,b.h);
+    if(Math.random()<0.6) addHideout(cx,cz,Math.min(w,d)*0.45,roof);
   }
   const mk=(geo,mats,cols)=>{
     if(!mats.length) return;
@@ -2353,7 +2464,7 @@ function addRamp(x,z,dir){
   const lip=new THREE.Mesh(new THREE.BoxGeometry(6,0.3,0.6),
     new THREE.MeshBasicMaterial({color:0xffd23e}));
   lip.position.set(0,2.75,-3.7); grp.add(lip);
-  grp.position.set(x,0,z); grp.rotation.y=dir;
+  grp.position.set(x,groundH(x,z),z); grp.rotation.y=dir;
   scene.add(grp);
   ramps.push({x,z,dir,cool:0});
 }
@@ -2468,7 +2579,7 @@ function buildingHit(x,z,r){
 // height of the building roof at a point (0 = open ground)
 function roofAt(x,z){
   for(const b of buildings){
-    if(x>b.minX&&x<b.maxX&&z>b.minZ&&z<b.maxZ) return b.h;
+    if(x>b.minX&&x<b.maxX&&z>b.minZ&&z<b.maxZ) return b.baseY+b.h;
   }
   return 0;
 }
@@ -3149,10 +3260,11 @@ doEnterExit=function(){
   const signMesh=new THREE.Mesh(new THREE.PlaneGeometry(10,3.2),
     new THREE.MeshBasicMaterial({map:signTex,transparent:true}));
   signMesh.position.set(0,CHAOS.h+1.8,CHAOS.d/2+0.1); grp.add(signMesh);
-  grp.position.set(CHAOS.x,0,CHAOS.z); scene.add(grp);
+  CHAOS.baseY=groundH(CHAOS.x,CHAOS.z);
+  grp.position.set(CHAOS.x,CHAOS.baseY,CHAOS.z); scene.add(grp);
   CHAOS.exterior=grp;
   buildings.push({minX:CHAOS.x-CHAOS.w/2,maxX:CHAOS.x+CHAOS.w/2,
-    minZ:CHAOS.z-CHAOS.d/2,maxZ:CHAOS.z+CHAOS.d/2,h:CHAOS.h});
+    minZ:CHAOS.z-CHAOS.d/2,maxZ:CHAOS.z+CHAOS.d/2,h:CHAOS.h,baseY:CHAOS.baseY});
 })();
 
 // Chaos Pizza drivers - purple cars, aggressive
@@ -3785,13 +3897,14 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
     new THREE.MeshLambertMaterial({color:0x5c3a2a}));
   frame.position.set(0,2.5,PIZZA.d/2+0.15); grp.add(frame);
 
-  grp.position.set(PIZZA.x,0,PIZZA.z);
+  PIZZA.baseY=groundH(PIZZA.x,PIZZA.z);
+  grp.position.set(PIZZA.x,PIZZA.baseY,PIZZA.z);
   scene.add(grp);
   PIZZA.exterior=grp;
 
   // Add collision box for the building
   buildings.push({minX:PIZZA.x-PIZZA.w/2,maxX:PIZZA.x+PIZZA.w/2,
-    minZ:PIZZA.z-PIZZA.d/2,maxZ:PIZZA.z+PIZZA.d/2,h:PIZZA.h});
+    minZ:PIZZA.z-PIZZA.d/2,maxZ:PIZZA.z+PIZZA.d/2,h:PIZZA.h,baseY:PIZZA.baseY});
 
   // Door trigger zone (front of building)
   PIZZA.doorX=PIZZA.x; PIZZA.doorZ=PIZZA.z+PIZZA.d/2+2.5;
@@ -4556,7 +4669,7 @@ function updateHeliMode(dt){
   }
   // ground or rooftop landing
   const roof=roofAt(h.x,h.z);
-  const floorY=(roof>0&&h.y>roof-3)?roof:0;
+  const floorY=(roof>0&&h.y>roof-3)?roof:groundH(h.x,h.z);
   if(h.y<=floorY){
     const impact=-h.vy;
     h.y=floorY;
@@ -4571,7 +4684,7 @@ function updateHeliMode(dt){
   if(hit){
     let roof=0;
     for(const b of buildings){
-      if(h.x>b.minX&&h.x<b.maxX&&h.z>b.minZ&&h.z<b.maxZ){ roof=b.h; break; }
+      if(h.x>b.minX&&h.x<b.maxX&&h.z>b.minZ&&h.z<b.maxZ){ roof=b.baseY+b.h; break; }
     }
     if(h.y<roof){
       h.x+=hit.nx*hit.depth; h.z+=hit.nz*hit.depth;
@@ -4656,7 +4769,7 @@ function updatePilotlessHelis(dt){
     h.mesh.userData.rotor.rotation.y+=h.spin*30*dt;
     updateHeliShadow(h);
     const roof=roofAt(h.x,h.z);
-    const floorY=(roof>0&&h.y>roof-3)?roof:0;
+    const floorY=(roof>0&&h.y>roof-3)?roof:groundH(h.x,h.z);
     if(h.y<=floorY){
       burst(h.x,floorY+1,h.z,40,COL_FIRE,8,1.2,4);
       sfx.bigCrash(); shake(0.6);
@@ -6230,7 +6343,7 @@ const beacon=(function(){
 })();
 function setBeacon(x,z){
   if(x===null){ beacon.visible=false; return; }
-  beacon.visible=true; beacon.position.set(x,0,z);
+  beacon.visible=true; beacon.position.set(x,groundH(x,z),z);
 }
 function startMission(){
   const types=['delivery','style','checkpoints','rampage','heat'];
@@ -7030,7 +7143,8 @@ function updateCamera(dt){
     const tgt=cameraCollide(p.x,p.y+1.5,p.z,
       p.x-Math.sin(footCamYaw)*6.5,p.y+2.9+camPitch*2.6,p.z-Math.cos(footCamYaw)*6.5);
     camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-4*dt));
-    if(camPos.y<0.45) camPos.y=0.45;   // looking down from below ground is a bad time
+    const camFloor=groundH(camPos.x,camPos.z)+0.45;
+    if(camPos.y<camFloor) camPos.y=camFloor;   // looking down from below ground is a bad time
     camera.fov=lerp(camera.fov,62,0.1);
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
@@ -7448,10 +7562,10 @@ function spawnDeb(){
   });
   const mesh=makePerson(0xff3ea0,'girl');
   deb={mesh,x:best.x+5,z:best.z+5,heading:0,bub:null,bubT:0,lineIdx:0,sayT:1.2,leaving:false,gone:0};
-  mesh.position.set(deb.x,0,deb.z);
+  mesh.position.set(deb.x,groundH(deb.x,deb.z),deb.z);
   scene.add(mesh);
   debBeacon=makePillar(0xff3ea0,1.1,26);
-  debBeacon.position.set(deb.x,0,deb.z);
+  debBeacon.position.set(deb.x,groundH(deb.x,deb.z),deb.z);
   scene.add(debBeacon);
 }
 function updateStory(dt){
@@ -7459,7 +7573,7 @@ function updateStory(dt){
   if(deb.leaving){
     deb.x+=Math.sin(deb.heading)*1.6*dt; deb.z+=Math.cos(deb.heading)*1.6*dt;
     deb.phase=(deb.phase||0)+dt*4;
-    deb.mesh.position.set(deb.x,0,deb.z);
+    deb.mesh.position.set(deb.x,groundH(deb.x,deb.z),deb.z);
     deb.mesh.rotation.y=deb.heading;
     const sw=Math.sin(deb.phase)*0.5, u=deb.mesh.userData;
     u.legL.rotation.x=sw; u.legR.rotation.x=-sw; u.armL.rotation.x=-sw; u.armR.rotation.x=sw;
@@ -7472,7 +7586,7 @@ function updateStory(dt){
   if(d<9) deb.heading=Math.atan2(player.x-deb.x,player.z-deb.z);
   deb.mesh.rotation.y=deb.heading;
   const tNow=performance.now();
-  deb.mesh.position.y=Math.abs(Math.sin(tNow/480))*0.025;
+  deb.mesh.position.y=groundH(deb.x,deb.z)+Math.abs(Math.sin(tNow/480))*0.025;
   if(debBeacon) debBeacon.material.opacity=0.24+Math.sin(tNow/280)*0.12;
   // project her speech bubble
   if(deb.bub&&deb.bubT>0){
@@ -7610,7 +7724,7 @@ const stores=[];
     const b=cand.splice(randi(0,cand.length-1),1)[0];
     const x=(b.minX+b.maxX)/2, z=b.minZ-2.2;
     const beacon=makePillar(0x37c8ff,0.9,7);
-    beacon.position.set(x,0,z); scene.add(beacon);
+    beacon.position.set(x,groundH(x,z),z); scene.add(beacon);
     stores.push({x,z,cool:0,robT:0,warned:false,hinted:false,beacon});
   }
 })();

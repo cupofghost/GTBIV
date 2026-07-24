@@ -38,14 +38,15 @@ module.exports = [
         let guard = 4000;
         while (player.bailing && guard-- > 0) updateBail(0.016);
         return { bailing, mode, pilotless, chute,
-          landedY: player.y, over: G.over, stillBailing: player.bailing };
+          landedY: player.y, groundY: groundH(player.x, player.z), over: G.over, stillBailing: player.bailing };
       });
       assert(r.bailing && r.mode === 'foot', 'bail should drop to foot mode mid-air');
       assert(r.pilotless, 'abandoned heli should be pilotless');
       assert(r.chute, 'chute should open');
       assert(!r.stillBailing, 'bail should end on touchdown');
       assert(!r.over, 'chute landing should not waste the player');
-      assert(r.landedY < 1, 'should be back on the ground, y=' + r.landedY);
+      // terrain isn't flat (hills, city relief) — compare against the ground field, not a flat y=0
+      assert(Math.abs(r.landedY - r.groundY) < 1, 'should be back on the ground, y=' + r.landedY + ' vs groundH=' + r.groundY);
     },
   },
   {
