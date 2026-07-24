@@ -40,12 +40,17 @@
   #hpfill { height:100%; width:100%; background:#7dff8a; }
   #boostbar { width:130px; height:6px; background:rgba(0,0,0,.55); border:1px solid #fff2; border-radius:4px; margin-top:2px; overflow:hidden; }
   #boostfill { height:100%; width:100%; background:#37c8ff; }
-  #mission { top:calc(46px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
+  #mission, #storyObj { top:calc(46px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
     max-width:min(calc(var(--lvw)*0.86),560px); text-align:center; font-size:14px; line-height:1.35;
     background:rgba(6,2,16,.85); border:1px solid #ff3ea088; border-radius:10px; padding:7px 14px; color:#fff; }
-  #mission b { color:#ff9ecb; }
+  #mission b, #storyObj b { color:#ff9ecb; }
   #minimap { position:absolute; top:calc(44px + env(safe-area-inset-top)); right:12px;
     width:118px; height:118px; border-radius:50%; border:2px solid rgba(255,255,255,.35); background:#111; opacity:.92; }
+  #minimapLegend { position:absolute; top:calc(44px + 118px + 6px + env(safe-area-inset-top)); right:12px;
+    width:118px; font-size:8px; line-height:1.6; color:#fff; text-shadow:0 1px 2px #000;
+    background:rgba(6,2,16,.68); border:1px solid rgba(255,255,255,.2); border-radius:8px;
+    padding:3px 6px; opacity:.92; }
+  #minimapLegend span { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:4px; }
   #toasts { position:absolute; bottom:34%; left:50%; transform:translateX(-50%);
     display:flex; flex-direction:column; align-items:center; gap:5px; }
   .toast { font-size:17px; color:#fff; text-shadow:0 2px 3px #000, 0 0 8px #000;
@@ -69,6 +74,7 @@
   .pedal2 { width:72px; height:52px; font-size:11px; }
   #btnGas { height:96px; background:rgba(20,90,40,.55); border-color:#7dff8a88; font-size:15px; }
   #btnBrake { height:168px; background:rgba(110,20,20,.55); border-color:#ff6b6b88; }
+  #btnBrake.reversing { background:rgba(120,90,10,.55); border-color:#ffd23e; }
   #btnBoost { background:rgba(20,60,110,.55); border-color:#37c8ff88; }
   #btnDrift { background:rgba(90,40,110,.55); border-color:#b04dff88; }
   #btnHorn { position:absolute; bottom:calc(168px + env(safe-area-inset-bottom)); left:50px;
@@ -198,6 +204,8 @@
     #joy { width:106px !important; height:106px !important; }
     #joyKnob { width:44px !important; height:44px !important; }
     #minimap { width:92px !important; height:92px !important; }
+    #minimapLegend { width:92px !important; top:calc(44px + 92px + 4px + env(safe-area-inset-top)) !important;
+      font-size:7px !important; line-height:1.4 !important; padding:2px 5px !important; }
     #speedo { top:calc(84px + env(safe-area-inset-top)) !important; font-size:11px; transform:scale(0.62); transform-origin:top left; }
     #btnHorn { bottom:calc(146px + env(safe-area-inset-bottom)); left:40px; width:62px; height:44px; }
     .hudBox { font-size:12px; padding:4px 8px; }
@@ -279,7 +287,7 @@
   #pmResume { background:rgba(20,90,40,.85); border-color:#7dff8a; }
   #pmRestart { background:rgba(110,20,20,.85); border-color:#ff6b6b; }
   .pmRow { display:flex; align-items:center; gap:10px; margin:14px 0; text-align:left; }
-  .pmRow label { color:#9be7ff; font-size:11px; font-family:Arial,sans-serif; letter-spacing:1px; width:58px; flex:none; }
+  .pmRow label { color:#9be7ff; font-size:11px; font-family:Arial,sans-serif; letter-spacing:1px; width:80px; flex:none; }
   .pmRow input[type=range] { flex:1; accent-color:#ff3ea0; min-height:26px; }
   .pmRow .pmVal { color:#ffd23e; font-size:11px; font-family:monospace; width:36px; text-align:right; flex:none; }
   .qGroup { flex:1; display:flex; gap:6px; }
@@ -419,7 +427,14 @@
   <div id="heatHint"></div>
   <div id="footHp"><div id="footHpFill"></div></div>
   <div id="mission" class="hudBox" style="display:none"></div>
+  <div id="storyObj" class="hudBox" style="display:none"></div>
   <canvas id="minimap" width="236" height="236"></canvas>
+  <div id="minimapLegend">
+    <div><span style="background:#ff4444"></span>COPS</div>
+    <div><span style="background:#ffd23e"></span>MISSION</div>
+    <div><span style="background:#b04dff"></span>TURF</div>
+    <div><span style="background:#ff3ea0"></span>DEB</div>
+  </div>
   <div id="speedo" class="hudBox" style="display:none">
     <canvas id="gauge" width="150" height="104"></canvas>
     <div id="dashName">SEDAN</div>
@@ -553,6 +568,16 @@
     <div class="pmRow"><label>VIBRATE</label><div class="qGroup" id="vibrateGroup">
       <button class="qBtn" data-v="on">ON</button>
       <button class="qBtn" data-v="off">OFF</button>
+    </div></div>
+    <div class="pmRow"><label for="volLookSens">LOOK SENS.</label><input type="range" id="volLookSens" min="50" max="200" step="10"><span class="pmVal" id="volLookSensVal"></span></div>
+    <div class="pmRow"><label>INVERT Y</label><div class="qGroup" id="invertYGroup">
+      <button class="qBtn" data-v="on">ON</button>
+      <button class="qBtn" data-v="off">OFF</button>
+    </div></div>
+    <div class="pmRow"><label>DIFFICULTY</label><div class="qGroup" id="difficultyGroup">
+      <button class="qBtn" data-d="easy">EASY</button>
+      <button class="qBtn" data-d="normal">NORMAL</button>
+      <button class="qBtn" data-d="hard">HARD</button>
     </div></div>
     <button class="pmBtn" id="pmSetBack">BACK</button>
   </div>
@@ -5613,7 +5638,8 @@ let lookTouch=null, lookLX=0, lookLY=0;
 let camYawOff=0, camPitch=0, lookHoldT=0; // camYawOff orbits car/heli cam; foot mode writes footCamYaw
 function applyLook(dx,dy){
   if(G.replay&&replay){ replay.cam.yaw-=dx*0.0048; replay.cam.pitch=clamp(replay.cam.pitch-dy*0.005,-1.2,1.2); return; }
-  const yaw=-dx*0.0048, pit=dy*0.006;
+  const sens=(SETTINGS.lookSens||100)/100;
+  const yaw=-dx*0.0048*sens, pit=dy*0.006*sens*(SETTINGS.invertY?-1:1);
   if(G.mode==='foot'){
     footCamYaw+=yaw;
     camPitch=clamp(camPitch+pit,-1.45,1.45);   // nearly straight up / straight down
@@ -5747,13 +5773,24 @@ function clearHeat(viaEscape){
   updateStarsHUD();
   cops.forEach(c=>{ if(c.driver==='cop') c.driver='leaving'; });
 }
+// P3: Easy/Normal/Hard scales cop pressure (spawn count, detection range)
+// and damage taken — persisted in the same SETTINGS blob as everything else.
+const DIFFICULTY_TIERS={
+  easy:  {spawnMult:0.7, aggroMult:0.8,  dmgMult:0.65},
+  normal:{spawnMult:1,   aggroMult:1,    dmgMult:1},
+  hard:  {spawnMult:1.4, aggroMult:1.25, dmgMult:1.4},
+};
+function difficulty(){ return DIFFICULTY_TIERS[SETTINGS.difficulty]||DIFFICULTY_TIERS.normal; }
 function spawnCop(){
   const far=intersections.filter(p=>Math.hypot(p.x-px0(),p.z-pz0())>110);
   const it=far.length?pick(far):pick(intersections);
   const c=makeCar('cop',it.x,it.z,rand(0,TAU),{driver:'cop'});
   cops.push(c);
 }
-function wantedCount(){ return G.stars===0?0:Math.min(1+G.stars,6); }
+// capped at 8 regardless of difficulty — "harder" means more pressure per
+// star, not an unbounded swarm that tanks fps (F3's traffic/ped caps get
+// the same treatment)
+function wantedCount(){ return G.stars===0?0:clamp(Math.round((1+G.stars)*difficulty().spawnMult),1,8); }
 function updateWanted(dt){
   const want=wantedCount();
   const active=cops.filter(c=>!c.dead&&c.driver==='cop').length
@@ -5761,27 +5798,28 @@ function updateWanted(dt){
   if(G.stars>0&&active<want) spawnCop();
   if(G.stars>0){
     const pxx=px0(), pzz=pz0();
+    const aggro=difficulty().aggroMult;
     let nearest=1e9, seen=false;
     cops.forEach(c=>{
       if(c.dead||c.driver!=='cop') return;
       const d=Math.hypot(c.x-pxx,c.z-pzz);
       nearest=Math.min(nearest,d);
-      if(d<70&&losClear(c.x,c.z,pxx,pzz)) seen=true;
+      if(d<70*aggro&&losClear(c.x,c.z,pxx,pzz)) seen=true;
     });
     footCops.forEach(fc=>{
       if(fc.state==='down') return;
       const d=Math.hypot(fc.x-pxx,fc.z-pzz);
       nearest=Math.min(nearest,d);
-      if(d<50&&losClear(fc.x,fc.z,pxx,pzz)) seen=true;
+      if(d<50*aggro&&losClear(fc.x,fc.z,pxx,pzz)) seen=true;
     });
-    if(copHeli&&!copHeli.dead) seen=seen||Math.hypot(copHeli.x-pxx,copHeli.z-pzz)<130;
+    if(copHeli&&!copHeli.dead) seen=seen||Math.hypot(copHeli.x-pxx,copHeli.z-pzz)<130*aggro;
     if(G.interior) seen=false;   // holed up in the pizza place
     // two ways to shake the heat: get FAR away fast, or break their line of sight and lay low
     const hh=$('heatHint');
     if(seen){
       G.escapeT=0; G.hiddenT=0;
       hh.textContent='THEY SEE YOU — RUN OR HIDE'; hh.style.color='#ff5a5a'; hh.style.display='block';
-    } else if(nearest>85){
+    } else if(nearest>85*aggro){
       G.hiddenT=0; G.escapeT+=dt;
       hh.textContent='CLEAR — STAY AWAY '+Math.max(0,3.5-G.escapeT).toFixed(1); hh.style.color='#7dff8a'; hh.style.display='block';
       if(G.escapeT>3.5) clearHeat(true);
@@ -6240,6 +6278,7 @@ function exitCar(){
   if(engineGritGain) engineGritGain.gain.value=0;
   if(turboGain) turboGain.gain.value=0;
 }
+let btnBrakeReversing=false;
 function updateCarMode(dt){
   const c=player.car;
   if(!c||c.dead){ exitCarSoft(); return; }
@@ -6258,6 +6297,16 @@ function updateCarMode(dt){
     G.boost=Math.min(100,G.boost+9*dt);
   }
   carPhysics(c,dt,ctl);
+
+  // J4 remaining: the BRAKE pedal already brakes-then-reverses (carPhysics
+  // above) — relabel it once the car is actually rolling backward so the
+  // touch control communicates the phase it's in, not just "brake".
+  const reversing=c.speed<-0.15;
+  if(reversing!==btnBrakeReversing){
+    btnBrakeReversing=reversing;
+    $('btnBrake').textContent=reversing?'REVERSE':'BRAKE';
+    $('btnBrake').classList.toggle('reversing',reversing);
+  }
 
   // --- Turbo's driving commentary ---
   const spd=Math.abs(c.speed);
@@ -6485,6 +6534,16 @@ function updateStarsHUD(){
   $('stars').innerHTML=html;
 }
 function setMissionHUD(html){ $('mission').innerHTML=html; $('mission').style.display='block'; }
+// Story-track objective (find Deb / pay off the debt) — only shown when no
+// timed random mission is occupying the same HUD slot, so the two never fight.
+function updateStoryObjHUD(){
+  if(mission||!deb||deb.leaving){ $('storyObj').style.display='none'; return; }
+  const d=Math.round(Math.hypot(player.x-deb.x,player.z-deb.z));
+  if(!G.story.metDeb) $('storyObj').innerHTML='<b>FIND DEB</b> — '+d+'m';
+  else if(G.story.debt>0) $('storyObj').innerHTML='<b>PAY OFF DEBT</b> — $'+G.story.debt+' · '+d+'m';
+  else { $('storyObj').style.display='none'; return; }
+  $('storyObj').style.display='block';
+}
 function cycleRadio(){
   G.station=(G.station+1)%(STATIONS.length+1);
   const st=STATIONS[G.station];
@@ -6498,6 +6557,9 @@ function cycleRadio(){
 
 // ================= MISSIONS =================
 let mission=null, missionCooldown=5, lastType='';
+// Soft progression (P1): tougher/higher-paying mission types unlock as
+// missionsDone climbs, instead of the pool flatlining at 5 types forever.
+function missionTier(){ return Math.min(2,Math.floor(G.missionsDone/5)); }
 const beacon=(function(){
   const grp=new THREE.Group();
   const cyl=new THREE.Mesh(new THREE.CylinderGeometry(2.4,2.4,26,12,1,true),
@@ -6513,6 +6575,9 @@ function setBeacon(x,z){
 }
 function startMission(){
   const types=['delivery','style','checkpoints','rampage','heat'];
+  const tier=missionTier();
+  if(tier>=1) types.push('courier','takedown');
+  if(tier>=2) types.push('getaway');
   const type=pick(types.filter(t=>t!==lastType)); lastType=type;
   if(type==='delivery'){
     const a=pick(intersections); let b=pick(intersections);
@@ -6534,16 +6599,42 @@ function startMission(){
   } else if(type==='rampage'){
     mission={type,timer:45,value:0,need:500};
     setBeacon(null);
-  } else {
+  } else if(type==='heat'){
     mission={type};
     G.heat=Math.max(G.heat,65); addHeat(0);
     setBeacon(null);
     toast('3 STARS — LOSE THE COPS!','bad');
+  } else if(type==='courier'){
+    // delivery, but Chaos Pizza already tipped off the cops — cops-on-you
+    // for the whole drop-off leg, so it pays a lot better than a plain run
+    const a=pick(intersections); let b=pick(intersections);
+    while(Math.hypot(a.x-b.x,a.z-b.z)<150) b=pick(intersections);
+    mission={type,stage:0,a,b,timer:0,reward:220+Math.round(Math.hypot(a.x-b.x,a.z-b.z)/2.2)};
+    setBeacon(a.x,a.z);
+    toast('COURIER — hot package, cops already know','bad');
+  } else if(type==='takedown'){
+    // flag a live traffic car; the beacon follows it so it's trackable
+    // even while it's still driving around
+    const cands=traffic.filter(c=>!c.dead&&c!==player.car);
+    if(!cands.length){ mission=null; missionCooldown=3; return; } // retry shortly, nothing to flag yet
+    const car=pick(cands);
+    mission={type,car,timer:50,reward:260};
+    setBeacon(car.x,car.z);
+    toast('TAKEDOWN — wreck the flagged car before it gets away','bad');
+  } else {
+    // getaway: reach the safehouse before the cops box you in
+    const a=pick(intersections);
+    mission={type,a,timer:60,reward:320};
+    G.heat=Math.max(G.heat,70); addHeat(0);
+    setBeacon(a.x,a.z);
+    toast('GETAWAY — get to the safehouse, they\'re already rolling','bad');
   }
   turboSay(type);     // Turbo narrates his own mission starts now
 }
 function completeMission(bonus){
-  const r=(mission.reward||0)+(bonus||0);
+  // soft progression: later missions (higher missionsDone) pay a bit more
+  const tierMult=1+missionTier()*0.15;
+  const r=Math.round(((mission.reward||0)+(bonus||0))*tierMult);
   addMoney(r); toast('MISSION PASSED +$'+r,'gold'); sfx.mission();
   G.missionsDone++;
   if(G.missionsDone%5===0){ addMoney(500); toast('CHAPTER BONUS +$500','gold'); }
@@ -6595,6 +6686,35 @@ function updateMission(dt){
     else if(mission.timer<=0) failMission();
   } else if(mission.type==='heat'){
     setMissionHUD('<b>HEAT</b> — lose the cops! ('+G.stars+'★)');
+  } else if(mission.type==='courier'){
+    const tgt=mission.stage===0?mission.a:mission.b;
+    const d=Math.hypot(tgt.x-px,tgt.z-pz);
+    if(mission.stage===0){
+      setMissionHUD('<b>COURIER</b> — pick up the package · '+Math.round(d)+'m');
+      if(d<5){
+        mission.stage=1; mission.timer=40; setBeacon(mission.b.x,mission.b.z); sfx.coin();
+        toast('PACKAGE SECURED — COPS INCOMING','bad');
+        G.heat=Math.max(G.heat,40); addHeat(0);
+      }
+    } else {
+      mission.timer-=dt;
+      setMissionHUD('<b>COURIER</b> — drop it off, hot · '+Math.round(d)+'m · '+Math.ceil(mission.timer)+'s');
+      if(d<6) completeMission(0);
+      else if(mission.timer<=0) failMission();
+    }
+  } else if(mission.type==='takedown'){
+    mission.timer-=dt;
+    if(mission.car.dead){ completeMission(0); return; }
+    setBeacon(mission.car.x,mission.car.z);
+    const d=Math.hypot(mission.car.x-px,mission.car.z-pz);
+    setMissionHUD('<b>TAKEDOWN</b> — wreck the flagged car · '+Math.round(d)+'m · '+Math.ceil(mission.timer)+'s');
+    if(mission.timer<=0) failMission();
+  } else if(mission.type==='getaway'){
+    mission.timer-=dt;
+    const d=Math.hypot(mission.a.x-px,mission.a.z-pz);
+    setMissionHUD('<b>GETAWAY</b> — reach the safehouse · '+Math.round(d)+'m · '+Math.ceil(mission.timer)+'s');
+    if(d<6) completeMission(Math.round(mission.timer*3));
+    else if(mission.timer<=0) failMission();
   }
   if(beacon.visible){
     beacon.children[0].material.opacity=0.25+0.15*Math.sin(performance.now()/200);
@@ -6658,6 +6778,7 @@ function downFootCop(fc){
 }
 function damagePlayer(amt){
   if(DEV_STATE.god||G.over) return;
+  amt*=difficulty().dmgMult;
   G.hp-=amt; G.hpT=0;
   shake(clamp(amt*0.03,0.12,0.4));
   if(G.hp<=0){ G.hp=0; wasted(); }
@@ -6917,7 +7038,7 @@ function updateFootCops(dt){
           burst(fc.x+Math.sin(fc.heading)*0.8,1.35,fc.z+Math.cos(fc.heading)*0.8,4,COL_FIRE,1.4,0.12,0);
           if(Math.random()<clamp(1.05-d/32,0.2,0.85)){
             if(G.mode==='car'&&player.car){
-              damageCar(player.car,randi(4,8),'shot');
+              damageCar(player.car,randi(4,8)*difficulty().dmgMult,'shot');
               burst(player.car.x+rand(-1,1),1,player.car.z+rand(-1,1),5,COL_SPARK,2,0.3,4);
             } else if(G.mode==='foot'){
               damagePlayer(randi(5,10));
@@ -6997,7 +7118,7 @@ function updateCops(dt){
       if(dd<2.6&&c.cool<=0){
         c.cool=0.6;
         const rel=Math.abs(player.car.speed)+Math.abs(c.speed)*0.6+4;
-        damageCar(player.car,5+rel*0.22,'ram');
+        damageCar(player.car,(5+rel*0.22)*difficulty().dmgMult,'ram');
         player.car.vel.x+=(player.car.x-c.x)/dd*rel*0.3;
         player.car.vel.z+=(player.car.z-c.z)/dd*rel*0.3;
         sfx.crash(0.3); shake(0.35);
@@ -7198,7 +7319,7 @@ function busted(){
   const fine=Math.floor(G.money*0.12);
   G.money-=fine; $('money').textContent='$'+G.money;
   bigEvent('BUSTED','#4f7ad9','You lost $'+fine);
-  if(mission&&mission.type==='heat') failMission();
+  if(mission&&(mission.type==='heat'||mission.type==='courier'||mission.type==='getaway')) failMission();
   G.heat=0; G.stars=0; G.escapeT=0; G.bustT=0; G.hiddenT=0; updateStarsHUD();
   cops.forEach(c=>{ if(c.driver==='cop') c.driver='leaving'; });
   respawn();
@@ -7282,8 +7403,12 @@ function updateCamera(dt){
     const dist=9.5+Math.abs(c.speed)*0.07, h=4.3+camPitch*2.2;
     const bx=-Math.sin(a), bz=-Math.cos(a);
     const tgt=cameraCollide(c.x,c.y+1.5,c.z,c.x+bx*dist,c.y+h,c.z+bz*dist);
-    // snap in instantly so we never clip the wall, ease back out gently
-    camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-5*dt));
+    // snap in instantly so we never clip the wall, ease back out gently —
+    // and catch up a bit faster at low speed, so pulling out from a stop
+    // (or a tight parking-lot three-point turn) doesn't feel like the
+    // camera is dragging a beat behind the wheel
+    const followRate=5+3*(1-clamp(Math.abs(c.speed)/8,0,1));
+    camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-followRate*dt));
     const sr=Math.abs(c.speed)/CARTYPES[c.type].top;
     camera.fov=lerp(camera.fov,62+sr*13+(input.boost&&G.boost>0?5:0),0.1);
     camera.updateProjectionMatrix();
@@ -7355,6 +7480,7 @@ function drawMinimap(){
   chaosDrivers.forEach(c=>{ if(!c.dead) dot(c.x,c.z,'#b04dff',3); });
   if(CHAOS&&CHAOS.x!==undefined) marker(CHAOS.x,CHAOS.z,'#b04dff','#ffffff');
   drawTurfOnMinimap();
+  if(deb&&!deb.leaving) dot(deb.x,deb.z,'#ff3ea0',5);
   if(mission&&beacon.visible) dot(beacon.position.x,beacon.position.z,'#ffd23e',5);
   mm.restore();
   // player arrow: always dead center, always pointing up
@@ -7446,7 +7572,7 @@ function loop(){
         if(c.hp<35&&Math.random()<0.3)
           burst(c.x,1.2,c.z,1,[[0.2,0.2,0.2],[0.35,0.35,0.35]],0.8,1.2,-1);
         drawDash(Math.abs(c.speed)/(CARTYPES[c.type].top*1.45),Math.abs(c.speed)*4.2,
-          c.type.toUpperCase(),G.carHP,G.boost);
+          c.type.toUpperCase()+(c.speed<-0.15?' · REV':''),G.carHP,G.boost);
       }
       checkPizzaJack();
       recTick(dt);
@@ -7738,6 +7864,7 @@ function spawnDeb(){
 }
 function updateStory(dt){
   if(!deb) return;
+  updateStoryObjHUD();
   if(deb.leaving){
     deb.x+=Math.sin(deb.heading)*1.6*dt; deb.z+=Math.cos(deb.heading)*1.6*dt;
     deb.phase=(deb.phase||0)+dt*4;
@@ -8761,7 +8888,7 @@ function updateReplay(dt){
 // so each sets its own flag and syncPause() is the only writer of G.paused.
 const SET_KEY='gtb4.settings';
 const SETTINGS=(function(){
-  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true };
+  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true, lookSens:100, invertY:false, difficulty:'normal' };
   try{ const s=JSON.parse(localStorage.getItem(SET_KEY)); if(s&&s.v===1) Object.assign(d,s); }catch(e){}
   return d;
 })();
@@ -8797,6 +8924,21 @@ function setVibrateMode(on){
   g.querySelectorAll('.qBtn').forEach(b=>{
     b.addEventListener('click',()=>setVibrateMode(b.dataset.v==='on'));
     b.addEventListener('touchend',e=>{ e.preventDefault(); setVibrateMode(b.dataset.v==='on'); });
+  });
+})();
+
+// ---- J3: look-sensitivity + invert-Y (applied directly in applyLook) ----
+function refreshInvertYButtons(){
+  const g=$('invertYGroup'); if(!g) return;
+  g.querySelectorAll('.qBtn').forEach(b=>b.classList.toggle('on',(b.dataset.v==='on')===!!SETTINGS.invertY));
+}
+function setInvertY(on){ SETTINGS.invertY=on; saveSettings(); refreshInvertYButtons(); }
+(function initInvertYUI(){
+  const g=$('invertYGroup'); if(!g) return;
+  refreshInvertYButtons();
+  g.querySelectorAll('.qBtn').forEach(b=>{
+    b.addEventListener('click',()=>setInvertY(b.dataset.v==='on'));
+    b.addEventListener('touchend',e=>{ e.preventDefault(); setInvertY(b.dataset.v==='on'); });
   });
 })();
 
@@ -8877,6 +9019,20 @@ applyQuality(qualityMode==='auto'?'high':qualityMode);
   });
 })();
 
+function refreshDifficultyButtons(){
+  const g=$('difficultyGroup'); if(!g) return;
+  g.querySelectorAll('.qBtn').forEach(b=>b.classList.toggle('on',b.dataset.d===SETTINGS.difficulty));
+}
+function setDifficulty(mode){ SETTINGS.difficulty=mode; saveSettings(); refreshDifficultyButtons(); }
+(function initDifficultyUI(){
+  const g=$('difficultyGroup'); if(!g) return;
+  refreshDifficultyButtons();
+  g.querySelectorAll('.qBtn').forEach(b=>{
+    b.addEventListener('click',()=>setDifficulty(b.dataset.d));
+    b.addEventListener('touchend',e=>{ e.preventDefault(); setDifficulty(b.dataset.d); });
+  });
+})();
+
 function syncPause(){ G.paused=G.started&&G.menuPaused; }
 function pauseGame(){
   if(G.menuPaused||!G.started||G.over||G.intro||activeCutscene||G.replay) return;
@@ -8914,14 +9070,15 @@ function showPausePanel(id){ ['pmMain','pmSettings','pmHow'].forEach(p=>{ $(p).s
     $('pmRestart').textContent='SURE? TAP AGAIN';
     setTimeout(()=>{ $('pmRestart').textContent='RESTART GAME'; armT=0; },2500);
   });
-  const slider=(id,key)=>{
+  const slider=(id,key,onInput)=>{
     const el=$(id), val=$(id+'Val');
     el.value=SETTINGS[key]; val.textContent=SETTINGS[key]+'%';
-    el.addEventListener('input',()=>{ SETTINGS[key]=+el.value; val.textContent=el.value+'%'; applyVolumes(); });
+    el.addEventListener('input',()=>{ SETTINGS[key]=+el.value; val.textContent=el.value+'%'; (onInput||applyVolumes)(); });
     el.addEventListener('change',saveSettings); // persist on release, not every drag tick
   };
   slider('volMaster','master'); slider('volMusic','music');
   slider('volSfx','sfx'); slider('volVoice','voice');
+  slider('volLookSens','lookSens',()=>{}); // read live off SETTINGS in applyLook, nothing to re-apply
 })();
 
 // ================= SAVE SYSTEM =================
