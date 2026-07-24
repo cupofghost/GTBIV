@@ -195,20 +195,33 @@ Sections, in file order, with what lives in each:
 
 | Banner / area | What's in it |
 | --- | --- |
-| top of `<script>` | **Helpers & global state** — `rand/randi/pick/clamp/lerp/angDiff`, `TAU`, `$`, and the two master state objects **`G`** and **`WORLD`** (see §6.1) |
-| `AUDIO` | `initAudio` (+ `buildMusicRack`/`makeIR` FX rack), engine synth, `sfx` object, synthwave soundtrack (`SW_SONGS`, `STATIONS`, `scheduleMusic`/`stepSong`, `sw*` instruments), dash gauge drawing |
+| top of `<script>` | **Helpers & global state** — `rand/randi/pick/clamp/lerp/angDiff`, `TAU`, `$`, and the two master state objects **`G`** and **`WORLD`** (see §6.1). A `// CODE MAP` comment block right below lists every banner with its current line range |
+| `DEVICE / ORIENTATION` | `IS_TOUCH`, self-rotating portrait phones (`ROTATED`, `vw`/`vh`, `remapXY`) |
+| `AUDIO` | `initAudio` (+ `buildMusicRack`/`makeIR` FX rack), engine synth layers, heli rotor chop, `sfx` object, `WEAPON_SFX` voices |
+| `PROCEDURAL 80s SYNTHWAVE SOUNDTRACK` | `SW_SONGS`, `STATIONS`, `scheduleMusic`/`stepSong`, `sw*` instruments, hot-loop swap under heat |
 | `THREE SETUP` | `scene`, `camera`, `renderer`, sky/sun textures, lights |
-| `CITY` | Procedural block/building/road generation, `intersections`, water, ramps, street furniture, collision helpers (`buildingHit`, `rampHit`, `resolveFootCollision`) |
+| `CITY` | Procedural block/building/road generation, `intersections`, **terrain** (`VERT_H`, `groundH`, `terrainLines`/`terrainGeo` ground + beach meshes — see `TERRAIN.md`), water, ramps, street furniture, collision helpers (`buildingHit`, `rampHit`, `resolveFootCollision`) |
+| `FOOTBALL FIELD` | Wildcats turf, goalposts, bleachers, scoreboard |
+| `ELEVATED LIGHT RAIL` | `RAILPATH`, stations, variable-length pillars, the animated train |
+| `STAIRS & FIRE ESCAPES` | `STAIR_RUNS`, `stairHitRun`/`stairH` — climbable runs the feet follow |
+| `WALL LADDERS` | `LADDERS`, `ladderGrab`, `mountLadder`, `updateClimb` |
 | `PARTICLES` | Fixed-size pool (`P_MAX=360`, `parts[]`), `spawnP`, `burst`, `updateParticles`, colour constants |
 | `BLOB SHADOWS` | `makeShadow` |
+| `GPU RESOURCE CLEANUP` | `disposeMesh`, `_sharedGPU` (shared geometry/materials that must never be disposed) |
 | `CARS` | `CARTYPES`, `makeCarMesh`, `makeCar`, traffic spawn |
-| `PEDESTRIANS` | `makePerson` (rigged limbs), dogs, `spawnPed`, chatter |
+| `PEDESTRIANS` | `makePerson` (rigged limbs, see `js/person.js` + `js/npc-types.js`), `spawnPed`, chatter |
 | `PIZZA DELIVERY SYSTEM` | Jackable pizza cars, `activeDelivery`, delivery loop |
-| `RIVAL PIZZA GANG` | `chaosDrivers`, `gangMembers`, turf on minimap |
+| `RIVAL PIZZA GANG: CHAOS PIZZA` | `chaosDrivers`, `gangMembers`, turf on minimap |
+| `FOOTBALL RIVALS: CHAOS HIGH JOCKS` | `JOCK_TAUNTS`, `spawnJock`, jock AI |
+| `STRAY DOGS & DOG GANGS` | Dogs, packs, `angry` state + growl/bite cues, meat drops |
 | `PIZZA WARS MISSION` | Scripted gang-war mission (`startPizzaWars`) |
-| heist funcs | `spawnGuards`, `updateGuards`, `updateSafeCrack`, `checkHeistTriggers`, `updateHeistHUD` |
-| pickups | `pickups`, `pickupDefs`, `scatterPickups`, `collectPickups` |
-| `HELICOPTERS` | Player heli + `spawnCopHeli`/`updateCopHeli` |
+| `PLAYER` | The `player` object and its initial state |
+| `PIZZA PLACE & INTERIOR` | Pizza-place exterior/interior, robbery, enter/exit, heist funcs (`spawnGuards`, `updateGuards`, `updateSafeCrack`, `checkHeistTriggers`) |
+| `SIDEWALKS & STOREFRONT AWNINGS` | 3D kerb strips, sidewalk slabs, awnings |
+| `MORE CITY BEAUTIFICATION` | Street trees, planters, cafe tables, pole banners |
+| `DAY/NIGHT & HEIST SYSTEM` | `toggleNight`, night sky, heist triggers |
+| `PICKUPS` | `pickups`, `pickupDefs`, `spawnPickup`, `scatterPickups`, `collectPickups`, `updatePickupVisuals` |
+| `HELICOPTERS` | Player heli + `spawnCopHeli`/`updateCopHeli`, pilotless helis |
 | `TALKING PEDS` | Speech bubbles, `wahVoice`, `doTalk` |
 | `WEAPONS` | `cycleWeapon`, `doAttack`, rockets, `explode`, `damageArea`, `WEAPON_SFX` (per-weapon fire/reload synth registry), `reloadPistol`, `startMissileFlight` (spatialized flight-loop sound) |
 | input | `joyStart/Move/End`, `doJump`, `applyLook`, `pollKeys` |
@@ -218,6 +231,9 @@ Sections, in file order, with what lives in each:
 | `HUD / TOASTS` | `toast`, `addMoney`, `updateStarsHUD`, `setMissionHUD`, `cycleRadio` |
 | `MISSIONS` | `startMission` (5 random types), `updateMission`, complete/fail, beacon |
 | `AI` | `updateTraffic`, `updateCops`, `updatePeds`, pickup visuals |
+| `FOOT COPS` | `spawnFootCop`, foot-cop AI, baton/pistol drops |
+| `SEWER RATS` | `RAT_POOL`, `spawnRats`, `updateRats`, manholes |
+| `MAMA RAT (rat vengeance)` | `spawnMamaRat`, `updateMamaRat`, her screech/bite/death voices |
 | `BUSTED / WASTED` | `bigEvent`, `respawn`, `busted`, `wasted` |
 | `CAMERA` | `updateCamera`, `cameraCollide`, `shake` |
 | `MINIMAP` | `drawMinimap` |
@@ -226,7 +242,11 @@ Sections, in file order, with what lives in each:
 | `ANIMATED INTRO` | Fly-through intro camera |
 | `STORY: TURBO JONES, CHAPTER 1` | `spawnDeb`, `updateStory`, the $800 debt, story cards, store robberies |
 | `CUTSCENE SYSTEM` | `CUTSCENES`, `playCutscene`, dialogue box |
-| `VOICEOVER SYSTEM` | `speak`, recorded VO (`loadVOFiles`, `playVOFile`), trailer/turbo lines |
+| `VOICEOVER SYSTEM` / `INTRO NARRATION` | `speak`, recorded VO (`loadVOFiles`, `playVOFile`), trailer/turbo lines |
+| `DEV TOOLS` | `?dev=1` panel, cheats, god mode, teleports |
+| `REPLAY SYSTEM` | `enterReplay`, `updateReplay`, free-fly camera, ring buffer |
+| `PAUSE MENU & SETTINGS` | Pause menu, volume/quality sliders |
+| `SAVE SYSTEM` | `queueSave`, `restoreSave`, the localStorage blob |
 | `START / RESIZE` | Boot, resize, event wiring |
 
 ---
