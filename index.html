@@ -1519,15 +1519,17 @@ const helipads=[];
   const fb=parks.find(b=>!b.helipad&&!b.football);
   if(fb) fb.football=true;
 })();
-// ---- terrain: terraced blocks + graded streets, signature hills, knolls in the
-// parks, dunes on the beach ring ----
+// ---- terrain: graded streets, signature hills, knolls in the parks, dunes on
+// the beach ring ----
 // see TERRAIN.md — groundH stays a single-valued height field; every
 // world-placed object reads its Y from it. Real streets don't bank sideways,
-// so this is a lattice, not a raw noise sample: each block is a flat plateau,
-// each road segment grades LINEARLY between the two intersections it connects
-// (constant across the road's width — only the direction of travel slopes),
-// and intersections are shared flat plateaus so adjacent roads always agree.
-// Retaining walls (below) dress the seam where a flat block meets a graded street.
+// so this is a lattice, not a raw noise sample: heights live on the road
+// intersections, a road segment grades LINEARLY between the two intersections
+// it connects (constant across the road's width — only the direction of travel
+// slopes), and intersections are shared plateaus so adjacent roads agree.
+// The block between four streets is the bilinear patch joining its four kerb
+// lines, so the field is CONTINUOUS everywhere: you walk up a grade onto the
+// sidewalk instead of hitting an invisible ledge and popping up to street level.
 const KNOLLS=[];
 blockInfo.forEach(b=>{
   if(b.type==='park'&&!b.helipad&&!b.football)
@@ -1540,10 +1542,13 @@ function cityRelief(x,z){
   return CITY_AMP*(0.5+0.5*Math.sin(x*0.011+1.3)*Math.cos(z*0.013))*edge;
 }
 // two named hills — kept well inside the elevated rail loop (radius ~172-224) so
-// the rail's variable-length pillars never go negative.
+// the rail's variable-length pillars never go negative. Radius vs height is the
+// grade budget: a raised-cosine bump's steepest slope is h*PI/(2r), so these sit
+// at ~0.17 rad (10 deg) — inside TERRAIN.md's 12-deg drivable/walkable cap even
+// once the city roll stacks on top.
 const SIGNATURE_HILLS=[
-  {x:-70,z:50,r:65,h:11},
-  {x:60,z:-70,r:60,h:9},
+  {x:-70,z:50,r:80,h:9},
+  {x:60,z:-70,r:75,h:8},
 ];
 function hillsAt(x,z){
   let h=0;
@@ -1554,35 +1559,26 @@ function hillsAt(x,z){
   return h;
 }
 // VERT_H: height at every road intersection, sampled straight off the smooth
-// relief field. PAD_H: each block's flat pad = the average of its 4 corners.
-const VERT_H=[], PAD_H=[];
+// relief field. Everything else in the city is interpolated from these.
+const VERT_H=[];
 for(let i=0;i<=WORLD.blocks;i++){
   VERT_H[i]=[];
   for(let j=0;j<=WORLD.blocks;j++) VERT_H[i][j]=cityRelief(roadLines[i],roadLines[j])+hillsAt(roadLines[i],roadLines[j]);
-}
-for(let i=0;i<WORLD.blocks;i++){
-  PAD_H[i]=[];
-  for(let j=0;j<WORLD.blocks;j++) PAD_H[i][j]=(VERT_H[i][j]+VERT_H[i+1][j]+VERT_H[i][j+1]+VERT_H[i+1][j+1])/4;
 }
 function groundH(x,z){
   const nb=WORLD.blocks;
   const ci=clamp(Math.floor((x-roadLines[0])/PITCH),0,nb-1);
   const cj=clamp(Math.floor((z-roadLines[0])/PITCH),0,nb-1);
   const lx=x-roadLines[ci], lz=z-roadLines[cj];
-  const onRoadX=lx<ROAD/2||lx>PITCH-ROAD/2, onRoadZ=lz<ROAD/2||lz>PITCH-ROAD/2;
-  let h;
-  if(onRoadX&&onRoadZ){
-    const iR=lx<ROAD/2?ci:ci+1, jR=lz<ROAD/2?cj:cj+1;
-    h=VERT_H[iR][jR];                                    // intersections: flat plateaus
-  } else if(onRoadX){
-    const iR=lx<ROAD/2?ci:ci+1, t=clamp((lz-ROAD/2)/(PITCH-ROAD),0,1);
-    h=lerp(VERT_H[iR][cj],VERT_H[iR][cj+1],t);            // N/S street: grades along z only
-  } else if(onRoadZ){
-    const jR=lz<ROAD/2?cj:cj+1, t=clamp((lx-ROAD/2)/(PITCH-ROAD),0,1);
-    h=lerp(VERT_H[ci][jR],VERT_H[ci+1][jR],t);            // E/W street: grades along x only
-  } else {
-    h=PAD_H[ci][cj];                                      // block interior: flat pad
-  }
+  // u/v run 0..1 across the block between two streets, and CLAMP over the road
+  // itself. That clamp is what keeps a street level across its width — on a N/S
+  // street u pins to its own kerb, so height varies with z only — while the
+  // block interior is the bilinear patch joining the four kerb lines, meeting
+  // each of them exactly. One expression, continuous everywhere, no ledges.
+  const u=clamp((lx-ROAD/2)/(PITCH-ROAD),0,1);
+  const v=clamp((lz-ROAD/2)/(PITCH-ROAD),0,1);
+  let h=lerp(lerp(VERT_H[ci][cj],VERT_H[ci+1][cj],u),
+             lerp(VERT_H[ci][cj+1],VERT_H[ci+1][cj+1],u),v);
   for(let i=0;i<KNOLLS.length;i++){
     const k=KNOLLS[i], dx=x-k.x, dz=z-k.z, d2=dx*dx+dz*dz;
     if(d2<k.r*k.r) h+=k.h*0.5*(1+Math.cos(Math.PI*Math.sqrt(d2)/k.r));
@@ -1616,53 +1612,11 @@ function stairHitRun(x,z){
   return best;
 }
 function stairH(x,z){ const st=stairHitRun(x,z); return st?st.h:0; }
-// retaining walls / curbs: dressing wherever a block's flat pad doesn't meet
-// its bordering street at the same height, so the seam reads as a designed
-// ledge instead of a glitch. Small steps (a curb) are cosmetic only — cars &
-// feet just follow groundH's little hop. Bigger drops get a real climbable
-// stair cut through the wall, per TERRAIN.md's "retaining walls or stairs."
-(function(){
-  const CURB_WALLS=[];
-  const rampMat=new THREE.MeshLambertMaterial({color:0x565064});
-  const rampGeo=new THREE.BoxGeometry(4.2,0.4,1); rampGeo.translate(0,0,0.5);
-  for(let i=0;i<WORLD.blocks;i++) for(let j=0;j<WORLD.blocks;j++){
-    const pad=PAD_H[i][j];
-    const cx0=roadLines[i]+ROAD/2, cx1=roadLines[i+1]-ROAD/2;
-    const cz0=roadLines[j]+ROAD/2, cz1=roadLines[j+1]-ROAD/2;
-    const edges=[
-      {hA:VERT_H[i][j],  hB:VERT_H[i][j+1],  ex:cx0,        ez:(cz0+cz1)/2, sx:0.5,  sz:BLOCK, blockAng:Math.PI/2},   // west: block is +x
-      {hA:VERT_H[i+1][j],hB:VERT_H[i+1][j+1],ex:cx1,        ez:(cz0+cz1)/2, sx:0.5,  sz:BLOCK, blockAng:-Math.PI/2}, // east: block is -x
-      {hA:VERT_H[i][j],  hB:VERT_H[i+1][j],  ex:(cx0+cx1)/2,ez:cz0,         sx:BLOCK,sz:0.5,   blockAng:0},          // south: block is +z
-      {hA:VERT_H[i][j+1],hB:VERT_H[i+1][j+1],ex:(cx0+cx1)/2,ez:cz1,         sx:BLOCK,sz:0.5,   blockAng:Math.PI},    // north: block is -z
-    ];
-    edges.forEach(e=>{
-      const top=Math.max(pad,e.hA,e.hB), bot=Math.min(pad,e.hA,e.hB), diff=top-bot;
-      if(diff<=0.35) return;
-      if(diff<=1.5){ CURB_WALLS.push([e.ex,bot,e.ez,e.sx,diff,e.sz]); return; }
-      // taller drops get a real, visible stair/ramp run instead of a sheer wall —
-      // running from the low side to the high side, through the seam
-      const ang=pad>(e.hA+e.hB)/2?e.blockAng:e.blockAng+Math.PI;
-      const len=clamp(diff*1.3,3,14);
-      const rx=e.ex-Math.sin(ang)*len/2, rz=e.ez-Math.cos(ang)*len/2;
-      STAIR_RUNS.push({x:rx,z:rz,ang,len,baseH:bot,topH:top});
-      const ramp=new THREE.Mesh(rampGeo,rampMat);
-      ramp.position.set(rx,bot,rz);
-      ramp.rotation.y=ang;
-      ramp.rotation.x=-Math.atan2(top-bot,len);
-      ramp.scale.z=len/Math.cos(Math.atan2(top-bot,len));
-      scene.add(ramp);
-    });
-  }
-  if(!CURB_WALLS.length) return;
-  const geo=new THREE.BoxGeometry(1,1,1); geo.translate(0,0.5,0);
-  const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:0x4a4658}),CURB_WALLS.length);
-  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), pos=new THREE.Vector3(), scl=new THREE.Vector3();
-  CURB_WALLS.forEach((w,i)=>{
-    pos.set(w[0],w[1],w[2]); scl.set(w[3],w[4],w[5]);
-    m.compose(pos,q,scl); im.setMatrixAt(i,m);
-  });
-  im.instanceMatrix.needsUpdate=true; scene.add(im);
-})();
+// NOTE: this used to be where retaining walls + seam stairs were built, to dress
+// the ledge where a flat block pad met a graded street. groundH is continuous
+// now (block interiors are the bilinear patch between their four kerb lines), so
+// there is no ledge left to dress — you simply walk up the grade. The 3D curb
+// strips along the sidewalks are cosmetic and live with the street dressing.
 const BUILDING_SKIRT=2.5;   // foundation skirt: hides the uphill gap on graded ground
 function footprintBaseY(minX,maxX,minZ,maxZ){
   // lowest of the four corners, so the building never floats on a slope
@@ -1791,21 +1745,79 @@ groundCanvas.width=groundCanvas.height=1024;
 })();
 const groundTex=new THREE.CanvasTexture(groundCanvas);
 groundTex.anisotropy=4;
-const groundGeo=new THREE.PlaneGeometry(WORLD.size,WORLD.size,120,120);
-(function(){ const pa=groundGeo.attributes.position;
-  for(let i=0;i<pa.count;i++) pa.setZ(i,groundH(pa.getX(i),-pa.getY(i)));
-  groundGeo.computeVertexNormals(); })();
+// ---- terrain meshes ----
+// A plain NxN plane can't draw this height field honestly: groundH kinks at
+// every kerb (level across the road, tilted across the block), and a cell that
+// straddles a kerb averages the two — the drawn surface then floats a metre or
+// so above the real ground, which is what buried props and pickups. So the grid
+// is built ON the road lattice instead: there is always a vertex line exactly at
+// every kerb and centre line, and the surface between them is genuinely planar.
+// Both the city and the beach ring use the same line list, so they can never
+// disagree about where the ground is (that mismatch was the beach mesh punching
+// up through downtown as sand-coloured patches).
+const TERRAIN_STEP=6;      // target spacing inside a road/block span
+const KNOLL_STEP=3;        // park knolls are the one curve that needs finer sampling
+function terrainLines(half){
+  const keys=new Set([-half,half]);
+  roadLines.forEach(l=>{ [l-ROAD/2,l,l+ROAD/2].forEach(v=>{ if(v>-half&&v<half) keys.add(v); }); });
+  // knolls are domes, not planes: a 6u sample cuts the corner off one and the
+  // lawn ends up drawn under the trees standing on it. Halve the step across
+  // their span (both axes share one line list, so this is a band, not a patch).
+  const bands=[];
+  KNOLLS.forEach(kn=>{ bands.push([kn.x-kn.r,kn.x+kn.r],[kn.z-kn.r,kn.z+kn.r]); });
+  const k=[...keys].sort((a,b)=>a-b), out=[];
+  for(let i=0;i<k.length-1;i++){
+    const step=bands.some(b=>b[0]<k[i+1]&&b[1]>k[i])?KNOLL_STEP:TERRAIN_STEP;
+    const n=Math.max(1,Math.round((k[i+1]-k[i])/step));
+    for(let s=0;s<n;s++) out.push(k[i]+(k[i+1]-k[i])*s/n);
+  }
+  out.push(k[k.length-1]);
+  return out;
+}
+// lines: sorted world coords used for BOTH axes. yOff(x,z): extra height.
+// hollow: skip any quad whose whole footprint is inside this half-extent.
+function terrainGeo(lines,half,yOff,hollow){
+  const n=lines.length, pos=new Float32Array(n*n*3), uv=new Float32Array(n*n*2), idx=[];
+  for(let j=0;j<n;j++) for(let i=0;i<n;i++){
+    const x=lines[i], z=lines[j], o=j*n+i;
+    pos[o*3]=x; pos[o*3+1]=groundH(x,z)+(yOff?yOff(x,z):0); pos[o*3+2]=z;
+    uv[o*2]=(x+half)/(2*half); uv[o*2+1]=1-(z+half)/(2*half);
+  }
+  for(let j=0;j<n-1;j++) for(let i=0;i<n-1;i++){
+    if(hollow&&Math.max(Math.abs(lines[i]),Math.abs(lines[i+1]),Math.abs(lines[j]),Math.abs(lines[j+1]))<hollow) continue;
+    const a=j*n+i, b=(j+1)*n+i, c=(j+1)*n+i+1, d=j*n+i+1;
+    idx.push(a,b,d, b,c,d);
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+const GROUND_LINES=terrainLines(WORLD.size/2);
+const groundGeo=terrainGeo(GROUND_LINES,WORLD.size/2);
 const ground=new THREE.Mesh(groundGeo,
   new THREE.MeshLambertMaterial({map:groundTex}));
-ground.rotation.x=-Math.PI/2; scene.add(ground);
-// beach ring, then ocean out to the horizon
-const sandGeo=new THREE.PlaneGeometry(WORLD.size+26,WORLD.size+26,72,72);
-(function(){ const pa=sandGeo.attributes.position;
-  for(let i=0;i<pa.count;i++) pa.setZ(i,groundH(pa.getX(i),-pa.getY(i)));
-  sandGeo.computeVertexNormals(); })();
+scene.add(ground);
+// beach ring, then ocean out to the horizon. The sand shares the city's vertex
+// lines and adds a skirt outside them, riding just proud of the ground out past
+// the coast highway and sinking well under it inland — so sand shows up on the
+// beach and nowhere else, no matter how the terrain rolls underneath.
+const SAND_EDGE=H+14;   // ~just outside the coast highway's outer kerb
+const SAND_LINES=(function(){
+  const outer=[], step=(WORLD.size/2+13)-WORLD.size/2;
+  for(let k=1;k<=3;k++) outer.push(WORLD.size/2+step*k/3);
+  return outer.slice().reverse().map(v=>-v).concat(GROUND_LINES,outer);
+})();
+function sandOffset(x,z){
+  const m=Math.max(Math.abs(x),Math.abs(z));
+  return lerp(-3,0.05,clamp((m-(SAND_EDGE-12))/12,0,1));
+}
+const sandGeo=terrainGeo(SAND_LINES,WORLD.size/2+13,sandOffset,SAND_EDGE-10);
 const sand=new THREE.Mesh(sandGeo,
   new THREE.MeshLambertMaterial({color:0xb89a66}));
-sand.rotation.x=-Math.PI/2; sand.position.y=-0.06; scene.add(sand);
+scene.add(sand);
 const waterCanvas=document.createElement('canvas');
 waterCanvas.width=waterCanvas.height=128;
 (function(){
@@ -4570,10 +4582,14 @@ function makePickupMesh(kind){
   spr.scale.set(2.2,2.2,1);
   return spr;
 }
+const PICKUP_HOVER=1.4;   // how high a pickup floats above whatever it was dropped on
 function spawnPickup(kind,x,z){
   const mesh=makePickupMesh(kind);
-  mesh.position.set(x,1.4,z); scene.add(mesh);
-  pickups.push({kind,mesh,x,z,phase:rand(0,TAU)});
+  // hover above the ground UNDER it, not above y=0 — on a hill an absolute
+  // height buries the thing inside the slope
+  const baseY=groundH(x,z);
+  mesh.position.set(x,baseY+PICKUP_HOVER,z); scene.add(mesh);
+  pickups.push({kind,mesh,x,z,baseY,phase:rand(0,TAU)});
 }
 function scatterPickups(){
   let cash=0,wrench=0,badge=0,rpg=0,meat=0;
@@ -5872,7 +5888,13 @@ function carPhysics(car,dt,ctl){
       if(car===player.car&&mission&&mission.type==='style') mission.value+=dt*40;
     }
   } else if(car.y<ghCar) car.y=ghCar;
-  else if(car.y>ghCar+0.02) car.y=lerp(car.y,ghCar,Math.min(1,12*dt));   // settle onto slopes
+  else if(car.y>ghCar+0.02){
+    // Streets have real grade now, and a first-order settle always lags a
+    // dropping surface — that lag is the tyres hovering a foot off the road all
+    // the way down a hill. So keep the easing for genuine drops (a kerb, a
+    // rooftop edge) and just plant the car when the gap is grade-sized.
+    car.y=(car.y-ghCar<0.6)?ghCar:lerp(car.y,ghCar,Math.min(1,12*dt));
+  }
   // integrate
   car.x+=car.vel.x*dt; car.z+=car.vel.z*dt;
   // NPC cars stay in town; the player can drive out onto the beach — and into the sea
@@ -6011,7 +6033,7 @@ function updateFoot(dt){
   if(p.stunT>0){   // clocked — flat on your back for a beat
     p.stunT-=dt;
     p.mesh.rotation.x=-1.25*clamp(p.stunT/0.8,0,1);
-    p.mesh.position.set(p.x,0.25,p.z);
+    p.mesh.position.set(p.x,groundH(p.x,p.z)+0.25,p.z);
     if(p.stunT<=0) p.mesh.rotation.x=0;
     return;
   }
@@ -6067,10 +6089,21 @@ function updateFoot(dt){
   p.mesh.position.set(p.x,p.y+Math.abs(Math.sin(p.phase))*0.06,p.z);
   p.mesh.rotation.y=p.heading;
   const u=p.mesh.userData;
+  // the grade under his feet, measured the way he's facing: + = walking uphill.
+  // Streets have real gradient now, so a hill is something you WALK up — he
+  // plants on the slope and switches to the climb stride instead of strolling
+  // along flat and popping up a step at a time.
+  const onTerrain=!(roofHere>0&&p.y>roofHere-1.0)&&!onStairs&&p.y<=ground+0.08;
+  const sFwd=groundH(p.x+Math.sin(p.heading)*1.2,p.z+Math.cos(p.heading)*1.2);
+  const sBack=groundH(p.x-Math.sin(p.heading)*1.2,p.z-Math.cos(p.heading)*1.2);
+  const grade=onTerrain?Math.atan2(sFwd-sBack,2.4):0;
+  // stand perpendicular-ish to the hillside (partial, so he still reads upright)
+  p.mesh.rotation.x=lerp(p.mesh.rotation.x,-grade*0.45,Math.min(1,10*dt));
   // Climbing wins over the jump pose: on a sloped run, hugging its surface, and
   // moving = a climb, even though the per-frame slope/gravity overshoot leaves
   // p.y a hair above the step (a real leap clears sh by far more than this).
-  const climbing=onStairs&&st.r.topH!==st.r.baseH&&mag>0.12&&p.y<sh+0.6;
+  const climbing=(onStairs&&st.r.topH!==st.r.baseH&&mag>0.12&&p.y<sh+0.6)
+    ||(mag>0.12&&grade>0.10);   // ~6 deg of street grade is a climb, not a stroll
   // "airborne" = genuinely off the deck (jump/fall), measured against the floor
   // under his feet — so standing on elevated stairs or a roof no longer reads as
   // a jump (that bug froze Turbo mid-leap while climbing).
@@ -7122,7 +7155,7 @@ function collectPickups(x,z,r){
     const p=pickups[i];
     if(Math.hypot(p.x-x,p.z-z)<r){
       scene.remove(p.mesh); disposeMesh(p.mesh); pickups.splice(i,1);
-      if(p.kind==='cash'){ addMoney(25,'PICKUP'); sfx.coin(); burst(x,1,z,8,COL_CASH,2,0.5,3); }
+      if(p.kind==='cash'){ addMoney(25,'PICKUP'); sfx.coin(); burst(x,p.baseY+1,z,8,COL_CASH,2,0.5,3); }
       else if(p.kind==='wrench'){
         if(player.car){ player.car.hp=player.car.maxhp; G.carHP=100; toast('REPAIRED','good'); sfx.repair(); }
         else addMoney(15,'FOUND');
@@ -7153,7 +7186,7 @@ function collectPickups(x,z,r){
 }
 function updatePickupVisuals(t){
   pickups.forEach(p=>{
-    p.mesh.position.y=1.4+Math.sin(t*2+p.phase)*0.3;
+    p.mesh.position.y=p.baseY+PICKUP_HOVER+Math.sin(t*2+p.phase)*0.3;
     p.mesh.material.rotation=t*1.5+p.phase;
   });
 }
@@ -7183,7 +7216,7 @@ function respawn(spot){
   setTimeout(()=>{
     const custom=!!spot;
     spot=spot||intersections[Math.floor(intersections.length/2)];
-    player.x=spot.x+(custom?0:4); player.z=spot.z+(custom?0:4); player.y=0;
+    player.x=spot.x+(custom?0:4); player.z=spot.z+(custom?0:4); player.y=groundH(player.x,player.z);
     player.mesh.visible=true; player.mesh.rotation.x=0; footCamYaw=player.heading;
     makeCar('sedan',spot.x-4,spot.z-3,rand(0,TAU),{parked:true});
     G.mode='foot'; player.car=null;

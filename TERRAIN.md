@@ -208,6 +208,20 @@ nothing moves — but the code is now grade-ready).
 
 *Risk: low. Effort: ~a day. Payoff: the game is now safe to grade.*
 
+> **Implemented, with one revision (2026-07-24).** Tier 1 first shipped as
+> *terraced* blocks — each block a dead-flat pad, with retaining walls and stair
+> runs dressing the ledge where a pad met a graded street. That ledge is a
+> discontinuity in `groundH`, which broke guardrail #2: on foot you walked
+> *through* the wall and then popped up to the next street level, the drawn mesh
+> couldn't reproduce the cliff so props seated on `groundH` sank into it, and the
+> beach mesh punched up through the city wherever the two disagreed.
+> What ships now keeps the flat-across-its-width street (guardrail: no banking)
+> but makes the block between four streets the **bilinear patch joining its four
+> kerb lines**. Same lattice, same one-height-per-column rule, no cliffs — you
+> walk the grade up onto the sidewalk. Buildings still seat on the lowest
+> footprint corner with a skirt; a block-wide tilt is a couple of metres, which
+> the skirt already covers. Retaining walls and their seam stairs are gone.
+
 ### Tier 1 — Terraced blocks + graded streets (the main event)
 
 This is the classic city-on-hills trick (think San Francisco / Pittsburgh) and
