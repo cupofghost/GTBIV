@@ -60,7 +60,7 @@ see a phone joystick on a desktop browser, or keyboard hints on a phone.
 | Jump | On-screen button | Space |
 | Horn | On-screen button | `H` |
 | Radio | Tap ♪ | `Q` |
-| Replay last 30 s (free camera) | REPLAY button | `R` (Space = play/pause, Esc = exit) |
+| Cinema Mode (free-fly director + staged scenes; "Replay last 30s" is one of them) | 🎬 CINEMA button | `R` (Space = play/pause during the 30s replay, Esc = exit) |
 | Day / night | — | `N` |
 | Crouch | — | `C` |
 | Pizza Wars mission | — | `M` |

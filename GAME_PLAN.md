@@ -43,8 +43,9 @@ A procedural city (blocks, roads, water, ramps, gentle terrain, elevated light
 rail, climbable stairs/fire escapes, rooftop hideouts) with: driveable cars +
 bikes + helicopters, cop AI + cop helis + **foot cops**, pedestrians + dogs
 (strays band into gangs), a heist system, a rival pizza-gang war, ambient
-**Chaos High jocks**, five random side-missions, a **30-second replay** system
-with a photo-op fly-cam, a fully **procedural 80s synthwave soundtrack** (3
+**Chaos High jocks**, five random side-missions, a **Cinema Mode** director
+(free-fly photo-op camera, staged scenes, 30-second replay), a fully
+**procedural 80s synthwave soundtrack** (3
 stations, FX rack, ducking), recorded Turbo voiceover, cutscenes, a **pause +
 settings** menu, **save/continue**, and a gated **dev toolkit** (`?dev=1`:
 cheat panel, scene-jump flags, debug HUD, `viewer.html` model turntable).
