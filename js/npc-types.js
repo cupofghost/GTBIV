@@ -1664,6 +1664,232 @@ window.NPC_TYPES = {
     beard: 0.4,
   }),
 
+  // === NICHE PROFESSIONS ===
+  florist_male: createNPCType('florist_male', {
+    genderBias: 'guy',
+    palette: {
+      shirts: [0xff6b9d, 0xd98aff, 0xf0e8d8],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0xf0f0f0, 0x1a1a1a],
+    },
+    buildRange: [0.88, 1.08],
+  }),
+
+  jewelry_maker: createNPCType('jewelry_maker', {
+    palette: PALETTES.upscale,
+    buildRange: [0.88, 1.08],
+    hairStyles: ['long', 'short'],
+  }),
+
+  glass_blower: createNPCType('glass_blower', {
+    palette: PALETTES.worker,
+    buildRange: [0.95, 1.15],
+    hairStyles: ['short', 'bald', 'buzz'],
+  }),
+
+  woodworker: createNPCType('woodworker', {
+    palette: PALETTES.worker,
+    buildRange: [1.0, 1.2],
+    hairStyles: ['short', 'buzz'],
+    beard: 0.5,
+  }),
+
+  seamstress: createNPCType('seamstress', {
+    genderBias: 'girl',
+    palette: PALETTES.vintage,
+    buildRange: [0.88, 1.1],
+    hairStyles: ['long', 'bun', 'short'],
+  }),
+
+  leather_worker: createNPCType('leather_worker', {
+    palette: PALETTES.worker,
+    buildRange: [1.0, 1.18],
+    hairStyles: ['short', 'buzz', 'long'],
+  }),
+
+  blacksmith: createNPCType('blacksmith', {
+    palette: PALETTES.worker,
+    buildRange: [1.05, 1.3],
+    hairStyles: ['short', 'bald', 'buzz'],
+    beard: true,
+  }),
+
+  potter: createNPCType('potter', {
+    palette: PALETTES.vintage,
+    buildRange: [0.88, 1.15],
+    hairStyles: ['long', 'short'],
+  }),
+
+  // === VINTAGE / RETRO CAREER TYPES ===
+  telegraph_operator: createNPCType('telegraph_operator', {
+    palette: PALETTES.vintage,
+    buildRange: [0.88, 1.08],
+    hairColors: [0x8a6030, 0x1a1a1a],
+  }),
+
+  film_projectionist: createNPCType('film_projectionist', {
+    palette: PALETTES.vintage,
+    buildRange: [0.88, 1.1],
+  }),
+
+  typewriter_enthusiast: createNPCType('typewriter_enthusiast', {
+    palette: PALETTES.vintage,
+    buildRange: [0.88, 1.1],
+    hairColors: [0x8a6030, 0xb88a60],
+  }),
+
+  vintage_car_collector: createNPCType('vintage_car_collector', {
+    palette: PALETTES.western,
+    buildRange: [0.95, 1.2],
+  }),
+
+  vinyl_collector: createNPCType('vinyl_collector', {
+    palette: PALETTES.dark,
+    buildRange: [0.88, 1.1],
+    hairColors: [0x1a1a1a],
+  }),
+
+  // === LIFESTYLE / WELLNESS ===
+  crossfit_enthusiast: createNPCType('crossfit_enthusiast', {
+    palette: PALETTES.athletic,
+    buildRange: [1.05, 1.2],
+    shorts: true,
+    tank: 0.9,
+  }),
+
+  pilates_instructor: createNPCType('pilates_instructor', {
+    genderBias: 'girl',
+    palette: PALETTES.athletic,
+    buildRange: [0.88, 1.05],
+    shorts: true,
+    tank: 0.7,
+  }),
+
+  nutrition_coach: createNPCType('nutrition_coach', {
+    palette: PALETTES.upscale,
+    buildRange: [0.95, 1.08],
+  }),
+
+  supplement_junkie: createNPCType('supplement_junkie', {
+    palette: PALETTES.athletic,
+    buildRange: [1.05, 1.2],
+    shorts: 0.5,
+    tank: 0.6,
+  }),
+
+  juice_cleanse_person: createNPCType('juice_cleanse_person', {
+    palette: PALETTES.upscale,
+    buildRange: [0.88, 1.02],
+    hairStyles: ['long', 'ponytail'],
+  }),
+
+  // === HOBBIES / OBSESSIONS ===
+  toy_collector: createNPCType('toy_collector', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.15],
+  }),
+
+  board_game_enthusiast: createNPCType('board_game_enthusiast', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.15],
+  }),
+
+  comic_book_nerd: createNPCType('comic_book_nerd', {
+    palette: PALETTES.casual,
+    buildRange: [0.85, 1.12],
+    hairColors: [0x1a1a1a, 0x8a8a8a],
+  }),
+
+  model_train_guy: createNPCType('model_train_guy', {
+    palette: PALETTES.vintage,
+    buildRange: [0.88, 1.2],
+    hairColors: [0x8a8a8a, 0xd9d9d9],
+  }),
+
+  rc_car_racer: createNPCType('rc_car_racer', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+  }),
+
+  drone_pilot: createNPCType('drone_pilot', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.08],
+    shorts: 0.3,
+  }),
+
+  // === DISTINCTIVE TRAITS ===
+  tattoo_sleeve_guy: createNPCType('tattoo_sleeve_guy', {
+    genderBias: 'guy',
+    palette: PALETTES.dark,
+    buildRange: [0.95, 1.15],
+    shorts: 0.5,
+    tank: 0.7,
+  }),
+
+  piercing_enthusiast: createNPCType('piercing_enthusiast', {
+    palette: PALETTES.dark,
+    buildRange: [0.88, 1.08],
+    hairColors: [0x1a1a1a, 0xff00ff],
+  }),
+
+  dyed_hair_person: createNPCType('dyed_hair_person', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+    hairColors: [0xff00ff, 0x00ffff, 0xffff00],
+  }),
+
+  freckled_girl: createNPCType('freckled_girl', {
+    genderBias: 'girl',
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.08],
+    skins: [0xf0c8a0, 0xffd9b0],
+    hairColors: [0x6b4a2f, 0x8a6030],
+  }),
+
+  tall_person: createNPCType('tall_person', {
+    palette: PALETTES.casual,
+    buildRange: [1.1, 1.25],
+    height: 1.15,
+  }),
+
+  short_person: createNPCType('short_person', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.02],
+    height: 0.92,
+  }),
+
+  // === SITUATIONAL / CONTEXT ===
+  morning_jogger: createNPCType('morning_jogger', {
+    palette: PALETTES.athletic,
+    buildRange: [0.88, 1.05],
+    shorts: true,
+    tank: 0.8,
+  }),
+
+  night_shift_worker: createNPCType('night_shift_worker', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.15],
+    hairColors: [0x1a1a1a, 0x8a8a8a],
+  }),
+
+  weekend_warrior: createNPCType('weekend_warrior', {
+    palette: PALETTES.athletic,
+    buildRange: [0.95, 1.15],
+    shorts: true,
+    tank: 0.6,
+  }),
+
+  parent_with_kids: createNPCType('parent_with_kids', {
+    palette: PALETTES.casual,
+    buildRange: [0.95, 1.15],
+  }),
+
+  retired_person: createNPCType('retired_person', {
+    palette: PALETTES.vintage,
+    buildRange: [0.95, 1.15],
+    hairColors: [0xd9d9d9, 0xa0a0a0, 0x8a8a8a],
+  }),
+
   // === MISC ===
   none: createNPCType('none', {
     // Truly random
