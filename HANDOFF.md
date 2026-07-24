@@ -776,6 +776,44 @@ brakes-then-reverses; ensure the pedal/HUD communicates it). Keep desktop
 WASD identical in feel (already true for the dead-zone change — `pollKeys`
 sets `input.jx/jy` directly, bypassing `joyMove`).
 
+**Brake vs. Reverse Clarity Spec (for J4 reverse/brake part):**
+
+**Physics Status:** `carPhysics` already implements correct brake→reverse sequence:
+- Engine off or moving forward: brake (velocity toward 0)
+- Stopped and reverse input held: engage reverse (backward acceleration)
+- Current code: correct; issue is only **UI clarity**, not mechanics
+
+**UI Problem:** Touch/desktop both show a single "BRAKE" button. On press, physics do the right thing (brake if moving, reverse if stopped), but the player doesn't know which mode is active. Result: confusion on first reverse ("why isn't the car going backward?").
+
+**Solution — Three changes:**
+
+1. **Touch Pedal Button (DOM):**
+   - Rename `#btnBrake` to `#pedBrake` (internal ID, no user-facing change)
+   - Add dynamic `data-state="brake"|"reverse"` attribute
+   - CSS: button text swaps based on state: `data-state[brake] { content: 'BRAKE'; }` vs `data-state[reverse] { content: 'REVERSE'; }`
+   - Update: in `carPhysics`, after `car.vel.length() < 0.1` (stopped), set `$('pedBrake').dataset.state = 'reverse'`
+   - Clear: in `carPhysics`, if moving forward, set back to `'brake'`
+   - *Effect:* Touch players see "BRAKE" when moving, "REVERSE" when stopped
+
+2. **Desktop Keyboard (HUD Hint):**
+   - Add a tiny indicator below the speedometer: `[S = BRAKE]` when moving, `[S = REVERSE]` when stopped
+   - Same state-tracking as above, just in the speedometer UI code instead of DOM
+
+3. **Color Feedback (Optional):**
+   - Button background tint: brake = red-ish, reverse = purple-ish (or invert)
+   - Reinforces the mode switch visually
+
+**Code Hook Points:**
+- [ ] `carPhysics`: after velocity check (~line 5200–5250), dispatch state change
+- [ ] Touch pedal: bind to dynamic CSS via `dataset.state` (~50 characters of CSS)
+- [ ] Desktop HUD: speedo text update in `updateDash` (~line 5700, small addition)
+
+**Testing/Acceptance for J4 reverse part:**
+- [ ] Touch: press brake while moving → button says "BRAKE"; stop car completely → button changes to "REVERSE" immediately
+- [ ] Desktop: same state reflected in HUD hint below speedometer
+- [ ] No input lag or flicker on state change; feels instant
+- [ ] Gameplay unchanged (physics identical); only UI changes
+
 ---
 
 ### Phase 3 — Progression & Balance
