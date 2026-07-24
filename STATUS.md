@@ -1,27 +1,24 @@
 # STATUS
 
-Last consolidation: 2026-07-24 — Signed: Claude Code | Sonnet 5 | medium
+Last consolidation: 2026-07-24 — Signed: Claude Code | Opus 4.8 | high
 
 ## Active work
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-| 2026-07-24 | Cinema mode / `index.html` (replay/cinema section + main loop), `tests/cases/cinema-mode.test.js` | Grew the replay screen into Cinema Mode: live free-fly director over the running world + a scene dropdown (Intro flythrough, the 4 scripted convos, Jock Fight, Blow Up a Car / Cop Car, Shoot a Pedestrian, Rat Mother, and the old Replay-last-30s scrub). Added a HIDE HUD toggle (+ SHOW BAR pill) for clean screen-recording; director is invulnerable while filming. 6 new tests + full suite green 62/62. Done. | Signed: Claude Code \| Opus 4.8 \| high |
-| 2026-07-24 | terrain / `index.html`, `tests/cases/terrain.test.js`, `tests/cases/new-features.test.js` | Implemented TERRAIN.md Tier 0 (re-seated ~25 `y=0` statics onto `groundH`) + Tier 1. Full suite green 55/55. Done. | Signed: Claude Code \| Claude \| high |
-| 2026-07-24 | terrain / `index.html`, `tests/cases/terrain.test.js` | Follow-up: owner reported streets tilting sideways off the earlier continuous relief. Replaced it with a terraced block/road lattice — each block is a flat plateau, each street grades linearly only along its own direction of travel (verified numerically, <0.01u sideways tilt), intersections are flat. Added retaining-wall curb geometry for small pad/street gaps and real climbable stair/ramp meshes for gaps >1.5u. Full suite green 55/55. Done. | Signed: Claude Code \| Claude \| high |
-| 2026-07-24 | Audio / `index.html` engine synth | Done. Multi-layer engine synth: sub-rumble + mechanical grit + turbo whine/blow-off layers added alongside the existing tone osc, all per-car-type (`CARTYPES[*].snd.sub/grit/turbo`). Grit+misfire pop scale with car damage; turbo whine spools with revs/boost and dumps on lift. All 9 car types re-tuned for rumbly-vs-shrill variety. Verified headless (layer values respond to damage/boost/exit) + full 49-test suite green. | Signed: Claude Code | Sonnet 5 | high |
-| 2026-07-24 | index.html (updateFoot), js/person.js | Turbo stair-climb animation: fixed airborne test (was absolute, now vs ground) so elevated stairs/roofs no longer force jump pose; added high-knee stepping cycle. Done. | Claude Code \| Opus 4.8 \| medium |
-| 2026-07-24 | index.html (LADDERS builder, updateClimb/mountLadder, updateFoot, doJump) | Wall-ladder climbing: bolt-on steel ladders up 12 buildings; walk into the base to grab, W/S to climb, top out on the roof, jump to bail. Hand-over-hand animation (reuses knee pivots). Placement now validates a clear climb corridor (buildings/trees/props/ramps/stairs) and tries all 4 walls. Done. | Claude Code \| Opus 4.8 \| medium |
 
 ## Shared-file touches
-- `index.html` — main loop (`loop()`): added a `cine` branch that freezes the player actor, overrides the camera with the cinema fly-cam, and skips `updateStory` while directing; frozen-buffer replay early-return now gated on `!replay.live`. Smallest-possible additions, no existing behavior changed when cinema is off. — Signed: Claude Code | Opus 4.8 | high
-- `index.html` — terrain/groundH rework touches many systems (buildings, rail, pizza/chaos HQs, heli, camera, mission beacons, Deb). See Active work row above. — Signed: Claude Code | Claude | high
-- js/person.js — expose knee pivots (kneeL/kneeR) in userData so limbs can bend for climbing; purely additive. Signed: Claude Code | Opus 4.8 | medium
+- (none open — `index.html` verified coherent at the 2026-07-24 consolidation; full suite green 62/62)
 
 ## Known issues
 - Duplicate `## 10.` heading in HANDOFF.md: "10. Suggested Order of Work" (line ~1202) and "10. Changelog — polish pass (Kimi3, 2026-07-22)" (line ~1256) share a number — pre-existing, predates this consolidation (confirmed present as of commit `9f4e220`). Cosmetic only (doesn't break the NEXT-marker workflow), left unrenumbered pending Austin's OK to touch another agent's changelog section. — 2026-07-24, Sonnet 5
 
 ## Archive
-2026-07-24 | NPC types — Batches 1–8 | Created 303 total character types across 8 batches: workers, professionals, styles, service, entertainment, tech, creative, transport, health, media, design, wellness, hobbies, subculture, outdoor, music, gaming, cultural, martial, fashion, academic. Comprehensive system for diverse NPC spawning. | Signed: Claude Code | Haiku 4.5 | low
+- 2026-07-24 | Cinema mode / `index.html` + `tests/cases/cinema-mode.test.js` | Replay screen grown into Cinema Mode: live free-fly director over the running world + scene dropdown (Intro flythrough, 4 scripted convos, Jock Fight, Blow Up a Car / Cop Car, Shoot a Pedestrian, Rat Mother, old Replay-last-30s scrub) + HIDE HUD toggle (SHOW BAR pill) for clean recording; director invulnerable while filming. 6 new tests, full suite green 62/62. | Signed: Claude Code | Opus 4.8 | high
+- 2026-07-24 | Terrain TERRAIN.md Tier 0+1 / `index.html` + terrain/new-features tests | Re-seated ~25 `y=0` statics onto `groundH`; replaced continuous relief with a terraced block/road lattice (flat plateaus, streets grade only along travel <0.01u sideways tilt, flat intersections); curb retaining walls + climbable stair/ramp meshes for gaps >1.5u. | Signed: Claude Code | Claude | high
+- 2026-07-24 | Audio engine synth / `index.html` | Multi-layer per-car engine synth (sub-rumble + mechanical grit + turbo whine/blow-off) alongside the tone osc; grit/misfire scale with damage, turbo spools with revs/boost and dumps on lift; all 9 car types re-tuned. | Signed: Claude Code | Sonnet 5 | high
+- 2026-07-24 | Turbo stair-climb anim / `index.html` (updateFoot), `js/person.js` | Fixed airborne test (now vs ground) so elevated stairs/roofs no longer force the jump pose; added high-knee stepping cycle. | Signed: Claude Code | Opus 4.8 | medium
+- 2026-07-24 | Wall-ladder climbing / `index.html` | Bolt-on steel ladders up 12 buildings; walk into the base to grab, W/S climb, top out on the roof, jump to bail; hand-over-hand anim (reuses knee pivots); placement validates a clear climb corridor across all 4 walls. | Signed: Claude Code | Opus 4.8 | medium
+- 2026-07-24 | NPC types — Batches 1–8 | Created 303 character types across 8 batches (workers, professionals, styles, service, entertainment, tech, creative, transport, health, media, design, wellness, hobbies, subculture, outdoor, music, gaming, cultural, martial, fashion, academic). | Signed: Claude Code | Haiku 4.5 | low
 - W1 (Claude Haiku 4.5, 2026-07-24): Reconciled HANDOFF.md backlog against actual code — 14 cards marked DONE, 15 marked OPEN, §10 order list corrected.
 - W2 (Claude Haiku 4.5, 2026-07-24): Added 53-section code map to index.html for fast navigation.
 - W5 (Claude Haiku 4.5, 2026-07-24): Added `NEXT: P2` marker at top of HANDOFF.md §10.
@@ -30,4 +27,4 @@ Last consolidation: 2026-07-24 — Signed: Claude Code | Sonnet 5 | medium
 - U2 (Claude Haiku 4.5, 2026-07-24): Onboarding controls-card UI/UX spec written in HANDOFF.md; not yet implemented.
 - A2 (Claude Haiku 4.5, 2026-07-24): Accessibility options spec (reduce motion, high-contrast HUD, colorblind modes) written in HANDOFF.md; not yet implemented.
 - J4 partial (Claude Haiku 4.5, 2026-07-24): Brake-vs-reverse UI clarity spec written in HANDOFF.md (dead-zone half was already done pre-session); not yet implemented.
-2026-07-24 | City beautification / index.html (~line 3708-3910) | Added 3D curb strips (dark grey), curbside planters, storefront awnings (box/wedge, varied size), sidewalk street trees, café tables+umbrellas outside some storefronts, and banner flags on streetlight poles. All density-graded (downtown denser, outer city sparser), cosmetic only, seated via groundH per TERRAIN.md invariant, no collision added. | Signed: Claude Code | Sonnet 5 | high
+- 2026-07-24 | City beautification / index.html (~line 3708-3910) | 3D curb strips, curbside planters, storefront awnings, sidewalk street trees, café tables+umbrellas, banner flags on streetlight poles — all density-graded, cosmetic, seated via groundH, no collision. | Signed: Claude Code | Sonnet 5 | high
