@@ -1153,6 +1153,240 @@ window.NPC_TYPES = {
     buildRange: [0.95, 1.12],
   }),
 
+  // === ENTERTAINMENT / PERFORMANCE ===
+  magician: createNPCType('magician', {
+    palette: {
+      shirts: [0x1a1a1a, 0x2a2a2a, 0xf0f0f0],
+      pants: [0x1a1a1a, 0x2a2a2a],
+      shoes: [0x1a1a1a, 0xf0f0f0],
+    },
+    buildRange: [0.88, 1.1],
+    hairColors: [0x1a1a1a],
+  }),
+
+  juggler: createNPCType('juggler', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.08],
+    shorts: 0.5,
+    tank: 0.4,
+  }),
+
+  acrobat: createNPCType('acrobat', {
+    palette: PALETTES.athletic,
+    buildRange: [0.85, 1.05],
+    shorts: true,
+    tank: 0.8,
+  }),
+
+  dancer: createNPCType('dancer', {
+    palette: PALETTES.athletic,
+    buildRange: [0.88, 1.08],
+    shorts: true,
+    tank: 0.7,
+  }),
+
+  dj: createNPCType('dj', {
+    palette: PALETTES.neon,
+    buildRange: [0.88, 1.1],
+    hairColors: [0x1a1a1a, 0xff00ff, 0x00ffff],
+  }),
+
+  // === TECH / MODERN PROFESSIONAL ===
+  startup_founder: createNPCType('startup_founder', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.08],
+    hairColors: [0x1a1a1a, 0x6b4a2f],
+    hairStyles: ['short', 'long'],
+  }),
+
+  software_engineer: createNPCType('software_engineer', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.12],
+    tank: 0,
+    shorts: 0.2,
+  }),
+
+  tech_bro: createNPCType('tech_bro', {
+    genderBias: 'guy',
+    palette: {
+      shirts: [0x1a1a1a, 0x2a5c8a, 0x3a6b9e],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0x1a1a1a, 0xf0f0f0],
+    },
+    buildRange: [0.9, 1.1],
+  }),
+
+  social_media_influencer: createNPCType('social_media_influencer', {
+    genderBias: 'girl',
+    palette: PALETTES.sleazy,
+    buildRange: [0.88, 1.05],
+    shorts: 0.5,
+    tank: 0.5,
+  }),
+
+  // === CREATIVE PROFESSIONALS ===
+  graphic_designer: createNPCType('graphic_designer', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.08],
+    hairColors: [0x1a1a1a, 0xff00ff, 0x8a6030],
+  }),
+
+  photographer: createNPCType('photographer', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+  }),
+
+  artist: createNPCType('artist', {
+    palette: PALETTES.vintage,
+    buildRange: [0.85, 1.15],
+    hairStyles: ['long', 'short'],
+  }),
+
+  writer: createNPCType('writer', {
+    palette: PALETTES.vintage,
+    buildRange: [0.88, 1.12],
+    hairStyles: ['long', 'short', 'buzz'],
+  }),
+
+  // === FOOD SERVICE (EXPANDED) ===
+  chef: createNPCType('chef', {
+    palette: {
+      shirts: [0xf0f0f0, 0xf0e8d8],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0x1a1a1a, 0x4a4a4a],
+    },
+    buildRange: [0.95, 1.2],
+    hairStyles: ['short', 'buzz'],
+  }),
+
+  line_cook: createNPCType('line_cook', {
+    palette: {
+      shirts: [0xf0f0f0, 0xf0e8d8, 0xff6b1a],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0x1a1a1a, 0x4a4a4a],
+    },
+    buildRange: [0.95, 1.15],
+  }),
+
+  ice_cream_man: createNPCType('ice_cream_man', {
+    palette: {
+      shirts: [0xff6b9d, 0xffd23e],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0x1a1a1a, 0x4a4a4a],
+    },
+    buildRange: [0.98, 1.2],
+  }),
+
+  bartender_cool: createNPCType('bartender_cool', {
+    palette: PALETTES.business,
+    buildRange: [0.9, 1.1],
+    tank: 0,
+    hairStyles: ['short', 'long'],
+  }),
+
+  // === ATHLETIC / SPORTS ===
+  soccer_player: createNPCType('soccer_player', {
+    palette: PALETTES.athletic,
+    buildRange: [0.95, 1.12],
+    shorts: true,
+    tank: 0.7,
+    hairStyles: ['short', 'buzz'],
+  }),
+
+  basketball_player: createNPCType('basketball_player', {
+    palette: PALETTES.athletic,
+    buildRange: [1.05, 1.25],
+    shorts: true,
+    tank: 1.0,
+  }),
+
+  boxer: createNPCType('boxer', {
+    palette: PALETTES.athletic,
+    buildRange: [1.0, 1.2],
+    shorts: true,
+    tank: 1.0,
+  }),
+
+  martial_artist: createNPCType('martial_artist', {
+    palette: PALETTES.athletic,
+    buildRange: [1.0, 1.15],
+    shorts: true,
+    tank: 0.8,
+  }),
+
+  // === SECURITY / DEFENSE ===
+  bouncer: createNPCType('bouncer', {
+    palette: PALETTES.dark,
+    buildRange: [1.1, 1.3],
+    hairStyles: ['buzz', 'short', 'bald'],
+  }),
+
+  private_investigator: createNPCType('private_investigator', {
+    palette: PALETTES.business,
+    buildRange: [0.95, 1.1],
+    hairColors: [0x1a1a1a, 0x8a8a8a],
+  }),
+
+  bodyguard: createNPCType('bodyguard', {
+    palette: PALETTES.dark,
+    buildRange: [1.05, 1.25],
+    hairStyles: ['buzz', 'short', 'bald'],
+  }),
+
+  // === QUIRKY / UNIQUE ===
+  conspiracy_nut: createNPCType('conspiracy_nut', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.2],
+    hairStyles: ['long', 'bald', 'short'],
+  }),
+
+  fortune_teller: createNPCType('fortune_teller', {
+    genderBias: 'girl',
+    palette: {
+      shirts: [0x9060b0, 0x6b7c9e, 0xd98aff],
+      pants: [0x3a2a3a, 0x4a3a2a],
+      shoes: [0x3a2a2a, 0x6b5a4a],
+    },
+    hairColors: [0x8a6030, 0xd9b44f],
+  }),
+
+  life_coach: createNPCType('life_coach', {
+    palette: PALETTES.upscale,
+    buildRange: [0.95, 1.12],
+    hairColors: [0x1a1a1a, 0x8a8a8a],
+  }),
+
+  personal_trainer: createNPCType('personal_trainer', {
+    palette: PALETTES.athletic,
+    buildRange: [1.05, 1.2],
+    shorts: true,
+    tank: 0.8,
+  }),
+
+  // === RETAIL / SHOPPING ===
+  boutique_owner: createNPCType('boutique_owner', {
+    palette: PALETTES.upscale,
+    buildRange: [0.88, 1.08],
+    tank: 0,
+  }),
+
+  clothing_clerk: createNPCType('clothing_clerk', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.08],
+  }),
+
+  electronics_geek: createNPCType('electronics_geek', {
+    palette: PALETTES.gamer,
+    buildRange: [0.88, 1.1],
+    hairColors: [0x1a1a1a, 0x8a8a8a],
+  }),
+
+  bargain_hunter: createNPCType('bargain_hunter', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.15],
+    hairColors: [0x1a1a1a, 0x8a8a8a, 0xd9d9d9],
+  }),
+
   // === MISC ===
   none: createNPCType('none', {
     // Truly random
