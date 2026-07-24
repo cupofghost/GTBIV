@@ -886,6 +886,57 @@ keep it a glanceable card, remembered as "seen" via the save (F1).
 **Acceptance:** First launch shows the card once; it's re-openable from pause;
 skipping works; "seen" persists so it doesn't nag.
 
+**Onboarding Design (for U2 implementation):**
+
+**Controls Card Spec:**
+
+*Presentation:* A centered modal overlay (like `#bigEvent` or pause menu) that slides in on first boot, after the animated intro clears but before gameplay. Tap/click anywhere or click "GOT IT" to dismiss. Clicking "HOW TO PLAY" in pause menu recalls it anytime (with a close button instead of "GOT IT").
+
+*Content Structure:*
+```
+CONTROLS
+═══════════════════════════════════════════════════════════════
+
+[TAB: TOUCH]  [TAB: DESKTOP]  ← Tab buttons, one per input method
+
+TOUCH TAB:
+📱 MOVE: Left thumb stick
+👁 LOOK: Swipe right side
+⚡ GAS/BRAKE: Bottom pedals
+🔥 BOOST/DRIFT: Pedal buttons
+🎯 SHOOT/PUNCH: Action buttons
+[Fine print: Rotate phone to landscape for best play]
+
+DESKTOP TAB:
+⌨️ MOVE: W A S D
+👁 LOOK: Drag right mouse button
+⚡ GAS/BRAKE: W / S
+🔥 BOOST: Shift  |  DRIFT: Space
+🎯 PUNCH: F  |  SHOOT: G
+[Fine print: No keyboard config yet—these are hardcoded]
+
+═══════════════════════════════════════════════════════════════
+THE JOB: Deb wants $800 by tonight. Rob stores. Run missions.
+Avoid the cops. Use [HOW TO PLAY] anytime to re-read this.
+═══════════════════════════════════════════════════════════════
+
+[GOT IT]  (or [CLOSE] if called from pause menu)
+```
+
+*Implementation Notes:*
+- Style: match the existing `#bigEvent` / `#pauseMenu` look (dark overlay, bold fonts, neon accents)
+- Tab switching: simple CSS-based toggle (show/hide tab content on click)
+- Storage: add `G.controlsCardSeen` to the save blob (F1), default false. On boot, if false, show card auto. "GOT IT" sets it true and saves.
+- Reachability: wire a "HOW TO PLAY" button into the pause menu (F2) that recalls the card. Must work whether seen before or not.
+- Responsive: ensure font sizes and layout work at 800×390 landscape (phone minimum).
+
+*Acceptance for U2:*
+- First launch shows card auto, dismissing lands you in gameplay without losing progress
+- Pause menu has "HOW TO PLAY" button that re-opens the card
+- Card is skippable (doesn't nag on revisit)
+- "Seen" flag persists after reload (once F1 is confirmed working)
+- All button/tab interactions are smooth and responsive at mobile touch speed
+
 #### U3 — Death / busted / respawn flow `P2 · Risk: Med`
 **Why:** `busted`/`wasted` should feel fair — clear consequence, quick recovery,
 progress kept.
