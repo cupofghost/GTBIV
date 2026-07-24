@@ -65,6 +65,7 @@ function makePerson(spec,gender){
     const thigh=new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.09,0.44,12),dress?skin:pantsMat);
     thigh.position.y=-0.21; hip.add(thigh);
     const knee=new THREE.Group(); knee.position.y=-0.43; hip.add(knee);
+    hip.userData.knee=knee;   // exposed so the leg can bend (e.g. stair climbing)
     const kneecap=new THREE.Mesh(new THREE.SphereGeometry(0.07,12,10),legSkin);
     knee.add(kneecap);
     const shin=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.075,0.42,12),legSkin);
@@ -180,7 +181,7 @@ function makePerson(spec,gender){
     beard.position.set(0,-0.11,0.1); headG.add(beard);
   }
   g.scale.y=spec.height;
-  g.userData={legL,legR,armL,armR,body,torso:torsoG,head:headG,jaw,mouth,gender,spec};
+  g.userData={legL,legR,kneeL:legL.userData.knee,kneeR:legR.userData.knee,armL,armR,body,torso:torsoG,head:headG,jaw,mouth,gender,spec};
   if(typeof makeShadow==='function') g.add(makeShadow(0.5));
   return g;
 }
