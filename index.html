@@ -2235,49 +2235,10 @@ function addHideout(x,z,r,y){
 // climb to the roof for anyone willing to go hand-over-hand. Each is a climb
 // line at (x,z) with an outward-facing normal `ang`; the mechanic lives in
 // updateClimb().
+// Populated by the builder below the ramps — it needs every static obstacle
+// (buildings, trees, poles, dumpsters, benches, hydrants, rail pillars, ramps,
+// stair runs) to already exist so it can keep each ladder's climb corridor clear.
 const LADDERS=[];   // {x,z,ang,baseH,topH}
-(function(){
-  const rungGeo=new THREE.BoxGeometry(0.52,0.045,0.045);
-  const railGeo=new THREE.BoxGeometry(0.05,1,0.05);   // scaled to run height per instance
-  const rungMats=[], railMats=[];
-  const m4=new THREE.Matrix4(), q4=new THREE.Quaternion(), e4=new THREE.Euler(),
-        p4=new THREE.Vector3(), s4=new THREE.Vector3(1,1,1);
-  const candidates=buildings.filter(b=>b.h>6&&b.h<46);
-  const used=new Set();
-  for(let k=0;k<12&&candidates.length;k++){
-    const b=pick(candidates), key=b.minX+','+b.minZ;
-    if(used.has(key)) continue; used.add(key);
-    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
-    const side=randi(0,3);
-    let x,z,ang;   // ang = outward wall normal: (sin,cos)
-    if(side===0){ x=b.minX; z=cz; ang=-Math.PI/2; }      // -x wall
-    else if(side===1){ x=b.maxX; z=cz; ang=Math.PI/2; }  // +x wall
-    else if(side===2){ x=cx; z=b.minZ; ang=Math.PI; }    // -z wall
-    else { x=cx; z=b.maxZ; ang=0; }                       // +z wall
-    const nX=Math.sin(ang), nZ=Math.cos(ang);            // outward normal
-    const baseH=groundH(x+nX*0.5,z+nZ*0.5), topH=b.h;
-    if(topH-baseH<4) continue;
-    LADDERS.push({x,z,ang,baseH,topH});
-    // rungs + rails, nudged just proud of the wall face so they read
-    const tX=Math.cos(ang), tZ=-Math.sin(ang);           // wall tangent
-    const fx=x+nX*0.07, fz=z+nZ*0.07;
-    e4.set(0,ang,0); q4.setFromEuler(e4);
-    [-1,1].forEach(s=>{
-      p4.set(fx+tX*0.24*s,(baseH+topH)/2,fz+tZ*0.24*s);
-      s4.set(1,topH-baseH,1); m4.compose(p4,q4,s4); railMats.push(m4.clone());
-    });
-    s4.set(1,1,1);
-    const n=Math.floor((topH-baseH)/0.42);
-    for(let i=1;i<n;i++){ p4.set(fx,baseH+i*0.42,fz); m4.compose(p4,q4,s4); rungMats.push(m4.clone()); }
-  }
-  const mk=(geo,mats,col)=>{
-    if(!mats.length) return;
-    const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:col}),mats.length);
-    mats.forEach((mm,i)=>im.setMatrixAt(i,mm));
-    im.instanceMatrix.needsUpdate=true; scene.add(im);
-  };
-  mk(rungGeo,rungMats,0x3a3f47); mk(railGeo,railMats,0x23272e);
-})();
 // nearest ladder the player can grab from where they're standing, or null.
 // Bottom grab = pushing into the wall near the base; top grab = stepping off
 // the roof edge into the climb line.
@@ -2316,6 +2277,86 @@ blockInfo.forEach(b=>{ if(b.type==='park'&&!b.helipad) addRamp(b.cx+rand(-8,8),b
 addRamp(roadLines[2],roadLines[5]+PITCH/2,Math.PI/2);
 addRamp(roadLines[6],roadLines[3]-PITCH/2,-Math.PI/2);
 addRamp(roadLines[4]+PITCH/2,roadLines[4],0);
+
+// ---- wall-ladder placement: only where the climb corridor is provably clear ----
+// Runs after every static obstacle exists. For each candidate building it tries
+// all four walls and keeps the ladder only if the vertical corridor Turbo's body
+// sweeps (out from the wall, a little to each side) hits nothing else.
+(function(){
+  const rungGeo=new THREE.BoxGeometry(0.52,0.045,0.045);
+  const railGeo=new THREE.BoxGeometry(0.05,1,0.05);   // scaled to run height per instance
+  const rungMats=[], railMats=[];
+  const m4=new THREE.Matrix4(), q4=new THREE.Quaternion(), e4=new THREE.Euler(),
+        p4=new THREE.Vector3(), s4=new THREE.Vector3(1,1,1);
+  // is the climb corridor off this wall clear of everything but the host building?
+  function corridorClear(x,z,ang,host){
+    const nX=Math.sin(ang), nZ=Math.cos(ang), tX=Math.cos(ang), tZ=-Math.sin(ang);
+    const near=(sx,sz,arr,rad)=>{ const rr=rad*rad;
+      for(let i=0;i<arr.length;i++){ const dx=sx-arr[i].x, dz=sz-arr[i].z; if(dx*dx+dz*dz<rr) return true; } return false; };
+    // sample the corridor: several steps out from the wall, and a bit to each side
+    for(let di=0;di<4;di++){
+      const d=0.3+di*0.4;                       // 0.3 .. 1.5 out from the wall
+      for(let si=-1;si<=1;si++){
+        const sx=x+nX*d+tX*0.45*si, sz=z+nZ*d+tZ*0.45*si;
+        for(const b of buildings){ if(b===host) continue;
+          if(sx>b.minX-0.3&&sx<b.maxX+0.3&&sz>b.minZ-0.3&&sz<b.maxZ+0.3) return false; }
+        if(near(sx,sz,treeSpots,0.95)||near(sx,sz,palmSpots,0.95)) return false;
+        if(near(sx,sz,poleSpots,0.7)||near(sx,sz,HYDRANT_SPOTS,0.7)) return false;
+        if(near(sx,sz,DUMPSTER_SPOTS,1.35)||near(sx,sz,BENCH_SPOTS,1.2)) return false;
+        if(near(sx,sz,RAIL_PILLARS,1.2)) return false;
+        for(const rp of ramps){ if(orientedBoxHit(sx,sz,0.4,rp.x,rp.z,rp.dir,3.2,4.2)) return false; }
+        // don't spawn a ladder on top of an existing stair / fire-escape run
+        for(const r of STAIR_RUNS){
+          const rn=Math.sin(r.ang), rc=Math.cos(r.ang);
+          const lz=(sx-r.x)*rn+(sz-r.z)*rc, lx=(sx-r.x)*rc-(sz-r.z)*rn;
+          if(Math.abs(lx)<1.7&&lz>-0.8&&lz<r.len+0.8) return false;
+        }
+      }
+    }
+    return true;
+  }
+  function wallFor(b,side){
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
+    if(side===0) return {x:b.minX,z:cz,ang:-Math.PI/2};   // -x wall
+    if(side===1) return {x:b.maxX,z:cz,ang:Math.PI/2};    // +x wall
+    if(side===2) return {x:cx,z:b.minZ,ang:Math.PI};      // -z wall
+    return {x:cx,z:b.maxZ,ang:0};                          // +z wall
+  }
+  const candidates=buildings.filter(b=>b.h>6&&b.h<46);
+  const used=new Set();
+  let placed=0;
+  for(let attempt=0;attempt<80&&placed<12&&candidates.length;attempt++){
+    const b=pick(candidates), bkey=b.minX+','+b.minZ;
+    if(used.has(bkey)) continue;
+    // try all four walls in random order; take the first clear one
+    const sides=[0,1,2,3]; for(let i=sides.length-1;i>0;i--){ const j=randi(0,i); const t=sides[i]; sides[i]=sides[j]; sides[j]=t; }
+    let W=null;
+    for(const side of sides){ const w=wallFor(b,side); if(corridorClear(w.x,w.z,w.ang,b)){ W=w; break; } }
+    if(!W) continue;
+    used.add(bkey);
+    const nX=Math.sin(W.ang), nZ=Math.cos(W.ang);
+    const baseH=groundH(W.x+nX*0.5,W.z+nZ*0.5), topH=b.h;
+    if(topH-baseH<4) continue;
+    LADDERS.push({x:W.x,z:W.z,ang:W.ang,baseH,topH}); placed++;
+    // rungs + rails, nudged just proud of the wall face so they read
+    const tX=Math.cos(W.ang), tZ=-Math.sin(W.ang), fx=W.x+nX*0.07, fz=W.z+nZ*0.07;
+    e4.set(0,W.ang,0); q4.setFromEuler(e4);
+    [-1,1].forEach(s=>{
+      p4.set(fx+tX*0.24*s,(baseH+topH)/2,fz+tZ*0.24*s);
+      s4.set(1,topH-baseH,1); m4.compose(p4,q4,s4); railMats.push(m4.clone());
+    });
+    s4.set(1,1,1);
+    const n=Math.floor((topH-baseH)/0.42);
+    for(let i=1;i<n;i++){ p4.set(fx,baseH+i*0.42,fz); m4.compose(p4,q4,s4); rungMats.push(m4.clone()); }
+  }
+  const mk=(geo,mats,col)=>{
+    if(!mats.length) return;
+    const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:col}),mats.length);
+    mats.forEach((mm,i)=>im.setMatrixAt(i,mm));
+    im.instanceMatrix.needsUpdate=true; scene.add(im);
+  };
+  mk(rungGeo,rungMats,0x3a3f47); mk(railGeo,railMats,0x23272e);
+})();
 
 // circle vs building AABBs
 function buildingHit(x,z,r){
