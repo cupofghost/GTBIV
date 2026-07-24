@@ -1201,6 +1201,8 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
+**NEXT: P2 (Economy tuning)** — A P2 leverage task that tuning money rewards/sinks to feel earned. Pairs well with P1/P3. No new systems, just number audits and feedback polish.
+
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
 
