@@ -5,7 +5,7 @@ Last consolidation: 2026-07-24 — Signed: Claude Code | Sonnet 5 | medium
 ## Active work
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-|      |              |                         |           |
+| 2026-07-24 | Audio / `index.html` engine synth | Done. Multi-layer engine synth: sub-rumble + mechanical grit + turbo whine/blow-off layers added alongside the existing tone osc, all per-car-type (`CARTYPES[*].snd.sub/grit/turbo`). Grit+misfire pop scale with car damage; turbo whine spools with revs/boost and dumps on lift. All 9 car types re-tuned for rumbly-vs-shrill variety. Verified headless (layer values respond to damage/boost/exit) + full 49-test suite green. | Signed: Claude Code | Sonnet 5 | high |
 
 ## Shared-file touches
 (list file + what changed + signature)
