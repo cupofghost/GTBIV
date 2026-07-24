@@ -22,6 +22,31 @@ module.exports = [
     },
   },
   {
+    name: 'rotor chop spools up with h.spin and mutes on exit',
+    run: async (page, { assert }) => {
+      const r = await page.evaluate(() => {
+        if (!AC) initAudio();
+        const h = helis[0];
+        player.x = h.x; player.z = h.z;
+        G.mode = 'heli'; player.heli = h; h.driver = 'player'; h.landed = false;
+        h.y = 20; h.spin = 0; h.vy = 0; h.vel.set(0, 0, 0);
+        updateHeliMode(0.02);
+        const cold = { gain: heliChopGain.gain.value, hz: heliChopLFO.frequency.value };
+        let guard = 400;
+        while (guard-- > 0 && h.spin < 0.99) updateHeliMode(0.02);
+        const spooled = { gain: heliChopGain.gain.value, hz: heliChopLFO.frequency.value, spin: h.spin };
+        exitHeli();
+        const muted = { gain: heliChopGain.gain.value, depth: heliChopDepth.gain.value };
+        return { cold, spooled, muted };
+      });
+      assert(r.spooled.spin > 0.98, 'spin should reach ~1 after enough updates, got ' + r.spooled.spin);
+      assert(r.spooled.gain > r.cold.gain, `chop volume should rise as the rotor spools up, ${r.cold.gain} -> ${r.spooled.gain}`);
+      assert(r.spooled.hz > r.cold.hz, `chop rate should rise as the rotor spools up, ${r.cold.hz} -> ${r.spooled.hz}`);
+      assert(r.muted.gain === 0 && r.muted.depth === 0, 'exiting the heli should mute the chop layer');
+      await page.evaluate(() => { G.mode = 'foot'; player.heli = null; });
+    },
+  },
+  {
     name: 'bail out at altitude, parachute opens, soft landing',
     run: async (page, { assert }) => {
       const r = await page.evaluate(async () => {

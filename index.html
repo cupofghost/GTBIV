@@ -713,6 +713,7 @@ WORLD.size=WORLD.half*2+40;
 
 // ================= AUDIO =================
 let AC=null, masterGain, sfxGain, voiceGain, engineOsc, engineGain, engineLP, skidGain,
+    heliChopFilt, heliChopGain, heliChopDepth, heliChopLFO,
     sirenOsc, sirenGain, musicGain, musicStep=0, nextNoteTime=0;
 // --- synthwave FX rack + soundtrack playhead (built lazily in initAudio) ---
 let musicVODuck,            // ducks the whole radio while Turbo/Deb talk
@@ -741,6 +742,20 @@ function initAudio(){
   const skF=AC.createBiquadFilter(); skF.type='bandpass'; skF.frequency.value=900; skF.Q.value=1.2;
   skidGain=AC.createGain(); skidGain.gain.value=0;
   skid.connect(skF); skF.connect(skidGain); skidGain.connect(sfxGain); skid.start();
+  // Heli rotor chop: engineOsc/engineGain above give the heli its steady
+  // turbine drone (reused from the car engine, untouched); this is a second,
+  // independent layer — filtered broadband noise (reuses the skid buffer)
+  // amplitude-modulated by heliChopLFO — for the "whup-whup" blade-pass
+  // character a bare tone can't give. Silent (gain 0) outside heli mode;
+  // updateHeliMode drives its rate/depth every frame off rotor spin + speed.
+  const heliChopSrc=AC.createBufferSource(); heliChopSrc.buffer=nb; heliChopSrc.loop=true;
+  heliChopFilt=AC.createBiquadFilter(); heliChopFilt.type='bandpass'; heliChopFilt.frequency.value=280; heliChopFilt.Q.value=0.9;
+  heliChopGain=AC.createGain(); heliChopGain.gain.value=0;      // per-frame baseline (see updateHeliMode)
+  heliChopDepth=AC.createGain(); heliChopDepth.gain.value=0;    // scales the LFO's -1..1 swing to match
+  heliChopLFO=AC.createOscillator(); heliChopLFO.type='sine'; heliChopLFO.frequency.value=8;
+  heliChopSrc.connect(heliChopFilt); heliChopFilt.connect(heliChopGain); heliChopGain.connect(sfxGain);
+  heliChopLFO.connect(heliChopDepth); heliChopDepth.connect(heliChopGain.gain);
+  heliChopSrc.start(); heliChopLFO.start();
   sirenOsc=AC.createOscillator(); sirenOsc.type='triangle'; sirenOsc.frequency.value=700;
   sirenGain=AC.createGain(); sirenGain.gain.value=0;
   sirenOsc.connect(sirenGain); sirenGain.connect(sfxGain); sirenOsc.start();
@@ -4290,6 +4305,14 @@ function updateHeliMode(dt){
     engineGain.gain.value=lerp(engineGain.gain.value,0.05+h.spin*0.04,0.2);
     engineOsc.frequency.value=36+h.spin*30+hs*0.4;
     engineLP.frequency.value=300+h.spin*500;
+    // rotor blade chop: noise AM'd at blade-pass rate — spools up with h.spin,
+    // chops faster in forward flight, baseline+depth stay matched so it dips
+    // to near-silence between "whups" instead of just pulsing up and down
+    const chopTarget=(0.05+h.spin*0.09)*0.5;
+    heliChopLFO.frequency.value=4+h.spin*7+hs*0.06;
+    heliChopGain.gain.value=chopTarget;
+    heliChopDepth.gain.value=chopTarget;
+    heliChopFilt.frequency.value=280+h.spin*220;
   }
   G.carHP=Math.max(0,h.hp/h.maxhp*100);
   drawDash(hs/36,hs*4.2,'CHOPPER',h.hp/h.maxhp*100,h.spin*100);
@@ -4311,6 +4334,7 @@ function bailOut(){
   player.mesh.visible=true;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
+  if(heliChopGain){ heliChopGain.gain.value=0; heliChopDepth.gain.value=0; }
   if(h.shadow) h.shadow.visible=true;
   refreshButtons();
   toast(h.y>8?'PULL THE CHUTE!':'BAIL OUT!','gold');
@@ -4358,6 +4382,7 @@ function exitHeli(){
   player.heli=null; footCamYaw=player.heading;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
+  if(heliChopGain){ heliChopGain.gain.value=0; heliChopDepth.gain.value=0; }
   refreshButtons();
 }
 // --- parachute: red & white canopy, opened from the BAIL freefall ---
@@ -6591,6 +6616,7 @@ function exitCarSoft(){
   G.mode='foot';
   if(engineGain) engineGain.gain.value=0;
   if(skidGain) skidGain.gain.value=0;
+  if(heliChopGain){ heliChopGain.gain.value=0; heliChopDepth.gain.value=0; }
 }
 function respawn(spot){
   G.over=true;
