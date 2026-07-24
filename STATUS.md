@@ -7,9 +7,11 @@ Last consolidation: 2026-07-24 — Signed: Claude Code | Sonnet 5 | medium
 |------|--------------|-------------------------|-----------|
 | 2026-07-24 | WEAPONS / AUDIO (`index.html`: WEAPONS + AUDIO sections) | Weapon sound synthesis system: pistol crack, RPG launch/flight/boom, reload SFX, flexible per-weapon registry. Done — implemented, tested (52/52 headless suite incl. 3 new cases), pushed. | Signed: Claude Code \| Sonnet 5 \| medium |
 | 2026-07-24 | WEAPONS / AUDIO (`index.html`) | Follow-up sound-effects pass (owner asked to keep going until consolidation is warranted): melee (fists/baton) voices in `WEAPON_SFX`, dedicated vehicle-explosion boom (`sfx.carBoom`). Done — tested (54/54 incl. 2 new cases), pushed. | Signed: Claude Code \| Sonnet 5 \| medium |
+| 2026-07-24 | MAMA RAT / AUDIO (`index.html`, `SEWER RATS`/`MAMA RAT` section) | HANDOFF.md RV3 idea (owner live-approved via "keep working on sound effects"): dedicated screech/bite/death cues replacing reused `sfx.bigCrash()`/`sfx.punch()`. Done — tested (55/55 incl. 1 new case), pushed. | Signed: Claude Code \| Sonnet 5 \| medium |
 
 ## Shared-file touches
 - `HANDOFF.md`: updated the `WEAPONS` code-map table row (§5) and the `G` state snippet (§6.1) to list the new `WEAPON_SFX`/`reloadPistol`/`startMissileFlight`/`pistolAmmo`/`reloading` additions. Smallest-possible factual sync, no content restructuring. — 2026-07-24, Signed: Claude Code | Sonnet 5 | medium
+- `HANDOFF.md`: struck through the "growl/screech sfx cue" bullet in RV3 (§8 Phase 8) and marked it DONE with a pointer to the new `sfx.ratScreech/ratBite/ratDeath`; left the rest of RV3 (car interaction, heat interaction, farm-loop cap) untouched and still gated on asking Austin. — 2026-07-24, Signed: Claude Code | Sonnet 5 | medium
 
 ## Known issues
 - Duplicate `## 10.` heading in HANDOFF.md: "10. Suggested Order of Work" (line ~1202) and "10. Changelog — polish pass (Kimi3, 2026-07-22)" (line ~1256) share a number — pre-existing, predates this consolidation (confirmed present as of commit `9f4e220`). Cosmetic only (doesn't break the NEXT-marker workflow), left unrenumbered pending Austin's OK to touch another agent's changelog section. — 2026-07-24, Sonnet 5

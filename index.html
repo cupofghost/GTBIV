@@ -881,6 +881,12 @@ const sfx={
   // rpgBoom (sawtooth sub instead of a clean sine) so a totaled ride reads as
   // mechanical/metal rather than a military warhead
   carBoom(){ noiseBurst(0.5,0.5,240,0.6); noiseBurst(0.35,0.3,4200,1.8,'highpass'); blip(90,20,0.8,0.5,'sawtooth'); },
+  // Mama Rat's voice (HANDOFF.md RV3): a guttural rumble under a rising
+  // screech for her sewer emergence, a snarling bite distinct from a human
+  // punch, and a falling death shriek — she used to borrow bigCrash/punch.
+  ratScreech(){ noiseBurst(0.6,0.45,500,0.8); blip(250,1600,0.4,0.3,'sawtooth'); noiseBurst(0.3,0.25,2600,1.5,'highpass'); },
+  ratBite(){ noiseBurst(0.09,0.4,700,1.1,'bandpass'); blip(220,80,0.12,0.22,'sawtooth'); },
+  ratDeath(){ blip(1400,120,0.5,0.3,'sawtooth'); noiseBurst(0.4,0.25,600,0.7); },
 };
 // ================= PROCEDURAL 80s SYNTHWAVE SOUNDTRACK =================
 // Each radio station is a *playlist* of through-composed songs. A song is a
@@ -6228,14 +6234,14 @@ function spawnMamaRat(mh){
   scene.add(mesh);
   mamaRat={mesh,x:mh.x,z:mh.z,y:groundY-h*0.55,riseFrom:groundY-h*0.55,riseTo:groundY,
     heading:0,home:mh,state:'emerge',t:0,hp:260,speed:2,phase:0,biteT:0,scale:s,h};
-  sfx.bigCrash(); shake(0.4);
+  sfx.ratScreech(); shake(0.4);
   toast('SOMETHING HUGE IS COMING UP FROM THE SEWER','bad');
 }
 function damageMamaRat(amt){
   const mr=mamaRat; if(!mr||mr.state==='dying') return;
   mr.hp-=amt;
   burst(mr.x,mr.h*0.4,mr.z,6,[[0.6,0.1,0.1],[0.4,0.05,0.05]],2,0.4,4);
-  if(mr.hp<=0){ mr.state='dying'; mr.t=0; toast('MAMA RAT DOWN','gold'); addMoney(150,'RAT SLAYER'); }
+  if(mr.hp<=0){ mr.state='dying'; mr.t=0; sfx.ratDeath(); toast('MAMA RAT DOWN','gold'); addMoney(150,'RAT SLAYER'); }
 }
 function updateMamaRat(dt){
   const mr=mamaRat; if(!mr) return;
@@ -6264,7 +6270,7 @@ function updateMamaRat(dt){
       mr.biteT-=dt;
       if(mr.biteT<=0&&G.mode==='foot'&&!DEV_STATE.god){
         mr.biteT=1;
-        sfx.punch();
+        sfx.ratBite();
         damagePlayer(randi(8,16));
         shake(0.35);
         burst(px,1.2,pz,8,[[1,0.4,0.4],[0.9,0.2,0.2]],2.5,0.5,4);
