@@ -5,9 +5,11 @@ Last consolidation: 2026-07-24 — Signed: Claude Code | Sonnet 5 | medium
 ## Active work
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-24 | Radio towers — `index.html` §RADIO TOWERS (1752–1859) | DONE. One 132-unit guyed mast on an open parking block + up to 7 rooftop masts on buildings ≥30 tall. Red/white banded, blinking obstruction lamps (steady mid-mast markers on the big one). Fully instanced, decorative only — not added to `buildings`, so collision/stairs are untouched. | Signed: Claude Code \| Opus 5 \| medium |
 
 ## Shared-file touches
 (list file + what changed + signature)
+- `index.html` — new self-contained RADIO TOWERS section after the rooftop-clutter IIFE; two one-line `updateRadioTowers(now/1000)` calls added next to the existing `updateLights(dt)` calls in the main loop; one code-map entry added. — Signed: Claude Code | Opus 5 | medium
 
 ## Known issues
 - Duplicate `## 10.` heading in HANDOFF.md: "10. Suggested Order of Work" (line ~1202) and "10. Changelog — polish pass (Kimi3, 2026-07-22)" (line ~1256) share a number — pre-existing, predates this consolidation (confirmed present as of commit `9f4e220`). Cosmetic only (doesn't break the NEXT-marker workflow), left unrenumbered pending Austin's OK to touch another agent's changelog section. — 2026-07-24, Sonnet 5
