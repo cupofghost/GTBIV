@@ -1890,6 +1890,218 @@ window.NPC_TYPES = {
     hairColors: [0xd9d9d9, 0xa0a0a0, 0x8a8a8a],
   }),
 
+  // === SUBCULTURE VARIANTS ===
+  rockabilly: createNPCType('rockabilly', {
+    palette: {
+      shirts: [0x1a1a1a, 0x2a2a2a, 0xff6b9d],
+      pants: [0x1a1a1a, 0x2a1a1a],
+      shoes: [0x1a1a1a, 0xff6b9d],
+    },
+    buildRange: [0.95, 1.15],
+    hairColors: [0x1a1a1a, 0xd9b44f],
+    hairStyles: ['short', 'buzz'],
+  }),
+
+  mod: createNPCType('mod', {
+    palette: {
+      shirts: [0xf0f0f0, 0x1a1a1a, 0x6b7c9e],
+      pants: [0x1a1a1a, 0x2a2a2a],
+      shoes: [0xf0f0f0, 0x1a1a1a],
+    },
+    buildRange: [0.88, 1.05],
+  }),
+
+  rocker: createNPCType('rocker', {
+    palette: PALETTES.dark,
+    buildRange: [0.88, 1.15],
+    hairColors: [0x1a1a1a],
+    hairStyles: ['long', 'short'],
+  }),
+
+  cyberpunk: createNPCType('cyberpunk', {
+    palette: PALETTES.cyber,
+    buildRange: [0.88, 1.1],
+    hairColors: [0x00ffff, 0xff00ff, 0x1a1a1a],
+  }),
+
+  steampunk: createNPCType('steampunk', {
+    palette: PALETTES.western,
+    buildRange: [0.88, 1.15],
+    shorts: 0,
+  }),
+
+  anime_fan: createNPCType('anime_fan', {
+    palette: PALETTES.neon,
+    buildRange: [0.85, 1.08],
+    hairColors: [0xff00ff, 0x00ffff, 0xffff00],
+  }),
+
+  gamer_dude: createNPCType('gamer_dude', {
+    genderBias: 'guy',
+    palette: PALETTES.gamer,
+    buildRange: [0.88, 1.15],
+    hairColors: [0x1a1a1a, 0x2a1a3a],
+  }),
+
+  // === OUTDOOR / ADVENTURE ===
+  hiker: createNPCType('hiker', {
+    palette: {
+      shirts: [0x6b7c9e, 0x8a6030, 0x4a7c4a],
+      pants: [0x4a4a4a, 0x5a5a5a],
+      shoes: [0x6b5a4a, 0x4a4a4a],
+    },
+    buildRange: [0.95, 1.12],
+  }),
+
+  rock_climber: createNPCType('rock_climber', {
+    palette: PALETTES.athletic,
+    buildRange: [0.95, 1.15],
+    shorts: true,
+    tank: 0.7,
+  }),
+
+  skier: createNPCType('skier', {
+    palette: PALETTES.upscale,
+    buildRange: [0.95, 1.12],
+    shorts: 0.1,
+  }),
+
+  fisherman: createNPCType('fisherman', {
+    palette: PALETTES.worker,
+    buildRange: [0.95, 1.2],
+    hairColors: [0x8a8a8a, 0xd9d9d9, 0x6b4a2f],
+    beard: 0.4,
+  }),
+
+  kayak_enthusiast: createNPCType('kayak_enthusiast', {
+    palette: PALETTES.beach,
+    buildRange: [0.95, 1.12],
+    shorts: true,
+    tank: 0.6,
+  }),
+
+  camper: createNPCType('camper', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.15],
+  }),
+
+  // === ALTERNATIVE LIFESTYLE ===
+  vegan_label_reader: createNPCType('vegan_label_reader', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.08],
+  }),
+
+  zero_waste_warrior: createNPCType('zero_waste_warrior', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+  }),
+
+  minimalist: createNPCType('minimalist', {
+    palette: {
+      shirts: [0xf0f0f0, 0x1a1a1a],
+      pants: [0x1a1a1a, 0x2a2a2a],
+      shoes: [0x1a1a1a, 0xf0f0f0],
+    },
+    buildRange: [0.88, 1.08],
+  }),
+
+  maximalist: createNPCType('maximalist', {
+    palette: PALETTES.neon,
+    buildRange: [0.88, 1.15],
+  }),
+
+  sustainable_shopper: createNPCType('sustainable_shopper', {
+    palette: PALETTES.hippie,
+    buildRange: [0.88, 1.1],
+  }),
+
+  // === MUSIC / SOUND ===
+  vinyl_guy: createNPCType('vinyl_guy', {
+    genderBias: 'guy',
+    palette: PALETTES.vintage,
+    buildRange: [0.88, 1.12],
+    hairColors: [0x8a6030, 0x1a1a1a],
+  }),
+
+  synthwave_fan: createNPCType('synthwave_fan', {
+    palette: PALETTES.neon,
+    buildRange: [0.88, 1.1],
+    hairColors: [0x1a1a1a, 0xff00ff],
+  }),
+
+  lo_fi_listener: createNPCType('lo_fi_listener', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+  }),
+
+  metal_fan: createNPCType('metal_fan', {
+    palette: PALETTES.dark,
+    buildRange: [0.88, 1.15],
+    hairColors: [0x1a1a1a],
+  }),
+
+  classical_snob: createNPCType('classical_snob', {
+    palette: PALETTES.upscale,
+    buildRange: [0.88, 1.1],
+    tank: 0,
+  }),
+
+  // === GAMING / ESPORTS ===
+  esports_pro: createNPCType('esports_pro', {
+    palette: PALETTES.casual,
+    buildRange: [0.85, 1.05],
+    shorts: 0.2,
+    tank: 0.1,
+  }),
+
+  speedrunner: createNPCType('speedrunner', {
+    palette: PALETTES.casual,
+    buildRange: [0.85, 1.08],
+  }),
+
+  retro_gamer: createNPCType('retro_gamer', {
+    palette: PALETTES.vintage,
+    buildRange: [0.88, 1.15],
+  }),
+
+  mobile_gamer: createNPCType('mobile_gamer', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.15],
+  }),
+
+  vr_enthusiast: createNPCType('vr_enthusiast', {
+    palette: PALETTES.futuristic,
+    buildRange: [0.88, 1.1],
+  }),
+
+  // === PET PEOPLE ===
+  cat_lover: createNPCType('cat_lover', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+  }),
+
+  dog_lover: createNPCType('dog_lover', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.12],
+  }),
+
+  exotic_pet_owner: createNPCType('exotic_pet_owner', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.15],
+    hairColors: [0x1a1a1a, 0xff00ff],
+  }),
+
+  horse_enthusiast: createNPCType('horse_enthusiast', {
+    palette: PALETTES.upscale,
+    buildRange: [0.95, 1.12],
+  }),
+
+  bird_watcher: createNPCType('bird_watcher', {
+    palette: PALETTES.vintage,
+    buildRange: [0.88, 1.15],
+    hairColors: [0x8a8a8a, 0xd9d9d9],
+  }),
+
   // === MISC ===
   none: createNPCType('none', {
     // Truly random
