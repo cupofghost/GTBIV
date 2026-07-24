@@ -5,6 +5,7 @@ Last consolidation: 2026-07-24 — Signed: Claude Code | Sonnet 5 | medium
 ## Active work
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-24 | Audio / `index.html` engine synth | Done. Multi-layer engine synth: sub-rumble + mechanical grit + turbo whine/blow-off layers added alongside the existing tone osc, all per-car-type (`CARTYPES[*].snd.sub/grit/turbo`). Grit+misfire pop scale with car damage; turbo whine spools with revs/boost and dumps on lift. All 9 car types re-tuned for rumbly-vs-shrill variety. Verified headless (layer values respond to damage/boost/exit) + full 49-test suite green. | Signed: Claude Code | Sonnet 5 | high |
 | 2026-07-24 | index.html (updateFoot), js/person.js | Turbo stair-climb animation: fixed airborne test (was absolute, now vs ground) so elevated stairs/roofs no longer force jump pose; added high-knee stepping cycle. Done. | Claude Code \| Opus 4.8 \| medium |
 | 2026-07-24 | index.html (LADDERS builder, updateClimb/mountLadder, updateFoot, doJump) | Wall-ladder climbing: bolt-on steel ladders up 12 buildings; walk into the base to grab, W/S to climb, top out on the roof, jump to bail. Hand-over-hand animation (reuses knee pivots). Placement now validates a clear climb corridor (buildings/trees/props/ramps/stairs) and tries all 4 walls. Done. | Claude Code \| Opus 4.8 \| medium |
 
