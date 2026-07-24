@@ -3814,6 +3814,112 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
   buildAwnings(makeWedgeGeo(),wedgeSpots);
 })();
 
+// ================= MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS =========
+// Sidewalk street trees, café tables/umbrellas outside some storefronts, and
+// banner flags on streetlight poles. Same deal as the block above: all
+// cosmetic-only (no collision) and density-graded, downtown thickest, the
+// outer ring a thinner sprinkling.
+(function(){
+  const DOWNTOWN_R=170;
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
+        pos=new THREE.Vector3(), scl=new THREE.Vector3(1,1,1), col=new THREE.Color();
+
+  // --- sidewalk street trees: trunk + canopy, purely decorative (the
+  // collidable park/street trees are a separate system built earlier) ---
+  const treeDressSpots=[];
+  blockInfo.forEach(b=>{
+    const downtown=Math.hypot(b.cx,b.cz)<DOWNTOWN_R;
+    const n=downtown?randi(2,5):(Math.random()<0.4?randi(0,2):0);
+    const half=BLOCK/2;
+    for(let k=0;k<n;k++){
+      const t=rand(-half+4,half-4);
+      switch(randi(0,3)){
+        case 0: treeDressSpots.push({x:b.cx+t,z:b.cz-half-1.6}); break;
+        case 1: treeDressSpots.push({x:b.cx+t,z:b.cz+half+1.6}); break;
+        case 2: treeDressSpots.push({x:b.cx-half-1.6,z:b.cz+t}); break;
+        default: treeDressSpots.push({x:b.cx+half+1.6,z:b.cz+t});
+      }
+    }
+  });
+  if(treeDressSpots.length){
+    const trunkGeo=new THREE.CylinderGeometry(0.13,0.18,2.2,6); trunkGeo.translate(0,1.1,0);
+    const canopyGeo=new THREE.IcosahedronGeometry(1,1); canopyGeo.translate(0,2.6,0);
+    const trunkInst=new THREE.InstancedMesh(trunkGeo,new THREE.MeshLambertMaterial({color:0x4a3324}),treeDressSpots.length);
+    const canopyInst=new THREE.InstancedMesh(canopyGeo,new THREE.MeshLambertMaterial({color:0xffffff}),treeDressSpots.length);
+    const greens=[0x2f7a42,0x357a3a,0x28683a,0x3a8a4a];
+    treeDressSpots.forEach((p,i)=>{
+      const s=rand(0.8,1.25);
+      e.set(0,rand(0,TAU),0); q.setFromEuler(e);
+      pos.set(p.x,groundH(p.x,p.z),p.z); scl.set(s,s,s);
+      m.compose(pos,q,scl); trunkInst.setMatrixAt(i,m); canopyInst.setMatrixAt(i,m);
+      col.setHex(pick(greens)); canopyInst.setColorAt(i,col);
+    });
+    trunkInst.instanceMatrix.needsUpdate=true; canopyInst.instanceMatrix.needsUpdate=true;
+    if(canopyInst.instanceColor) canopyInst.instanceColor.needsUpdate=true;
+    scene.add(trunkInst); scene.add(canopyInst);
+  }
+
+  // --- sidewalk café tables + umbrellas outside some storefronts ---
+  const cafeSpots=[];
+  buildings.forEach(b=>{
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
+    const downtown=Math.hypot(cx,cz)<DOWNTOWN_R;
+    if(Math.random()>=(downtown?0.22:0.05)) return;
+    const w=b.maxX-b.minX, d=b.maxZ-b.minZ, side=randi(0,3), n=randi(1,3);
+    for(let k=0;k<n;k++){
+      const along=rand(-Math.min(w,d)/2+2,Math.min(w,d)/2-2), out=rand(1.8,3.0);
+      let x=cx,z=cz;
+      if(side===0){ x=cx+along; z=b.maxZ+out; }
+      else if(side===1){ x=cx+along; z=b.minZ-out; }
+      else if(side===2){ x=b.maxX+out; z=cz+along; }
+      else { x=b.minX-out; z=cz+along; }
+      cafeSpots.push({x,z});
+    }
+  });
+  if(cafeSpots.length){
+    const tableGeo=new THREE.CylinderGeometry(0.55,0.5,0.05,10); tableGeo.translate(0,0.75,0);
+    const legGeo=new THREE.CylinderGeometry(0.05,0.05,0.75,6); legGeo.translate(0,0.375,0);
+    const poleGeoC=new THREE.CylinderGeometry(0.03,0.03,1.6,5); poleGeoC.translate(0,1.55,0);
+    const capGeo=new THREE.ConeGeometry(0.85,0.5,8); capGeo.translate(0,2.35,0);
+    const tableInst=new THREE.InstancedMesh(tableGeo,new THREE.MeshLambertMaterial({color:0xe8e0d0}),cafeSpots.length);
+    const legInst=new THREE.InstancedMesh(legGeo,new THREE.MeshLambertMaterial({color:0x2c2c34}),cafeSpots.length);
+    const poleInstC=new THREE.InstancedMesh(poleGeoC,new THREE.MeshLambertMaterial({color:0x2c2c34}),cafeSpots.length);
+    const capInst=new THREE.InstancedMesh(capGeo,new THREE.MeshLambertMaterial({color:0xffffff}),cafeSpots.length);
+    const capColors=[0xd93a3a,0xffd23e,0x37c8ff,0xff7a3d,0xb04dff,0x2a6b3a];
+    cafeSpots.forEach((p,i)=>{
+      e.set(0,rand(0,TAU),0); q.setFromEuler(e);
+      pos.set(p.x,groundH(p.x,p.z),p.z);
+      m.compose(pos,q,scl); tableInst.setMatrixAt(i,m); legInst.setMatrixAt(i,m);
+      poleInstC.setMatrixAt(i,m); capInst.setMatrixAt(i,m);
+      col.setHex(pick(capColors)); capInst.setColorAt(i,col);
+    });
+    [tableInst,legInst,poleInstC,capInst].forEach(inst=>{ inst.instanceMatrix.needsUpdate=true; scene.add(inst); });
+    if(capInst.instanceColor) capInst.instanceColor.needsUpdate=true;
+  }
+
+  // --- banner flags on streetlight poles ---
+  const bannerSpots=[];
+  poleSpots.forEach(p=>{
+    const downtown=Math.hypot(p.x,p.z)<DOWNTOWN_R;
+    if(Math.random()<(downtown?0.3:0.08)) bannerSpots.push(p);
+  });
+  if(bannerSpots.length){
+    const bannerGeo=new THREE.PlaneGeometry(0.6,1.4); bannerGeo.translate(0,-0.7,0);
+    const bannerMat=new THREE.MeshLambertMaterial({color:0xffffff,side:THREE.DoubleSide});
+    const bannerInst=new THREE.InstancedMesh(bannerGeo,bannerMat,bannerSpots.length);
+    const bannerColors=[0xd93a3a,0xffd23e,0x37c8ff,0x7dff8a,0xb04dff,0xff7a3d];
+    bannerSpots.forEach((p,i)=>{
+      e.set(0,rand(0,TAU),0); q.setFromEuler(e);
+      pos.set(p.x,groundH(p.x,p.z)+4.6,p.z);
+      m.compose(pos,q,scl); bannerInst.setMatrixAt(i,m);
+      col.setHex(pick(bannerColors)); bannerInst.setColorAt(i,col);
+    });
+    bannerInst.instanceMatrix.needsUpdate=true;
+    if(bannerInst.instanceColor) bannerInst.instanceColor.needsUpdate=true;
+    scene.add(bannerInst);
+  }
+})();
+
 // Interior state
 G.interior=false;
 function enterPizzaPlace(){
