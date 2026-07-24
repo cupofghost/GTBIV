@@ -823,7 +823,7 @@ spawning that tanks fps (respect F3 caps).
 
 ### Phase 4 — Polish, UX & Accessibility
 
-#### U1 — Objective clarity & HUD readability `P1 · Risk: Low`
+#### U1 — Objective clarity & HUD readability `P1 · Risk: Low` `PARTIAL`
 **Why:** New/returning players don't always know what to do or where to go.
 **Where:** `HUD / TOASTS`, `MINIMAP`, `updateStory`/`updateMission` HUD strings,
 `setBeacon`.
@@ -835,6 +835,11 @@ screens.
 **Acceptance:** At any moment it's obvious what to do next and which way to go;
 minimap blips are self-explanatory; HUD is legible at phone size in bright and
 dark scenes.
+**Status:** the story-objective half shipped — see §16. Remaining: the debt/
+money/stars boxes were reviewed against the acceptance bar and already read
+clearly at phone size (dark chip background + text-shadow, existing shrink
+breakpoint), so no change was made there; revisit only if a real-device test
+says otherwise.
 
 #### U2 — Onboarding / How-to-Play `P2 · Risk: Low`
 **Why:** Controls are only a one-line hint; a short first-run guide lowers the
@@ -1513,3 +1518,43 @@ No code changed; suite untouched (still green as of the last code commit).
 
 Next: agents doing PR work should merge their own PRs going forward instead
 of leaving them open for Austin.
+
+---
+
+## 16. Changelog — U1 first slice: story-objective HUD + minimap legend (Claude, 2026-07-24)
+
+Picked up **U1** (`§8`), the top of the main-track order in `§10`. Until now
+"what do I do next" only existed for timed random missions (`setMissionHUD`
++ the 3D beacon) — the Chapter-1 story goal (find Deb, then pay off the $800)
+had a one-time toast and an in-world pink beacon pillar, but nothing
+persistent on the HUD and no minimap presence at all.
+
+- **`updateStoryObjHUD()`** (new, next to `setMissionHUD`): a small HUD line
+  (`#storyObj`, styled identically to `#mission` via a shared CSS rule) that
+  shows `FIND DEB — Nm` before `G.story.metDeb`, then `PAY OFF DEBT — $N ·
+  Nm` while the debt is outstanding, live distance recomputed every frame.
+  It yields to `#mission` whenever a random mission is active (checked first,
+  same HUD slot) so the two objective sources never fight for the screen, and
+  hides once `G.story.paidOff`. Called from `updateStory(dt)`, which already
+  runs every frame.
+- **Deb is now a minimap blip** (`drawMinimap()`): a pink dot at her position
+  whenever she exists and isn't in her post-payoff `leaving` walk-off, using
+  the same rotating player-centric map (and therefore the same "which way to
+  turn" read) missions already got from the gold beacon dot.
+- **Minimap legend** (`#minimapLegend`, new element under the minimap): four
+  lines — COPS (red), MISSION (gold), TURF (purple), DEB (pink) — the exact
+  set the `U1` card asked for. Non-interactive (`pointer-events` inherited as
+  `none` from `#hud`, matching the minimap itself), sized down at the
+  existing `max-height:430px` shrink breakpoint alongside the minimap so it
+  doesn't creep into the button/pedal area on short landscape screens.
+
+Verified in a live headless smoke pass at an 800×390 landscape viewport (both
+the pre-meet and debt-owed states) — legend and objective line render clearly
+with no overlap of the minimap, mission box, or touch controls. New
+`tests/cases/hud-objective.test.js` (5 cases) covers the HUD text/visibility
+state machine and a minimap-draw smoke check with Deb present.
+
+Full suite: `cd tests && node run.js` — **53/53 green** (up from 48; 5 new
+cases), zero console errors.
+
+Signed: Claude Code | Sonnet 5 | medium

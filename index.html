@@ -40,12 +40,17 @@
   #hpfill { height:100%; width:100%; background:#7dff8a; }
   #boostbar { width:130px; height:6px; background:rgba(0,0,0,.55); border:1px solid #fff2; border-radius:4px; margin-top:2px; overflow:hidden; }
   #boostfill { height:100%; width:100%; background:#37c8ff; }
-  #mission { top:calc(46px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
+  #mission, #storyObj { top:calc(46px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
     max-width:min(calc(var(--lvw)*0.86),560px); text-align:center; font-size:14px; line-height:1.35;
     background:rgba(6,2,16,.85); border:1px solid #ff3ea088; border-radius:10px; padding:7px 14px; color:#fff; }
-  #mission b { color:#ff9ecb; }
+  #mission b, #storyObj b { color:#ff9ecb; }
   #minimap { position:absolute; top:calc(44px + env(safe-area-inset-top)); right:12px;
     width:118px; height:118px; border-radius:50%; border:2px solid rgba(255,255,255,.35); background:#111; opacity:.92; }
+  #minimapLegend { position:absolute; top:calc(44px + 118px + 6px + env(safe-area-inset-top)); right:12px;
+    width:118px; font-size:8px; line-height:1.6; color:#fff; text-shadow:0 1px 2px #000;
+    background:rgba(6,2,16,.68); border:1px solid rgba(255,255,255,.2); border-radius:8px;
+    padding:3px 6px; opacity:.92; }
+  #minimapLegend span { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:4px; }
   #toasts { position:absolute; bottom:34%; left:50%; transform:translateX(-50%);
     display:flex; flex-direction:column; align-items:center; gap:5px; }
   .toast { font-size:17px; color:#fff; text-shadow:0 2px 3px #000, 0 0 8px #000;
@@ -198,6 +203,8 @@
     #joy { width:106px !important; height:106px !important; }
     #joyKnob { width:44px !important; height:44px !important; }
     #minimap { width:92px !important; height:92px !important; }
+    #minimapLegend { width:92px !important; top:calc(44px + 92px + 4px + env(safe-area-inset-top)) !important;
+      font-size:7px !important; line-height:1.4 !important; padding:2px 5px !important; }
     #speedo { top:calc(84px + env(safe-area-inset-top)) !important; font-size:11px; transform:scale(0.62); transform-origin:top left; }
     #btnHorn { bottom:calc(146px + env(safe-area-inset-bottom)); left:40px; width:62px; height:44px; }
     .hudBox { font-size:12px; padding:4px 8px; }
@@ -419,7 +426,14 @@
   <div id="heatHint"></div>
   <div id="footHp"><div id="footHpFill"></div></div>
   <div id="mission" class="hudBox" style="display:none"></div>
+  <div id="storyObj" class="hudBox" style="display:none"></div>
   <canvas id="minimap" width="236" height="236"></canvas>
+  <div id="minimapLegend">
+    <div><span style="background:#ff4444"></span>COPS</div>
+    <div><span style="background:#ffd23e"></span>MISSION</div>
+    <div><span style="background:#b04dff"></span>TURF</div>
+    <div><span style="background:#ff3ea0"></span>DEB</div>
+  </div>
   <div id="speedo" class="hudBox" style="display:none">
     <canvas id="gauge" width="150" height="104"></canvas>
     <div id="dashName">SEDAN</div>
@@ -5706,6 +5720,16 @@ function updateStarsHUD(){
   $('stars').innerHTML=html;
 }
 function setMissionHUD(html){ $('mission').innerHTML=html; $('mission').style.display='block'; }
+// Story-track objective (find Deb / pay off the debt) — only shown when no
+// timed random mission is occupying the same HUD slot, so the two never fight.
+function updateStoryObjHUD(){
+  if(mission||!deb||deb.leaving){ $('storyObj').style.display='none'; return; }
+  const d=Math.round(Math.hypot(player.x-deb.x,player.z-deb.z));
+  if(!G.story.metDeb) $('storyObj').innerHTML='<b>FIND DEB</b> — '+d+'m';
+  else if(G.story.debt>0) $('storyObj').innerHTML='<b>PAY OFF DEBT</b> — $'+G.story.debt+' · '+d+'m';
+  else { $('storyObj').style.display='none'; return; }
+  $('storyObj').style.display='block';
+}
 function cycleRadio(){
   G.station=(G.station+1)%(STATIONS.length+1);
   const st=STATIONS[G.station];
@@ -6570,6 +6594,7 @@ function drawMinimap(){
   chaosDrivers.forEach(c=>{ if(!c.dead) dot(c.x,c.z,'#b04dff',3); });
   if(CHAOS&&CHAOS.x!==undefined) marker(CHAOS.x,CHAOS.z,'#b04dff','#ffffff');
   drawTurfOnMinimap();
+  if(deb&&!deb.leaving) dot(deb.x,deb.z,'#ff3ea0',5);
   if(mission&&beacon.visible) dot(beacon.position.x,beacon.position.z,'#ffd23e',5);
   mm.restore();
   // player arrow: always dead center, always pointing up
@@ -6953,6 +6978,7 @@ function spawnDeb(){
 }
 function updateStory(dt){
   if(!deb) return;
+  updateStoryObjHUD();
   if(deb.leaving){
     deb.x+=Math.sin(deb.heading)*1.6*dt; deb.z+=Math.cos(deb.heading)*1.6*dt;
     deb.phase=(deb.phase||0)+dt*4;
