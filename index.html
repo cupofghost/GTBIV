@@ -74,6 +74,7 @@
   .pedal2 { width:72px; height:52px; font-size:11px; }
   #btnGas { height:96px; background:rgba(20,90,40,.55); border-color:#7dff8a88; font-size:15px; }
   #btnBrake { height:168px; background:rgba(110,20,20,.55); border-color:#ff6b6b88; }
+  #btnBrake.reversing { background:rgba(120,90,10,.55); border-color:#ffd23e; }
   #btnBoost { background:rgba(20,60,110,.55); border-color:#37c8ff88; }
   #btnDrift { background:rgba(90,40,110,.55); border-color:#b04dff88; }
   #btnHorn { position:absolute; bottom:calc(168px + env(safe-area-inset-bottom)); left:50px;
@@ -5495,6 +5496,7 @@ function exitCar(){
   if(engineGain) engineGain.gain.value=0;
   if(skidGain) skidGain.gain.value=0;
 }
+let btnBrakeReversing=false;
 function updateCarMode(dt){
   const c=player.car;
   if(!c||c.dead){ exitCarSoft(); return; }
@@ -5513,6 +5515,16 @@ function updateCarMode(dt){
     G.boost=Math.min(100,G.boost+9*dt);
   }
   carPhysics(c,dt,ctl);
+
+  // J4 remaining: the BRAKE pedal already brakes-then-reverses (carPhysics
+  // above) — relabel it once the car is actually rolling backward so the
+  // touch control communicates the phase it's in, not just "brake".
+  const reversing=c.speed<-0.15;
+  if(reversing!==btnBrakeReversing){
+    btnBrakeReversing=reversing;
+    $('btnBrake').textContent=reversing?'REVERSE':'BRAKE';
+    $('btnBrake').classList.toggle('reversing',reversing);
+  }
 
   // --- Turbo's driving commentary ---
   const spd=Math.abs(c.speed);
@@ -5743,6 +5755,9 @@ function cycleRadio(){
 
 // ================= MISSIONS =================
 let mission=null, missionCooldown=5, lastType='';
+// Soft progression (P1): tougher/higher-paying mission types unlock as
+// missionsDone climbs, instead of the pool flatlining at 5 types forever.
+function missionTier(){ return Math.min(2,Math.floor(G.missionsDone/5)); }
 const beacon=(function(){
   const grp=new THREE.Group();
   const cyl=new THREE.Mesh(new THREE.CylinderGeometry(2.4,2.4,26,12,1,true),
@@ -5758,6 +5773,9 @@ function setBeacon(x,z){
 }
 function startMission(){
   const types=['delivery','style','checkpoints','rampage','heat'];
+  const tier=missionTier();
+  if(tier>=1) types.push('courier','takedown');
+  if(tier>=2) types.push('getaway');
   const type=pick(types.filter(t=>t!==lastType)); lastType=type;
   if(type==='delivery'){
     const a=pick(intersections); let b=pick(intersections);
@@ -5779,16 +5797,42 @@ function startMission(){
   } else if(type==='rampage'){
     mission={type,timer:45,value:0,need:500};
     setBeacon(null);
-  } else {
+  } else if(type==='heat'){
     mission={type};
     G.heat=Math.max(G.heat,65); addHeat(0);
     setBeacon(null);
     toast('3 STARS — LOSE THE COPS!','bad');
+  } else if(type==='courier'){
+    // delivery, but Chaos Pizza already tipped off the cops — cops-on-you
+    // for the whole drop-off leg, so it pays a lot better than a plain run
+    const a=pick(intersections); let b=pick(intersections);
+    while(Math.hypot(a.x-b.x,a.z-b.z)<150) b=pick(intersections);
+    mission={type,stage:0,a,b,timer:0,reward:220+Math.round(Math.hypot(a.x-b.x,a.z-b.z)/2.2)};
+    setBeacon(a.x,a.z);
+    toast('COURIER — hot package, cops already know','bad');
+  } else if(type==='takedown'){
+    // flag a live traffic car; the beacon follows it so it's trackable
+    // even while it's still driving around
+    const cands=traffic.filter(c=>!c.dead&&c!==player.car);
+    if(!cands.length){ mission=null; missionCooldown=3; return; } // retry shortly, nothing to flag yet
+    const car=pick(cands);
+    mission={type,car,timer:50,reward:260};
+    setBeacon(car.x,car.z);
+    toast('TAKEDOWN — wreck the flagged car before it gets away','bad');
+  } else {
+    // getaway: reach the safehouse before the cops box you in
+    const a=pick(intersections);
+    mission={type,a,timer:60,reward:320};
+    G.heat=Math.max(G.heat,70); addHeat(0);
+    setBeacon(a.x,a.z);
+    toast('GETAWAY — get to the safehouse, they\'re already rolling','bad');
   }
   turboSay(type);     // Turbo narrates his own mission starts now
 }
 function completeMission(bonus){
-  const r=(mission.reward||0)+(bonus||0);
+  // soft progression: later missions (higher missionsDone) pay a bit more
+  const tierMult=1+missionTier()*0.15;
+  const r=Math.round(((mission.reward||0)+(bonus||0))*tierMult);
   addMoney(r); toast('MISSION PASSED +$'+r,'gold'); sfx.mission();
   G.missionsDone++;
   if(G.missionsDone%5===0){ addMoney(500); toast('CHAPTER BONUS +$500','gold'); }
@@ -5840,6 +5884,35 @@ function updateMission(dt){
     else if(mission.timer<=0) failMission();
   } else if(mission.type==='heat'){
     setMissionHUD('<b>HEAT</b> — lose the cops! ('+G.stars+'★)');
+  } else if(mission.type==='courier'){
+    const tgt=mission.stage===0?mission.a:mission.b;
+    const d=Math.hypot(tgt.x-px,tgt.z-pz);
+    if(mission.stage===0){
+      setMissionHUD('<b>COURIER</b> — pick up the package · '+Math.round(d)+'m');
+      if(d<5){
+        mission.stage=1; mission.timer=40; setBeacon(mission.b.x,mission.b.z); sfx.coin();
+        toast('PACKAGE SECURED — COPS INCOMING','bad');
+        G.heat=Math.max(G.heat,40); addHeat(0);
+      }
+    } else {
+      mission.timer-=dt;
+      setMissionHUD('<b>COURIER</b> — drop it off, hot · '+Math.round(d)+'m · '+Math.ceil(mission.timer)+'s');
+      if(d<6) completeMission(0);
+      else if(mission.timer<=0) failMission();
+    }
+  } else if(mission.type==='takedown'){
+    mission.timer-=dt;
+    if(mission.car.dead){ completeMission(0); return; }
+    setBeacon(mission.car.x,mission.car.z);
+    const d=Math.hypot(mission.car.x-px,mission.car.z-pz);
+    setMissionHUD('<b>TAKEDOWN</b> — wreck the flagged car · '+Math.round(d)+'m · '+Math.ceil(mission.timer)+'s');
+    if(mission.timer<=0) failMission();
+  } else if(mission.type==='getaway'){
+    mission.timer-=dt;
+    const d=Math.hypot(mission.a.x-px,mission.a.z-pz);
+    setMissionHUD('<b>GETAWAY</b> — reach the safehouse · '+Math.round(d)+'m · '+Math.ceil(mission.timer)+'s');
+    if(d<6) completeMission(Math.round(mission.timer*3));
+    else if(mission.timer<=0) failMission();
   }
   if(beacon.visible){
     beacon.children[0].material.opacity=0.25+0.15*Math.sin(performance.now()/200);
@@ -6438,7 +6511,7 @@ function busted(){
   const fine=Math.floor(G.money*0.12);
   G.money-=fine; $('money').textContent='$'+G.money;
   bigEvent('BUSTED','#4f7ad9','You lost $'+fine);
-  if(mission&&mission.type==='heat') failMission();
+  if(mission&&(mission.type==='heat'||mission.type==='courier'||mission.type==='getaway')) failMission();
   G.heat=0; G.stars=0; G.escapeT=0; G.bustT=0; G.hiddenT=0; updateStarsHUD();
   cops.forEach(c=>{ if(c.driver==='cop') c.driver='leaving'; });
   respawn();
@@ -6686,7 +6759,7 @@ function loop(){
         if(c.hp<35&&Math.random()<0.3)
           burst(c.x,1.2,c.z,1,[[0.2,0.2,0.2],[0.35,0.35,0.35]],0.8,1.2,-1);
         drawDash(Math.abs(c.speed)/(CARTYPES[c.type].top*1.45),Math.abs(c.speed)*4.2,
-          c.type.toUpperCase(),G.carHP,G.boost);
+          c.type.toUpperCase()+(c.speed<-0.15?' · REV':''),G.carHP,G.boost);
       }
       checkPizzaJack();
       recTick(dt);

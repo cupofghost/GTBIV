@@ -761,29 +761,35 @@ car camera doesn't feel sluggish at low speed. Don't regress the wall pull-in.
 clips into buildings; low-speed driving feels responsive; no motion sickness
 spikes from over-fast lerps.
 
-#### J4 — Control feel: joystick dead-zone + reverse/brake clarity `P2 · Risk: Med` `PARTIAL`
-**Status: dead-zone done**, reverse/brake clarity still open. `joyMove` now has
-a 10px radial dead zone with a linear rescale back to full magnitude at the
-55px max travel (no dead jump right past the threshold) — standing still no
-longer drifts from thumb jitter, full-tilt still hits `|input.jx,jy|`=1.
-Brake-vs-reverse legibility is untouched.
+#### J4 — Control feel: joystick dead-zone + reverse/brake clarity `P2 · Risk: Med` `DONE`
+**Status: done.** Dead-zone shipped earlier (see above); brake-vs-reverse
+legibility shipped in `§17`. `joyMove` has a 10px radial dead zone with a
+linear rescale back to full magnitude at the 55px max travel (no dead jump
+right past the threshold) — standing still no longer drifts from thumb
+jitter, full-tilt still hits `|input.jx,jy|`=1. The touch `#btnBrake` pedal
+now relabels to **REVERSE** (with a distinct amber tint) once `player.car.
+speed<-0.15` — i.e. once `carPhysics`'s existing brake-then-reverse behavior
+has actually kicked into reverse — and the analog dash appends **· REV** to
+the car-type readout at the same threshold, so desktop (which hides the touch
+pedals) gets the same cue on the always-visible gauge cluster.
 **Why:** Touch stick and the brake/reverse pedal are the highest-touch surfaces;
 small tuning pays off constantly.
 **Where:** `joyStart/Move/End`, `pollKeys`, `carPhysics` throttle handling,
-pedals DOM.
-**Remaining:** Make brake-vs-reverse legible (the physics already
-brakes-then-reverses; ensure the pedal/HUD communicates it). Keep desktop
-WASD identical in feel (already true for the dead-zone change — `pollKeys`
-sets `input.jx/jy` directly, bypassing `joyMove`).
+`updateCarMode` (new `btnBrakeReversing` edge-detect), pedals DOM, the
+`drawDash` call site in the main loop.
 
 ---
 
 ### Phase 3 — Progression & Balance
 
-#### P1 — Mission variety & light progression `P1 · Risk: Med`
+#### P1 — Mission variety & light progression `P1 · Risk: Med` `DONE`
+**Status: done** — see `§17`. Three new types (`courier`, `takedown`,
+`getaway`) join the original five, gated behind `missionTier()` (reads
+`missionsDone`, already persisted by `F1`) instead of a new save field.
 **Why:** Five random side-missions repeat forever with only "don't repeat the
 last one" logic — it goes stale fast.
-**Where:** `MISSIONS` (`startMission`, `updateMission`, complete/fail).
+**Where:** `MISSIONS` (`startMission`, `updateMission`, complete/fail), plus
+`busted()`'s heat-driven-mission-fail branch.
 **Approach:** Add **2–4 new mission types** in the existing data-driven style
 (e.g. *getaway/escape*, *survive the ambush*, *chase-down*, *courier under
 fire*). Weight selection by what the player is near / can do, and scale reward
@@ -1219,10 +1225,10 @@ throughout:
 ✔ F3  Adaptive quality           DONE
 ✔ F4  Audio mix + ducking        DONE
 ✔ J1  Haptics & impact feedback  DONE
-U1  Objective clarity/HUD       ← NEXT
-P1  Mission variety
-J3  Camera options
-J4  Control feel
+✔ U1  Objective clarity/HUD      DONE (story-goal half; see §16)
+✔ P1  Mission variety            DONE
+✔ J4  Control feel               DONE
+J3  Camera options              ← NEXT
 P3  Wanted + difficulty
 P2  Economy tuning
 J2  Hitstop + shake
@@ -1555,6 +1561,72 @@ with no overlap of the minimap, mission box, or touch controls. New
 state machine and a minimap-draw smoke check with Deb present.
 
 Full suite: `cd tests && node run.js` — **53/53 green** (up from 48; 5 new
+cases), zero console errors.
+
+Signed: Claude Code | Sonnet 5 | medium
+
+---
+
+## 17. Changelog — P1 mission variety + J4 brake/reverse clarity (Claude, 2026-07-24)
+
+Continuing down `§10`'s suggested order: **P1** (mission variety) and the
+remaining half of **J4** (control feel).
+
+**P1 — three new mission types + soft progression.** The five-type pool
+(`delivery/style/checkpoints/rampage/heat`) went stale after a few loops —
+"don't repeat the last type" was the only variety mechanism. Added:
+
+- **`courier`** — a `delivery` variant where Chaos Pizza has already tipped
+  off the cops: picking up the package sets `G.heat=Math.max(G.heat,40)`
+  (same `addHeat(0)`-to-recompute-stars pattern the existing `heat` type
+  uses), so the drop-off leg plays out under real cop pressure. Pays ~80%
+  more than a plain delivery for the added risk.
+- **`takedown`** — flags a live civilian `traffic[]` car (never the player's)
+  and reuses the existing mission `beacon` to *follow* it every frame
+  (`setBeacon(mission.car.x, mission.car.z)` inside `updateMission`), so it's
+  trackable on the minimap even while it's still driving around. Wins the
+  instant `mission.car.dead` flips — already true whether the player shoots
+  it (`damageCar` via the pistol branch in `doAttack`), ends it with an RPG,
+  or it simply wrecks itself into a tree (civilian traffic already takes
+  crash damage the same way cop cars do). No new AI or damage system needed.
+- **`getaway`** — like `heat` but with an actual destination: forces
+  `G.heat=Math.max(G.heat,70)` and gives the player a beacon to reach within
+  a timer. Rewards a time-remaining bonus on top of the base $320, so a fast
+  runner cashes in more than someone who barely makes it.
+- **Soft progression:** `missionTier()` (`0/1/2`, stepping every 5
+  `missionsDone`) gates the pool — `courier`/`takedown` unlock at tier 1,
+  `getaway` at tier 2 — and `completeMission()` now applies a `+15%`-per-tier
+  reward multiplier across **every** mission type, so the original five keep
+  paying better too as the session goes on. No new save field: `missionsDone`
+  already persists via `F1`, so unlocks and the pay bump survive a reload for
+  free.
+- `busted()` already force-failed an in-progress `heat` mission (elevated
+  wanted level makes no sense to keep chasing post-respawn); extended that
+  same guard to `courier` and `getaway` since they force heat too.
+
+**J4 remainder — brake-vs-reverse legibility.** `carPhysics` already brakes
+then reverses on one held input; nothing told the player which phase they
+were in. Two additive, read-only-of-state cues, no physics touched:
+
+- `updateCarMode` edge-detects `player.car.speed<-0.15` and relabels the
+  touch `#btnBrake` pedal from **BRAKE** to **REVERSE**, toggling a new
+  `.reversing` class (amber tint, `#ffd23e` border) so it reads as a
+  distinct state at a glance, not just a text swap.
+- The main-loop `drawDash(...)` call site appends **`· REV`** to the
+  car-type name at the same threshold — this lands on the always-visible
+  analog gauge cluster (`#speedo`, not gated by `html.is-desktop`), so
+  desktop/keyboard players — who never see the touch pedals — get the same
+  cue.
+
+New `tests/cases/mission-variety.test.js` (10 cases: tier-gating in both
+directions, the tiered reward multiplier, each new type's win/fail path, and
+the `busted()` guard — courier and getaway get their own fresh-page cases
+since `respawn()` latches `G.over=true` for its 1.8s teleport delay, so two
+synchronous `busted()` calls in one page would have the second no-op on that
+guard) and `tests/cases/control-feel.test.js` (2 cases: pedal relabel/class
+toggle, dash label appends/drops `REV`).
+
+Full suite: `cd tests && node run.js` — **65/65 green** (up from 53; 12 new
 cases), zero console errors.
 
 Signed: Claude Code | Sonnet 5 | medium
