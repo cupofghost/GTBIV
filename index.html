@@ -692,10 +692,11 @@ function remapXY(clientX,clientY){
 }
 updateOrientationMode(); // set before THREE/HUD sizing below reads vw()/vh()
 
+const PISTOL_MAG=12;  // rounds per magazine; shared with WEAPON_SFX.pistol (see WEAPONS)
 const G={ mode:'foot', money:0, heat:0, stars:0, carHP:100, boost:100,
   escapeT:0, bustT:0, hiddenT:0, hp:100, hpT:0, hasBaton:false, missionsDone:0, over:false, started:false, paused:false,
   menuPaused:false, meat:0,
-  station:0, weapon:'fists', rockets:0 };
+  station:0, weapon:'fists', rockets:0, pistolAmmo:PISTOL_MAG, reloading:false };
 const WORLD={ blocks:10, block:50, road:16 };
 const _PARAMS=new URLSearchParams(location.search);
 const DEV=_PARAMS.get('dev')==='1';
@@ -712,6 +713,7 @@ WORLD.size=WORLD.half*2+40;
 
 // ================= AUDIO =================
 let AC=null, masterGain, sfxGain, voiceGain, engineOsc, engineGain, engineLP, skidGain,
+    heliChopFilt, heliChopGain, heliChopDepth, heliChopLFO,
     engineSubOsc, engineSubGain, engineGritFilter, engineGritGain, turboOsc, turboFilter, turboGain,
     sirenOsc, sirenGain, musicGain, musicStep=0, nextNoteTime=0;
 // --- synthwave FX rack + soundtrack playhead (built lazily in initAudio) ---
@@ -757,6 +759,20 @@ function initAudio(){
   const skF=AC.createBiquadFilter(); skF.type='bandpass'; skF.frequency.value=900; skF.Q.value=1.2;
   skidGain=AC.createGain(); skidGain.gain.value=0;
   skid.connect(skF); skF.connect(skidGain); skidGain.connect(sfxGain); skid.start();
+  // Heli rotor chop: engineOsc/engineGain above give the heli its steady
+  // turbine drone (reused from the car engine, untouched); this is a second,
+  // independent layer — filtered broadband noise (reuses the skid buffer)
+  // amplitude-modulated by heliChopLFO — for the "whup-whup" blade-pass
+  // character a bare tone can't give. Silent (gain 0) outside heli mode;
+  // updateHeliMode drives its rate/depth every frame off rotor spin + speed.
+  const heliChopSrc=AC.createBufferSource(); heliChopSrc.buffer=nb; heliChopSrc.loop=true;
+  heliChopFilt=AC.createBiquadFilter(); heliChopFilt.type='bandpass'; heliChopFilt.frequency.value=280; heliChopFilt.Q.value=0.9;
+  heliChopGain=AC.createGain(); heliChopGain.gain.value=0;      // per-frame baseline (see updateHeliMode)
+  heliChopDepth=AC.createGain(); heliChopDepth.gain.value=0;    // scales the LFO's -1..1 swing to match
+  heliChopLFO=AC.createOscillator(); heliChopLFO.type='sine'; heliChopLFO.frequency.value=8;
+  heliChopSrc.connect(heliChopFilt); heliChopFilt.connect(heliChopGain); heliChopGain.connect(sfxGain);
+  heliChopLFO.connect(heliChopDepth); heliChopDepth.connect(heliChopGain.gain);
+  heliChopSrc.start(); heliChopLFO.start();
   sirenOsc=AC.createOscillator(); sirenOsc.type='triangle'; sirenOsc.frequency.value=700;
   sirenGain=AC.createGain(); sirenGain.gain.value=0;
   sirenOsc.connect(sirenGain); sirenGain.connect(sfxGain); sirenOsc.start();
@@ -866,13 +882,13 @@ function blip(f0,f1,dur,vol,type){
   g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
   o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime+dur+0.02);
 }
-function noiseBurst(dur,vol,freq,q){
+function noiseBurst(dur,vol,freq,q,type){
   if(!AC) return;
   freq=freq||800; q=q||0.6;
   const len=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
   for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
   const s=AC.createBufferSource(); s.buffer=b;
-  const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=freq; f.Q.value=q;
+  const f=AC.createBiquadFilter(); f.type=type||'lowpass'; f.frequency.value=freq; f.Q.value=q;
   const g=AC.createGain(); g.gain.value=vol;
   s.connect(f); f.connect(g); g.connect(sfxGain); s.start();
 }
@@ -897,8 +913,27 @@ const sfx={
   busted(){ blip(400,100,1.0,0.28,'sawtooth'); },
   repair(){ blip(300,900,0.25,0.18,'triangle'); },
   jump(){ blip(200,600,0.3,0.2,'sine'); },
-  gunshot(){ noiseBurst(0.08,0.45,2200); blip(900,200,0.08,0.25); },
-  rocket(){ noiseBurst(0.4,0.35,600); blip(300,900,0.35,0.18,'sawtooth'); },
+  // actual synthesis for these two lives in WEAPON_SFX (WEAPONS section) so
+  // every weapon's voice — and its reload — sits in one flexible registry;
+  // these stay here only because footcop AI and doAttack already call them.
+  gunshot(){ WEAPON_SFX.pistol.fire(); },
+  rocket(){ WEAPON_SFX.rpg.fire(); },
+  rpgBoom(){ noiseBurst(0.55,0.55,180,0.7); noiseBurst(0.9,0.3,3200,0.6,'highpass'); blip(130,24,0.7,0.55,'sine'); },
+  // a wrecked car's "the whole thing goes up" boom — grittier and lower than
+  // rpgBoom (sawtooth sub instead of a clean sine) so a totaled ride reads as
+  // mechanical/metal rather than a military warhead
+  carBoom(){ noiseBurst(0.5,0.5,240,0.6); noiseBurst(0.35,0.3,4200,1.8,'highpass'); blip(90,20,0.8,0.5,'sawtooth'); },
+  // Mama Rat's voice (HANDOFF.md RV3): a guttural rumble under a rising
+  // screech for her sewer emergence, a snarling bite distinct from a human
+  // punch, and a falling death shriek — she used to borrow bigCrash/punch.
+  ratScreech(){ noiseBurst(0.6,0.45,500,0.8); blip(250,1600,0.4,0.3,'sawtooth'); noiseBurst(0.3,0.25,2600,1.5,'highpass'); },
+  ratBite(){ noiseBurst(0.09,0.4,700,1.1,'bandpass'); blip(220,80,0.12,0.22,'sawtooth'); },
+  ratDeath(){ blip(1400,120,0.5,0.3,'sawtooth'); noiseBurst(0.4,0.25,600,0.7); },
+  // stray-dog pack voice: a rumble when a pack turns hostile (antagonizeDogs),
+  // a sharper snap on contact — bigger/lower than ratBite so a dog reads as
+  // a bigger animal than a sewer rat
+  dogGrowl(){ noiseBurst(0.22,0.3,380,1.4,'bandpass'); blip(180,90,0.16,0.16,'sawtooth'); },
+  dogBite(){ noiseBurst(0.07,0.35,450,1.3,'bandpass'); blip(140,60,0.1,0.22,'sawtooth'); },
 };
 // ================= PROCEDURAL 80s SYNTHWAVE SOUNDTRACK =================
 // Each radio station is a *playlist* of through-composed songs. A song is a
@@ -3607,12 +3642,15 @@ function dogBtnPressed(){
   feedDogs();
 }
 function antagonizeDogs(x,z,r){
+  let hit=false;
   for(const d of strayDogs){
     if(Math.hypot(d.x-x,d.z-z)<r){
+      hit=true;
       let g=d.gang; if(!g) g=makeGang([d]);
       g.state='angry'; g.stateT=12; g.trust=0;   // even a loyal pack turns on a kicker
     }
   }
+  if(hit) sfx.dogGrowl();
 }
 function updateStrayDogs(dt){
   // lone strays gravitate together and band into packs
@@ -3692,7 +3730,7 @@ function updateStrayDogs(dt){
     // an antagonized pack bites
     if(g&&g.state==='angry'&&G.mode==='foot'&&!player.bailing){
       if(Math.hypot(player.x-d.x,player.z-d.z)<0.9&&d.biteT<=0){
-        d.biteT=1.2; shake(0.3); sfx.punch();
+        d.biteT=1.2; shake(0.3); sfx.dogBite();
         player.stunT=Math.max(player.stunT||0,0.5);
         toast('DOG BITE!','bad');
       }
@@ -4729,6 +4767,14 @@ function updateHeliMode(dt){
     engineGain.gain.value=lerp(engineGain.gain.value,0.05+h.spin*0.04,0.2);
     engineOsc.frequency.value=36+h.spin*30+hs*0.4;
     engineLP.frequency.value=300+h.spin*500;
+    // rotor blade chop: noise AM'd at blade-pass rate — spools up with h.spin,
+    // chops faster in forward flight, baseline+depth stay matched so it dips
+    // to near-silence between "whups" instead of just pulsing up and down
+    const chopTarget=(0.05+h.spin*0.09)*0.5;
+    heliChopLFO.frequency.value=4+h.spin*7+hs*0.06;
+    heliChopGain.gain.value=chopTarget;
+    heliChopDepth.gain.value=chopTarget;
+    heliChopFilt.frequency.value=280+h.spin*220;
   }
   G.carHP=Math.max(0,h.hp/h.maxhp*100);
   drawDash(hs/36,hs*4.2,'CHOPPER',h.hp/h.maxhp*100,h.spin*100);
@@ -4750,6 +4796,7 @@ function bailOut(){
   player.mesh.visible=true;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
+  if(heliChopGain){ heliChopGain.gain.value=0; heliChopDepth.gain.value=0; }
   if(h.shadow) h.shadow.visible=true;
   refreshButtons();
   toast(h.y>8?'PULL THE CHUTE!':'BAIL OUT!','gold');
@@ -4797,6 +4844,7 @@ function exitHeli(){
   player.heli=null; footCamYaw=player.heading;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
+  if(heliChopGain){ heliChopGain.gain.value=0; heliChopDepth.gain.value=0; }
   refreshButtons();
 }
 // --- parachute: red & white canopy, opened from the BAIL freefall ---
@@ -5004,7 +5052,8 @@ function refreshButtons(){
   $('btnBoost').textContent=heli?'UP':'BOOST';
   $('btnDrift').textContent=heli?'DOWN':'DRIFT';
   if(!foot) $('btnTalk').style.display='none';
-  $('btnPunch').textContent=G.weapon==='fists'?'PUNCH':(G.weapon==='baton'?'SWING':(G.weapon==='pistol'?'SHOOT':'RPG ('+G.rockets+')'));
+  $('btnPunch').textContent=G.weapon==='fists'?'PUNCH':(G.weapon==='baton'?'SWING':
+    (G.weapon==='pistol'?(G.reloading?'RELOAD…':'SHOOT ('+G.pistolAmmo+')'):'RPG ('+G.rockets+')'));
   $('btnGun').textContent=G.weapon.toUpperCase();
   updateWeaponVisual();
 }
@@ -5154,12 +5203,122 @@ function cycleWeapon(){
   refreshButtons();
   blip(500,700,0.08,0.12,'triangle');
 }
+// --- weapon sound synthesis -------------------------------------------
+// A small, deliberately flexible per-weapon "voice" registry, built entirely
+// from the AC-based primitives up in AUDIO (blip = tonal sweep, noiseBurst =
+// filtered noise transient). Every weapon type is one entry with a fire()
+// and a reload(); a projectile weapon can also ride startMissileFlight()
+// below for a continuous in-flight sound. To add a future weapon: add a new
+// WEAPON_SFX[name] with its own fire()/reload() built from the same
+// primitives — nothing in doAttack's ammo/reload plumbing has to change.
+const WEAPON_SFX={
+  pistol:{
+    mag:PISTOL_MAG, reloadTime:1.05,
+    fire(){
+      // short, dry, high-pitched crack — pistols snap, they don't boom
+      noiseBurst(0.05,0.5,3200,1.4,'bandpass');
+      noiseBurst(0.08,0.22,1300,0.9);
+      blip(1900,300,0.03,0.16,'square');
+    },
+    reload(){
+      // mag drops, fresh mag seats, slide racks — three beats over ~0.9s
+      noiseBurst(0.03,0.22,2600,3,'highpass');
+      setTimeout(()=>{ blip(180,90,0.06,0.16,'square'); noiseBurst(0.04,0.2,1800,2,'bandpass'); },260);
+      setTimeout(()=>{ noiseBurst(0.05,0.32,2400,2.5,'bandpass'); blip(2200,900,0.04,0.14,'square'); },620);
+    },
+  },
+  rpg:{
+    reloadTime:0.8, // matches the punchT cooldown that already gates the next shot
+    fire(){
+      // low ignition thump under a rising motor hiss + igniter sizzle
+      noiseBurst(0.45,0.4,650,0.7);
+      blip(150,55,0.35,0.3,'sawtooth');
+      blip(2600,5400,0.22,0.12,'sawtooth');
+    },
+    reload(){
+      // breech pops open, next round drops in, breech clacks shut
+      noiseBurst(0.04,0.2,1300,2,'bandpass');
+      setTimeout(()=>{ blip(140,70,0.09,0.22,'sine'); },200);
+      setTimeout(()=>{ noiseBurst(0.04,0.28,1600,2.2,'bandpass'); },440);
+    },
+  },
+  // melee has no reload, but shares the same fire()-per-entry shape so
+  // doPunch() can pick a voice with one lookup instead of a special case
+  fists:{
+    fire(){
+      // bare-knuckle thump — soft and fleshy, no metallic edge
+      noiseBurst(0.1,0.4,320,0.7);
+      blip(190,70,0.09,0.22,'sine');
+    },
+  },
+  baton:{
+    fire(){
+      // wood-on-target crack over a heavier body thud than a bare fist
+      noiseBurst(0.04,0.4,2400,2.2,'bandpass');
+      noiseBurst(0.12,0.4,260,0.8);
+      blip(160,50,0.09,0.2,'sine');
+    },
+  },
+};
+// Reload lockout: fire() checks G.reloading before letting the pistol shoot
+// again; the timeout below is the only place that clears it.
+function reloadPistol(){
+  if(G.reloading) return;
+  G.reloading=true;
+  WEAPON_SFX.pistol.reload();
+  haptic(20);
+  refreshButtons();
+  setTimeout(()=>{ G.pistolAmmo=PISTOL_MAG; G.reloading=false; refreshButtons(); },WEAPON_SFX.pistol.reloadTime*1000);
+}
+// One shared 1s noise buffer feeds every missile-flight loop (cheap to reuse,
+// unlike the one-shot buffers noiseBurst allocates fresh each time).
+let _missileNoiseBuf=null;
+function missileNoiseBuffer(){
+  if(_missileNoiseBuf) return _missileNoiseBuf;
+  const len=AC.sampleRate, b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+  return _missileNoiseBuf=b;
+}
+// world position -> {dist, pan} relative to the camera, for simple stereo
+// positioning of continuous weapon sounds (e.g. a flying missile's whoosh).
+const _sfxLocal=new THREE.Vector3();
+function spatialOf(x,y,z){
+  _sfxLocal.set(x,y,z);
+  camera.worldToLocal(_sfxLocal);
+  const dist=_sfxLocal.length();
+  return {dist,pan:clamp(_sfxLocal.x/Math.max(4,dist),-1,1)};
+}
+// Continuous rocket-motor whoosh that tracks a live rocket in flight — start
+// at launch, call .update(x,y,z) every substep while it's airborne, .stop()
+// on impact. Pan + tone brighten as it gets closer to the camera.
+function startMissileFlight(){
+  if(!AC) return null;
+  const src=AC.createBufferSource(); src.buffer=missileNoiseBuffer(); src.loop=true;
+  const filt=AC.createBiquadFilter(); filt.type='bandpass'; filt.frequency.value=500; filt.Q.value=0.9;
+  const pan=AC.createStereoPanner();
+  const g=AC.createGain(); g.gain.value=0;
+  src.connect(filt); filt.connect(pan); pan.connect(g); g.connect(sfxGain);
+  src.start();
+  return {
+    update(x,y,z){
+      const s=spatialOf(x,y,z), t=AC.currentTime;
+      g.gain.setTargetAtTime(clamp(0.22*(1-s.dist/45),0,0.22),t,0.05);
+      filt.frequency.setTargetAtTime(clamp(680-s.dist*9,150,680),t,0.05);
+      pan.pan.setTargetAtTime(s.pan,t,0.05);
+    },
+    stop(){
+      g.gain.setTargetAtTime(0,AC.currentTime,0.05);
+      setTimeout(()=>{ try{src.stop();}catch(e){} },160);
+    },
+  };
+}
 function doAttack(){
   if(!G.started||G.over||G.mode!=='foot'||player.punchT>0) return;
   if(G.weapon==='fists'){ doPunch(false); return; }
   if(G.weapon==='baton'){ doPunch(true); return; }
   const p=player;
   if(G.weapon==='pistol'){
+    if(G.reloading) return;
     // point blank = stick-up: they hand over their cash instead of catching a bullet
     let mark=null,md=5;
     peds.forEach(pd=>{
@@ -5180,7 +5339,9 @@ function doAttack(){
       addHeat(12);
       return;
     }
+    if(G.pistolAmmo<=0){ reloadPistol(); return; }
     p.punchT=0.32;
+    G.pistolAmmo--;
     sfx.gunshot();
     haptic(15);
     addHeat(4);
@@ -5239,6 +5400,7 @@ function doAttack(){
         ped.heading=Math.atan2(ped.x-p.x,ped.z-p.z);
       }
     }
+    if(G.pistolAmmo<=0) reloadPistol();
     return;
   }
   if(G.weapon==='rpg'&&(G.rockets>0||DEV_STATE.inf)){
@@ -5246,14 +5408,16 @@ function doAttack(){
     if(!DEV_STATE.inf) G.rockets--;
     if(G.rockets<=0) G.weapon='pistol';
     sfx.rocket();
+    WEAPON_SFX.rpg.reload();   // breech reloads the next round during the cooldown above
     haptic(40);
     addHeat(20);
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(0.25,0.25,0.9),
       new THREE.MeshBasicMaterial({color:0xff7a3d}));
     scene.add(mesh);
     const rp=-camPitch*1.1;   // aim up/down with the look thumb
-    rockets.push({x:p.x+Math.sin(p.heading)*1.5,y:p.y+1.5,z:p.z+Math.cos(p.heading)*1.5,
-      heading:p.heading,hs:Math.cos(rp)*46,vy:Math.sin(rp)*46,life:3,mesh});
+    const rocket={x:p.x+Math.sin(p.heading)*1.5,y:p.y+1.5,z:p.z+Math.cos(p.heading)*1.5,
+      heading:p.heading,hs:Math.cos(rp)*46,vy:Math.sin(rp)*46,life:3,mesh,snd:startMissileFlight()};
+    rockets.push(rocket);
     refreshButtons();
   }
 }
@@ -5269,6 +5433,7 @@ function updateRockets(dt){
     r.mesh.position.set(r.x,r.y,r.z);
     r.mesh.rotation.y=r.heading;
     if(r.vy!==undefined) r.mesh.rotation.x=clamp(-r.vy*0.02,-0.9,0.9);
+    if(r.snd) r.snd.update(r.x,r.y,r.z);
     burst(r.x,r.y,r.z,1,COL_SMOKE,0.5,0.4,0);
     let boom=r.life<=0||r.y<=0.15;
     if(!boom&&buildingHit(r.x,r.z,0.5)) boom=true;
@@ -5283,6 +5448,7 @@ function updateRockets(dt){
       boom=true;
     }
     if(boom){
+      if(r.snd) r.snd.stop();
       explode(r.x,Math.max(r.y,0.3),r.z);
       scene.remove(r.mesh); disposeMesh(r.mesh); rockets.splice(i,1);
     }
@@ -5320,7 +5486,7 @@ function updateFireballs(dt){
   }
 }
 function explode(x,y,z){
-  sfx.bigCrash(); shake(0.8); haptic([40,50,70]);
+  sfx.rpgBoom(); shake(0.8); haptic([40,50,70]);
   G.lastBoom={x,z,t:performance.now()};
   spawnFireball(x,Math.max(y,1),z,4.5);
   burst(x,y,z,42,COL_FIRE,8,1.1,4);
@@ -5331,7 +5497,7 @@ function explode(x,y,z){
 const boomFx=[];      // climbing cloud emitters {x,y,z,t}
 let shockwave=null;   // one reusable expanding ring
 function bigExplosion(x,y,z){
-  sfx.bigCrash(); shake(1.2); haptic([60,40,90,40,120]);
+  sfx.carBoom(); shake(1.2); haptic([60,40,90,40,120]);
   spawnFireball(x,y+1,z,8.5);
   burst(x,y,z,70,COL_FIRE,12,1.6,4);
   burst(x,y,z,40,COL_FIRE,6,2.2,1);
@@ -6235,7 +6401,7 @@ function updateCarMode(dt){
 function doPunch(heavy){
   if(!G.started||G.over||G.mode!=='foot'||player.punchT>0) return;
   player.punchT=0.55;
-  sfx.punch();
+  (heavy?WEAPON_SFX.baton:WEAPON_SFX.fists).fire();
   turboSay('punch');
   const p=player;
   const reach=heavy?2.9:2.3;   // the nightstick swings long
@@ -6657,14 +6823,14 @@ function spawnMamaRat(mh){
   scene.add(mesh);
   mamaRat={mesh,x:mh.x,z:mh.z,y:groundY-h*0.55,riseFrom:groundY-h*0.55,riseTo:groundY,
     heading:0,home:mh,state:'emerge',t:0,hp:260,speed:2,phase:0,biteT:0,scale:s,h};
-  sfx.bigCrash(); shake(0.4);
+  sfx.ratScreech(); shake(0.4);
   toast('SOMETHING HUGE IS COMING UP FROM THE SEWER','bad');
 }
 function damageMamaRat(amt){
   const mr=mamaRat; if(!mr||mr.state==='dying') return;
   mr.hp-=amt;
   burst(mr.x,mr.h*0.4,mr.z,6,[[0.6,0.1,0.1],[0.4,0.05,0.05]],2,0.4,4);
-  if(mr.hp<=0){ mr.state='dying'; mr.t=0; toast('MAMA RAT DOWN','gold'); addMoney(150,'RAT SLAYER'); }
+  if(mr.hp<=0){ mr.state='dying'; mr.t=0; sfx.ratDeath(); toast('MAMA RAT DOWN','gold'); addMoney(150,'RAT SLAYER'); }
 }
 function updateMamaRat(dt){
   const mr=mamaRat; if(!mr) return;
@@ -6693,7 +6859,7 @@ function updateMamaRat(dt){
       mr.biteT-=dt;
       if(mr.biteT<=0&&G.mode==='foot'&&!DEV_STATE.god){
         mr.biteT=1;
-        sfx.punch();
+        sfx.ratBite();
         damagePlayer(randi(8,16));
         shake(0.35);
         burst(px,1.2,pz,8,[[1,0.4,0.4],[0.9,0.2,0.2]],2.5,0.5,4);
@@ -7006,6 +7172,7 @@ function exitCarSoft(){
   G.mode='foot';
   if(engineGain) engineGain.gain.value=0;
   if(skidGain) skidGain.gain.value=0;
+  if(heliChopGain){ heliChopGain.gain.value=0; heliChopDepth.gain.value=0; }
   if(engineSubGain) engineSubGain.gain.value=0;
   if(engineGritGain) engineGritGain.gain.value=0;
   if(turboGain) turboGain.gain.value=0;
@@ -7021,6 +7188,7 @@ function respawn(spot){
     makeCar('sedan',spot.x-4,spot.z-3,rand(0,TAU),{parked:true});
     G.mode='foot'; player.car=null;
     G.boost=100; G.carHP=100; G.hp=100; G.hpT=0; G.over=false;
+    G.pistolAmmo=PISTOL_MAG; G.reloading=false;   // don't come back mid-reload
     $('speedo').style.display='none';
   },1800);
 }

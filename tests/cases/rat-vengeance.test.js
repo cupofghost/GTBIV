@@ -80,4 +80,19 @@ module.exports = [
       await page.evaluate(() => { G.hp = 100; });
     },
   },
+  {
+    name: 'mama rat has her own screech/bite/death voice (RV3), not reused sfx.punch()/sfx.bigCrash()',
+    run: async (page, { assert }) => {
+      const r = await page.evaluate(() => {
+        if (!AC) initAudio();
+        let threw = null;
+        try { sfx.ratScreech(); sfx.ratBite(); sfx.ratDeath(); } catch (e) { threw = e.message; }
+        return { threw,
+          distinct: typeof sfx.ratScreech === 'function' && typeof sfx.ratBite === 'function'
+            && typeof sfx.ratDeath === 'function' && sfx.ratBite !== sfx.punch && sfx.ratScreech !== sfx.bigCrash };
+      });
+      assert(r.threw === null, 'mama rat voices should never throw, got: ' + r.threw);
+      assert(r.distinct, 'expected sfx.ratScreech/ratBite/ratDeath as distinct functions from punch/bigCrash');
+    },
+  },
 ];

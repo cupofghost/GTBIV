@@ -210,7 +210,7 @@ Sections, in file order, with what lives in each:
 | pickups | `pickups`, `pickupDefs`, `scatterPickups`, `collectPickups` |
 | `HELICOPTERS` | Player heli + `spawnCopHeli`/`updateCopHeli` |
 | `TALKING PEDS` | Speech bubbles, `wahVoice`, `doTalk` |
-| `WEAPONS` | `cycleWeapon`, `doAttack`, rockets, `explode`, `damageArea` |
+| `WEAPONS` | `cycleWeapon`, `doAttack`, rockets, `explode`, `damageArea`, `WEAPON_SFX` (per-weapon fire/reload synth registry), `reloadPistol`, `startMissileFlight` (spatialized flight-loop sound) |
 | input | `joyStart/Move/End`, `doJump`, `applyLook`, `pollKeys` |
 | `WANTED` | `addHeat`, `clearHeat`, `spawnCop`, `updateWanted` |
 | `CAR PHYSICS` | `carPhysics`, `damageCar` |
@@ -239,7 +239,8 @@ Two global objects hold nearly all mutable state:
 ```js
 const G = { mode:'foot'|'car'|'heli', money, heat, stars, carHP, boost,
             escapeT, bustT, missionsDone, over, started, paused,
-            station, weapon:'fists'|'pistol'|'rpg', rockets };
+            station, weapon:'fists'|'pistol'|'rpg', rockets,
+            pistolAmmo, reloading };  // pistol magazine (12) + auto-reload lockout, see WEAPONS
 const WORLD = { blocks:10, block:50, road:16, pitch, half, size };
 ```
 
@@ -1328,16 +1329,20 @@ matters more there than for the single mama rat).
 room to make her a proper set-piece encounter instead of a slow blob that
 either bites you or doesn't.
 **Ideas, unscoped, pick up only after RV1/RV2 are solid:** building/prop
-avoidance so she can't be trivially juked through a wall; a growl/screech
+avoidance so she can't be trivially juked through a wall; ~~a growl/screech
 `sfx` cue and dedicated voice/bark line instead of reused `sfx.punch()`/
-`sfx.bigCrash()`; car interaction (run her over, or she flips/damages a car
-that gets too close); heat/wanted interaction (does summoning her raise
-`G.heat`, the way shooting a ped already does via `addHeat(18)` in the
-`'ped'` branch — right now `'rat'` doesn't call `addHeat` at all beyond the
-flat `addHeat(4)` every pistol shot already applies); a cap or cooldown if
-repeat testing shows player-summoned mama rats becoming a farmable money
-loop (`$150` "RAT SLAYER" payout on kill has no gate today). Ask Austin
-before committing to any of these — they're ideas, not approved scope.
+`sfx.bigCrash()`~~ **DONE (Claude Code, Sonnet 5, 2026-07-24)** — `sfx.ratScreech`
+(emergence), `sfx.ratBite` (contact), `sfx.ratDeath` (kill), owner live-approved
+during a weapon-sound-synthesis session; still no dedicated *voice/bark line*
+(that's the VOICEOVER SYSTEM, separate scope); car interaction (run her over,
+or she flips/damages a car that gets too close); heat/wanted interaction (does
+summoning her raise `G.heat`, the way shooting a ped already does via
+`addHeat(18)` in the `'ped'` branch — right now `'rat'` doesn't call `addHeat`
+at all beyond the flat `addHeat(4)` every pistol shot already applies); a cap
+or cooldown if repeat testing shows player-summoned mama rats becoming a
+farmable money loop (`$150` "RAT SLAYER" payout on kill has no gate today).
+Ask Austin before committing to any of the remaining ideas — they're still
+unapproved scope.
 
 ---
 
