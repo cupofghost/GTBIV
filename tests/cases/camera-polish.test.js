@@ -74,27 +74,42 @@ module.exports = {
           const c = cars.find(c2 => !c2.dead && !c2.driver);
           player.car = c; G.mode = 'car';
           c.heading = 0; camYawOff = 0; camPitch = 0;
-          // Put the camera at the SAME radius as the ideal chase spot but at
-          // a right angle to it, so cameraCollide's tgt-vs-camPos distance
-          // check is a tie (no wall in the way either) and updateCamera
-          // takes the eased "swing around" branch, not the instant snap —
-          // that snap branch (a genuinely-too-far camera, e.g. a wall just
-          // stopped occluding) always jumps straight to tgt regardless of
-          // speed, which isn't what this card's follow-rate tweak touches.
-          const testFollow = (speed) => {
+          // Stub out world occlusion: which parked car this map happens to
+          // hand back (and what's next to it) is unseeded per HANDOFF's D7,
+          // so without this the tie between camPos/tgt distances below is
+          // only reliable when that car's surroundings are clear — flaky
+          // otherwise. This test is about the follow-rate formula, not
+          // cameraCollide's wall/vehicle pull-in (already exercised live by
+          // every other test that drives around).
+          const origBH = buildingHit, origVH = vehicleHit;
+          buildingHit = () => null; vehicleHit = () => null;
+          // Start the camera right at the car — clearly closer than any
+          // chase distance, so this is unambiguously the eased "ease back
+          // out" branch (not the instant occlusion snap, which always jumps
+          // straight to tgt regardless of speed and isn't what this card's
+          // follow-rate tweak touches). Measuring the fraction of the gap
+          // closed (not the raw distance moved) keeps this independent of
+          // the chase distance itself growing with speed.
+          const testFollowFactor = (speed) => {
             c.speed = speed;
             const dist = 9.5 + Math.abs(speed) * 0.07; // mirrors updateCamera's own formula
-            const start = new THREE.Vector3(c.x + dist, c.y + 4.3, c.z); // same radius, 90° off from tgt
+            const h = 4.3; // camPitch=0
+            const bx = -Math.sin(c.heading + camYawOff), bz = -Math.cos(c.heading + camYawOff);
+            const tgt = new THREE.Vector3(c.x + bx * dist, c.y + h, c.z + bz * dist);
+            const start = new THREE.Vector3(c.x, c.y + h, c.z);
             camPos.copy(start);
+            const initialGap = camPos.distanceTo(tgt);
             updateCamera(0.05);
-            return camPos.distanceTo(start); // how far it swung toward tgt in one frame
+            const remainingGap = camPos.distanceTo(tgt);
+            return 1 - remainingGap / initialGap; // the lerp factor actually applied
           };
-          const movedLow = testFollow(0);
-          const movedHigh = testFollow(30);
+          const factorLow = testFollowFactor(0);
+          const factorHigh = testFollowFactor(30);
           G.mode = 'foot'; player.car = null;
-          return { movedLow, movedHigh };
+          buildingHit = origBH; vehicleHit = origVH;
+          return { factorLow, factorHigh };
         });
-        assert(r.movedLow > r.movedHigh, 'expected the low-speed camera to close more distance in one frame than the high-speed camera, got ' + JSON.stringify(r));
+        assert(r.factorLow > r.factorHigh, 'expected the low-speed camera to use a higher follow-rate lerp factor than the high-speed camera, got ' + JSON.stringify(r));
       },
     },
   ],

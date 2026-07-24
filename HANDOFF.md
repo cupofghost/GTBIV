@@ -820,11 +820,15 @@ feel big). Don't touch the debt mechanic itself, just the numbers + feedback.
 **Acceptance:** A test playthrough to $800 feels earned (not 2 minutes, not an
 hour). Every income source is reachable and worth doing.
 
-#### P3 — Wanted-system feel + difficulty options `P2 · Risk: Med`
+#### P3 — Wanted-system feel + difficulty options `P2 · Risk: Med` `DONE`
+**Status: done** — see `§19`. The escalation curve, HUD hints ("THEY SEE
+YOU"/"CLEAR"/"HIDDEN"), and star thresholds already read clearly pre-existing
+this card, so the actual gap was the missing **Difficulty** setting; that's
+what shipped.
 **Why:** Heat/stars escalation and cop pressure drive the fun; expose it and
 tune it.
-**Where:** `WANTED` (`addHeat`, `clearHeat`, `updateWanted`, `spawnCop`),
-`updateCops`.
+**Where:** `WANTED` (`addHeat`, `clearHeat`, `updateWanted`, `spawnCop`,
+`wantedCount`), `updateCops`, `updateFootCops`, `damagePlayer`, Settings (F2).
 **Approach:** Tune escalation/cool-down curves so chases build and resolve
 readably. Add a **Difficulty** setting (Easy/Normal/Hard) in Settings (F2) that
 scales cop aggression/spawn rate + damage taken. Persist it (F1). Make the star
@@ -1237,8 +1241,8 @@ throughout:
 ✔ P1  Mission variety            DONE
 ✔ J4  Control feel               DONE
 ✔ J3  Camera options             DONE (sens/invert/low-speed follow; see §18)
-P3  Wanted + difficulty         ← NEXT
-P2  Economy tuning
+✔ P3  Wanted + difficulty        DONE (Easy/Normal/Hard; see §19)
+P2  Economy tuning              ← NEXT
 J2  Hitstop + shake
 U2  Onboarding
 U3  Death/respawn flow
@@ -1686,6 +1690,57 @@ follow-rate comparison (same synthetic offset, same `dt`, asserts the
 low-speed case closes more distance in one frame).
 
 Full suite: `cd tests && node run.js` — **70/70 green** (up from 65; 5 new
+cases), zero console errors.
+
+Signed: Claude Code | Sonnet 5 | medium
+
+---
+
+## 19. Changelog — P3 difficulty options (Easy/Normal/Hard) (Claude, 2026-07-24)
+
+Next per `§10`. The wanted system's escalation curve and HUD hints already
+read clearly (star thresholds, "THEY SEE YOU"/"CLEAR — STAY AWAY"/"HIDDEN —
+LAY LOW" with live countdowns) — nothing there needed retuning. The actual
+gap was the card's other ask: a difficulty setting that actually changes
+something. Added:
+
+- **`DIFFICULTY_TIERS`** (`easy`/`normal`/`hard`, next to `spawnCop`): three
+  multipliers — `spawnMult` (cop pressure), `aggroMult` (detection/escape
+  range), `dmgMult` (damage taken) — read through a `difficulty()` helper
+  keyed off `SETTINGS.difficulty` (new, defaults `'normal'`, persisted in the
+  existing `SETTINGS` blob).
+- **`wantedCount()`** now scales `(1+G.stars)` by `spawnMult`, **capped at 8**
+  regardless of difficulty — "harder" means denser pressure per star, not an
+  unbounded swarm; respects the same don't-tank-fps intent as `F3`'s
+  traffic/ped caps without needing a new cap system.
+- **`updateWanted()`**'s three detection ranges (car cop `70`, foot cop `50`,
+  cop heli `130`) and the "CLEAR" escape distance (`85`) all scale by
+  `aggroMult` — hard spots the player from farther away *and* makes losing
+  the heat require getting farther away, easy does the opposite.
+- **Damage taken** scales by `dmgMult` at every cop-inflicted damage site:
+  `damagePlayer()` (the shared choke point for footcop gunfire/baton hits —
+  also happens to cover mama-rat bites, a reasonable read of a general
+  "damage taken" difficulty lever) plus the two `damageCar(player.car,...)`
+  sites for cop gunfire and cop-car ramming.
+- New Settings (F2) row: `#difficultyGroup`, a 3-button toggle following the
+  exact `qualityGroup`/`vibrateGroup` pattern (`refreshDifficultyButtons` +
+  `setDifficulty` + a standalone `initDifficultyUI()` IIFE).
+- Widened `.pmRow label` from `58px`→`80px` while adding J3's rows last
+  session — the two-word "LOOK SENS." label was still wrapping to two lines
+  at 70px; 80px was needed to fit it on one, verified with a live phone-
+  viewport screenshot (800×390, scrolled to the bottom of the now-8-row
+  panel — it's `overflow:auto` per the existing `.pmPanel` rule, so the
+  extra row doesn't overlap anything, just adds one more scroll step).
+
+New `tests/cases/wanted-difficulty.test.js` (7 cases): default value, spawn-
+count scaling in both directions, the 8-cap holding at 5 stars on hard,
+zero-stars staying zero regardless of difficulty, damage scaling in both
+directions, hard spotting the player from a distance normal can't (with
+`losClear` stubbed so the assertion tests the range math, not whether the
+test's chosen coordinates happen to clear a procedurally-placed building),
+and persistence across reload.
+
+Full suite: `cd tests && node run.js` — **77/77 green** (up from 70; 7 new
 cases), zero console errors.
 
 Signed: Claude Code | Sonnet 5 | medium

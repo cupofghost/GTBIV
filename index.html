@@ -574,6 +574,11 @@
       <button class="qBtn" data-v="on">ON</button>
       <button class="qBtn" data-v="off">OFF</button>
     </div></div>
+    <div class="pmRow"><label>DIFFICULTY</label><div class="qGroup" id="difficultyGroup">
+      <button class="qBtn" data-d="easy">EASY</button>
+      <button class="qBtn" data-d="normal">NORMAL</button>
+      <button class="qBtn" data-d="hard">HARD</button>
+    </div></div>
     <button class="pmBtn" id="pmSetBack">BACK</button>
   </div>
   <div class="pmPanel" id="pmHow" style="display:none">
@@ -5082,13 +5087,24 @@ function clearHeat(viaEscape){
   updateStarsHUD();
   cops.forEach(c=>{ if(c.driver==='cop') c.driver='leaving'; });
 }
+// P3: Easy/Normal/Hard scales cop pressure (spawn count, detection range)
+// and damage taken — persisted in the same SETTINGS blob as everything else.
+const DIFFICULTY_TIERS={
+  easy:  {spawnMult:0.7, aggroMult:0.8,  dmgMult:0.65},
+  normal:{spawnMult:1,   aggroMult:1,    dmgMult:1},
+  hard:  {spawnMult:1.4, aggroMult:1.25, dmgMult:1.4},
+};
+function difficulty(){ return DIFFICULTY_TIERS[SETTINGS.difficulty]||DIFFICULTY_TIERS.normal; }
 function spawnCop(){
   const far=intersections.filter(p=>Math.hypot(p.x-px0(),p.z-pz0())>110);
   const it=far.length?pick(far):pick(intersections);
   const c=makeCar('cop',it.x,it.z,rand(0,TAU),{driver:'cop'});
   cops.push(c);
 }
-function wantedCount(){ return G.stars===0?0:Math.min(1+G.stars,6); }
+// capped at 8 regardless of difficulty — "harder" means more pressure per
+// star, not an unbounded swarm that tanks fps (F3's traffic/ped caps get
+// the same treatment)
+function wantedCount(){ return G.stars===0?0:clamp(Math.round((1+G.stars)*difficulty().spawnMult),1,8); }
 function updateWanted(dt){
   const want=wantedCount();
   const active=cops.filter(c=>!c.dead&&c.driver==='cop').length
@@ -5096,27 +5112,28 @@ function updateWanted(dt){
   if(G.stars>0&&active<want) spawnCop();
   if(G.stars>0){
     const pxx=px0(), pzz=pz0();
+    const aggro=difficulty().aggroMult;
     let nearest=1e9, seen=false;
     cops.forEach(c=>{
       if(c.dead||c.driver!=='cop') return;
       const d=Math.hypot(c.x-pxx,c.z-pzz);
       nearest=Math.min(nearest,d);
-      if(d<70&&losClear(c.x,c.z,pxx,pzz)) seen=true;
+      if(d<70*aggro&&losClear(c.x,c.z,pxx,pzz)) seen=true;
     });
     footCops.forEach(fc=>{
       if(fc.state==='down') return;
       const d=Math.hypot(fc.x-pxx,fc.z-pzz);
       nearest=Math.min(nearest,d);
-      if(d<50&&losClear(fc.x,fc.z,pxx,pzz)) seen=true;
+      if(d<50*aggro&&losClear(fc.x,fc.z,pxx,pzz)) seen=true;
     });
-    if(copHeli&&!copHeli.dead) seen=seen||Math.hypot(copHeli.x-pxx,copHeli.z-pzz)<130;
+    if(copHeli&&!copHeli.dead) seen=seen||Math.hypot(copHeli.x-pxx,copHeli.z-pzz)<130*aggro;
     if(G.interior) seen=false;   // holed up in the pizza place
     // two ways to shake the heat: get FAR away fast, or break their line of sight and lay low
     const hh=$('heatHint');
     if(seen){
       G.escapeT=0; G.hiddenT=0;
       hh.textContent='THEY SEE YOU — RUN OR HIDE'; hh.style.color='#ff5a5a'; hh.style.display='block';
-    } else if(nearest>85){
+    } else if(nearest>85*aggro){
       G.hiddenT=0; G.escapeT+=dt;
       hh.textContent='CLEAR — STAY AWAY '+Math.max(0,3.5-G.escapeT).toFixed(1); hh.style.color='#7dff8a'; hh.style.display='block';
       if(G.escapeT>3.5) clearHeat(true);
@@ -5982,6 +5999,7 @@ function downFootCop(fc){
 }
 function damagePlayer(amt){
   if(DEV_STATE.god||G.over) return;
+  amt*=difficulty().dmgMult;
   G.hp-=amt; G.hpT=0;
   shake(clamp(amt*0.03,0.12,0.4));
   if(G.hp<=0){ G.hp=0; wasted(); }
@@ -6241,7 +6259,7 @@ function updateFootCops(dt){
           burst(fc.x+Math.sin(fc.heading)*0.8,1.35,fc.z+Math.cos(fc.heading)*0.8,4,COL_FIRE,1.4,0.12,0);
           if(Math.random()<clamp(1.05-d/32,0.2,0.85)){
             if(G.mode==='car'&&player.car){
-              damageCar(player.car,randi(4,8),'shot');
+              damageCar(player.car,randi(4,8)*difficulty().dmgMult,'shot');
               burst(player.car.x+rand(-1,1),1,player.car.z+rand(-1,1),5,COL_SPARK,2,0.3,4);
             } else if(G.mode==='foot'){
               damagePlayer(randi(5,10));
@@ -6321,7 +6339,7 @@ function updateCops(dt){
       if(dd<2.6&&c.cool<=0){
         c.cool=0.6;
         const rel=Math.abs(player.car.speed)+Math.abs(c.speed)*0.6+4;
-        damageCar(player.car,5+rel*0.22,'ram');
+        damageCar(player.car,(5+rel*0.22)*difficulty().dmgMult,'ram');
         player.car.vel.x+=(player.car.x-c.x)/dd*rel*0.3;
         player.car.vel.z+=(player.car.z-c.z)/dd*rel*0.3;
         sfx.crash(0.3); shake(0.35);
@@ -8085,7 +8103,7 @@ function updateReplay(dt){
 // so each sets its own flag and syncPause() is the only writer of G.paused.
 const SET_KEY='gtb4.settings';
 const SETTINGS=(function(){
-  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true, lookSens:100, invertY:false };
+  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true, lookSens:100, invertY:false, difficulty:'normal' };
   try{ const s=JSON.parse(localStorage.getItem(SET_KEY)); if(s&&s.v===1) Object.assign(d,s); }catch(e){}
   return d;
 })();
@@ -8213,6 +8231,20 @@ applyQuality(qualityMode==='auto'?'high':qualityMode);
   g.querySelectorAll('.qBtn').forEach(b=>{
     b.addEventListener('click',()=>setQualityMode(b.dataset.q));
     b.addEventListener('touchend',e=>{ e.preventDefault(); setQualityMode(b.dataset.q); });
+  });
+})();
+
+function refreshDifficultyButtons(){
+  const g=$('difficultyGroup'); if(!g) return;
+  g.querySelectorAll('.qBtn').forEach(b=>b.classList.toggle('on',b.dataset.d===SETTINGS.difficulty));
+}
+function setDifficulty(mode){ SETTINGS.difficulty=mode; saveSettings(); refreshDifficultyButtons(); }
+(function initDifficultyUI(){
+  const g=$('difficultyGroup'); if(!g) return;
+  refreshDifficultyButtons();
+  g.querySelectorAll('.qBtn').forEach(b=>{
+    b.addEventListener('click',()=>setDifficulty(b.dataset.d));
+    b.addEventListener('touchend',e=>{ e.preventDefault(); setDifficulty(b.dataset.d); });
   });
 })();
 
