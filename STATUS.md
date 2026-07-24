@@ -16,7 +16,7 @@ possible change and add a line here.
 - `js/person.js` — shared rig; additions must stay backward-compatible (limbs are read by several animation paths).
 
 ## Known issues
-- **PII in the docs (AGENTS.md §3):** the owner's first name appears in `HANDOFF.md`, `GAME_PLAN.md`, `ASSETS.md`, `STORY_BIBLE.md`, `CHARACTERS.md` and older `STATUS.md` entries. Flagged, not silently deleted — scrubbing it from the working tree is easy, but it stays in git history unless the owner wants that rewritten. Owner's call. No emails, keys, tokens or phone numbers found anywhere in the repo. — 2026-07-24, Claude
+- ~~PII in the docs~~ **RESOLVED — owner's decision, 2026-07-24:** the owner's first name in `HANDOFF.md`/`GAME_PLAN.md`/`ASSETS.md`/`STORY_BIBLE.md`/`CHARACTERS.md` is fine and does not need scrubbing. Do not re-flag it. The rest of AGENTS.md §3 still applies in full — no surnames, emails, phone numbers, addresses, other-platform usernames, or credentials of any kind. Latest scan found none of those. — 2026-07-24, Claude
 - Duplicate `## 10.` heading in HANDOFF.md ("Suggested Order of Work" and "Changelog — polish pass (Kimi3)"). Still open: renumbering the duplicate cascades through §§11–15 and every cross-reference to them, so it is not the one-line fix it looks like. Cosmetic only — the NEXT-marker workflow is unaffected. Leave it unless the owner asks. — 2026-07-24, Claude
 - Park knolls keep ~0.15u of sag between the drawn lawn and `groundH` (a dome sampled every ~3u). Harmless at that size; only worth revisiting if props on a knoll ever look sunk. — 2026-07-24, Claude
 
