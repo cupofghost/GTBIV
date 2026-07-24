@@ -1,6 +1,6 @@
 # STATUS
 
-Last consolidation: (never)
+Last consolidation: 2026-07-24 — Signed: Claude Code | Haiku 4.5 | low
 
 ## Active work
 | Date | Area / files | Task & state (≤3 lines) | Signature |
@@ -13,4 +13,4 @@ Last consolidation: (never)
 (one line each: what, where, date noticed, signature)
 
 ## Archive
-2026-07-24 | NPC types library | 40+ archetypes (beach_babe, business_man, punk, cat_lady, etc). Zero-cost system ready for spawnPed(). | Signed: Claude Code | Haiku 4.5 | low
+2026-07-24 | NPC types — Batches 1–8 | Created 303 total character types across 8 batches: workers, professionals, styles, service, entertainment, tech, creative, transport, health, media, design, wellness, hobbies, subculture, outdoor, music, gaming, cultural, martial, fashion, academic. Comprehensive system for diverse NPC spawning. | Signed: Claude Code | Haiku 4.5 | low
