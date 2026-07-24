@@ -957,6 +957,49 @@ marker shapes/colours on the minimap. All persisted (F1).
 **Acceptance:** Each toggle has a real, visible effect and persists; reduce-motion
 noticeably calms the camera; HUD text scales without breaking layout.
 
+**Accessibility Options Spec (for A2 implementation):**
+
+Three toggles in Settings panel (F2), each with visual on/off indicator:
+
+| Setting | Type | Effect | Code Hook |
+|---------|------|--------|-----------|
+| **Reduce Motion** | Toggle | Caps camera shake, disables hitstop on impact, disables FOV kick | `SETTINGS.reduceMotion` → respected in `shake()`, J2/J3 code paths |
+| **High Contrast HUD** | Toggle | HUD text +20% size, darker backgrounds, stronger borders; keeps layout stable | `SETTINGS.highContrast` → CSS class on `#hud` + font-size override |
+| **Colorblind Mode** | Dropdown: OFF / Deuteranopia / Protanopia / Tritanopia | Minimap marker colors shift to accessible palettes (per mode); star/heat HUD text bolded | `SETTINGS.colorblindMode` → CSS class on `#minimap` + marker remap |
+
+**Settings Panel Integration:**
+- Add three rows in the existing Settings pane (`#pmSettings` in pause menu)
+- **Reduce Motion**: checkbox toggle (already familiar pattern from F2)
+- **High Contrast**: checkbox toggle
+- **Colorblind**: dropdown (OFF / Deuteranopia / Protanopia / Tritanopia)
+- All stored in `SETTINGS` blob via `saveSettings()` (already in F2)
+
+**Implementation Checklist:**
+
+*Canvas/3D (in `CAMERA`/`loop`):*
+- [ ] `if(SETTINGS.reduceMotion) { shake() returns immediately; hitstop skipped; FOV kick clamped to 0; }`
+- Line references: `shake()` around line 6500, hitstop in `carPhysics` (~5200), FOV kick in `updateCamera` (~6480)
+
+*DOM/CSS (HUD):*
+- [ ] Add `.gtb-high-contrast` class rules for `#money`, `#debt`, `#stars`, `#heatHint`, `#mission`
+  - Font-size: +20% (e.g., `1.2em`)
+  - Background: darker (e.g., `rgba(0,0,0,0.8)`)
+  - Border: thicker (e.g., `2px` solid) and brighter
+- [ ] Add `.gtb-colorblind-deut` / `-prot` / `-trit` classes for minimap marker colors
+
+*Minimap Colors (per mode):*
+- **Normal**: Blue cops, red gang, green mission, yellow Deb, cyan helis
+- **Deuteranopia** (red-green weakness): Blue cops, purple gang, yellow mission, orange Deb, cyan helis
+- **Protanopia** (red-green weakness variant): Blue cops, teal gang, white mission, orange Deb, magenta helis
+- **Tritanopia** (blue-yellow weakness): Red cops, green gang, magenta mission, pink Deb, cyan helis
+
+*Acceptance for A2:*
+- [ ] Toggling reduce-motion visibly stops screen shake + hitstop in gameplay
+- [ ] High-contrast mode renders HUD larger + darker; layout doesn't break at 800×390
+- [ ] Colorblind mode changes minimap markers correctly; all three variants tested
+- [ ] All three settings persist after reload (test with F1 save system)
+- [ ] No console errors; performance unchanged
+
 ---
 
 ### Phase 5 — Robustness & Performance Hygiene

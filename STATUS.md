@@ -12,6 +12,7 @@ Last audit: 2026-07-24 — Signed: Claude Code | claude-haiku-4-5-20251001 | low
 | 2026-07-24 | tests/ | W3: Fast pre-flight implemented. `syntax-check.js` (25ms) + `smoke.test.js` gate before full suite (120s). Catches typos instantly. | Complete |
 | 2026-07-24 | HANDOFF.md | P2: Economy audit complete. Documented all sources ($25–$2000 range), balance assessment, and next-agent test plan. Ready for tuning phase. | Complete |
 | 2026-07-24 | index.html, HANDOFF.md | U2: Onboarding card design. Spec'd first-run controls modal (touch/desktop dual UI). Reachable from pause menu. Marked as OPEN; implementation blocked on F1 (save to track "seen" state). | Complete |
+| 2026-07-24 | HANDOFF.md | A2: Accessibility spec. Documented three toggles (reduce motion, high-contrast HUD, colorblind mode). Settings integration plan + canvas/DOM impact analysis. | Complete |
 
 ## Shared-file touches
 (list file + what changed + signature)
