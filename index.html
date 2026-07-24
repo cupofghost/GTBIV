@@ -877,6 +877,10 @@ const sfx={
   gunshot(){ WEAPON_SFX.pistol.fire(); },
   rocket(){ WEAPON_SFX.rpg.fire(); },
   rpgBoom(){ noiseBurst(0.55,0.55,180,0.7); noiseBurst(0.9,0.3,3200,0.6,'highpass'); blip(130,24,0.7,0.55,'sine'); },
+  // a wrecked car's "the whole thing goes up" boom — grittier and lower than
+  // rpgBoom (sawtooth sub instead of a clean sine) so a totaled ride reads as
+  // mechanical/metal rather than a military warhead
+  carBoom(){ noiseBurst(0.5,0.5,240,0.6); noiseBurst(0.35,0.3,4200,1.8,'highpass'); blip(90,20,0.8,0.5,'sawtooth'); },
 };
 // ================= PROCEDURAL 80s SYNTHWAVE SOUNDTRACK =================
 // Each radio station is a *playlist* of through-composed songs. A song is a
@@ -4737,6 +4741,23 @@ const WEAPON_SFX={
       setTimeout(()=>{ noiseBurst(0.04,0.28,1600,2.2,'bandpass'); },440);
     },
   },
+  // melee has no reload, but shares the same fire()-per-entry shape so
+  // doPunch() can pick a voice with one lookup instead of a special case
+  fists:{
+    fire(){
+      // bare-knuckle thump — soft and fleshy, no metallic edge
+      noiseBurst(0.1,0.4,320,0.7);
+      blip(190,70,0.09,0.22,'sine');
+    },
+  },
+  baton:{
+    fire(){
+      // wood-on-target crack over a heavier body thud than a bare fist
+      noiseBurst(0.04,0.4,2400,2.2,'bandpass');
+      noiseBurst(0.12,0.4,260,0.8);
+      blip(160,50,0.09,0.2,'sine');
+    },
+  },
 };
 // Reload lockout: fire() checks G.reloading before letting the pistol shoot
 // again; the timeout below is the only place that clears it.
@@ -4975,7 +4996,7 @@ function explode(x,y,z){
 const boomFx=[];      // climbing cloud emitters {x,y,z,t}
 let shockwave=null;   // one reusable expanding ring
 function bigExplosion(x,y,z){
-  sfx.bigCrash(); shake(1.2); haptic([60,40,90,40,120]);
+  sfx.carBoom(); shake(1.2); haptic([60,40,90,40,120]);
   spawnFireball(x,y+1,z,8.5);
   burst(x,y,z,70,COL_FIRE,12,1.6,4);
   burst(x,y,z,40,COL_FIRE,6,2.2,1);
@@ -5785,7 +5806,7 @@ function updateCarMode(dt){
 function doPunch(heavy){
   if(!G.started||G.over||G.mode!=='foot'||player.punchT>0) return;
   player.punchT=0.55;
-  sfx.punch();
+  (heavy?WEAPON_SFX.baton:WEAPON_SFX.fists).fire();
   turboSay('punch');
   const p=player;
   const reach=heavy?2.9:2.3;   // the nightstick swings long

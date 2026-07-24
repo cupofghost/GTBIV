@@ -4,8 +4,9 @@
 // to make it trivial to add a future weapon type. These tests don't (can't,
 // headless) assert on actual audio output — they assert on the state machine
 // wired to it: firing spends ammo/rockets, an empty pistol mag auto-reloads
-// and refills, and a live rocket carries a flight-loop handle that gets
-// cleaned up on impact. See tests/README.md's "drive state directly" pattern.
+// and refills, a live rocket carries a flight-loop handle that gets cleaned
+// up on impact, and melee (fists/baton) picks a distinct voice per swing.
+// See tests/README.md's "drive state directly" pattern.
 
 module.exports = {
   cases: [
@@ -73,6 +74,42 @@ module.exports = {
         assert(r.hasHandle, 'expected the rocket to carry a flight-sound handle with update()/stop()');
         assert(r.rocketsLeft === 0, 'expected the rocket to resolve (explode + despawn) after life<=0');
         assert(r.weaponAfter === 'pistol', 'firing the only rocket should fall back to the pistol');
+      },
+    },
+    {
+      name: 'doPunch picks the fists voice unarmed and the baton voice with the nightstick out, both silent-safe',
+      run: async (page, { assert }) => {
+        const r = await page.evaluate(() => {
+          if (!AC) initAudio();
+          G.mode = 'foot'; G.started = true; G.over = false;
+          const calls = { fists: 0, baton: 0 };
+          const origFists = WEAPON_SFX.fists.fire, origBaton = WEAPON_SFX.baton.fire;
+          WEAPON_SFX.fists.fire = () => { calls.fists++; origFists(); };
+          WEAPON_SFX.baton.fire = () => { calls.baton++; origBaton(); };
+          let threw = null;
+          try {
+            player.punchT = 0; doPunch(false);   // bare fists
+            player.punchT = 0; doPunch(true);    // baton swing
+          } catch (e) { threw = e.message; }
+          WEAPON_SFX.fists.fire = origFists; WEAPON_SFX.baton.fire = origBaton;
+          return { threw, calls };
+        });
+        assert(r.threw === null, 'doPunch should never throw, got: ' + r.threw);
+        assert(r.calls.fists === 1, 'expected doPunch(false) to use WEAPON_SFX.fists, got ' + r.calls.fists + ' calls');
+        assert(r.calls.baton === 1, 'expected doPunch(true) to use WEAPON_SFX.baton, got ' + r.calls.baton + ' calls');
+      },
+    },
+    {
+      name: 'a totaled car\'s bigExplosion plays its own carBoom voice without throwing',
+      run: async (page, { assert }) => {
+        const r = await page.evaluate(() => {
+          if (!AC) initAudio();
+          let threw = null;
+          try { bigExplosion(player.x, 1, player.z); } catch (e) { threw = e.message; }
+          return { threw, boomCam: !!G.boomCam };
+        });
+        assert(r.threw === null, 'bigExplosion should never throw, got: ' + r.threw);
+        assert(r.boomCam, 'bigExplosion should still trigger the boom camera beat');
       },
     },
   ],

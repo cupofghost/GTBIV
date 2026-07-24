@@ -6,6 +6,7 @@ Last consolidation: 2026-07-24 — Signed: Claude Code | Sonnet 5 | medium
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
 | 2026-07-24 | WEAPONS / AUDIO (`index.html`: WEAPONS + AUDIO sections) | Weapon sound synthesis system: pistol crack, RPG launch/flight/boom, reload SFX, flexible per-weapon registry. Done — implemented, tested (52/52 headless suite incl. 3 new cases), pushed. | Signed: Claude Code \| Sonnet 5 \| medium |
+| 2026-07-24 | WEAPONS / AUDIO (`index.html`) | Follow-up sound-effects pass (owner asked to keep going until consolidation is warranted): melee (fists/baton) voices in `WEAPON_SFX`, dedicated vehicle-explosion boom (`sfx.carBoom`). Done — tested (54/54 incl. 2 new cases), pushed. | Signed: Claude Code \| Sonnet 5 \| medium |
 
 ## Shared-file touches
 - `HANDOFF.md`: updated the `WEAPONS` code-map table row (§5) and the `G` state snippet (§6.1) to list the new `WEAPON_SFX`/`reloadPistol`/`startMissileFlight`/`pistolAmmo`/`reloading` additions. Smallest-possible factual sync, no content restructuring. — 2026-07-24, Signed: Claude Code | Sonnet 5 | medium
