@@ -7,6 +7,7 @@
 // `filter` is an optional substring match against test filenames.
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const { startServer, resolvePlaywright, launchBrowser, openGamePage, closeGamePage } = require('./helpers');
 
 const ROOT = path.join(__dirname, '..');
@@ -23,6 +24,15 @@ function assertEqual(actual, expected, msg) {
 }
 
 async function main() {
+  // Fast tier: syntax check (catches typos in <100ms)
+  console.log(`${DIM}Fast tier: syntax check…${RESET}`);
+  try {
+    execSync(`node "${path.join(__dirname, 'syntax-check.js')}"`, { stdio: 'inherit' });
+  } catch (e) {
+    // Syntax check failed — exit immediately
+    process.exit(1);
+  }
+
   const filter = process.argv[2];
   const files = fs.readdirSync(CASES_DIR)
     .filter(f => f.endsWith('.test.js'))
