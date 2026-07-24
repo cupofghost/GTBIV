@@ -921,6 +921,238 @@ window.NPC_TYPES = {
     hairColors: [0x8a8a8a, 0xd9d9d9, 0x6b6b6b],
   }),
 
+  // === ACTIVITY-BASED (EXPANDED) ===
+  dog_owner: createNPCType('dog_owner', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.15],
+    hairStyles: ['long', 'short', 'ponytail'],
+  }),
+
+  window_shopper: createNPCType('window_shopper', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+  }),
+
+  food_truck_guy: createNPCType('food_truck_guy', {
+    palette: {
+      shirts: [0xff6b1a, 0xffd23e, 0x8aff6b],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0x1a1a1a, 0x4a4a4a],
+    },
+    buildRange: [0.95, 1.2],
+  }),
+
+  hot_dog_vendor: createNPCType('hot_dog_vendor', {
+    palette: {
+      shirts: [0xff6b1a, 0x8aff6b],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0x1a1a1a],
+    },
+    buildRange: [0.98, 1.18],
+  }),
+
+  newspaper_seller: createNPCType('newspaper_seller', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.12],
+    hairColors: [0x1a1a1a, 0x8a8a8a, 0xd9d9d9],
+  }),
+
+  flower_girl: createNPCType('flower_girl', {
+    genderBias: 'girl',
+    palette: {
+      shirts: [0xff6b9d, 0xd98aff, 0xf0e8d8],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0xf0f0f0, 0x1a1a1a],
+    },
+    buildRange: [0.88, 1.05],
+  }),
+
+  street_photographer: createNPCType('street_photographer', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+    hairStyles: ['long', 'short'],
+  }),
+
+  cyclist: createNPCType('cyclist', {
+    palette: PALETTES.athletic,
+    buildRange: [0.85, 1.08],
+    shorts: true,
+    tank: 0.6,
+  }),
+
+  skateboard_kid: createNPCType('skateboard_kid', {
+    palette: PALETTES.casual,
+    buildRange: [0.85, 1.0],
+    shorts: true,
+    tank: 0.5,
+  }),
+
+  student: createNPCType('student', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.08],
+    shorts: 0.3,
+    tank: 0.2,
+  }),
+
+  // === MOOD / STATE TYPES ===
+  tired_commuter: createNPCType('tired_commuter', {
+    palette: PALETTES.business,
+    buildRange: [0.9, 1.12],
+    hairColors: [0x1a1a1a, 0x8a8a8a],
+  }),
+
+  stressed_professional: createNPCType('stressed_professional', {
+    palette: PALETTES.business,
+    buildRange: [0.9, 1.1],
+    tank: 0,
+  }),
+
+  relaxed_dude: createNPCType('relaxed_dude', {
+    palette: PALETTES.hippie,
+    buildRange: [0.9, 1.15],
+    shorts: 0.5,
+    tank: 0.4,
+  }),
+
+  anxious_person: createNPCType('anxious_person', {
+    palette: PALETTES.casual,
+    buildRange: [0.85, 1.05],
+    hairColors: [0x1a1a1a, 0x8a8a8a],
+  }),
+
+  excited_kid: createNPCType('excited_kid', {
+    palette: PALETTES.casual,
+    buildRange: [0.85, 0.95],
+    shorts: true,
+    tank: 0.5,
+  }),
+
+  // === BODY TYPE VARIANTS ===
+  bodybuilder: createNPCType('bodybuilder', {
+    palette: PALETTES.athletic,
+    buildRange: [1.2, 1.3],
+    shorts: true,
+    tank: 1.0,
+  }),
+
+  lean_runner: createNPCType('lean_runner', {
+    palette: PALETTES.athletic,
+    buildRange: [0.8, 0.92],
+    shorts: true,
+    tank: 0.8,
+  }),
+
+  stocky_build: createNPCType('stocky_build', {
+    palette: PALETTES.casual,
+    buildRange: [1.08, 1.25],
+  }),
+
+  petite: createNPCType('petite', {
+    genderBias: 'girl',
+    palette: PALETTES.casual,
+    buildRange: [0.85, 0.95],
+    hairStyles: ['long', 'ponytail'],
+  }),
+
+  // === REGIONAL / CULTURAL ===
+  hipster_barista: createNPCType('hipster_barista', {
+    palette: PALETTES.hipster,
+    buildRange: [0.88, 1.05],
+    hairStyles: ['short', 'long'],
+    hairColors: [0x1a1a1a, 0x8a6030],
+  }),
+
+  coffee_addict: createNPCType('coffee_addict', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+    hairStyles: ['short', 'long', 'ponytail'],
+  }),
+
+  yoga_instructor: createNPCType('yoga_instructor', {
+    genderBias: 'girl',
+    palette: PALETTES.athletic,
+    buildRange: [0.88, 1.02],
+    shorts: true,
+    tank: 0.8,
+  }),
+
+  wellness_coach: createNPCType('wellness_coach', {
+    palette: PALETTES.upscale,
+    buildRange: [0.95, 1.08],
+    shorts: 0.3,
+    tank: 0.3,
+  }),
+
+  vegan_activist: createNPCType('vegan_activist', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.08],
+    hairColors: [0x1a1a1a, 0x8a6030],
+  }),
+
+  // === RANDOM MEMORABLE TYPES ===
+  person_with_beard: createNPCType('person_with_beard', {
+    genderBias: 'guy',
+    palette: PALETTES.casual,
+    buildRange: [0.95, 1.15],
+    beard: true,
+    hairStyles: ['short', 'buzz'],
+  }),
+
+  hat_person: createNPCType('hat_person', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.15],
+    hairStyles: ['short', 'bald', 'buzz'],
+  }),
+
+  sunglasses_type: createNPCType('sunglasses_type', {
+    palette: PALETTES.upscale,
+    buildRange: [0.95, 1.12],
+    shorts: 0.4,
+  }),
+
+  fashionable_guy: createNPCType('fashionable_guy', {
+    genderBias: 'guy',
+    palette: {
+      shirts: [0xff6b9d, 0xd98aff, 0x6b7c9e],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0xff6b9d, 0xf0f0f0],
+    },
+    buildRange: [0.88, 1.05],
+  }),
+
+  goth_girl: createNPCType('goth_girl', {
+    genderBias: 'girl',
+    palette: PALETTES.dark,
+    hairColors: [0x1a1a1a],
+    hairStyles: ['long', 'short'],
+  }),
+
+  punk_girl: createNPCType('punk_girl', {
+    genderBias: 'girl',
+    palette: PALETTES.dark,
+    hairColors: [0x1a1a1a, 0xff00ff, 0xffff00],
+    hairStyles: ['short', 'buzz'],
+  }),
+
+  beach_boy: createNPCType('beach_boy', {
+    genderBias: 'guy',
+    palette: PALETTES.beach,
+    buildRange: [0.95, 1.15],
+    shorts: true,
+    tank: 0.7,
+    hairStyles: ['long', 'short'],
+    hairColors: [0xd9b44f, 0x8a6030],
+  }),
+
+  outdoorsy_type: createNPCType('outdoorsy_type', {
+    palette: {
+      shirts: [0x6b7c9e, 0x8a6030, 0x4a7c4a],
+      pants: [0x4a4a4a, 0x5a5a5a],
+      shoes: [0x4a4a4a, 0x6b5a4a],
+    },
+    buildRange: [0.95, 1.12],
+  }),
+
   // === MISC ===
   none: createNPCType('none', {
     // Truly random
