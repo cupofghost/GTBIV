@@ -806,6 +806,46 @@ feel big). Don't touch the debt mechanic itself, just the numbers + feedback.
 **Acceptance:** A test playthrough to $800 feels earned (not 2 minutes, not an
 hour). Every income source is reachable and worth doing.
 
+**Economy Audit (for P2 implementation):**
+
+All money sources and current values (as of 2026-07-24):
+
+| Activity | Amount | Notes |
+|----------|--------|-------|
+| **Robbery** | | |
+| — Stickup (pedestrian at gunpoint) | $25–70 | Base income, always available |
+| — Pizza heist (crack safe) | $400–900 | One-time per chapter, high-reward encounter |
+| **Missions** | $120–200+ | Base $120 + distance/3; every 5th mission bonus $500 |
+| **Deliveries** | Variable | Pizza runs (not implemented, placeholder in code) |
+| **Passive** | | |
+| — Heat loss (cool down after escape) | $G.stars×60 | Encourages heat-cooldown play (stars 1–6 = $60–360) |
+| — Helicopter air time | $airT×110 | Bonus for time spent flying (~$110–500+ per flight) |
+| — Chopper shot down | $150 | One-off reward |
+| — Mama rat killed | $150 | One-off reward |
+| **Pickups** | $15–25 | Random money on street (minimal) |
+| **Chapter milestones** | $500 | Every 5 missions |
+| **Debt** | $800 | Target to pay Deb; once paid, game continues |
+
+**Estimated playthrough to $800 (rough math):**
+- 5–6 stickups: $150–420
+- 1 heist: $400–900 (often exceeds target alone)
+- 2–3 missions: $240–600
+- Heat losses + air time: $100–300 (opportunistic)
+- **Total: $800–2100** depending on playstyle
+
+**Current balance assessment:**
+- **Heist can solo-fund the debt**, making stickups/missions optional
+- **Stickup is low-reward but always-available** — should feel like grinding if overly used
+- **Missions are mid-tier but distance-weighted**, encouraging exploration
+- **Heat loss / air time are bonuses** for active play, not required
+
+**Tuning recommendation:**
+- If playthrough feels **too quick** (heist dominates): reduce heist to $200–500 or gate it behind heat/time
+- If playthrough feels **grindy** (too many stickups needed): bump stickup to $50–100 or increase mission rewards
+- If playthrough feels **right**: document the balanced feel and preserve these numbers as canon
+
+**Next agent: Test a fresh playthrough focusing on natural earning pace. Time yourself from boot to $800. Report: fast/moderate/grindy?**
+
 #### P3 — Wanted-system feel + difficulty options `P2 · Risk: Med` `OPEN`
 **Why:** Heat/stars escalation and cop pressure drive the fun; expose it and
 tune it.
