@@ -3,12 +3,15 @@
 These rules apply to every AI agent (Claude, Kimi, Gemini, or other) working in this repo.
 The owner is not a coder. Be efficient, be brief, and never assume another agent's work is broken.
 
+**Reference:** See `COORDINATION.md` for concrete examples of how to claim work, flag conflicts, and run consolidation.
+
 ## 1. Start of every session (do this first, cheaply)
 1. Read this file and `STATUS.md`. Do NOT read the whole repo.
 2. Read only the files relevant to your task.
-3. Claim your work: add one line to the **Active work** table in `STATUS.md`
-   (area, task, agent signature, date). If your area is already claimed by
-   another agent with a recent date, pick a different task or tell the owner.
+3. **Claim your work** in `STATUS.md` **Active work** (see `COORDINATION.md` for format):
+   - Add one line with date, area/files, one-sentence task description, and your signature
+   - If your area is already claimed by another agent with a recent date, pick a different task or tell the owner.
+   - If you're touching a shared file (config, main entry point), also add a line to **Shared-file touches**
 
 ## 2. Work rules
 - Stay inside your claimed area. Do not edit files outside it.
@@ -67,15 +70,19 @@ Say exactly one of:
 - "No consolidation needed yet."
 - "Consolidation recommended: <one-line reason>."
 
-## 8. Consolidation sessions (one focused chat, occasionally)
-When the owner starts a chat with "run consolidation":
+## 8. Consolidation sessions (Haiku runs this, ~10 min every 2 weeks)
+When consolidation is needed (see §7 triggers or owner requests it):
 1. Read `STATUS.md` fully and skim recent commit messages.
-2. Resolve conflicts, merge duplicate work, verify shared files are coherent.
-3. Archive completed entries: move them from **Active work** to the bottom of
+2. Archive completed entries: move them from **Active work** to the bottom of
    `STATUS.md` under **Archive**, keeping only the one-line summary + signature.
-4. Reset the consolidation counter by adding a line: `Last consolidation: <date> — Signed: ...`
-5. Ask the owner before deleting anything or changing behavior of working code.
-6. Also scan for accidentally committed PII or secrets (section 3) and report findings.
+3. Reconcile the board: grep main for shipped features (e.g. grep for `disposeMesh` if R1 claims done);
+   update board status to match.
+4. Check for conflicts: flag overlapping **Active work** or **Shared-file touches** to the owner (don't resolve).
+5. Scan for accidentally committed PII or secrets (section 3) and report findings.
+6. Stamp the consolidation: add a line `Last consolidation: <date> — Signed: Claude Code | Haiku 4.5 | low`
+7. Report in one sentence: "No consolidation needed yet." or "Consolidation recommended: <reason>." or "Consolidation done: <what changed>."
+
+See `COORDINATION.md` for the full checklist.
 
 ## 9. Token-efficiency rules (all agents, always)
 - Short replies to the owner: what you did, what's next, consolidation check. No essays.
