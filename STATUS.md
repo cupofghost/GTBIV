@@ -1,30 +1,35 @@
 # STATUS
 
-Last consolidation: 2026-07-24 — Signed: Claude Code | Opus 4.8 | high
+Last consolidation: 2026-07-24 (third pass — after the terrain fix landed on `main` as #31) — Signed: Claude Code | Claude | high
 
 ## Active work
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-24 | Cinema Mode — `index.html` §REPLAY/CINEMA + `tests/cases/cinema-mode.test.js` | DONE, rebased on `main`. Replay screen grown into a live free-fly director: scene dropdown (intro flythrough, 4 scripted convos, jock fight, blow up a car/cop car, shoot a ped, rat mother, last-30s scrub) + HIDE HUD toggle for clean recording; director is invulnerable while filming. | Signed: Claude Code | Opus 5 | high |
 
 ## Shared-file touches
-- (none open — `index.html` verified coherent at the 2026-07-24 consolidation; full suite green 62/62)
+Standing list of what's hot. If you must edit one of these, make the smallest
+possible change and add a line here.
+- `index.html` — the whole game. Hot spots, in order of how often they conflict: the AUDIO section (the `let AC=null,…` declaration line and the `exitCarSoft()` reset block each grow a variable every time someone adds a sound layer), `updateFoot`, and the terrain/ground block (`groundH`, `terrainLines`/`terrainGeo`) — terrain is settled as of #31, so read `TERRAIN.md` before reopening it.
+- `index.html`'s `// CODE MAP` comment block — its line ranges go stale the moment anyone inserts code. It is mechanical to regenerate from the section banners; don't hand-edit the numbers.
+- `HANDOFF.md` — §5 code map and §8 backlog get edited by most sessions; edit the row, not the structure.
+- `TERRAIN.md` — the terrain contract. Read the Tier 1 revision note before touching `groundH`.
+- `js/person.js` — shared rig; additions must stay backward-compatible (limbs are read by several animation paths).
 
 ## Known issues
-- Duplicate `## 10.` heading in HANDOFF.md: "10. Suggested Order of Work" (line ~1202) and "10. Changelog — polish pass (Kimi3, 2026-07-22)" (line ~1256) share a number — pre-existing, predates this consolidation (confirmed present as of commit `9f4e220`). Cosmetic only (doesn't break the NEXT-marker workflow), left unrenumbered pending Austin's OK to touch another agent's changelog section. — 2026-07-24, Sonnet 5
+- ~~PII in the docs~~ **RESOLVED — owner's decision, 2026-07-24:** the owner's first name in `HANDOFF.md`/`GAME_PLAN.md`/`ASSETS.md`/`STORY_BIBLE.md`/`CHARACTERS.md` is fine and does not need scrubbing. Do not re-flag it. The rest of AGENTS.md §3 still applies in full — no surnames, emails, phone numbers, addresses, other-platform usernames, or credentials of any kind. Latest scan found none of those. — 2026-07-24, Claude
+- Duplicate `## 10.` heading in HANDOFF.md ("Suggested Order of Work" and "Changelog — polish pass (Kimi3)"). Still open: renumbering the duplicate cascades through §§11–15 and every cross-reference to them, so it is not the one-line fix it looks like. Cosmetic only — the NEXT-marker workflow is unaffected. Leave it unless the owner asks. — 2026-07-24, Claude
+- Park knolls keep ~0.15u of sag between the drawn lawn and `groundH` (a dome sampled every ~3u). Harmless at that size; only worth revisiting if props on a knoll ever look sunk. — 2026-07-24, Claude
 
 ## Archive
-- 2026-07-24 | Cinema mode / `index.html` + `tests/cases/cinema-mode.test.js` | Replay screen grown into Cinema Mode: live free-fly director over the running world + scene dropdown (Intro flythrough, 4 scripted convos, Jock Fight, Blow Up a Car / Cop Car, Shoot a Pedestrian, Rat Mother, old Replay-last-30s scrub) + HIDE HUD toggle (SHOW BAR pill) for clean recording; director invulnerable while filming. 6 new tests, full suite green 62/62. | Signed: Claude Code | Opus 4.8 | high
-- 2026-07-24 | Terrain TERRAIN.md Tier 0+1 / `index.html` + terrain/new-features tests | Re-seated ~25 `y=0` statics onto `groundH`; replaced continuous relief with a terraced block/road lattice (flat plateaus, streets grade only along travel <0.01u sideways tilt, flat intersections); curb retaining walls + climbable stair/ramp meshes for gaps >1.5u. | Signed: Claude Code | Claude | high
-- 2026-07-24 | Audio engine synth / `index.html` | Multi-layer per-car engine synth (sub-rumble + mechanical grit + turbo whine/blow-off) alongside the tone osc; grit/misfire scale with damage, turbo spools with revs/boost and dumps on lift; all 9 car types re-tuned. | Signed: Claude Code | Sonnet 5 | high
-- 2026-07-24 | Turbo stair-climb anim / `index.html` (updateFoot), `js/person.js` | Fixed airborne test (now vs ground) so elevated stairs/roofs no longer force the jump pose; added high-knee stepping cycle. | Signed: Claude Code | Opus 4.8 | medium
-- 2026-07-24 | Wall-ladder climbing / `index.html` | Bolt-on steel ladders up 12 buildings; walk into the base to grab, W/S climb, top out on the roof, jump to bail; hand-over-hand anim (reuses knee pivots); placement validates a clear climb corridor across all 4 walls. | Signed: Claude Code | Opus 4.8 | medium
-- 2026-07-24 | NPC types — Batches 1–8 | Created 303 character types across 8 batches (workers, professionals, styles, service, entertainment, tech, creative, transport, health, media, design, wellness, hobbies, subculture, outdoor, music, gaming, cultural, martial, fashion, academic). | Signed: Claude Code | Haiku 4.5 | low
-- W1 (Claude Haiku 4.5, 2026-07-24): Reconciled HANDOFF.md backlog against actual code — 14 cards marked DONE, 15 marked OPEN, §10 order list corrected.
-- W2 (Claude Haiku 4.5, 2026-07-24): Added 53-section code map to index.html for fast navigation.
-- W5 (Claude Haiku 4.5, 2026-07-24): Added `NEXT: P2` marker at top of HANDOFF.md §10.
-- W3 (Claude Haiku 4.5, 2026-07-24): Added fast pre-flight test tier — `tests/syntax-check.js` (~25ms) + `tests/cases/smoke.test.js`, wired into `tests/run.js` ahead of the full suite.
-- P2 (Claude Haiku 4.5, 2026-07-24): Economy audit in HANDOFF.md — documented all money sources/sinks and playthrough-to-$800 estimate; tuning itself not yet done.
-- U2 (Claude Haiku 4.5, 2026-07-24): Onboarding controls-card UI/UX spec written in HANDOFF.md; not yet implemented.
-- A2 (Claude Haiku 4.5, 2026-07-24): Accessibility options spec (reduce motion, high-contrast HUD, colorblind modes) written in HANDOFF.md; not yet implemented.
-- J4 partial (Claude Haiku 4.5, 2026-07-24): Brake-vs-reverse UI clarity spec written in HANDOFF.md (dead-zone half was already done pre-session); not yet implemented.
-- 2026-07-24 | City beautification / index.html (~line 3708-3910) | 3D curb strips, curbside planters, storefront awnings, sidewalk street trees, café tables+umbrellas, banner flags on streetlight poles — all density-graded, cosmetic, seated via groundH, no collision. | Signed: Claude Code | Sonnet 5 | high
+- Cinema Mode (Opus 4.8, high, 2026-07-24): the REPLAY screen expanded into a director interface — live free-fly camera over the running world, staged scenes, HIDE HUD for recording, old buffer scrub kept as one scene option. `tests/cases/cinema-mode.test.js` added.
+- Player-facing polish (Sonnet 5, medium, 2026-07-24): U1 story-objective HUD (find Deb / pay the debt, live distance) + Deb minimap marker and blip legend; P1 three new mission types (courier/takedown/getaway) gated by a `missionsDone` tier; J4 BRAKE/REVERSE relabel; J3 look-sensitivity slider + invert-Y and a faster low-speed car camera; P3 Easy/Normal/Hard scaling cop pressure, detection range and damage taken. See HANDOFF.md §§16–19.
+- Terrain (Claude, high, 2026-07-24): hills + graded streets, landed over three passes. Final state — `groundH` is a continuous lattice: streets run level across their width and grade only along travel, each block is the bilinear patch joining its four kerb lines, signature hills sit inside a 12° grade budget. Ground and beach meshes are built on the road lattice so the drawn surface matches the field; every static reads its Y from `groundH`. Terraced pads, retaining walls and seam stairs were tried and removed — see the revision note in `TERRAIN.md`. Merged to `main` as #31; suite 99/99 green on the merge.
+- Audio — weapons (Sonnet 5, medium, 2026-07-24): `WEAPON_SFX` registry — pistol crack, RPG launch/flight/boom, reload, melee (fists/baton) voices, dedicated `sfx.carBoom`.
+- Audio — creatures (Sonnet 5, medium, 2026-07-24): Mama Rat screech/bite/death and stray-dog growl/bite cues, replacing reused `sfx.punch()`/`sfx.bigCrash()`.
+- Audio — vehicles (Sonnet 5, high, 2026-07-24): multi-layer engine synth (sub/grit/turbo per car type, scaling with damage and boost) and a noise-fed helicopter rotor chop.
+- Animation (Opus 4.8, medium, 2026-07-24): Turbo's stair-climb stride (airborne test now measured against the floor under his feet, not y=0), plus wall-ladder climbing up 12 buildings with a validated climb corridor.
+- City beautification (Sonnet 5, high, 2026-07-24): 3D kerb strips, planters, awnings, street trees, café tables, pole banners — density-graded, cosmetic, seated via `groundH`.
+- NPC types (Haiku 4.5, low, 2026-07-24): 303 character archetypes across 8 batches for diverse NPC spawning.
+- Docs & tooling (Haiku 4.5, 2026-07-24): backlog reconciled against real code (W1), `NEXT: P2` marker (W5), fast pre-flight test tier — `tests/syntax-check.js` + `smoke.test.js` (W3), plus specs written but not implemented: economy audit (P2), onboarding controls card (U2), accessibility options (A2), brake-vs-reverse clarity (J4).
+- Navigation (Claude, high, 2026-07-24): `index.html`'s `// CODE MAP` recomputed from the real banners (was ~58 lines adrift, missing 3 sections) and HANDOFF.md §5 re-synced to every banner in file order.

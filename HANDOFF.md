@@ -195,22 +195,35 @@ Sections, in file order, with what lives in each:
 
 | Banner / area | What's in it |
 | --- | --- |
-| top of `<script>` | **Helpers & global state** — `rand/randi/pick/clamp/lerp/angDiff`, `TAU`, `$`, and the two master state objects **`G`** and **`WORLD`** (see §6.1) |
-| `AUDIO` | `initAudio` (+ `buildMusicRack`/`makeIR` FX rack), engine synth, `sfx` object, synthwave soundtrack (`SW_SONGS`, `STATIONS`, `scheduleMusic`/`stepSong`, `sw*` instruments), dash gauge drawing |
+| top of `<script>` | **Helpers & global state** — `rand/randi/pick/clamp/lerp/angDiff`, `TAU`, `$`, and the two master state objects **`G`** and **`WORLD`** (see §6.1). A `// CODE MAP` comment block right below lists every banner with its current line range |
+| `DEVICE / ORIENTATION` | `IS_TOUCH`, self-rotating portrait phones (`ROTATED`, `vw`/`vh`, `remapXY`) |
+| `AUDIO` | `initAudio` (+ `buildMusicRack`/`makeIR` FX rack), engine synth layers, heli rotor chop, `sfx` object, `WEAPON_SFX` voices |
+| `PROCEDURAL 80s SYNTHWAVE SOUNDTRACK` | `SW_SONGS`, `STATIONS`, `scheduleMusic`/`stepSong`, `sw*` instruments, hot-loop swap under heat |
 | `THREE SETUP` | `scene`, `camera`, `renderer`, sky/sun textures, lights |
-| `CITY` | Procedural block/building/road generation, `intersections`, water, ramps, street furniture, collision helpers (`buildingHit`, `rampHit`, `resolveFootCollision`) |
+| `CITY` | Procedural block/building/road generation, `intersections`, **terrain** (`VERT_H`, `groundH`, `terrainLines`/`terrainGeo` ground + beach meshes — see `TERRAIN.md`), water, ramps, street furniture, collision helpers (`buildingHit`, `rampHit`, `resolveFootCollision`) |
+| `FOOTBALL FIELD` | Wildcats turf, goalposts, bleachers, scoreboard |
+| `ELEVATED LIGHT RAIL` | `RAILPATH`, stations, variable-length pillars, the animated train |
+| `STAIRS & FIRE ESCAPES` | `STAIR_RUNS`, `stairHitRun`/`stairH` — climbable runs the feet follow |
+| `WALL LADDERS` | `LADDERS`, `ladderGrab`, `mountLadder`, `updateClimb` |
 | `PARTICLES` | Fixed-size pool (`P_MAX=360`, `parts[]`), `spawnP`, `burst`, `updateParticles`, colour constants |
 | `BLOB SHADOWS` | `makeShadow` |
+| `GPU RESOURCE CLEANUP` | `disposeMesh`, `_sharedGPU` (shared geometry/materials that must never be disposed) |
 | `CARS` | `CARTYPES`, `makeCarMesh`, `makeCar`, traffic spawn |
-| `PEDESTRIANS` | `makePerson` (rigged limbs), dogs, `spawnPed`, chatter |
+| `PEDESTRIANS` | `makePerson` (rigged limbs, see `js/person.js` + `js/npc-types.js`), `spawnPed`, chatter |
 | `PIZZA DELIVERY SYSTEM` | Jackable pizza cars, `activeDelivery`, delivery loop |
-| `RIVAL PIZZA GANG` | `chaosDrivers`, `gangMembers`, turf on minimap |
+| `RIVAL PIZZA GANG: CHAOS PIZZA` | `chaosDrivers`, `gangMembers`, turf on minimap |
+| `FOOTBALL RIVALS: CHAOS HIGH JOCKS` | `JOCK_TAUNTS`, `spawnJock`, jock AI |
+| `STRAY DOGS & DOG GANGS` | Dogs, packs, `angry` state + growl/bite cues, meat drops |
 | `PIZZA WARS MISSION` | Scripted gang-war mission (`startPizzaWars`) |
-| heist funcs | `spawnGuards`, `updateGuards`, `updateSafeCrack`, `checkHeistTriggers`, `updateHeistHUD` |
-| pickups | `pickups`, `pickupDefs`, `scatterPickups`, `collectPickups` |
-| `HELICOPTERS` | Player heli + `spawnCopHeli`/`updateCopHeli` |
+| `PLAYER` | The `player` object and its initial state |
+| `PIZZA PLACE & INTERIOR` | Pizza-place exterior/interior, robbery, enter/exit, heist funcs (`spawnGuards`, `updateGuards`, `updateSafeCrack`, `checkHeistTriggers`) |
+| `SIDEWALKS & STOREFRONT AWNINGS` | 3D kerb strips, sidewalk slabs, awnings |
+| `MORE CITY BEAUTIFICATION` | Street trees, planters, cafe tables, pole banners |
+| `DAY/NIGHT & HEIST SYSTEM` | `toggleNight`, night sky, heist triggers |
+| `PICKUPS` | `pickups`, `pickupDefs`, `spawnPickup`, `scatterPickups`, `collectPickups`, `updatePickupVisuals` |
+| `HELICOPTERS` | Player heli + `spawnCopHeli`/`updateCopHeli`, pilotless helis |
 | `TALKING PEDS` | Speech bubbles, `wahVoice`, `doTalk` |
-| `WEAPONS` | `cycleWeapon`, `doAttack`, rockets, `explode`, `damageArea` |
+| `WEAPONS` | `cycleWeapon`, `doAttack`, rockets, `explode`, `damageArea`, `WEAPON_SFX` (per-weapon fire/reload synth registry), `reloadPistol`, `startMissileFlight` (spatialized flight-loop sound) |
 | input | `joyStart/Move/End`, `doJump`, `applyLook`, `pollKeys` |
 | `WANTED` | `addHeat`, `clearHeat`, `spawnCop`, `updateWanted` |
 | `CAR PHYSICS` | `carPhysics`, `damageCar` |
@@ -218,6 +231,9 @@ Sections, in file order, with what lives in each:
 | `HUD / TOASTS` | `toast`, `addMoney`, `updateStarsHUD`, `setMissionHUD`, `cycleRadio` |
 | `MISSIONS` | `startMission` (5 random types), `updateMission`, complete/fail, beacon |
 | `AI` | `updateTraffic`, `updateCops`, `updatePeds`, pickup visuals |
+| `FOOT COPS` | `spawnFootCop`, foot-cop AI, baton/pistol drops |
+| `SEWER RATS` | `RAT_POOL`, `spawnRats`, `updateRats`, manholes |
+| `MAMA RAT (rat vengeance)` | `spawnMamaRat`, `updateMamaRat`, her screech/bite/death voices |
 | `BUSTED / WASTED` | `bigEvent`, `respawn`, `busted`, `wasted` |
 | `CAMERA` | `updateCamera`, `cameraCollide`, `shake` |
 | `MINIMAP` | `drawMinimap` |
@@ -226,7 +242,11 @@ Sections, in file order, with what lives in each:
 | `ANIMATED INTRO` | Fly-through intro camera |
 | `STORY: TURBO JONES, CHAPTER 1` | `spawnDeb`, `updateStory`, the $800 debt, story cards, store robberies |
 | `CUTSCENE SYSTEM` | `CUTSCENES`, `playCutscene`, dialogue box |
-| `VOICEOVER SYSTEM` | `speak`, recorded VO (`loadVOFiles`, `playVOFile`), trailer/turbo lines |
+| `VOICEOVER SYSTEM` / `INTRO NARRATION` | `speak`, recorded VO (`loadVOFiles`, `playVOFile`), trailer/turbo lines |
+| `DEV TOOLS` | `?dev=1` panel, cheats, god mode, teleports |
+| `REPLAY SYSTEM` | `enterReplay`, `updateReplay`, free-fly camera, ring buffer |
+| `PAUSE MENU & SETTINGS` | Pause menu, volume/quality sliders |
+| `SAVE SYSTEM` | `queueSave`, `restoreSave`, the localStorage blob |
 | `START / RESIZE` | Boot, resize, event wiring |
 
 ---
@@ -239,7 +259,8 @@ Two global objects hold nearly all mutable state:
 ```js
 const G = { mode:'foot'|'car'|'heli', money, heat, stars, carHP, boost,
             escapeT, bustT, missionsDone, over, started, paused,
-            station, weapon:'fists'|'pistol'|'rpg', rockets };
+            station, weapon:'fists'|'pistol'|'rpg', rockets,
+            pistolAmmo, reloading };  // pistol magazine (12) + auto-reload lockout, see WEAPONS
 const WORLD = { blocks:10, block:50, road:16, pitch, half, size };
 ```
 
@@ -750,10 +771,20 @@ disables both.
 fast; gentle bumps do almost nothing. No input lag introduced. Reduce-motion off
 switch works.
 
-#### J3 — Camera polish (foot + car) `P2 · Risk: Med` `OPEN`
+#### J3 — Camera polish (foot + car) `P2 · Risk: Med` `PARTIAL`
+**Status:** sensitivity/invert-Y and the low-speed car-cam follow-rate
+shipped — see `§18`. The foot-camera-while-strafing smoothing bullet is
+feel-tuning that needs an actual playtest to judge (this suite explicitly
+can't — see `tests/README.md`); reviewed the existing `moveMag>0.12` +
+`lookHoldT` gating and it already reads as reasonable on inspection, so left
+untouched rather than guess at a change with no way to verify it helped.
+Revisit with a real device/playtest pass if it still reads as whippy.
+(A concurrent reconciliation pass on `main` had marked this `OPEN` — it
+predates §18 landing; `PARTIAL` is correct post-merge.)
 **Why:** The camera is already thoughtful (collision pull-in, look-hold, speed
 FOV). Small tuning + options make it feel pro.
-**Where:** `CAMERA` (`updateCamera`, `cameraCollide`).
+**Where:** `CAMERA` (`updateCamera`, `cameraCollide`), `applyLook`, Settings
+(F2) panel.
 **Approach:** Add a **look-sensitivity** slider and **invert-Y** toggle (Settings,
 F2), applied in `applyLook`. Smooth the foot camera when strafing; make sure the
 car camera doesn't feel sluggish at low speed. Don't regress the wall pull-in.
@@ -761,20 +792,22 @@ car camera doesn't feel sluggish at low speed. Don't regress the wall pull-in.
 clips into buildings; low-speed driving feels responsive; no motion sickness
 spikes from over-fast lerps.
 
-#### J4 — Control feel: joystick dead-zone + reverse/brake clarity `P2 · Risk: Med` `PARTIAL`
-**Status: dead-zone done**, reverse/brake clarity still open. `joyMove` now has
-a 10px radial dead zone with a linear rescale back to full magnitude at the
-55px max travel (no dead jump right past the threshold) — standing still no
-longer drifts from thumb jitter, full-tilt still hits `|input.jx,jy|`=1.
-Brake-vs-reverse legibility is untouched.
+#### J4 — Control feel: joystick dead-zone + reverse/brake clarity `P2 · Risk: Med` `DONE`
+**Status: done.** Dead-zone shipped earlier (see above); brake-vs-reverse
+legibility shipped in `§17`. `joyMove` has a 10px radial dead zone with a
+linear rescale back to full magnitude at the 55px max travel (no dead jump
+right past the threshold) — standing still no longer drifts from thumb
+jitter, full-tilt still hits `|input.jx,jy|`=1. The touch `#btnBrake` pedal
+now relabels to **REVERSE** (with a distinct amber tint) once `player.car.
+speed<-0.15` — i.e. once `carPhysics`'s existing brake-then-reverse behavior
+has actually kicked into reverse — and the analog dash appends **· REV** to
+the car-type readout at the same threshold, so desktop (which hides the touch
+pedals) gets the same cue on the always-visible gauge cluster.
 **Why:** Touch stick and the brake/reverse pedal are the highest-touch surfaces;
 small tuning pays off constantly.
 **Where:** `joyStart/Move/End`, `pollKeys`, `carPhysics` throttle handling,
-pedals DOM.
-**Remaining:** Make brake-vs-reverse legible (the physics already
-brakes-then-reverses; ensure the pedal/HUD communicates it). Keep desktop
-WASD identical in feel (already true for the dead-zone change — `pollKeys`
-sets `input.jx/jy` directly, bypassing `joyMove`).
+`updateCarMode` (new `btnBrakeReversing` edge-detect), pedals DOM, the
+`drawDash` call site in the main loop.
 
 **Brake vs. Reverse Clarity Spec (for J4 reverse/brake part):**
 
@@ -818,10 +851,14 @@ sets `input.jx/jy` directly, bypassing `joyMove`).
 
 ### Phase 3 — Progression & Balance
 
-#### P1 — Mission variety & light progression `P1 · Risk: Med`
+#### P1 — Mission variety & light progression `P1 · Risk: Med` `DONE`
+**Status: done** — see `§17`. Three new types (`courier`, `takedown`,
+`getaway`) join the original five, gated behind `missionTier()` (reads
+`missionsDone`, already persisted by `F1`) instead of a new save field.
 **Why:** Five random side-missions repeat forever with only "don't repeat the
 last one" logic — it goes stale fast.
-**Where:** `MISSIONS` (`startMission`, `updateMission`, complete/fail).
+**Where:** `MISSIONS` (`startMission`, `updateMission`, complete/fail), plus
+`busted()`'s heat-driven-mission-fail branch.
 **Approach:** Add **2–4 new mission types** in the existing data-driven style
 (e.g. *getaway/escape*, *survive the ambush*, *chase-down*, *courier under
 fire*). Weight selection by what the player is near / can do, and scale reward
@@ -884,11 +921,16 @@ All money sources and current values (as of 2026-07-24):
 
 **Next agent: Test a fresh playthrough focusing on natural earning pace. Time yourself from boot to $800. Report: fast/moderate/grindy?**
 
-#### P3 — Wanted-system feel + difficulty options `P2 · Risk: Med` `OPEN`
+#### P3 — Wanted-system feel + difficulty options `P2 · Risk: Med` `DONE`
+**Status: done** — see `§19`. The escalation curve, HUD hints ("THEY SEE
+YOU"/"CLEAR"/"HIDDEN"), and star thresholds already read clearly pre-existing
+this card, so the actual gap was the missing **Difficulty** setting; that's
+what shipped. (A concurrent reconciliation pass on `main` had marked this
+`OPEN` — it predates §19 landing.)
 **Why:** Heat/stars escalation and cop pressure drive the fun; expose it and
 tune it.
-**Where:** `WANTED` (`addHeat`, `clearHeat`, `updateWanted`, `spawnCop`),
-`updateCops`.
+**Where:** `WANTED` (`addHeat`, `clearHeat`, `updateWanted`, `spawnCop`,
+`wantedCount`), `updateCops`, `updateFootCops`, `damagePlayer`, Settings (F2).
 **Approach:** Tune escalation/cool-down curves so chases build and resolve
 readably. Add a **Difficulty** setting (Easy/Normal/Hard) in Settings (F2) that
 scales cop aggression/spawn rate + damage taken. Persist it (F1). Make the star
@@ -901,7 +943,7 @@ spawning that tanks fps (respect F3 caps).
 
 ### Phase 4 — Polish, UX & Accessibility
 
-#### U1 — Objective clarity & HUD readability `P1 · Risk: Low`
+#### U1 — Objective clarity & HUD readability `P1 · Risk: Low` `PARTIAL`
 **Why:** New/returning players don't always know what to do or where to go.
 **Where:** `HUD / TOASTS`, `MINIMAP`, `updateStory`/`updateMission` HUD strings,
 `setBeacon`.
@@ -913,6 +955,11 @@ screens.
 **Acceptance:** At any moment it's obvious what to do next and which way to go;
 minimap blips are self-explanatory; HUD is legible at phone size in bright and
 dark scenes.
+**Status:** the story-objective half shipped — see §16. Remaining: the debt/
+money/stars boxes were reviewed against the acceptance bar and already read
+clearly at phone size (dark chip background + text-shadow, existing shrink
+breakpoint), so no change was made there; revisit only if a real-device test
+says otherwise.
 
 #### U2 — Onboarding / How-to-Play `P2 · Risk: Low` `OPEN`
 **Why:** Controls are only a one-line hint; a short first-run guide lowers the
@@ -1328,16 +1375,20 @@ matters more there than for the single mama rat).
 room to make her a proper set-piece encounter instead of a slow blob that
 either bites you or doesn't.
 **Ideas, unscoped, pick up only after RV1/RV2 are solid:** building/prop
-avoidance so she can't be trivially juked through a wall; a growl/screech
+avoidance so she can't be trivially juked through a wall; ~~a growl/screech
 `sfx` cue and dedicated voice/bark line instead of reused `sfx.punch()`/
-`sfx.bigCrash()`; car interaction (run her over, or she flips/damages a car
-that gets too close); heat/wanted interaction (does summoning her raise
-`G.heat`, the way shooting a ped already does via `addHeat(18)` in the
-`'ped'` branch — right now `'rat'` doesn't call `addHeat` at all beyond the
-flat `addHeat(4)` every pistol shot already applies); a cap or cooldown if
-repeat testing shows player-summoned mama rats becoming a farmable money
-loop (`$150` "RAT SLAYER" payout on kill has no gate today). Ask Austin
-before committing to any of these — they're ideas, not approved scope.
+`sfx.bigCrash()`~~ **DONE (Claude Code, Sonnet 5, 2026-07-24)** — `sfx.ratScreech`
+(emergence), `sfx.ratBite` (contact), `sfx.ratDeath` (kill), owner live-approved
+during a weapon-sound-synthesis session; still no dedicated *voice/bark line*
+(that's the VOICEOVER SYSTEM, separate scope); car interaction (run her over,
+or she flips/damages a car that gets too close); heat/wanted interaction (does
+summoning her raise `G.heat`, the way shooting a ped already does via
+`addHeat(18)` in the `'ped'` branch — right now `'rat'` doesn't call `addHeat`
+at all beyond the flat `addHeat(4)` every pistol shot already applies); a cap
+or cooldown if repeat testing shows player-summoned mama rats becoming a
+farmable money loop (`$150` "RAT SLAYER" payout on kill has no gate today).
+Ask Austin before committing to any of the remaining ideas — they're still
+unapproved scope.
 
 ---
 
@@ -1388,18 +1439,18 @@ throughout:
 ✔ F3  Adaptive quality           DONE
 ✔ F4  Audio mix + ducking        DONE
 ✔ J1  Haptics & impact feedback  DONE
-✔ U1  Objective clarity/HUD      DONE
-✔ P1  Mission variety (base)     DONE
+✔ U1  Objective clarity/HUD      DONE (story-goal half; see §16)
+✔ P1  Mission variety            DONE (courier/takedown/getaway + base; see §17)
+✔ J4  Control feel               DONE (dead-zone + brake/reverse clarity; see §17)
+✔ J3  Camera options             DONE (sens/invert/low-speed follow; see §18)
+✔ P3  Wanted + difficulty        DONE (Easy/Normal/Hard; see §19)
 ✔ FB1 Jock NPCs                  DONE
 ✔ FB2 Football field             DONE
 ✔ RV1 Mama rat mechanics         DONE (placeholder)
+P2  Economy tuning              ← NEXT (audit already written below; tuning itself not yet done)
 —  D5  Time controls             OPEN (dev tool)
 —  D7  Deterministic seed        OPEN (dev tool)
 —  J2  Hitstop + shake           OPEN
-—  J3  Camera options            OPEN
-—  J4  Brake/reverse clarity     OPEN (dead-zone done)
-—  P3  Wanted + difficulty       OPEN
-—  P2  Economy tuning            OPEN
 —  U2  Onboarding                OPEN
 —  U3  Death/respawn flow        OPEN
 —  R2  Pooling traffic/peds      OPEN
@@ -1697,3 +1748,211 @@ No code changed; suite untouched (still green as of the last code commit).
 
 Next: agents doing PR work should merge their own PRs going forward instead
 of leaving them open for Austin.
+
+---
+
+## 16. Changelog — U1 first slice: story-objective HUD + minimap legend (Claude, 2026-07-24)
+
+Picked up **U1** (`§8`), the top of the main-track order in `§10`. Until now
+"what do I do next" only existed for timed random missions (`setMissionHUD`
++ the 3D beacon) — the Chapter-1 story goal (find Deb, then pay off the $800)
+had a one-time toast and an in-world pink beacon pillar, but nothing
+persistent on the HUD and no minimap presence at all.
+
+- **`updateStoryObjHUD()`** (new, next to `setMissionHUD`): a small HUD line
+  (`#storyObj`, styled identically to `#mission` via a shared CSS rule) that
+  shows `FIND DEB — Nm` before `G.story.metDeb`, then `PAY OFF DEBT — $N ·
+  Nm` while the debt is outstanding, live distance recomputed every frame.
+  It yields to `#mission` whenever a random mission is active (checked first,
+  same HUD slot) so the two objective sources never fight for the screen, and
+  hides once `G.story.paidOff`. Called from `updateStory(dt)`, which already
+  runs every frame.
+- **Deb is now a minimap blip** (`drawMinimap()`): a pink dot at her position
+  whenever she exists and isn't in her post-payoff `leaving` walk-off, using
+  the same rotating player-centric map (and therefore the same "which way to
+  turn" read) missions already got from the gold beacon dot.
+- **Minimap legend** (`#minimapLegend`, new element under the minimap): four
+  lines — COPS (red), MISSION (gold), TURF (purple), DEB (pink) — the exact
+  set the `U1` card asked for. Non-interactive (`pointer-events` inherited as
+  `none` from `#hud`, matching the minimap itself), sized down at the
+  existing `max-height:430px` shrink breakpoint alongside the minimap so it
+  doesn't creep into the button/pedal area on short landscape screens.
+
+Verified in a live headless smoke pass at an 800×390 landscape viewport (both
+the pre-meet and debt-owed states) — legend and objective line render clearly
+with no overlap of the minimap, mission box, or touch controls. New
+`tests/cases/hud-objective.test.js` (5 cases) covers the HUD text/visibility
+state machine and a minimap-draw smoke check with Deb present.
+
+Full suite: `cd tests && node run.js` — **53/53 green** (up from 48; 5 new
+cases), zero console errors.
+
+Signed: Claude Code | Sonnet 5 | medium
+
+---
+
+## 17. Changelog — P1 mission variety + J4 brake/reverse clarity (Claude, 2026-07-24)
+
+Continuing down `§10`'s suggested order: **P1** (mission variety) and the
+remaining half of **J4** (control feel).
+
+**P1 — three new mission types + soft progression.** The five-type pool
+(`delivery/style/checkpoints/rampage/heat`) went stale after a few loops —
+"don't repeat the last type" was the only variety mechanism. Added:
+
+- **`courier`** — a `delivery` variant where Chaos Pizza has already tipped
+  off the cops: picking up the package sets `G.heat=Math.max(G.heat,40)`
+  (same `addHeat(0)`-to-recompute-stars pattern the existing `heat` type
+  uses), so the drop-off leg plays out under real cop pressure. Pays ~80%
+  more than a plain delivery for the added risk.
+- **`takedown`** — flags a live civilian `traffic[]` car (never the player's)
+  and reuses the existing mission `beacon` to *follow* it every frame
+  (`setBeacon(mission.car.x, mission.car.z)` inside `updateMission`), so it's
+  trackable on the minimap even while it's still driving around. Wins the
+  instant `mission.car.dead` flips — already true whether the player shoots
+  it (`damageCar` via the pistol branch in `doAttack`), ends it with an RPG,
+  or it simply wrecks itself into a tree (civilian traffic already takes
+  crash damage the same way cop cars do). No new AI or damage system needed.
+- **`getaway`** — like `heat` but with an actual destination: forces
+  `G.heat=Math.max(G.heat,70)` and gives the player a beacon to reach within
+  a timer. Rewards a time-remaining bonus on top of the base $320, so a fast
+  runner cashes in more than someone who barely makes it.
+- **Soft progression:** `missionTier()` (`0/1/2`, stepping every 5
+  `missionsDone`) gates the pool — `courier`/`takedown` unlock at tier 1,
+  `getaway` at tier 2 — and `completeMission()` now applies a `+15%`-per-tier
+  reward multiplier across **every** mission type, so the original five keep
+  paying better too as the session goes on. No new save field: `missionsDone`
+  already persists via `F1`, so unlocks and the pay bump survive a reload for
+  free.
+- `busted()` already force-failed an in-progress `heat` mission (elevated
+  wanted level makes no sense to keep chasing post-respawn); extended that
+  same guard to `courier` and `getaway` since they force heat too.
+
+**J4 remainder — brake-vs-reverse legibility.** `carPhysics` already brakes
+then reverses on one held input; nothing told the player which phase they
+were in. Two additive, read-only-of-state cues, no physics touched:
+
+- `updateCarMode` edge-detects `player.car.speed<-0.15` and relabels the
+  touch `#btnBrake` pedal from **BRAKE** to **REVERSE**, toggling a new
+  `.reversing` class (amber tint, `#ffd23e` border) so it reads as a
+  distinct state at a glance, not just a text swap.
+- The main-loop `drawDash(...)` call site appends **`· REV`** to the
+  car-type name at the same threshold — this lands on the always-visible
+  analog gauge cluster (`#speedo`, not gated by `html.is-desktop`), so
+  desktop/keyboard players — who never see the touch pedals — get the same
+  cue.
+
+New `tests/cases/mission-variety.test.js` (10 cases: tier-gating in both
+directions, the tiered reward multiplier, each new type's win/fail path, and
+the `busted()` guard — courier and getaway get their own fresh-page cases
+since `respawn()` latches `G.over=true` for its 1.8s teleport delay, so two
+synchronous `busted()` calls in one page would have the second no-op on that
+guard) and `tests/cases/control-feel.test.js` (2 cases: pedal relabel/class
+toggle, dash label appends/drops `REV`).
+
+Full suite: `cd tests && node run.js` — **65/65 green** (up from 53; 12 new
+cases), zero console errors.
+
+Signed: Claude Code | Sonnet 5 | medium
+
+---
+
+## 18. Changelog — J3 camera polish: sensitivity, invert-Y, low-speed follow (Claude, 2026-07-24)
+
+Picked up **J3** next per `§10`. Landed the concrete, verifiable half of the
+card; deferred the one feel-tuning bullet (see the card's new `PARTIAL`
+status note above) rather than guess at a change this suite can't judge.
+
+- **Look-sensitivity slider + invert-Y toggle** (Settings → F2, new
+  `#volLookSens` range input and `#invertYGroup` on/off pair, styled
+  identically to the existing volume sliders and the `VIBRATE` toggle).
+  Both persist in the same `SETTINGS` blob (`gtb4.settings`) — `lookSens`
+  defaults to `100` (%), `invertY` to `false`. Applied at the single choke
+  point every look input already funnels through, `applyLook(dx,dy)`: yaw
+  and pitch deltas are scaled by `SETTINGS.lookSens/100`, and pitch is
+  negated when `invertY` is on. Touch drag, mouse drag, and replay-camera
+  scrubbing all call `applyLook`, so this covers every input path without
+  touching the touch/mouse listeners themselves.
+  - Generalized the settings-panel `slider(id,key)` helper to take an
+    optional `onInput` callback (defaults to the existing `applyVolumes`,
+    so the four volume sliders are untouched) since a look-sensitivity
+    change has nothing to "apply" beyond the `SETTINGS` write `applyLook`
+    already reads live.
+- **Low-speed car-camera follow rate.** The chase-cam's ease-back-out lerp
+  used a fixed `5/s` rate regardless of speed; pulling out from a stop (or a
+  tight three-point turn) meant the camera visibly lagged the car's new
+  heading for a beat. It now ramps up to `8/s` as speed drops to zero
+  (`followRate=5+3*(1-clamp(|speed|/8,0,1))`) and eases back to the original
+  `5/s` above ~8 u/s, so normal-speed driving feels identical. The instant
+  "never clip into a wall" snap branch (`cameraCollide` pulling the camera in
+  when a building gets between it and the car) is untouched — this only
+  changes the ease-back-out rate.
+- Foot-camera-while-strafing smoothing and "no motion sickness spikes" are
+  feel-tuning with no automated way to verify improvement (`tests/README.md`
+  is explicit that this suite tests state/logic, not feel) — reviewed the
+  existing `moveMag>0.12`/`lookHoldT` gate in `updateCamera`'s foot branch,
+  didn't find a concrete issue on inspection, left it as-is rather than churn
+  numbers with no way to confirm they helped. Flagged on the card for a real
+  playtest pass.
+
+New `tests/cases/camera-polish.test.js` (5 cases): default settings values,
+`applyLook` scaling proportionally with `lookSens`, `invertY` flipping pitch
+sign, both settings surviving a reload, and the low-speed-vs-speed car-camera
+follow-rate comparison (same synthetic offset, same `dt`, asserts the
+low-speed case closes more distance in one frame).
+
+Full suite: `cd tests && node run.js` — **70/70 green** (up from 65; 5 new
+cases), zero console errors.
+
+Signed: Claude Code | Sonnet 5 | medium
+
+---
+
+## 19. Changelog — P3 difficulty options (Easy/Normal/Hard) (Claude, 2026-07-24)
+
+Next per `§10`. The wanted system's escalation curve and HUD hints already
+read clearly (star thresholds, "THEY SEE YOU"/"CLEAR — STAY AWAY"/"HIDDEN —
+LAY LOW" with live countdowns) — nothing there needed retuning. The actual
+gap was the card's other ask: a difficulty setting that actually changes
+something. Added:
+
+- **`DIFFICULTY_TIERS`** (`easy`/`normal`/`hard`, next to `spawnCop`): three
+  multipliers — `spawnMult` (cop pressure), `aggroMult` (detection/escape
+  range), `dmgMult` (damage taken) — read through a `difficulty()` helper
+  keyed off `SETTINGS.difficulty` (new, defaults `'normal'`, persisted in the
+  existing `SETTINGS` blob).
+- **`wantedCount()`** now scales `(1+G.stars)` by `spawnMult`, **capped at 8**
+  regardless of difficulty — "harder" means denser pressure per star, not an
+  unbounded swarm; respects the same don't-tank-fps intent as `F3`'s
+  traffic/ped caps without needing a new cap system.
+- **`updateWanted()`**'s three detection ranges (car cop `70`, foot cop `50`,
+  cop heli `130`) and the "CLEAR" escape distance (`85`) all scale by
+  `aggroMult` — hard spots the player from farther away *and* makes losing
+  the heat require getting farther away, easy does the opposite.
+- **Damage taken** scales by `dmgMult` at every cop-inflicted damage site:
+  `damagePlayer()` (the shared choke point for footcop gunfire/baton hits —
+  also happens to cover mama-rat bites, a reasonable read of a general
+  "damage taken" difficulty lever) plus the two `damageCar(player.car,...)`
+  sites for cop gunfire and cop-car ramming.
+- New Settings (F2) row: `#difficultyGroup`, a 3-button toggle following the
+  exact `qualityGroup`/`vibrateGroup` pattern (`refreshDifficultyButtons` +
+  `setDifficulty` + a standalone `initDifficultyUI()` IIFE).
+- Widened `.pmRow label` from `58px`→`80px` while adding J3's rows last
+  session — the two-word "LOOK SENS." label was still wrapping to two lines
+  at 70px; 80px was needed to fit it on one, verified with a live phone-
+  viewport screenshot (800×390, scrolled to the bottom of the now-8-row
+  panel — it's `overflow:auto` per the existing `.pmPanel` rule, so the
+  extra row doesn't overlap anything, just adds one more scroll step).
+
+New `tests/cases/wanted-difficulty.test.js` (7 cases): default value, spawn-
+count scaling in both directions, the 8-cap holding at 5 stars on hard,
+zero-stars staying zero regardless of difficulty, damage scaling in both
+directions, hard spotting the player from a distance normal can't (with
+`losClear` stubbed so the assertion tests the range math, not whether the
+test's chosen coordinates happen to clear a procedurally-placed building),
+and persistence across reload.
+
+Full suite: `cd tests && node run.js` — **77/77 green** (up from 70; 7 new
+cases), zero console errors.
+
+Signed: Claude Code | Sonnet 5 | medium

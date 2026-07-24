@@ -40,12 +40,17 @@
   #hpfill { height:100%; width:100%; background:#7dff8a; }
   #boostbar { width:130px; height:6px; background:rgba(0,0,0,.55); border:1px solid #fff2; border-radius:4px; margin-top:2px; overflow:hidden; }
   #boostfill { height:100%; width:100%; background:#37c8ff; }
-  #mission { top:calc(46px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
+  #mission, #storyObj { top:calc(46px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
     max-width:min(calc(var(--lvw)*0.86),560px); text-align:center; font-size:14px; line-height:1.35;
     background:rgba(6,2,16,.85); border:1px solid #ff3ea088; border-radius:10px; padding:7px 14px; color:#fff; }
-  #mission b { color:#ff9ecb; }
+  #mission b, #storyObj b { color:#ff9ecb; }
   #minimap { position:absolute; top:calc(44px + env(safe-area-inset-top)); right:12px;
     width:118px; height:118px; border-radius:50%; border:2px solid rgba(255,255,255,.35); background:#111; opacity:.92; }
+  #minimapLegend { position:absolute; top:calc(44px + 118px + 6px + env(safe-area-inset-top)); right:12px;
+    width:118px; font-size:8px; line-height:1.6; color:#fff; text-shadow:0 1px 2px #000;
+    background:rgba(6,2,16,.68); border:1px solid rgba(255,255,255,.2); border-radius:8px;
+    padding:3px 6px; opacity:.92; }
+  #minimapLegend span { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:4px; }
   #toasts { position:absolute; bottom:34%; left:50%; transform:translateX(-50%);
     display:flex; flex-direction:column; align-items:center; gap:5px; }
   .toast { font-size:17px; color:#fff; text-shadow:0 2px 3px #000, 0 0 8px #000;
@@ -69,6 +74,7 @@
   .pedal2 { width:72px; height:52px; font-size:11px; }
   #btnGas { height:96px; background:rgba(20,90,40,.55); border-color:#7dff8a88; font-size:15px; }
   #btnBrake { height:168px; background:rgba(110,20,20,.55); border-color:#ff6b6b88; }
+  #btnBrake.reversing { background:rgba(120,90,10,.55); border-color:#ffd23e; }
   #btnBoost { background:rgba(20,60,110,.55); border-color:#37c8ff88; }
   #btnDrift { background:rgba(90,40,110,.55); border-color:#b04dff88; }
   #btnHorn { position:absolute; bottom:calc(168px + env(safe-area-inset-bottom)); left:50px;
@@ -198,6 +204,8 @@
     #joy { width:106px !important; height:106px !important; }
     #joyKnob { width:44px !important; height:44px !important; }
     #minimap { width:92px !important; height:92px !important; }
+    #minimapLegend { width:92px !important; top:calc(44px + 92px + 4px + env(safe-area-inset-top)) !important;
+      font-size:7px !important; line-height:1.4 !important; padding:2px 5px !important; }
     #speedo { top:calc(84px + env(safe-area-inset-top)) !important; font-size:11px; transform:scale(0.62); transform-origin:top left; }
     #btnHorn { bottom:calc(146px + env(safe-area-inset-bottom)); left:40px; width:62px; height:44px; }
     .hudBox { font-size:12px; padding:4px 8px; }
@@ -292,7 +300,7 @@
   #pmResume { background:rgba(20,90,40,.85); border-color:#7dff8a; }
   #pmRestart { background:rgba(110,20,20,.85); border-color:#ff6b6b; }
   .pmRow { display:flex; align-items:center; gap:10px; margin:14px 0; text-align:left; }
-  .pmRow label { color:#9be7ff; font-size:11px; font-family:Arial,sans-serif; letter-spacing:1px; width:58px; flex:none; }
+  .pmRow label { color:#9be7ff; font-size:11px; font-family:Arial,sans-serif; letter-spacing:1px; width:80px; flex:none; }
   .pmRow input[type=range] { flex:1; accent-color:#ff3ea0; min-height:26px; }
   .pmRow .pmVal { color:#ffd23e; font-size:11px; font-family:monospace; width:36px; text-align:right; flex:none; }
   .qGroup { flex:1; display:flex; gap:6px; }
@@ -432,7 +440,14 @@
   <div id="heatHint"></div>
   <div id="footHp"><div id="footHpFill"></div></div>
   <div id="mission" class="hudBox" style="display:none"></div>
+  <div id="storyObj" class="hudBox" style="display:none"></div>
   <canvas id="minimap" width="236" height="236"></canvas>
+  <div id="minimapLegend">
+    <div><span style="background:#ff4444"></span>COPS</div>
+    <div><span style="background:#ffd23e"></span>MISSION</div>
+    <div><span style="background:#b04dff"></span>TURF</div>
+    <div><span style="background:#ff3ea0"></span>DEB</div>
+  </div>
   <div id="speedo" class="hudBox" style="display:none">
     <canvas id="gauge" width="150" height="104"></canvas>
     <div id="dashName">SEDAN</div>
@@ -567,6 +582,16 @@
       <button class="qBtn" data-v="on">ON</button>
       <button class="qBtn" data-v="off">OFF</button>
     </div></div>
+    <div class="pmRow"><label for="volLookSens">LOOK SENS.</label><input type="range" id="volLookSens" min="50" max="200" step="10"><span class="pmVal" id="volLookSensVal"></span></div>
+    <div class="pmRow"><label>INVERT Y</label><div class="qGroup" id="invertYGroup">
+      <button class="qBtn" data-v="on">ON</button>
+      <button class="qBtn" data-v="off">OFF</button>
+    </div></div>
+    <div class="pmRow"><label>DIFFICULTY</label><div class="qGroup" id="difficultyGroup">
+      <button class="qBtn" data-d="easy">EASY</button>
+      <button class="qBtn" data-d="normal">NORMAL</button>
+      <button class="qBtn" data-d="hard">HARD</button>
+    </div></div>
     <button class="pmBtn" id="pmSetBack">BACK</button>
   </div>
   <div class="pmPanel" id="pmHow" style="display:none">
@@ -644,56 +669,60 @@ let TRAFFIC_CAP=16, PED_CAP=34, PARTICLE_SCALE=1, GFX_TIER='high';
 // CODE MAP — Search by section name to navigate quickly.
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
-// HELPERS & GLOBAL STATE        (588–605, ~18 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION          (606–655, ~50 lines: IS_TOUCH, updateOrientationMode, vw, vh, remapXY, ROTATED)
-// AUDIO                         (656–818, ~163 lines: initAudio, AC, masterGain, engine synth, sfx)
-// PROCEDURAL 80s SYNTHWAVE      (819–1321, ~503 lines: SW_SONGS, STATIONS, scheduleMusic, stepSong, synth fx)
-// THREE SETUP                   (1322–1372, ~51 lines: scene, camera, renderer, sky/sun, lights)
-// CITY                          (1373–1983, ~611 lines: procCity, blockInfo, roads, buildings, textures)
-// FOOTBALL FIELD                (1984–2034, ~51 lines: FOOTBALL landmark, turf, goalposts, bleachers)
-// ELEVATED LIGHT RAIL           (2035–2158, ~124 lines: TRAIN, stations, rail track, animated loop)
-// STAIRS & FIRE ESCAPES         (2159–2383, ~225 lines: STAIR_RUNS, terrain knolls, hideouts)
-// PARTICLES                     (2384–2438, ~55 lines: burst, P_MAX, particle pool)
-// BLOB SHADOWS                  (2439–2443, ~5 lines: makeShadow)
-// GPU RESOURCE CLEANUP          (2444–2465, ~22 lines: disposeMesh, _sharedGPU)
-// CARS                          (2466–2658, ~193 lines: makeCar, CAR_SPECS, carModel, physics setup)
-// PEDESTRIANS                   (2659–2775, ~117 lines: makePerson, spawnPed, updatePeds)
-// PIZZA DELIVERY SYSTEM         (2776–2928, ~153 lines: pizza delivery missions, stages, reward)
-// RIVAL PIZZA GANG: CHAOS PIZZA (2932–3057, ~126 lines: CHAOS gang members, spawnGangMembers, taunts)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS (3059–3220, ~162 lines: JOCK_TAUNTS, spawnJocks, jock AI)
-// STRAY DOGS & DOG GANGS        (3223–3444, ~222 lines: dogs, dog gangs, pack behavior, meat drops)
-// PIZZA WARS MISSION            (3448–3520, ~73 lines: heist system, stages, guards, pizza exterior)
-// PLAYER                        (3523–3547, ~25 lines: player object creation, initial state)
-// PIZZA PLACE & INTERIOR        (3548–3798, ~251 lines: pizza interior geometry, robbery, NPC setup)
-// DAY/NIGHT & HEIST SYSTEM      (3802–3990, ~189 lines: toggleNight, night sky, heist triggers)
-// PICKUPS                       (3993–4031, ~39 lines: money pickups, spawn/despawn)
-// HELICOPTERS                   (4032–4492, ~461 lines: makeHeli, heli physics, pilot AI, rotor anim)
-// TALKING PEDS                  (4493–4581, ~89 lines: showBubble, wahVoice, NPC speech bubbles)
-// WEAPONS                       (4582–5032, ~451 lines: doAttack, pistol/RPG logic, collision, damage)
-// WANTED                        (5033–5126, ~94 lines: addHeat, clearHeat, star system, heat decay)
-// CAR PHYSICS                   (5127–5310, ~184 lines: carPhysics, collision, acceleration, damage)
-// PLAYER: FOOT & CAR            (5311–5688, ~378 lines: footCamDistance, input, kick mode, car entry/exit)
-// HUD / TOASTS                  (5689–5719, ~31 lines: toast, HUD updates, on-screen feedback)
-// MISSIONS                      (5720–5825, ~106 lines: startMission, updateMission, missions, reward)
-// AI                            (5826–5850, ~25 lines: cop/ped goal/walk logic)
-// FOOT COPS                     (5851–5893, ~43 lines: spawnCop, updateCops, cop AI, roaming)
-// SEWER RATS                    (5894–6010, ~117 lines: RAT_POOL, makeRatMesh, spawnRats, updateRats)
-// MAMA RAT (rat vengeance)      (6011–6381, ~371 lines: spawnMamaRat, updateMamaRat, bite logic, mama model)
-// BUSTED / WASTED               (6382–6455, ~74 lines: busted, wasted, respawn logic, state reset)
-// CAMERA                        (6456–6542, ~87 lines: updateCamera, shake, collision pull-in, look math)
-// MINIMAP                       (6543–6589, ~47 lines: drawMinimap, blips, legend, position tracking)
-// MAIN LOOP                     (6590–6750, ~161 lines: loop, substep simulation, entity updates, frame pacing)
-// ORIENTATION (pause on rotate) (6751–6808, ~58 lines: orientationchange, portrait warning overlay)
-// ANIMATED INTRO                (6809–6878, ~70 lines: intro cinematic, title screen animation)
-// STORY: TURBO JONES, CHAPTER 1 (6879–7141, ~263 lines: story flags, Deb intro, debt system, mission gates)
-// CUTSCENE SYSTEM               (7142–7383, ~242 lines: playCutscene, cutscene definitions, actor positioning)
-// VOICEOVER SYSTEM              (7387–7771, ~385 lines: playVOFile, playVOLine, TTS, voiceover queue)
-// INTRO NARRATION               (7469–7771, ~303 lines: intro voiceover, narrative setup)
-// DEV TOOLS                     (7774–7849, ~76 lines: devPanel, cheats, god mode, teleports, ?dev=1 gate)
-// REPLAY SYSTEM                 (7852–7973, ~122 lines: enterReplay, updateReplay, free-fly camera, buffer)
-// PAUSE MENU & SETTINGS         (7974–8141, ~168 lines: pauseMenu, Settings panel, volume/quality sliders)
-// SAVE SYSTEM                   (8142–8191, ~50 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                (8192–end, ~200 lines: boot, init, resize handlers, quality apply)
+// HELPERS & GLOBAL STATE                          (617–631, ~15 lines: rand, randi, pick, clamp, lerp, TAU, $)
+// DEVICE / ORIENTATION                            (728–778, ~51 lines: IS_TOUCH, updateOrientationMode, vw, vh, remapXY, ROTATED)
+// AUDIO                                           (779–1002, ~224 lines: initAudio, AC, masterGain, engine synth, sfx)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK             (1003–1505, ~503 lines: SW_SONGS, STATIONS, scheduleMusic, stepSong, synth fx)
+// THREE SETUP                                     (1506–1556, ~51 lines: scene, camera, renderer, sky/sun, lights)
+// CITY                                            (1557–2288, ~732 lines: procCity, blockInfo, roads, buildings, textures)
+// FOOTBALL FIELD                                  (2289–2339, ~51 lines: FOOTBALL landmark, turf, goalposts, bleachers)
+// ELEVATED LIGHT RAIL                             (2340–2464, ~125 lines: TRAIN, stations, rail track, animated loop)
+// STAIRS & FIRE ESCAPES                           (2465–2539, ~75 lines: STAIR_RUNS, terrain knolls, hideouts)
+// WALL LADDERS                                    (2540–2794, ~255 lines: LADDERS, ladderGrab, mountLadder, updateClimb, ramps/addRamp)
+// PARTICLES                                       (2795–2849, ~55 lines: burst, P_MAX, particle pool)
+// BLOB SHADOWS                                    (2850–2854, ~5 lines: makeShadow)
+// GPU RESOURCE CLEANUP                            (2855–2876, ~22 lines: disposeMesh, _sharedGPU)
+// CARS                                            (2877–3071, ~195 lines: makeCar, CAR_SPECS, carModel, physics setup)
+// PEDESTRIANS                                     (3072–3188, ~117 lines: makePerson, spawnPed, updatePeds)
+// PIZZA DELIVERY SYSTEM                           (3189–3344, ~156 lines: pizza delivery missions, stages, reward)
+// RIVAL PIZZA GANG: CHAOS PIZZA                   (3345–3472, ~128 lines: chaosDrivers, makeChaosCar, spawnChaosDrivers, updateChaosDrivers, gangMembers)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS               (3473–3636, ~164 lines: JOCK_TAUNTS, jocks, addLettermanJacket, JOCK_TEAMS, spawnJock)
+// STRAY DOGS & DOG GANGS                          (3637–3864, ~228 lines: dogs, dog gangs, pack behavior, meat drops)
+// PIZZA WARS MISSION                              (3865–3939, ~75 lines: heist system, stages, guards, pizza exterior)
+// PLAYER                                          (3940–3965, ~26 lines: player object creation, initial state)
+// PIZZA PLACE & INTERIOR                          (3966–4126, ~161 lines: pizza interior geometry, robbery, NPC setup)
+// SIDEWALKS & STOREFRONT AWNINGS                  (4127–4235, ~109 lines: 3D kerb strips, sidewalk slabs, awnings, storefront dressing)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS (4236–4435, ~200 lines: street trees, planters, cafe tables, pole banners (+ pizza enter/exit tail))
+// DAY/NIGHT & HEIST SYSTEM                        (4436–4626, ~191 lines: toggleNight, night sky, heist triggers)
+// PICKUPS                                         (4627–4669, ~43 lines: money pickups, spawn/despawn)
+// HELICOPTERS                                     (4670–5141, ~472 lines: makeHeli, heli physics, pilot AI, rotor anim)
+// TALKING PEDS                                    (5142–5230, ~89 lines: showBubble, wahVoice, NPC speech bubbles)
+// WEAPONS                                         (5231–5800, ~570 lines: doAttack, pistol/RPG logic, collision, damage)
+// WANTED                                          (5801–5906, ~106 lines: addHeat, clearHeat, star system, heat decay)
+// CAR PHYSICS                                     (5907–6096, ~190 lines: carPhysics, collision, acceleration, damage)
+// PLAYER: FOOT & CAR                              (6097–6589, ~493 lines: footCamDistance, input, kick mode, car entry/exit, updateFoot)
+// HUD / TOASTS                                    (6590–6630, ~41 lines: toast, HUD updates, on-screen feedback)
+// MISSIONS                                        (6631–6797, ~167 lines: startMission, updateMission, missions, reward)
+// AI                                              (6798–6822, ~25 lines: cop/ped goal/walk logic)
+// FOOT COPS                                       (6823–6866, ~44 lines: spawnCop, updateCops, cop AI, roaming)
+// SEWER RATS                                      (6867–6983, ~117 lines: RAT_POOL, makeRatMesh, spawnRats, updateRats)
+// MAMA RAT (rat vengeance) — PLACEHOLDER          (6984–7354, ~371 lines: spawnMamaRat, updateMamaRat, bite logic, mama model)
+// BUSTED / WASTED                                 (7355–7433, ~79 lines: busted, wasted, respawn logic, state reset)
+// CAMERA                                          (7434–7525, ~92 lines: updateCamera, shake, collision pull-in, look math)
+// MINIMAP                                         (7526–7573, ~48 lines: drawMinimap, blips, legend, position tracking)
+// MAIN LOOP                                       (7574–7739, ~166 lines: loop, substep simulation, entity updates, frame pacing)
+// ORIENTATION                                     (7740–7797, ~58 lines: checkOrientation, fitScreen, toggleFullscreen)
+// ANIMATED INTRO                                  (7798–7867, ~70 lines: intro cinematic, title screen animation)
+// STORY: TURBO JONES, CHAPTER 1                   (7868–8131, ~264 lines: story flags, Deb intro, debt system, mission gates)
+// CUTSCENE SYSTEM                                 (8132–8376, ~245 lines: playCutscene, cutscene definitions, actor positioning)
+// VOICEOVER SYSTEM                                (8377–8458, ~82 lines: playVOFile, playVOLine, TTS, voiceover queue)
+// INTRO NARRATION                                 (8459–8763, ~305 lines: intro voiceover, narrative setup)
+// DEV TOOLS                                       (8764–8841, ~78 lines: devPanel, cheats, god mode, teleports, ?dev=1 gate)
+// CINEMA MODE (was REPLAY)                        (8842–8973, ~132 lines: enterReplay/enterCinema, updateCinemaCam, free-fly camera, buffer scrub, HIDE HUD)
+// CINEMA: SCENES & STAGING                        (8974–9165, ~192 lines: cinemaIntro, cinemaCutscene, stageJockFight, stageCarBoom, stageShootPed, stageRatMother)
+// PAUSE MENU & SETTINGS                           (9166–9363, ~198 lines: pauseMenu, Settings panel, volume/quality sliders)
+// SAVE SYSTEM                                     (9364–9413, ~50 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                  (9414–end, ~41 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -728,10 +757,11 @@ function remapXY(clientX,clientY){
 }
 updateOrientationMode(); // set before THREE/HUD sizing below reads vw()/vh()
 
+const PISTOL_MAG=12;  // rounds per magazine; shared with WEAPON_SFX.pistol (see WEAPONS)
 const G={ mode:'foot', money:0, heat:0, stars:0, carHP:100, boost:100,
   escapeT:0, bustT:0, hiddenT:0, hp:100, hpT:0, hasBaton:false, missionsDone:0, over:false, started:false, paused:false,
   menuPaused:false, meat:0,
-  station:0, weapon:'fists', rockets:0 };
+  station:0, weapon:'fists', rockets:0, pistolAmmo:PISTOL_MAG, reloading:false };
 const WORLD={ blocks:10, block:50, road:16 };
 const _PARAMS=new URLSearchParams(location.search);
 const DEV=_PARAMS.get('dev')==='1';
@@ -748,6 +778,7 @@ WORLD.size=WORLD.half*2+40;
 
 // ================= AUDIO =================
 let AC=null, masterGain, sfxGain, voiceGain, engineOsc, engineGain, engineLP, skidGain,
+    heliChopFilt, heliChopGain, heliChopDepth, heliChopLFO,
     engineSubOsc, engineSubGain, engineGritFilter, engineGritGain, turboOsc, turboFilter, turboGain,
     sirenOsc, sirenGain, musicGain, musicStep=0, nextNoteTime=0;
 // --- synthwave FX rack + soundtrack playhead (built lazily in initAudio) ---
@@ -793,6 +824,20 @@ function initAudio(){
   const skF=AC.createBiquadFilter(); skF.type='bandpass'; skF.frequency.value=900; skF.Q.value=1.2;
   skidGain=AC.createGain(); skidGain.gain.value=0;
   skid.connect(skF); skF.connect(skidGain); skidGain.connect(sfxGain); skid.start();
+  // Heli rotor chop: engineOsc/engineGain above give the heli its steady
+  // turbine drone (reused from the car engine, untouched); this is a second,
+  // independent layer — filtered broadband noise (reuses the skid buffer)
+  // amplitude-modulated by heliChopLFO — for the "whup-whup" blade-pass
+  // character a bare tone can't give. Silent (gain 0) outside heli mode;
+  // updateHeliMode drives its rate/depth every frame off rotor spin + speed.
+  const heliChopSrc=AC.createBufferSource(); heliChopSrc.buffer=nb; heliChopSrc.loop=true;
+  heliChopFilt=AC.createBiquadFilter(); heliChopFilt.type='bandpass'; heliChopFilt.frequency.value=280; heliChopFilt.Q.value=0.9;
+  heliChopGain=AC.createGain(); heliChopGain.gain.value=0;      // per-frame baseline (see updateHeliMode)
+  heliChopDepth=AC.createGain(); heliChopDepth.gain.value=0;    // scales the LFO's -1..1 swing to match
+  heliChopLFO=AC.createOscillator(); heliChopLFO.type='sine'; heliChopLFO.frequency.value=8;
+  heliChopSrc.connect(heliChopFilt); heliChopFilt.connect(heliChopGain); heliChopGain.connect(sfxGain);
+  heliChopLFO.connect(heliChopDepth); heliChopDepth.connect(heliChopGain.gain);
+  heliChopSrc.start(); heliChopLFO.start();
   sirenOsc=AC.createOscillator(); sirenOsc.type='triangle'; sirenOsc.frequency.value=700;
   sirenGain=AC.createGain(); sirenGain.gain.value=0;
   sirenOsc.connect(sirenGain); sirenGain.connect(sfxGain); sirenOsc.start();
@@ -902,13 +947,13 @@ function blip(f0,f1,dur,vol,type){
   g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
   o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime+dur+0.02);
 }
-function noiseBurst(dur,vol,freq,q){
+function noiseBurst(dur,vol,freq,q,type){
   if(!AC) return;
   freq=freq||800; q=q||0.6;
   const len=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
   for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
   const s=AC.createBufferSource(); s.buffer=b;
-  const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=freq; f.Q.value=q;
+  const f=AC.createBiquadFilter(); f.type=type||'lowpass'; f.frequency.value=freq; f.Q.value=q;
   const g=AC.createGain(); g.gain.value=vol;
   s.connect(f); f.connect(g); g.connect(sfxGain); s.start();
 }
@@ -933,8 +978,27 @@ const sfx={
   busted(){ blip(400,100,1.0,0.28,'sawtooth'); },
   repair(){ blip(300,900,0.25,0.18,'triangle'); },
   jump(){ blip(200,600,0.3,0.2,'sine'); },
-  gunshot(){ noiseBurst(0.08,0.45,2200); blip(900,200,0.08,0.25); },
-  rocket(){ noiseBurst(0.4,0.35,600); blip(300,900,0.35,0.18,'sawtooth'); },
+  // actual synthesis for these two lives in WEAPON_SFX (WEAPONS section) so
+  // every weapon's voice — and its reload — sits in one flexible registry;
+  // these stay here only because footcop AI and doAttack already call them.
+  gunshot(){ WEAPON_SFX.pistol.fire(); },
+  rocket(){ WEAPON_SFX.rpg.fire(); },
+  rpgBoom(){ noiseBurst(0.55,0.55,180,0.7); noiseBurst(0.9,0.3,3200,0.6,'highpass'); blip(130,24,0.7,0.55,'sine'); },
+  // a wrecked car's "the whole thing goes up" boom — grittier and lower than
+  // rpgBoom (sawtooth sub instead of a clean sine) so a totaled ride reads as
+  // mechanical/metal rather than a military warhead
+  carBoom(){ noiseBurst(0.5,0.5,240,0.6); noiseBurst(0.35,0.3,4200,1.8,'highpass'); blip(90,20,0.8,0.5,'sawtooth'); },
+  // Mama Rat's voice (HANDOFF.md RV3): a guttural rumble under a rising
+  // screech for her sewer emergence, a snarling bite distinct from a human
+  // punch, and a falling death shriek — she used to borrow bigCrash/punch.
+  ratScreech(){ noiseBurst(0.6,0.45,500,0.8); blip(250,1600,0.4,0.3,'sawtooth'); noiseBurst(0.3,0.25,2600,1.5,'highpass'); },
+  ratBite(){ noiseBurst(0.09,0.4,700,1.1,'bandpass'); blip(220,80,0.12,0.22,'sawtooth'); },
+  ratDeath(){ blip(1400,120,0.5,0.3,'sawtooth'); noiseBurst(0.4,0.25,600,0.7); },
+  // stray-dog pack voice: a rumble when a pack turns hostile (antagonizeDogs),
+  // a sharper snap on contact — bigger/lower than ratBite so a dog reads as
+  // a bigger animal than a sewer rat
+  dogGrowl(){ noiseBurst(0.22,0.3,380,1.4,'bandpass'); blip(180,90,0.16,0.16,'sawtooth'); },
+  dogBite(){ noiseBurst(0.07,0.35,450,1.3,'bandpass'); blip(140,60,0.1,0.22,'sawtooth'); },
 };
 // ================= PROCEDURAL 80s SYNTHWAVE SOUNDTRACK =================
 // Each radio station is a *playlist* of through-composed songs. A song is a
@@ -1520,15 +1584,17 @@ const helipads=[];
   const fb=parks.find(b=>!b.helipad&&!b.football);
   if(fb) fb.football=true;
 })();
-// ---- terrain: terraced blocks + graded streets, signature hills, knolls in the
-// parks, dunes on the beach ring ----
+// ---- terrain: graded streets, signature hills, knolls in the parks, dunes on
+// the beach ring ----
 // see TERRAIN.md — groundH stays a single-valued height field; every
 // world-placed object reads its Y from it. Real streets don't bank sideways,
-// so this is a lattice, not a raw noise sample: each block is a flat plateau,
-// each road segment grades LINEARLY between the two intersections it connects
-// (constant across the road's width — only the direction of travel slopes),
-// and intersections are shared flat plateaus so adjacent roads always agree.
-// Retaining walls (below) dress the seam where a flat block meets a graded street.
+// so this is a lattice, not a raw noise sample: heights live on the road
+// intersections, a road segment grades LINEARLY between the two intersections
+// it connects (constant across the road's width — only the direction of travel
+// slopes), and intersections are shared plateaus so adjacent roads agree.
+// The block between four streets is the bilinear patch joining its four kerb
+// lines, so the field is CONTINUOUS everywhere: you walk up a grade onto the
+// sidewalk instead of hitting an invisible ledge and popping up to street level.
 const KNOLLS=[];
 blockInfo.forEach(b=>{
   if(b.type==='park'&&!b.helipad&&!b.football)
@@ -1541,10 +1607,13 @@ function cityRelief(x,z){
   return CITY_AMP*(0.5+0.5*Math.sin(x*0.011+1.3)*Math.cos(z*0.013))*edge;
 }
 // two named hills — kept well inside the elevated rail loop (radius ~172-224) so
-// the rail's variable-length pillars never go negative.
+// the rail's variable-length pillars never go negative. Radius vs height is the
+// grade budget: a raised-cosine bump's steepest slope is h*PI/(2r), so these sit
+// at ~0.17 rad (10 deg) — inside TERRAIN.md's 12-deg drivable/walkable cap even
+// once the city roll stacks on top.
 const SIGNATURE_HILLS=[
-  {x:-70,z:50,r:65,h:11},
-  {x:60,z:-70,r:60,h:9},
+  {x:-70,z:50,r:80,h:9},
+  {x:60,z:-70,r:75,h:8},
 ];
 function hillsAt(x,z){
   let h=0;
@@ -1555,35 +1624,26 @@ function hillsAt(x,z){
   return h;
 }
 // VERT_H: height at every road intersection, sampled straight off the smooth
-// relief field. PAD_H: each block's flat pad = the average of its 4 corners.
-const VERT_H=[], PAD_H=[];
+// relief field. Everything else in the city is interpolated from these.
+const VERT_H=[];
 for(let i=0;i<=WORLD.blocks;i++){
   VERT_H[i]=[];
   for(let j=0;j<=WORLD.blocks;j++) VERT_H[i][j]=cityRelief(roadLines[i],roadLines[j])+hillsAt(roadLines[i],roadLines[j]);
-}
-for(let i=0;i<WORLD.blocks;i++){
-  PAD_H[i]=[];
-  for(let j=0;j<WORLD.blocks;j++) PAD_H[i][j]=(VERT_H[i][j]+VERT_H[i+1][j]+VERT_H[i][j+1]+VERT_H[i+1][j+1])/4;
 }
 function groundH(x,z){
   const nb=WORLD.blocks;
   const ci=clamp(Math.floor((x-roadLines[0])/PITCH),0,nb-1);
   const cj=clamp(Math.floor((z-roadLines[0])/PITCH),0,nb-1);
   const lx=x-roadLines[ci], lz=z-roadLines[cj];
-  const onRoadX=lx<ROAD/2||lx>PITCH-ROAD/2, onRoadZ=lz<ROAD/2||lz>PITCH-ROAD/2;
-  let h;
-  if(onRoadX&&onRoadZ){
-    const iR=lx<ROAD/2?ci:ci+1, jR=lz<ROAD/2?cj:cj+1;
-    h=VERT_H[iR][jR];                                    // intersections: flat plateaus
-  } else if(onRoadX){
-    const iR=lx<ROAD/2?ci:ci+1, t=clamp((lz-ROAD/2)/(PITCH-ROAD),0,1);
-    h=lerp(VERT_H[iR][cj],VERT_H[iR][cj+1],t);            // N/S street: grades along z only
-  } else if(onRoadZ){
-    const jR=lz<ROAD/2?cj:cj+1, t=clamp((lx-ROAD/2)/(PITCH-ROAD),0,1);
-    h=lerp(VERT_H[ci][jR],VERT_H[ci+1][jR],t);            // E/W street: grades along x only
-  } else {
-    h=PAD_H[ci][cj];                                      // block interior: flat pad
-  }
+  // u/v run 0..1 across the block between two streets, and CLAMP over the road
+  // itself. That clamp is what keeps a street level across its width — on a N/S
+  // street u pins to its own kerb, so height varies with z only — while the
+  // block interior is the bilinear patch joining the four kerb lines, meeting
+  // each of them exactly. One expression, continuous everywhere, no ledges.
+  const u=clamp((lx-ROAD/2)/(PITCH-ROAD),0,1);
+  const v=clamp((lz-ROAD/2)/(PITCH-ROAD),0,1);
+  let h=lerp(lerp(VERT_H[ci][cj],VERT_H[ci+1][cj],u),
+             lerp(VERT_H[ci][cj+1],VERT_H[ci+1][cj+1],u),v);
   for(let i=0;i<KNOLLS.length;i++){
     const k=KNOLLS[i], dx=x-k.x, dz=z-k.z, d2=dx*dx+dz*dz;
     if(d2<k.r*k.r) h+=k.h*0.5*(1+Math.cos(Math.PI*Math.sqrt(d2)/k.r));
@@ -1617,53 +1677,11 @@ function stairHitRun(x,z){
   return best;
 }
 function stairH(x,z){ const st=stairHitRun(x,z); return st?st.h:0; }
-// retaining walls / curbs: dressing wherever a block's flat pad doesn't meet
-// its bordering street at the same height, so the seam reads as a designed
-// ledge instead of a glitch. Small steps (a curb) are cosmetic only — cars &
-// feet just follow groundH's little hop. Bigger drops get a real climbable
-// stair cut through the wall, per TERRAIN.md's "retaining walls or stairs."
-(function(){
-  const CURB_WALLS=[];
-  const rampMat=new THREE.MeshLambertMaterial({color:0x565064});
-  const rampGeo=new THREE.BoxGeometry(4.2,0.4,1); rampGeo.translate(0,0,0.5);
-  for(let i=0;i<WORLD.blocks;i++) for(let j=0;j<WORLD.blocks;j++){
-    const pad=PAD_H[i][j];
-    const cx0=roadLines[i]+ROAD/2, cx1=roadLines[i+1]-ROAD/2;
-    const cz0=roadLines[j]+ROAD/2, cz1=roadLines[j+1]-ROAD/2;
-    const edges=[
-      {hA:VERT_H[i][j],  hB:VERT_H[i][j+1],  ex:cx0,        ez:(cz0+cz1)/2, sx:0.5,  sz:BLOCK, blockAng:Math.PI/2},   // west: block is +x
-      {hA:VERT_H[i+1][j],hB:VERT_H[i+1][j+1],ex:cx1,        ez:(cz0+cz1)/2, sx:0.5,  sz:BLOCK, blockAng:-Math.PI/2}, // east: block is -x
-      {hA:VERT_H[i][j],  hB:VERT_H[i+1][j],  ex:(cx0+cx1)/2,ez:cz0,         sx:BLOCK,sz:0.5,   blockAng:0},          // south: block is +z
-      {hA:VERT_H[i][j+1],hB:VERT_H[i+1][j+1],ex:(cx0+cx1)/2,ez:cz1,         sx:BLOCK,sz:0.5,   blockAng:Math.PI},    // north: block is -z
-    ];
-    edges.forEach(e=>{
-      const top=Math.max(pad,e.hA,e.hB), bot=Math.min(pad,e.hA,e.hB), diff=top-bot;
-      if(diff<=0.35) return;
-      if(diff<=1.5){ CURB_WALLS.push([e.ex,bot,e.ez,e.sx,diff,e.sz]); return; }
-      // taller drops get a real, visible stair/ramp run instead of a sheer wall —
-      // running from the low side to the high side, through the seam
-      const ang=pad>(e.hA+e.hB)/2?e.blockAng:e.blockAng+Math.PI;
-      const len=clamp(diff*1.3,3,14);
-      const rx=e.ex-Math.sin(ang)*len/2, rz=e.ez-Math.cos(ang)*len/2;
-      STAIR_RUNS.push({x:rx,z:rz,ang,len,baseH:bot,topH:top});
-      const ramp=new THREE.Mesh(rampGeo,rampMat);
-      ramp.position.set(rx,bot,rz);
-      ramp.rotation.y=ang;
-      ramp.rotation.x=-Math.atan2(top-bot,len);
-      ramp.scale.z=len/Math.cos(Math.atan2(top-bot,len));
-      scene.add(ramp);
-    });
-  }
-  if(!CURB_WALLS.length) return;
-  const geo=new THREE.BoxGeometry(1,1,1); geo.translate(0,0.5,0);
-  const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:0x4a4658}),CURB_WALLS.length);
-  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), pos=new THREE.Vector3(), scl=new THREE.Vector3();
-  CURB_WALLS.forEach((w,i)=>{
-    pos.set(w[0],w[1],w[2]); scl.set(w[3],w[4],w[5]);
-    m.compose(pos,q,scl); im.setMatrixAt(i,m);
-  });
-  im.instanceMatrix.needsUpdate=true; scene.add(im);
-})();
+// NOTE: this used to be where retaining walls + seam stairs were built, to dress
+// the ledge where a flat block pad met a graded street. groundH is continuous
+// now (block interiors are the bilinear patch between their four kerb lines), so
+// there is no ledge left to dress — you simply walk up the grade. The 3D curb
+// strips along the sidewalks are cosmetic and live with the street dressing.
 const BUILDING_SKIRT=2.5;   // foundation skirt: hides the uphill gap on graded ground
 function footprintBaseY(minX,maxX,minZ,maxZ){
   // lowest of the four corners, so the building never floats on a slope
@@ -1792,21 +1810,79 @@ groundCanvas.width=groundCanvas.height=1024;
 })();
 const groundTex=new THREE.CanvasTexture(groundCanvas);
 groundTex.anisotropy=4;
-const groundGeo=new THREE.PlaneGeometry(WORLD.size,WORLD.size,120,120);
-(function(){ const pa=groundGeo.attributes.position;
-  for(let i=0;i<pa.count;i++) pa.setZ(i,groundH(pa.getX(i),-pa.getY(i)));
-  groundGeo.computeVertexNormals(); })();
+// ---- terrain meshes ----
+// A plain NxN plane can't draw this height field honestly: groundH kinks at
+// every kerb (level across the road, tilted across the block), and a cell that
+// straddles a kerb averages the two — the drawn surface then floats a metre or
+// so above the real ground, which is what buried props and pickups. So the grid
+// is built ON the road lattice instead: there is always a vertex line exactly at
+// every kerb and centre line, and the surface between them is genuinely planar.
+// Both the city and the beach ring use the same line list, so they can never
+// disagree about where the ground is (that mismatch was the beach mesh punching
+// up through downtown as sand-coloured patches).
+const TERRAIN_STEP=6;      // target spacing inside a road/block span
+const KNOLL_STEP=3;        // park knolls are the one curve that needs finer sampling
+function terrainLines(half){
+  const keys=new Set([-half,half]);
+  roadLines.forEach(l=>{ [l-ROAD/2,l,l+ROAD/2].forEach(v=>{ if(v>-half&&v<half) keys.add(v); }); });
+  // knolls are domes, not planes: a 6u sample cuts the corner off one and the
+  // lawn ends up drawn under the trees standing on it. Halve the step across
+  // their span (both axes share one line list, so this is a band, not a patch).
+  const bands=[];
+  KNOLLS.forEach(kn=>{ bands.push([kn.x-kn.r,kn.x+kn.r],[kn.z-kn.r,kn.z+kn.r]); });
+  const k=[...keys].sort((a,b)=>a-b), out=[];
+  for(let i=0;i<k.length-1;i++){
+    const step=bands.some(b=>b[0]<k[i+1]&&b[1]>k[i])?KNOLL_STEP:TERRAIN_STEP;
+    const n=Math.max(1,Math.round((k[i+1]-k[i])/step));
+    for(let s=0;s<n;s++) out.push(k[i]+(k[i+1]-k[i])*s/n);
+  }
+  out.push(k[k.length-1]);
+  return out;
+}
+// lines: sorted world coords used for BOTH axes. yOff(x,z): extra height.
+// hollow: skip any quad whose whole footprint is inside this half-extent.
+function terrainGeo(lines,half,yOff,hollow){
+  const n=lines.length, pos=new Float32Array(n*n*3), uv=new Float32Array(n*n*2), idx=[];
+  for(let j=0;j<n;j++) for(let i=0;i<n;i++){
+    const x=lines[i], z=lines[j], o=j*n+i;
+    pos[o*3]=x; pos[o*3+1]=groundH(x,z)+(yOff?yOff(x,z):0); pos[o*3+2]=z;
+    uv[o*2]=(x+half)/(2*half); uv[o*2+1]=1-(z+half)/(2*half);
+  }
+  for(let j=0;j<n-1;j++) for(let i=0;i<n-1;i++){
+    if(hollow&&Math.max(Math.abs(lines[i]),Math.abs(lines[i+1]),Math.abs(lines[j]),Math.abs(lines[j+1]))<hollow) continue;
+    const a=j*n+i, b=(j+1)*n+i, c=(j+1)*n+i+1, d=j*n+i+1;
+    idx.push(a,b,d, b,c,d);
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+const GROUND_LINES=terrainLines(WORLD.size/2);
+const groundGeo=terrainGeo(GROUND_LINES,WORLD.size/2);
 const ground=new THREE.Mesh(groundGeo,
   new THREE.MeshLambertMaterial({map:groundTex}));
-ground.rotation.x=-Math.PI/2; scene.add(ground);
-// beach ring, then ocean out to the horizon
-const sandGeo=new THREE.PlaneGeometry(WORLD.size+26,WORLD.size+26,72,72);
-(function(){ const pa=sandGeo.attributes.position;
-  for(let i=0;i<pa.count;i++) pa.setZ(i,groundH(pa.getX(i),-pa.getY(i)));
-  sandGeo.computeVertexNormals(); })();
+scene.add(ground);
+// beach ring, then ocean out to the horizon. The sand shares the city's vertex
+// lines and adds a skirt outside them, riding just proud of the ground out past
+// the coast highway and sinking well under it inland — so sand shows up on the
+// beach and nowhere else, no matter how the terrain rolls underneath.
+const SAND_EDGE=H+14;   // ~just outside the coast highway's outer kerb
+const SAND_LINES=(function(){
+  const outer=[], step=(WORLD.size/2+13)-WORLD.size/2;
+  for(let k=1;k<=3;k++) outer.push(WORLD.size/2+step*k/3);
+  return outer.slice().reverse().map(v=>-v).concat(GROUND_LINES,outer);
+})();
+function sandOffset(x,z){
+  const m=Math.max(Math.abs(x),Math.abs(z));
+  return lerp(-3,0.05,clamp((m-(SAND_EDGE-12))/12,0,1));
+}
+const sandGeo=terrainGeo(SAND_LINES,WORLD.size/2+13,sandOffset,SAND_EDGE-10);
 const sand=new THREE.Mesh(sandGeo,
   new THREE.MeshLambertMaterial({color:0xb89a66}));
-sand.rotation.x=-Math.PI/2; sand.position.y=-0.06; scene.add(sand);
+scene.add(sand);
 const waterCanvas=document.createElement('canvas');
 waterCanvas.width=waterCanvas.height=128;
 (function(){
@@ -3643,12 +3719,15 @@ function dogBtnPressed(){
   feedDogs();
 }
 function antagonizeDogs(x,z,r){
+  let hit=false;
   for(const d of strayDogs){
     if(Math.hypot(d.x-x,d.z-z)<r){
+      hit=true;
       let g=d.gang; if(!g) g=makeGang([d]);
       g.state='angry'; g.stateT=12; g.trust=0;   // even a loyal pack turns on a kicker
     }
   }
+  if(hit) sfx.dogGrowl();
 }
 function updateStrayDogs(dt){
   // lone strays gravitate together and band into packs
@@ -3728,7 +3807,7 @@ function updateStrayDogs(dt){
     // an antagonized pack bites
     if(g&&g.state==='angry'&&G.mode==='foot'&&!player.bailing){
       if(Math.hypot(player.x-d.x,player.z-d.z)<0.9&&d.biteT<=0){
-        d.biteT=1.2; shake(0.3); sfx.punch();
+        d.biteT=1.2; shake(0.3); sfx.dogBite();
         player.stunT=Math.max(player.stunT||0,0.5);
         toast('DOG BITE!','bad');
       }
@@ -4568,10 +4647,14 @@ function makePickupMesh(kind){
   spr.scale.set(2.2,2.2,1);
   return spr;
 }
+const PICKUP_HOVER=1.4;   // how high a pickup floats above whatever it was dropped on
 function spawnPickup(kind,x,z){
   const mesh=makePickupMesh(kind);
-  mesh.position.set(x,1.4,z); scene.add(mesh);
-  pickups.push({kind,mesh,x,z,phase:rand(0,TAU)});
+  // hover above the ground UNDER it, not above y=0 — on a hill an absolute
+  // height buries the thing inside the slope
+  const baseY=groundH(x,z);
+  mesh.position.set(x,baseY+PICKUP_HOVER,z); scene.add(mesh);
+  pickups.push({kind,mesh,x,z,baseY,phase:rand(0,TAU)});
 }
 function scatterPickups(){
   let cash=0,wrench=0,badge=0,rpg=0,meat=0;
@@ -4765,6 +4848,14 @@ function updateHeliMode(dt){
     engineGain.gain.value=lerp(engineGain.gain.value,0.05+h.spin*0.04,0.2);
     engineOsc.frequency.value=36+h.spin*30+hs*0.4;
     engineLP.frequency.value=300+h.spin*500;
+    // rotor blade chop: noise AM'd at blade-pass rate — spools up with h.spin,
+    // chops faster in forward flight, baseline+depth stay matched so it dips
+    // to near-silence between "whups" instead of just pulsing up and down
+    const chopTarget=(0.05+h.spin*0.09)*0.5;
+    heliChopLFO.frequency.value=4+h.spin*7+hs*0.06;
+    heliChopGain.gain.value=chopTarget;
+    heliChopDepth.gain.value=chopTarget;
+    heliChopFilt.frequency.value=280+h.spin*220;
   }
   G.carHP=Math.max(0,h.hp/h.maxhp*100);
   drawDash(hs/36,hs*4.2,'CHOPPER',h.hp/h.maxhp*100,h.spin*100);
@@ -4786,6 +4877,7 @@ function bailOut(){
   player.mesh.visible=true;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
+  if(heliChopGain){ heliChopGain.gain.value=0; heliChopDepth.gain.value=0; }
   if(h.shadow) h.shadow.visible=true;
   refreshButtons();
   toast(h.y>8?'PULL THE CHUTE!':'BAIL OUT!','gold');
@@ -4833,6 +4925,7 @@ function exitHeli(){
   player.heli=null; footCamYaw=player.heading;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
+  if(heliChopGain){ heliChopGain.gain.value=0; heliChopDepth.gain.value=0; }
   refreshButtons();
 }
 // --- parachute: red & white canopy, opened from the BAIL freefall ---
@@ -5040,7 +5133,8 @@ function refreshButtons(){
   $('btnBoost').textContent=heli?'UP':'BOOST';
   $('btnDrift').textContent=heli?'DOWN':'DRIFT';
   if(!foot) $('btnTalk').style.display='none';
-  $('btnPunch').textContent=G.weapon==='fists'?'PUNCH':(G.weapon==='baton'?'SWING':(G.weapon==='pistol'?'SHOOT':'RPG ('+G.rockets+')'));
+  $('btnPunch').textContent=G.weapon==='fists'?'PUNCH':(G.weapon==='baton'?'SWING':
+    (G.weapon==='pistol'?(G.reloading?'RELOAD…':'SHOOT ('+G.pistolAmmo+')'):'RPG ('+G.rockets+')'));
   $('btnGun').textContent=G.weapon.toUpperCase();
   updateWeaponVisual();
 }
@@ -5190,12 +5284,122 @@ function cycleWeapon(){
   refreshButtons();
   blip(500,700,0.08,0.12,'triangle');
 }
+// --- weapon sound synthesis -------------------------------------------
+// A small, deliberately flexible per-weapon "voice" registry, built entirely
+// from the AC-based primitives up in AUDIO (blip = tonal sweep, noiseBurst =
+// filtered noise transient). Every weapon type is one entry with a fire()
+// and a reload(); a projectile weapon can also ride startMissileFlight()
+// below for a continuous in-flight sound. To add a future weapon: add a new
+// WEAPON_SFX[name] with its own fire()/reload() built from the same
+// primitives — nothing in doAttack's ammo/reload plumbing has to change.
+const WEAPON_SFX={
+  pistol:{
+    mag:PISTOL_MAG, reloadTime:1.05,
+    fire(){
+      // short, dry, high-pitched crack — pistols snap, they don't boom
+      noiseBurst(0.05,0.5,3200,1.4,'bandpass');
+      noiseBurst(0.08,0.22,1300,0.9);
+      blip(1900,300,0.03,0.16,'square');
+    },
+    reload(){
+      // mag drops, fresh mag seats, slide racks — three beats over ~0.9s
+      noiseBurst(0.03,0.22,2600,3,'highpass');
+      setTimeout(()=>{ blip(180,90,0.06,0.16,'square'); noiseBurst(0.04,0.2,1800,2,'bandpass'); },260);
+      setTimeout(()=>{ noiseBurst(0.05,0.32,2400,2.5,'bandpass'); blip(2200,900,0.04,0.14,'square'); },620);
+    },
+  },
+  rpg:{
+    reloadTime:0.8, // matches the punchT cooldown that already gates the next shot
+    fire(){
+      // low ignition thump under a rising motor hiss + igniter sizzle
+      noiseBurst(0.45,0.4,650,0.7);
+      blip(150,55,0.35,0.3,'sawtooth');
+      blip(2600,5400,0.22,0.12,'sawtooth');
+    },
+    reload(){
+      // breech pops open, next round drops in, breech clacks shut
+      noiseBurst(0.04,0.2,1300,2,'bandpass');
+      setTimeout(()=>{ blip(140,70,0.09,0.22,'sine'); },200);
+      setTimeout(()=>{ noiseBurst(0.04,0.28,1600,2.2,'bandpass'); },440);
+    },
+  },
+  // melee has no reload, but shares the same fire()-per-entry shape so
+  // doPunch() can pick a voice with one lookup instead of a special case
+  fists:{
+    fire(){
+      // bare-knuckle thump — soft and fleshy, no metallic edge
+      noiseBurst(0.1,0.4,320,0.7);
+      blip(190,70,0.09,0.22,'sine');
+    },
+  },
+  baton:{
+    fire(){
+      // wood-on-target crack over a heavier body thud than a bare fist
+      noiseBurst(0.04,0.4,2400,2.2,'bandpass');
+      noiseBurst(0.12,0.4,260,0.8);
+      blip(160,50,0.09,0.2,'sine');
+    },
+  },
+};
+// Reload lockout: fire() checks G.reloading before letting the pistol shoot
+// again; the timeout below is the only place that clears it.
+function reloadPistol(){
+  if(G.reloading) return;
+  G.reloading=true;
+  WEAPON_SFX.pistol.reload();
+  haptic(20);
+  refreshButtons();
+  setTimeout(()=>{ G.pistolAmmo=PISTOL_MAG; G.reloading=false; refreshButtons(); },WEAPON_SFX.pistol.reloadTime*1000);
+}
+// One shared 1s noise buffer feeds every missile-flight loop (cheap to reuse,
+// unlike the one-shot buffers noiseBurst allocates fresh each time).
+let _missileNoiseBuf=null;
+function missileNoiseBuffer(){
+  if(_missileNoiseBuf) return _missileNoiseBuf;
+  const len=AC.sampleRate, b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+  return _missileNoiseBuf=b;
+}
+// world position -> {dist, pan} relative to the camera, for simple stereo
+// positioning of continuous weapon sounds (e.g. a flying missile's whoosh).
+const _sfxLocal=new THREE.Vector3();
+function spatialOf(x,y,z){
+  _sfxLocal.set(x,y,z);
+  camera.worldToLocal(_sfxLocal);
+  const dist=_sfxLocal.length();
+  return {dist,pan:clamp(_sfxLocal.x/Math.max(4,dist),-1,1)};
+}
+// Continuous rocket-motor whoosh that tracks a live rocket in flight — start
+// at launch, call .update(x,y,z) every substep while it's airborne, .stop()
+// on impact. Pan + tone brighten as it gets closer to the camera.
+function startMissileFlight(){
+  if(!AC) return null;
+  const src=AC.createBufferSource(); src.buffer=missileNoiseBuffer(); src.loop=true;
+  const filt=AC.createBiquadFilter(); filt.type='bandpass'; filt.frequency.value=500; filt.Q.value=0.9;
+  const pan=AC.createStereoPanner();
+  const g=AC.createGain(); g.gain.value=0;
+  src.connect(filt); filt.connect(pan); pan.connect(g); g.connect(sfxGain);
+  src.start();
+  return {
+    update(x,y,z){
+      const s=spatialOf(x,y,z), t=AC.currentTime;
+      g.gain.setTargetAtTime(clamp(0.22*(1-s.dist/45),0,0.22),t,0.05);
+      filt.frequency.setTargetAtTime(clamp(680-s.dist*9,150,680),t,0.05);
+      pan.pan.setTargetAtTime(s.pan,t,0.05);
+    },
+    stop(){
+      g.gain.setTargetAtTime(0,AC.currentTime,0.05);
+      setTimeout(()=>{ try{src.stop();}catch(e){} },160);
+    },
+  };
+}
 function doAttack(){
   if(!G.started||G.over||G.mode!=='foot'||player.punchT>0) return;
   if(G.weapon==='fists'){ doPunch(false); return; }
   if(G.weapon==='baton'){ doPunch(true); return; }
   const p=player;
   if(G.weapon==='pistol'){
+    if(G.reloading) return;
     // point blank = stick-up: they hand over their cash instead of catching a bullet
     let mark=null,md=5;
     peds.forEach(pd=>{
@@ -5216,7 +5420,9 @@ function doAttack(){
       addHeat(12);
       return;
     }
+    if(G.pistolAmmo<=0){ reloadPistol(); return; }
     p.punchT=0.32;
+    G.pistolAmmo--;
     sfx.gunshot();
     haptic(15);
     addHeat(4);
@@ -5275,6 +5481,7 @@ function doAttack(){
         ped.heading=Math.atan2(ped.x-p.x,ped.z-p.z);
       }
     }
+    if(G.pistolAmmo<=0) reloadPistol();
     return;
   }
   if(G.weapon==='rpg'&&(G.rockets>0||DEV_STATE.inf)){
@@ -5282,14 +5489,16 @@ function doAttack(){
     if(!DEV_STATE.inf) G.rockets--;
     if(G.rockets<=0) G.weapon='pistol';
     sfx.rocket();
+    WEAPON_SFX.rpg.reload();   // breech reloads the next round during the cooldown above
     haptic(40);
     addHeat(20);
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(0.25,0.25,0.9),
       new THREE.MeshBasicMaterial({color:0xff7a3d}));
     scene.add(mesh);
     const rp=-camPitch*1.1;   // aim up/down with the look thumb
-    rockets.push({x:p.x+Math.sin(p.heading)*1.5,y:p.y+1.5,z:p.z+Math.cos(p.heading)*1.5,
-      heading:p.heading,hs:Math.cos(rp)*46,vy:Math.sin(rp)*46,life:3,mesh});
+    const rocket={x:p.x+Math.sin(p.heading)*1.5,y:p.y+1.5,z:p.z+Math.cos(p.heading)*1.5,
+      heading:p.heading,hs:Math.cos(rp)*46,vy:Math.sin(rp)*46,life:3,mesh,snd:startMissileFlight()};
+    rockets.push(rocket);
     refreshButtons();
   }
 }
@@ -5305,6 +5514,7 @@ function updateRockets(dt){
     r.mesh.position.set(r.x,r.y,r.z);
     r.mesh.rotation.y=r.heading;
     if(r.vy!==undefined) r.mesh.rotation.x=clamp(-r.vy*0.02,-0.9,0.9);
+    if(r.snd) r.snd.update(r.x,r.y,r.z);
     burst(r.x,r.y,r.z,1,COL_SMOKE,0.5,0.4,0);
     let boom=r.life<=0||r.y<=0.15;
     if(!boom&&buildingHit(r.x,r.z,0.5)) boom=true;
@@ -5319,6 +5529,7 @@ function updateRockets(dt){
       boom=true;
     }
     if(boom){
+      if(r.snd) r.snd.stop();
       explode(r.x,Math.max(r.y,0.3),r.z);
       scene.remove(r.mesh); disposeMesh(r.mesh); rockets.splice(i,1);
     }
@@ -5356,7 +5567,7 @@ function updateFireballs(dt){
   }
 }
 function explode(x,y,z){
-  sfx.bigCrash(); shake(0.8); haptic([40,50,70]);
+  sfx.rpgBoom(); shake(0.8); haptic([40,50,70]);
   G.lastBoom={x,z,t:performance.now()};
   spawnFireball(x,Math.max(y,1),z,4.5);
   burst(x,y,z,42,COL_FIRE,8,1.1,4);
@@ -5367,7 +5578,7 @@ function explode(x,y,z){
 const boomFx=[];      // climbing cloud emitters {x,y,z,t}
 let shockwave=null;   // one reusable expanding ring
 function bigExplosion(x,y,z){
-  sfx.bigCrash(); shake(1.2); haptic([60,40,90,40,120]);
+  sfx.carBoom(); shake(1.2); haptic([60,40,90,40,120]);
   spawnFireball(x,y+1,z,8.5);
   burst(x,y,z,70,COL_FIRE,12,1.6,4);
   burst(x,y,z,40,COL_FIRE,6,2.2,1);
@@ -5483,7 +5694,8 @@ let lookTouch=null, lookLX=0, lookLY=0;
 let camYawOff=0, camPitch=0, lookHoldT=0; // camYawOff orbits car/heli cam; foot mode writes footCamYaw
 function applyLook(dx,dy){
   if(G.replay&&replay){ replay.cam.yaw-=dx*0.0048; replay.cam.pitch=clamp(replay.cam.pitch-dy*0.005,-1.2,1.2); return; }
-  const yaw=-dx*0.0048, pit=dy*0.006;
+  const sens=(SETTINGS.lookSens||100)/100;
+  const yaw=-dx*0.0048*sens, pit=dy*0.006*sens*(SETTINGS.invertY?-1:1);
   if(G.mode==='foot'){
     footCamYaw+=yaw;
     camPitch=clamp(camPitch+pit,-1.45,1.45);   // nearly straight up / straight down
@@ -5617,13 +5829,24 @@ function clearHeat(viaEscape){
   updateStarsHUD();
   cops.forEach(c=>{ if(c.driver==='cop') c.driver='leaving'; });
 }
+// P3: Easy/Normal/Hard scales cop pressure (spawn count, detection range)
+// and damage taken — persisted in the same SETTINGS blob as everything else.
+const DIFFICULTY_TIERS={
+  easy:  {spawnMult:0.7, aggroMult:0.8,  dmgMult:0.65},
+  normal:{spawnMult:1,   aggroMult:1,    dmgMult:1},
+  hard:  {spawnMult:1.4, aggroMult:1.25, dmgMult:1.4},
+};
+function difficulty(){ return DIFFICULTY_TIERS[SETTINGS.difficulty]||DIFFICULTY_TIERS.normal; }
 function spawnCop(){
   const far=intersections.filter(p=>Math.hypot(p.x-px0(),p.z-pz0())>110);
   const it=far.length?pick(far):pick(intersections);
   const c=makeCar('cop',it.x,it.z,rand(0,TAU),{driver:'cop'});
   cops.push(c);
 }
-function wantedCount(){ return G.stars===0?0:Math.min(1+G.stars,6); }
+// capped at 8 regardless of difficulty — "harder" means more pressure per
+// star, not an unbounded swarm that tanks fps (F3's traffic/ped caps get
+// the same treatment)
+function wantedCount(){ return G.stars===0?0:clamp(Math.round((1+G.stars)*difficulty().spawnMult),1,8); }
 function updateWanted(dt){
   const want=wantedCount();
   const active=cops.filter(c=>!c.dead&&c.driver==='cop').length
@@ -5631,27 +5854,28 @@ function updateWanted(dt){
   if(G.stars>0&&active<want) spawnCop();
   if(G.stars>0){
     const pxx=px0(), pzz=pz0();
+    const aggro=difficulty().aggroMult;
     let nearest=1e9, seen=false;
     cops.forEach(c=>{
       if(c.dead||c.driver!=='cop') return;
       const d=Math.hypot(c.x-pxx,c.z-pzz);
       nearest=Math.min(nearest,d);
-      if(d<70&&losClear(c.x,c.z,pxx,pzz)) seen=true;
+      if(d<70*aggro&&losClear(c.x,c.z,pxx,pzz)) seen=true;
     });
     footCops.forEach(fc=>{
       if(fc.state==='down') return;
       const d=Math.hypot(fc.x-pxx,fc.z-pzz);
       nearest=Math.min(nearest,d);
-      if(d<50&&losClear(fc.x,fc.z,pxx,pzz)) seen=true;
+      if(d<50*aggro&&losClear(fc.x,fc.z,pxx,pzz)) seen=true;
     });
-    if(copHeli&&!copHeli.dead) seen=seen||Math.hypot(copHeli.x-pxx,copHeli.z-pzz)<130;
+    if(copHeli&&!copHeli.dead) seen=seen||Math.hypot(copHeli.x-pxx,copHeli.z-pzz)<130*aggro;
     if(G.interior) seen=false;   // holed up in the pizza place
     // two ways to shake the heat: get FAR away fast, or break their line of sight and lay low
     const hh=$('heatHint');
     if(seen){
       G.escapeT=0; G.hiddenT=0;
       hh.textContent='THEY SEE YOU — RUN OR HIDE'; hh.style.color='#ff5a5a'; hh.style.display='block';
-    } else if(nearest>85){
+    } else if(nearest>85*aggro){
       G.hiddenT=0; G.escapeT+=dt;
       hh.textContent='CLEAR — STAY AWAY '+Math.max(0,3.5-G.escapeT).toFixed(1); hh.style.color='#7dff8a'; hh.style.display='block';
       if(G.escapeT>3.5) clearHeat(true);
@@ -5742,7 +5966,13 @@ function carPhysics(car,dt,ctl){
       if(car===player.car&&mission&&mission.type==='style') mission.value+=dt*40;
     }
   } else if(car.y<ghCar) car.y=ghCar;
-  else if(car.y>ghCar+0.02) car.y=lerp(car.y,ghCar,Math.min(1,12*dt));   // settle onto slopes
+  else if(car.y>ghCar+0.02){
+    // Streets have real grade now, and a first-order settle always lags a
+    // dropping surface — that lag is the tyres hovering a foot off the road all
+    // the way down a hill. So keep the easing for genuine drops (a kerb, a
+    // rooftop edge) and just plant the car when the gap is grade-sized.
+    car.y=(car.y-ghCar<0.6)?ghCar:lerp(car.y,ghCar,Math.min(1,12*dt));
+  }
   // integrate
   car.x+=car.vel.x*dt; car.z+=car.vel.z*dt;
   // NPC cars stay in town; the player can drive out onto the beach — and into the sea
@@ -5881,7 +6111,7 @@ function updateFoot(dt){
   if(p.stunT>0){   // clocked — flat on your back for a beat
     p.stunT-=dt;
     p.mesh.rotation.x=-1.25*clamp(p.stunT/0.8,0,1);
-    p.mesh.position.set(p.x,0.25,p.z);
+    p.mesh.position.set(p.x,groundH(p.x,p.z)+0.25,p.z);
     if(p.stunT<=0) p.mesh.rotation.x=0;
     return;
   }
@@ -5937,10 +6167,21 @@ function updateFoot(dt){
   p.mesh.position.set(p.x,p.y+Math.abs(Math.sin(p.phase))*0.06,p.z);
   p.mesh.rotation.y=p.heading;
   const u=p.mesh.userData;
+  // the grade under his feet, measured the way he's facing: + = walking uphill.
+  // Streets have real gradient now, so a hill is something you WALK up — he
+  // plants on the slope and switches to the climb stride instead of strolling
+  // along flat and popping up a step at a time.
+  const onTerrain=!(roofHere>0&&p.y>roofHere-1.0)&&!onStairs&&p.y<=ground+0.08;
+  const sFwd=groundH(p.x+Math.sin(p.heading)*1.2,p.z+Math.cos(p.heading)*1.2);
+  const sBack=groundH(p.x-Math.sin(p.heading)*1.2,p.z-Math.cos(p.heading)*1.2);
+  const grade=onTerrain?Math.atan2(sFwd-sBack,2.4):0;
+  // stand perpendicular-ish to the hillside (partial, so he still reads upright)
+  p.mesh.rotation.x=lerp(p.mesh.rotation.x,-grade*0.45,Math.min(1,10*dt));
   // Climbing wins over the jump pose: on a sloped run, hugging its surface, and
   // moving = a climb, even though the per-frame slope/gravity overshoot leaves
   // p.y a hair above the step (a real leap clears sh by far more than this).
-  const climbing=onStairs&&st.r.topH!==st.r.baseH&&mag>0.12&&p.y<sh+0.6;
+  const climbing=(onStairs&&st.r.topH!==st.r.baseH&&mag>0.12&&p.y<sh+0.6)
+    ||(mag>0.12&&grade>0.10);   // ~6 deg of street grade is a climb, not a stroll
   // "airborne" = genuinely off the deck (jump/fall), measured against the floor
   // under his feet — so standing on elevated stairs or a roof no longer reads as
   // a jump (that bug froze Turbo mid-leap while climbing).
@@ -6110,6 +6351,7 @@ function exitCar(){
   if(engineGritGain) engineGritGain.gain.value=0;
   if(turboGain) turboGain.gain.value=0;
 }
+let btnBrakeReversing=false;
 function updateCarMode(dt){
   const c=player.car;
   if(!c||c.dead){ exitCarSoft(); return; }
@@ -6128,6 +6370,16 @@ function updateCarMode(dt){
     G.boost=Math.min(100,G.boost+9*dt);
   }
   carPhysics(c,dt,ctl);
+
+  // J4 remaining: the BRAKE pedal already brakes-then-reverses (carPhysics
+  // above) — relabel it once the car is actually rolling backward so the
+  // touch control communicates the phase it's in, not just "brake".
+  const reversing=c.speed<-0.15;
+  if(reversing!==btnBrakeReversing){
+    btnBrakeReversing=reversing;
+    $('btnBrake').textContent=reversing?'REVERSE':'BRAKE';
+    $('btnBrake').classList.toggle('reversing',reversing);
+  }
 
   // --- Turbo's driving commentary ---
   const spd=Math.abs(c.speed);
@@ -6271,7 +6523,7 @@ function updateCarMode(dt){
 function doPunch(heavy){
   if(!G.started||G.over||G.mode!=='foot'||player.punchT>0) return;
   player.punchT=0.55;
-  sfx.punch();
+  (heavy?WEAPON_SFX.baton:WEAPON_SFX.fists).fire();
   turboSay('punch');
   const p=player;
   const reach=heavy?2.9:2.3;   // the nightstick swings long
@@ -6355,6 +6607,16 @@ function updateStarsHUD(){
   $('stars').innerHTML=html;
 }
 function setMissionHUD(html){ $('mission').innerHTML=html; $('mission').style.display='block'; }
+// Story-track objective (find Deb / pay off the debt) — only shown when no
+// timed random mission is occupying the same HUD slot, so the two never fight.
+function updateStoryObjHUD(){
+  if(mission||!deb||deb.leaving){ $('storyObj').style.display='none'; return; }
+  const d=Math.round(Math.hypot(player.x-deb.x,player.z-deb.z));
+  if(!G.story.metDeb) $('storyObj').innerHTML='<b>FIND DEB</b> — '+d+'m';
+  else if(G.story.debt>0) $('storyObj').innerHTML='<b>PAY OFF DEBT</b> — $'+G.story.debt+' · '+d+'m';
+  else { $('storyObj').style.display='none'; return; }
+  $('storyObj').style.display='block';
+}
 function cycleRadio(){
   G.station=(G.station+1)%(STATIONS.length+1);
   const st=STATIONS[G.station];
@@ -6368,6 +6630,9 @@ function cycleRadio(){
 
 // ================= MISSIONS =================
 let mission=null, missionCooldown=5, lastType='';
+// Soft progression (P1): tougher/higher-paying mission types unlock as
+// missionsDone climbs, instead of the pool flatlining at 5 types forever.
+function missionTier(){ return Math.min(2,Math.floor(G.missionsDone/5)); }
 const beacon=(function(){
   const grp=new THREE.Group();
   const cyl=new THREE.Mesh(new THREE.CylinderGeometry(2.4,2.4,26,12,1,true),
@@ -6383,6 +6648,9 @@ function setBeacon(x,z){
 }
 function startMission(){
   const types=['delivery','style','checkpoints','rampage','heat'];
+  const tier=missionTier();
+  if(tier>=1) types.push('courier','takedown');
+  if(tier>=2) types.push('getaway');
   const type=pick(types.filter(t=>t!==lastType)); lastType=type;
   if(type==='delivery'){
     const a=pick(intersections); let b=pick(intersections);
@@ -6404,16 +6672,42 @@ function startMission(){
   } else if(type==='rampage'){
     mission={type,timer:45,value:0,need:500};
     setBeacon(null);
-  } else {
+  } else if(type==='heat'){
     mission={type};
     G.heat=Math.max(G.heat,65); addHeat(0);
     setBeacon(null);
     toast('3 STARS — LOSE THE COPS!','bad');
+  } else if(type==='courier'){
+    // delivery, but Chaos Pizza already tipped off the cops — cops-on-you
+    // for the whole drop-off leg, so it pays a lot better than a plain run
+    const a=pick(intersections); let b=pick(intersections);
+    while(Math.hypot(a.x-b.x,a.z-b.z)<150) b=pick(intersections);
+    mission={type,stage:0,a,b,timer:0,reward:220+Math.round(Math.hypot(a.x-b.x,a.z-b.z)/2.2)};
+    setBeacon(a.x,a.z);
+    toast('COURIER — hot package, cops already know','bad');
+  } else if(type==='takedown'){
+    // flag a live traffic car; the beacon follows it so it's trackable
+    // even while it's still driving around
+    const cands=traffic.filter(c=>!c.dead&&c!==player.car);
+    if(!cands.length){ mission=null; missionCooldown=3; return; } // retry shortly, nothing to flag yet
+    const car=pick(cands);
+    mission={type,car,timer:50,reward:260};
+    setBeacon(car.x,car.z);
+    toast('TAKEDOWN — wreck the flagged car before it gets away','bad');
+  } else {
+    // getaway: reach the safehouse before the cops box you in
+    const a=pick(intersections);
+    mission={type,a,timer:60,reward:320};
+    G.heat=Math.max(G.heat,70); addHeat(0);
+    setBeacon(a.x,a.z);
+    toast('GETAWAY — get to the safehouse, they\'re already rolling','bad');
   }
   turboSay(type);     // Turbo narrates his own mission starts now
 }
 function completeMission(bonus){
-  const r=(mission.reward||0)+(bonus||0);
+  // soft progression: later missions (higher missionsDone) pay a bit more
+  const tierMult=1+missionTier()*0.15;
+  const r=Math.round(((mission.reward||0)+(bonus||0))*tierMult);
   addMoney(r); toast('MISSION PASSED +$'+r,'gold'); sfx.mission();
   G.missionsDone++;
   if(G.missionsDone%5===0){ addMoney(500); toast('CHAPTER BONUS +$500','gold'); }
@@ -6465,6 +6759,35 @@ function updateMission(dt){
     else if(mission.timer<=0) failMission();
   } else if(mission.type==='heat'){
     setMissionHUD('<b>HEAT</b> — lose the cops! ('+G.stars+'★)');
+  } else if(mission.type==='courier'){
+    const tgt=mission.stage===0?mission.a:mission.b;
+    const d=Math.hypot(tgt.x-px,tgt.z-pz);
+    if(mission.stage===0){
+      setMissionHUD('<b>COURIER</b> — pick up the package · '+Math.round(d)+'m');
+      if(d<5){
+        mission.stage=1; mission.timer=40; setBeacon(mission.b.x,mission.b.z); sfx.coin();
+        toast('PACKAGE SECURED — COPS INCOMING','bad');
+        G.heat=Math.max(G.heat,40); addHeat(0);
+      }
+    } else {
+      mission.timer-=dt;
+      setMissionHUD('<b>COURIER</b> — drop it off, hot · '+Math.round(d)+'m · '+Math.ceil(mission.timer)+'s');
+      if(d<6) completeMission(0);
+      else if(mission.timer<=0) failMission();
+    }
+  } else if(mission.type==='takedown'){
+    mission.timer-=dt;
+    if(mission.car.dead){ completeMission(0); return; }
+    setBeacon(mission.car.x,mission.car.z);
+    const d=Math.hypot(mission.car.x-px,mission.car.z-pz);
+    setMissionHUD('<b>TAKEDOWN</b> — wreck the flagged car · '+Math.round(d)+'m · '+Math.ceil(mission.timer)+'s');
+    if(mission.timer<=0) failMission();
+  } else if(mission.type==='getaway'){
+    mission.timer-=dt;
+    const d=Math.hypot(mission.a.x-px,mission.a.z-pz);
+    setMissionHUD('<b>GETAWAY</b> — reach the safehouse · '+Math.round(d)+'m · '+Math.ceil(mission.timer)+'s');
+    if(d<6) completeMission(Math.round(mission.timer*3));
+    else if(mission.timer<=0) failMission();
   }
   if(beacon.visible){
     beacon.children[0].material.opacity=0.25+0.15*Math.sin(performance.now()/200);
@@ -6528,6 +6851,7 @@ function downFootCop(fc){
 }
 function damagePlayer(amt){
   if(DEV_STATE.god||G.over) return;
+  amt*=difficulty().dmgMult;
   G.hp-=amt; G.hpT=0;
   shake(clamp(amt*0.03,0.12,0.4));
   if(G.hp<=0){ G.hp=0; wasted(); }
@@ -6693,14 +7017,14 @@ function spawnMamaRat(mh){
   scene.add(mesh);
   mamaRat={mesh,x:mh.x,z:mh.z,y:groundY-h*0.55,riseFrom:groundY-h*0.55,riseTo:groundY,
     heading:0,home:mh,state:'emerge',t:0,hp:260,speed:2,phase:0,biteT:0,scale:s,h};
-  sfx.bigCrash(); shake(0.4);
+  sfx.ratScreech(); shake(0.4);
   toast('SOMETHING HUGE IS COMING UP FROM THE SEWER','bad');
 }
 function damageMamaRat(amt){
   const mr=mamaRat; if(!mr||mr.state==='dying') return;
   mr.hp-=amt;
   burst(mr.x,mr.h*0.4,mr.z,6,[[0.6,0.1,0.1],[0.4,0.05,0.05]],2,0.4,4);
-  if(mr.hp<=0){ mr.state='dying'; mr.t=0; toast('MAMA RAT DOWN','gold'); addMoney(150,'RAT SLAYER'); }
+  if(mr.hp<=0){ mr.state='dying'; mr.t=0; sfx.ratDeath(); toast('MAMA RAT DOWN','gold'); addMoney(150,'RAT SLAYER'); }
 }
 function updateMamaRat(dt){
   const mr=mamaRat; if(!mr) return;
@@ -6729,7 +7053,7 @@ function updateMamaRat(dt){
       mr.biteT-=dt;
       if(mr.biteT<=0&&G.mode==='foot'&&!DEV_STATE.god){
         mr.biteT=1;
-        sfx.punch();
+        sfx.ratBite();
         damagePlayer(randi(8,16));
         shake(0.35);
         burst(px,1.2,pz,8,[[1,0.4,0.4],[0.9,0.2,0.2]],2.5,0.5,4);
@@ -6787,7 +7111,7 @@ function updateFootCops(dt){
           burst(fc.x+Math.sin(fc.heading)*0.8,1.35,fc.z+Math.cos(fc.heading)*0.8,4,COL_FIRE,1.4,0.12,0);
           if(Math.random()<clamp(1.05-d/32,0.2,0.85)){
             if(G.mode==='car'&&player.car){
-              damageCar(player.car,randi(4,8),'shot');
+              damageCar(player.car,randi(4,8)*difficulty().dmgMult,'shot');
               burst(player.car.x+rand(-1,1),1,player.car.z+rand(-1,1),5,COL_SPARK,2,0.3,4);
             } else if(G.mode==='foot'){
               damagePlayer(randi(5,10));
@@ -6867,7 +7191,7 @@ function updateCops(dt){
       if(dd<2.6&&c.cool<=0){
         c.cool=0.6;
         const rel=Math.abs(player.car.speed)+Math.abs(c.speed)*0.6+4;
-        damageCar(player.car,5+rel*0.22,'ram');
+        damageCar(player.car,(5+rel*0.22)*difficulty().dmgMult,'ram');
         player.car.vel.x+=(player.car.x-c.x)/dd*rel*0.3;
         player.car.vel.z+=(player.car.z-c.z)/dd*rel*0.3;
         sfx.crash(0.3); shake(0.35);
@@ -6992,7 +7316,7 @@ function collectPickups(x,z,r){
     const p=pickups[i];
     if(Math.hypot(p.x-x,p.z-z)<r){
       scene.remove(p.mesh); disposeMesh(p.mesh); pickups.splice(i,1);
-      if(p.kind==='cash'){ addMoney(25,'PICKUP'); sfx.coin(); burst(x,1,z,8,COL_CASH,2,0.5,3); }
+      if(p.kind==='cash'){ addMoney(25,'PICKUP'); sfx.coin(); burst(x,p.baseY+1,z,8,COL_CASH,2,0.5,3); }
       else if(p.kind==='wrench'){
         if(player.car){ player.car.hp=player.car.maxhp; G.carHP=100; toast('REPAIRED','good'); sfx.repair(); }
         else addMoney(15,'FOUND');
@@ -7023,7 +7347,7 @@ function collectPickups(x,z,r){
 }
 function updatePickupVisuals(t){
   pickups.forEach(p=>{
-    p.mesh.position.y=1.4+Math.sin(t*2+p.phase)*0.3;
+    p.mesh.position.y=p.baseY+PICKUP_HOVER+Math.sin(t*2+p.phase)*0.3;
     p.mesh.material.rotation=t*1.5+p.phase;
   });
 }
@@ -7042,6 +7366,7 @@ function exitCarSoft(){
   G.mode='foot';
   if(engineGain) engineGain.gain.value=0;
   if(skidGain) skidGain.gain.value=0;
+  if(heliChopGain){ heliChopGain.gain.value=0; heliChopDepth.gain.value=0; }
   if(engineSubGain) engineSubGain.gain.value=0;
   if(engineGritGain) engineGritGain.gain.value=0;
   if(turboGain) turboGain.gain.value=0;
@@ -7052,11 +7377,12 @@ function respawn(spot){
   setTimeout(()=>{
     const custom=!!spot;
     spot=spot||intersections[Math.floor(intersections.length/2)];
-    player.x=spot.x+(custom?0:4); player.z=spot.z+(custom?0:4); player.y=0;
+    player.x=spot.x+(custom?0:4); player.z=spot.z+(custom?0:4); player.y=groundH(player.x,player.z);
     player.mesh.visible=true; player.mesh.rotation.x=0; footCamYaw=player.heading;
     makeCar('sedan',spot.x-4,spot.z-3,rand(0,TAU),{parked:true});
     G.mode='foot'; player.car=null;
     G.boost=100; G.carHP=100; G.hp=100; G.hpT=0; G.over=false;
+    G.pistolAmmo=PISTOL_MAG; G.reloading=false;   // don't come back mid-reload
     $('speedo').style.display='none';
   },1800);
 }
@@ -7066,7 +7392,7 @@ function busted(){
   const fine=Math.floor(G.money*0.12);
   G.money-=fine; $('money').textContent='$'+G.money;
   bigEvent('BUSTED','#4f7ad9','You lost $'+fine);
-  if(mission&&mission.type==='heat') failMission();
+  if(mission&&(mission.type==='heat'||mission.type==='courier'||mission.type==='getaway')) failMission();
   G.heat=0; G.stars=0; G.escapeT=0; G.bustT=0; G.hiddenT=0; updateStarsHUD();
   cops.forEach(c=>{ if(c.driver==='cop') c.driver='leaving'; });
   respawn();
@@ -7150,8 +7476,12 @@ function updateCamera(dt){
     const dist=9.5+Math.abs(c.speed)*0.07, h=4.3+camPitch*2.2;
     const bx=-Math.sin(a), bz=-Math.cos(a);
     const tgt=cameraCollide(c.x,c.y+1.5,c.z,c.x+bx*dist,c.y+h,c.z+bz*dist);
-    // snap in instantly so we never clip the wall, ease back out gently
-    camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-5*dt));
+    // snap in instantly so we never clip the wall, ease back out gently —
+    // and catch up a bit faster at low speed, so pulling out from a stop
+    // (or a tight parking-lot three-point turn) doesn't feel like the
+    // camera is dragging a beat behind the wheel
+    const followRate=5+3*(1-clamp(Math.abs(c.speed)/8,0,1));
+    camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-followRate*dt));
     const sr=Math.abs(c.speed)/CARTYPES[c.type].top;
     camera.fov=lerp(camera.fov,62+sr*13+(input.boost&&G.boost>0?5:0),0.1);
     camera.updateProjectionMatrix();
@@ -7223,6 +7553,7 @@ function drawMinimap(){
   chaosDrivers.forEach(c=>{ if(!c.dead) dot(c.x,c.z,'#b04dff',3); });
   if(CHAOS&&CHAOS.x!==undefined) marker(CHAOS.x,CHAOS.z,'#b04dff','#ffffff');
   drawTurfOnMinimap();
+  if(deb&&!deb.leaving) dot(deb.x,deb.z,'#ff3ea0',5);
   if(mission&&beacon.visible) dot(beacon.position.x,beacon.position.z,'#ffd23e',5);
   mm.restore();
   // player arrow: always dead center, always pointing up
@@ -7317,7 +7648,7 @@ function loop(){
         if(c.hp<35&&Math.random()<0.3)
           burst(c.x,1.2,c.z,1,[[0.2,0.2,0.2],[0.35,0.35,0.35]],0.8,1.2,-1);
         drawDash(Math.abs(c.speed)/(CARTYPES[c.type].top*1.45),Math.abs(c.speed)*4.2,
-          c.type.toUpperCase(),G.carHP,G.boost);
+          c.type.toUpperCase()+(c.speed<-0.15?' · REV':''),G.carHP,G.boost);
       }
       checkPizzaJack();
       recTick(dt);
@@ -7611,6 +7942,7 @@ function spawnDeb(){
 }
 function updateStory(dt){
   if(!deb) return;
+  updateStoryObjHUD();
   if(deb.leaving){
     deb.x+=Math.sin(deb.heading)*1.6*dt; deb.z+=Math.cos(deb.heading)*1.6*dt;
     deb.phase=(deb.phase||0)+dt*4;
@@ -8836,7 +9168,7 @@ function cinemaPlayScene(id){
 // so each sets its own flag and syncPause() is the only writer of G.paused.
 const SET_KEY='gtb4.settings';
 const SETTINGS=(function(){
-  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true };
+  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true, lookSens:100, invertY:false, difficulty:'normal' };
   try{ const s=JSON.parse(localStorage.getItem(SET_KEY)); if(s&&s.v===1) Object.assign(d,s); }catch(e){}
   return d;
 })();
@@ -8872,6 +9204,21 @@ function setVibrateMode(on){
   g.querySelectorAll('.qBtn').forEach(b=>{
     b.addEventListener('click',()=>setVibrateMode(b.dataset.v==='on'));
     b.addEventListener('touchend',e=>{ e.preventDefault(); setVibrateMode(b.dataset.v==='on'); });
+  });
+})();
+
+// ---- J3: look-sensitivity + invert-Y (applied directly in applyLook) ----
+function refreshInvertYButtons(){
+  const g=$('invertYGroup'); if(!g) return;
+  g.querySelectorAll('.qBtn').forEach(b=>b.classList.toggle('on',(b.dataset.v==='on')===!!SETTINGS.invertY));
+}
+function setInvertY(on){ SETTINGS.invertY=on; saveSettings(); refreshInvertYButtons(); }
+(function initInvertYUI(){
+  const g=$('invertYGroup'); if(!g) return;
+  refreshInvertYButtons();
+  g.querySelectorAll('.qBtn').forEach(b=>{
+    b.addEventListener('click',()=>setInvertY(b.dataset.v==='on'));
+    b.addEventListener('touchend',e=>{ e.preventDefault(); setInvertY(b.dataset.v==='on'); });
   });
 })();
 
@@ -8952,6 +9299,20 @@ applyQuality(qualityMode==='auto'?'high':qualityMode);
   });
 })();
 
+function refreshDifficultyButtons(){
+  const g=$('difficultyGroup'); if(!g) return;
+  g.querySelectorAll('.qBtn').forEach(b=>b.classList.toggle('on',b.dataset.d===SETTINGS.difficulty));
+}
+function setDifficulty(mode){ SETTINGS.difficulty=mode; saveSettings(); refreshDifficultyButtons(); }
+(function initDifficultyUI(){
+  const g=$('difficultyGroup'); if(!g) return;
+  refreshDifficultyButtons();
+  g.querySelectorAll('.qBtn').forEach(b=>{
+    b.addEventListener('click',()=>setDifficulty(b.dataset.d));
+    b.addEventListener('touchend',e=>{ e.preventDefault(); setDifficulty(b.dataset.d); });
+  });
+})();
+
 function syncPause(){ G.paused=G.started&&G.menuPaused; }
 function pauseGame(){
   if(G.menuPaused||!G.started||G.over||G.intro||activeCutscene||G.replay) return;
@@ -8989,14 +9350,15 @@ function showPausePanel(id){ ['pmMain','pmSettings','pmHow'].forEach(p=>{ $(p).s
     $('pmRestart').textContent='SURE? TAP AGAIN';
     setTimeout(()=>{ $('pmRestart').textContent='RESTART GAME'; armT=0; },2500);
   });
-  const slider=(id,key)=>{
+  const slider=(id,key,onInput)=>{
     const el=$(id), val=$(id+'Val');
     el.value=SETTINGS[key]; val.textContent=SETTINGS[key]+'%';
-    el.addEventListener('input',()=>{ SETTINGS[key]=+el.value; val.textContent=el.value+'%'; applyVolumes(); });
+    el.addEventListener('input',()=>{ SETTINGS[key]=+el.value; val.textContent=el.value+'%'; (onInput||applyVolumes)(); });
     el.addEventListener('change',saveSettings); // persist on release, not every drag tick
   };
   slider('volMaster','master'); slider('volMusic','music');
   slider('volSfx','sfx'); slider('volVoice','voice');
+  slider('volLookSens','lookSens',()=>{}); // read live off SETTINGS in applyLook, nothing to re-apply
 })();
 
 // ================= SAVE SYSTEM =================
