@@ -22,3 +22,4 @@ Last consolidation: 2026-07-24 — Signed: Claude Code | Sonnet 5 | medium
 - U2 (Claude Haiku 4.5, 2026-07-24): Onboarding controls-card UI/UX spec written in HANDOFF.md; not yet implemented.
 - A2 (Claude Haiku 4.5, 2026-07-24): Accessibility options spec (reduce motion, high-contrast HUD, colorblind modes) written in HANDOFF.md; not yet implemented.
 - J4 partial (Claude Haiku 4.5, 2026-07-24): Brake-vs-reverse UI clarity spec written in HANDOFF.md (dead-zone half was already done pre-session); not yet implemented.
+2026-07-24 | City beautification / index.html (~line 3708-3910) | Added 3D curb strips (dark grey), curbside planters, storefront awnings (box/wedge, varied size), sidewalk street trees, café tables+umbrellas outside some storefronts, and banner flags on streetlight poles. All density-graded (downtown denser, outer city sparser), cosmetic only, seated via groundH per TERRAIN.md invariant, no collision added. | Signed: Claude Code | Sonnet 5 | high
