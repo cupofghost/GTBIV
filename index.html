@@ -2230,6 +2230,69 @@ function addHideout(x,z,r,y){
   };
   mk(stepGeo,stepMats,stepCols); mk(platGeo,platMats,null);
 })();
+// ================= WALL LADDERS =================
+// bolt-on steel ladders up the side of some buildings — a straight vertical
+// climb to the roof for anyone willing to go hand-over-hand. Each is a climb
+// line at (x,z) with an outward-facing normal `ang`; the mechanic lives in
+// updateClimb().
+const LADDERS=[];   // {x,z,ang,baseH,topH}
+(function(){
+  const rungGeo=new THREE.BoxGeometry(0.52,0.045,0.045);
+  const railGeo=new THREE.BoxGeometry(0.05,1,0.05);   // scaled to run height per instance
+  const rungMats=[], railMats=[];
+  const m4=new THREE.Matrix4(), q4=new THREE.Quaternion(), e4=new THREE.Euler(),
+        p4=new THREE.Vector3(), s4=new THREE.Vector3(1,1,1);
+  const candidates=buildings.filter(b=>b.h>6&&b.h<46);
+  const used=new Set();
+  for(let k=0;k<12&&candidates.length;k++){
+    const b=pick(candidates), key=b.minX+','+b.minZ;
+    if(used.has(key)) continue; used.add(key);
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
+    const side=randi(0,3);
+    let x,z,ang;   // ang = outward wall normal: (sin,cos)
+    if(side===0){ x=b.minX; z=cz; ang=-Math.PI/2; }      // -x wall
+    else if(side===1){ x=b.maxX; z=cz; ang=Math.PI/2; }  // +x wall
+    else if(side===2){ x=cx; z=b.minZ; ang=Math.PI; }    // -z wall
+    else { x=cx; z=b.maxZ; ang=0; }                       // +z wall
+    const nX=Math.sin(ang), nZ=Math.cos(ang);            // outward normal
+    const baseH=groundH(x+nX*0.5,z+nZ*0.5), topH=b.h;
+    if(topH-baseH<4) continue;
+    LADDERS.push({x,z,ang,baseH,topH});
+    // rungs + rails, nudged just proud of the wall face so they read
+    const tX=Math.cos(ang), tZ=-Math.sin(ang);           // wall tangent
+    const fx=x+nX*0.07, fz=z+nZ*0.07;
+    e4.set(0,ang,0); q4.setFromEuler(e4);
+    [-1,1].forEach(s=>{
+      p4.set(fx+tX*0.24*s,(baseH+topH)/2,fz+tZ*0.24*s);
+      s4.set(1,topH-baseH,1); m4.compose(p4,q4,s4); railMats.push(m4.clone());
+    });
+    s4.set(1,1,1);
+    const n=Math.floor((topH-baseH)/0.42);
+    for(let i=1;i<n;i++){ p4.set(fx,baseH+i*0.42,fz); m4.compose(p4,q4,s4); rungMats.push(m4.clone()); }
+  }
+  const mk=(geo,mats,col)=>{
+    if(!mats.length) return;
+    const im=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:col}),mats.length);
+    mats.forEach((mm,i)=>im.setMatrixAt(i,mm));
+    im.instanceMatrix.needsUpdate=true; scene.add(im);
+  };
+  mk(rungGeo,rungMats,0x3a3f47); mk(railGeo,railMats,0x23272e);
+})();
+// nearest ladder the player can grab from where they're standing, or null.
+// Bottom grab = pushing into the wall near the base; top grab = stepping off
+// the roof edge into the climb line.
+function ladderGrab(px,pz,py,moveAng){
+  const mvx=Math.sin(moveAng), mvz=Math.cos(moveAng);
+  for(const L of LADDERS){
+    const nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
+    const cX=L.x+nX*0.45, cZ=L.z+nZ*0.45;        // the climb line, out off the wall
+    if(Math.hypot(px-cX,pz-cZ)>1.25) continue;
+    const toward=mvx*nX+mvz*nZ;                    // <0 into the wall, >0 out toward the edge
+    if(py<=L.baseH+1.7 && toward<-0.25) return {L,from:'bottom'};
+    if(py>=L.topH-1.7 && toward>0.25) return {L,from:'top'};
+  }
+  return null;
+}
 // street-level hideouts: under every El station + behind the stadium bleachers
 RAIL_STATIONS.length&&[[0,-198],[198,0],[0,198],[-198,0]].forEach(st=>addHideout(st[0]+rand(-4,4),st[1]+rand(-4,4),7));
 if(FOOTBALL) addHideout(FOOTBALL.x,FOOTBALL.z+18,8);
@@ -3524,6 +3587,7 @@ updatePizzaDelivery=function(dt){
 const player={
   mesh:makePerson(0x37c8ff,'guy'), x:roadLines[4]+6, z:roadLines[4]+6,
   heading:0, phase:0, punchT:0, car:null, vy:0, y:0,
+  climb:null, climbPhase:0,   // set to {L} while hand-over-handing a wall ladder
 };
 scene.add(player.mesh);
 // Turbo's sunglasses — replay photo-op prop, slides on/off his face
@@ -4899,6 +4963,7 @@ Object.keys(btnMap).forEach(id=>{
 });
 function doJump(){
   if(!G.started||G.over||G.mode!=='foot') return;
+  if(player.climb){ bailLadder(); return; }   // push off the rungs
   if(player.y<=0.02&&player.vy<=0){
     player.vy=8.6; player.y=0.03;
     blip(300,520,0.12,0.12,'triangle');
@@ -5329,12 +5394,16 @@ function updateFoot(dt){
     if(p.stunT<=0) p.mesh.rotation.x=0;
     return;
   }
+  if(p.climb){ updateClimb(dt); return; }   // on a wall ladder — vertical rules take over
   const mx=input.jx, mz=input.jy;
   const mag=Math.min(1,Math.hypot(mx,mz));
   p.moveMag=mag;
   if(mag>0.12){
     const camYaw=Math.atan2(camera.position.x-p.x,camera.position.z-p.z);
     const moveAng=Math.atan2(-mx,-mz)+camYaw+Math.PI;
+    // walk into the foot of a ladder (or step off the roof edge onto one) to grab on
+    const grab=ladderGrab(p.x,p.z,p.y,moveAng);
+    if(grab){ mountLadder(grab); return; }
     const sp=mag>0.85?8.2:4.6;
     let nx=p.x+Math.sin(moveAng)*sp*mag*dt, nz=p.z+Math.cos(moveAng)*sp*mag*dt;
     // on a sloped staircase your feet find the steps: movement follows the climb
@@ -5455,6 +5524,49 @@ function updateFoot(dt){
   fhp.style.display='block';
   $('footHpFill').style.width=Math.max(0,G.hp)+'%';
   collectPickups(p.x,p.z,1.6);
+}
+// ---- wall-ladder climbing ----
+function mountLadder(grab){
+  const p=player, L=grab.L, nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
+  p.climb={L}; p.vy=0;
+  p.x=L.x+nX*0.45; p.z=L.z+nZ*0.45;
+  p.y=clamp(p.y,L.baseH,L.topH);
+  p.heading=L.ang+Math.PI;   // chest to the wall
+  p.mesh.rotation.y=p.heading;
+  blip(240,320,0.09,0.1,'triangle');
+}
+function bailLadder(){   // shove off the rungs into a short backward hop
+  const p=player; if(!p.climb) return;
+  const L=p.climb.L, nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
+  p.x=L.x+nX*1.15; p.z=L.z+nZ*1.15; p.vy=4.4; p.climb=null;
+  blip(260,170,0.1,0.12,'sine');
+}
+function updateClimb(dt){
+  const p=player, L=p.climb.L, u=p.mesh.userData;
+  const nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
+  // glued to the climb line, facing the wall
+  p.x=L.x+nX*0.45; p.z=L.z+nZ*0.45; p.vy=0;
+  p.heading=L.ang+Math.PI;
+  // W climbs, S descends; nothing pressed = hang in place
+  const up=-input.jy, spd=2.8, moved=up*spd*dt;
+  p.y=clamp(p.y+moved,L.baseH,L.topH);
+  p.climbPhase+=Math.abs(moved)*6.5;
+  // top out onto the roof, or step down off the bottom onto the street
+  if(p.y>=L.topH-0.02&&up>0.1){ p.x=L.x-nX*1.5; p.z=L.z-nZ*1.5; p.y=L.topH; p.climb=null; }
+  else if(p.y<=L.baseH+0.02&&up<-0.1){ p.x=L.x+nX*0.9; p.z=L.z+nZ*0.9; p.y=L.baseH; p.climb=null; }
+  // place + pose (hand-over-hand: opposite hand and foot rise together)
+  p.mesh.position.set(p.x,p.y,p.z);
+  p.mesh.rotation.y=p.heading;
+  const ph=p.climbPhase, rL=Math.sin(ph), rR=-rL;
+  u.armL.rotation.x=-2.30-Math.max(0,rL)*0.55;   // reaching hand stretches higher
+  u.armR.rotation.x=-2.30-Math.max(0,rR)*0.55;
+  const liftL=Math.max(0,rR), liftR=Math.max(0,rL);   // contralateral to the arms
+  u.legL.rotation.x=-0.14-liftL*0.60;
+  u.legR.rotation.x=-0.14-liftR*0.60;
+  if(u.kneeL) u.kneeL.rotation.x=0.20+liftL*0.85;
+  if(u.kneeR) u.kneeR.rotation.x=0.20+liftR*0.85;
+  u.head.rotation.x=0.16;   // eyes up the climb
+  if(u.torso){ u.torso.rotation.y=Math.sin(ph)*0.06; u.torso.rotation.x=0.05; }
 }
 function doEnterExit(){
   if(!G.started||G.over) return;
