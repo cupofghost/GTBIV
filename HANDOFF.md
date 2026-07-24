@@ -550,7 +550,7 @@ math. Great for composing cutscene shots (feeds D-work in CHARACTERS.md).
 **Acceptance:** Toggle → camera detaches and flies smoothly anywhere; toggle back
 → returns to normal follow-cam exactly.
 
-#### D5 — Time controls (pause-step / slow-mo / fast-forward) `P2 · Risk: Low`
+#### D5 — Time controls (pause-step / slow-mo / fast-forward) `P2 · Risk: Low` `OPEN`
 **Why:** Inspecting animations, physics, and cutscene timing needs sub-real-time
 control.
 **Where:** `MAIN LOOP` — introduce a `timeScale` applied to `dt` for simulation
@@ -584,7 +584,7 @@ point) so you can eyeball the rig. This *is* the creator's preview surface.
 updates the model live; poses play correctly. Uses the same builder the game
 uses (no forked model code).
 
-#### D7 — Deterministic seed (optional) `P2 · Risk: Med`
+#### D7 — Deterministic seed (optional) `P2 · Risk: Med` `OPEN`
 **Why:** `Math.random()` is used everywhere, so bugs aren't reproducible.
 **Where:** central RNG; city/traffic/ped/mission spawns.
 **Approach:** When `?seed=<n>` is present, route randomness through a small
@@ -737,7 +737,7 @@ silenced when the setting is off, never throws when `navigator.vibrate` is
 absent, and the setting round-trips a reload) plus the full headless suite
 green (43/43, up from 39 with the four new haptics cases).
 
-#### J2 — Hitstop + refined screen shake `P2 · Risk: Med`
+#### J2 — Hitstop + refined screen shake `P2 · Risk: Med` `OPEN`
 **Why:** Big impacts read as "meh". A few frames of freeze + a tuned shake curve
 makes collisions and explosions land.
 **Where:** `CAMERA` (`shake`, already exists), `MAIN LOOP`, `carPhysics`/`explode`.
@@ -750,7 +750,7 @@ disables both.
 fast; gentle bumps do almost nothing. No input lag introduced. Reduce-motion off
 switch works.
 
-#### J3 — Camera polish (foot + car) `P2 · Risk: Med`
+#### J3 — Camera polish (foot + car) `P2 · Risk: Med` `OPEN`
 **Why:** The camera is already thoughtful (collision pull-in, look-hold, speed
 FOV). Small tuning + options make it feel pro.
 **Where:** `CAMERA` (`updateCamera`, `cameraCollide`).
@@ -775,6 +775,44 @@ pedals DOM.
 brakes-then-reverses; ensure the pedal/HUD communicates it). Keep desktop
 WASD identical in feel (already true for the dead-zone change — `pollKeys`
 sets `input.jx/jy` directly, bypassing `joyMove`).
+
+**Brake vs. Reverse Clarity Spec (for J4 reverse/brake part):**
+
+**Physics Status:** `carPhysics` already implements correct brake→reverse sequence:
+- Engine off or moving forward: brake (velocity toward 0)
+- Stopped and reverse input held: engage reverse (backward acceleration)
+- Current code: correct; issue is only **UI clarity**, not mechanics
+
+**UI Problem:** Touch/desktop both show a single "BRAKE" button. On press, physics do the right thing (brake if moving, reverse if stopped), but the player doesn't know which mode is active. Result: confusion on first reverse ("why isn't the car going backward?").
+
+**Solution — Three changes:**
+
+1. **Touch Pedal Button (DOM):**
+   - Rename `#btnBrake` to `#pedBrake` (internal ID, no user-facing change)
+   - Add dynamic `data-state="brake"|"reverse"` attribute
+   - CSS: button text swaps based on state: `data-state[brake] { content: 'BRAKE'; }` vs `data-state[reverse] { content: 'REVERSE'; }`
+   - Update: in `carPhysics`, after `car.vel.length() < 0.1` (stopped), set `$('pedBrake').dataset.state = 'reverse'`
+   - Clear: in `carPhysics`, if moving forward, set back to `'brake'`
+   - *Effect:* Touch players see "BRAKE" when moving, "REVERSE" when stopped
+
+2. **Desktop Keyboard (HUD Hint):**
+   - Add a tiny indicator below the speedometer: `[S = BRAKE]` when moving, `[S = REVERSE]` when stopped
+   - Same state-tracking as above, just in the speedometer UI code instead of DOM
+
+3. **Color Feedback (Optional):**
+   - Button background tint: brake = red-ish, reverse = purple-ish (or invert)
+   - Reinforces the mode switch visually
+
+**Code Hook Points:**
+- [ ] `carPhysics`: after velocity check (~line 5200–5250), dispatch state change
+- [ ] Touch pedal: bind to dynamic CSS via `dataset.state` (~50 characters of CSS)
+- [ ] Desktop HUD: speedo text update in `updateDash` (~line 5700, small addition)
+
+**Testing/Acceptance for J4 reverse part:**
+- [ ] Touch: press brake while moving → button says "BRAKE"; stop car completely → button changes to "REVERSE" immediately
+- [ ] Desktop: same state reflected in HUD hint below speedometer
+- [ ] No input lag or flicker on state change; feels instant
+- [ ] Gameplay unchanged (physics identical); only UI changes
 
 ---
 
@@ -806,7 +844,47 @@ feel big). Don't touch the debt mechanic itself, just the numbers + feedback.
 **Acceptance:** A test playthrough to $800 feels earned (not 2 minutes, not an
 hour). Every income source is reachable and worth doing.
 
-#### P3 — Wanted-system feel + difficulty options `P2 · Risk: Med`
+**Economy Audit (for P2 implementation):**
+
+All money sources and current values (as of 2026-07-24):
+
+| Activity | Amount | Notes |
+|----------|--------|-------|
+| **Robbery** | | |
+| — Stickup (pedestrian at gunpoint) | $25–70 | Base income, always available |
+| — Pizza heist (crack safe) | $400–900 | One-time per chapter, high-reward encounter |
+| **Missions** | $120–200+ | Base $120 + distance/3; every 5th mission bonus $500 |
+| **Deliveries** | Variable | Pizza runs (not implemented, placeholder in code) |
+| **Passive** | | |
+| — Heat loss (cool down after escape) | $G.stars×60 | Encourages heat-cooldown play (stars 1–6 = $60–360) |
+| — Helicopter air time | $airT×110 | Bonus for time spent flying (~$110–500+ per flight) |
+| — Chopper shot down | $150 | One-off reward |
+| — Mama rat killed | $150 | One-off reward |
+| **Pickups** | $15–25 | Random money on street (minimal) |
+| **Chapter milestones** | $500 | Every 5 missions |
+| **Debt** | $800 | Target to pay Deb; once paid, game continues |
+
+**Estimated playthrough to $800 (rough math):**
+- 5–6 stickups: $150–420
+- 1 heist: $400–900 (often exceeds target alone)
+- 2–3 missions: $240–600
+- Heat losses + air time: $100–300 (opportunistic)
+- **Total: $800–2100** depending on playstyle
+
+**Current balance assessment:**
+- **Heist can solo-fund the debt**, making stickups/missions optional
+- **Stickup is low-reward but always-available** — should feel like grinding if overly used
+- **Missions are mid-tier but distance-weighted**, encouraging exploration
+- **Heat loss / air time are bonuses** for active play, not required
+
+**Tuning recommendation:**
+- If playthrough feels **too quick** (heist dominates): reduce heist to $200–500 or gate it behind heat/time
+- If playthrough feels **grindy** (too many stickups needed): bump stickup to $50–100 or increase mission rewards
+- If playthrough feels **right**: document the balanced feel and preserve these numbers as canon
+
+**Next agent: Test a fresh playthrough focusing on natural earning pace. Time yourself from boot to $800. Report: fast/moderate/grindy?**
+
+#### P3 — Wanted-system feel + difficulty options `P2 · Risk: Med` `OPEN`
 **Why:** Heat/stars escalation and cop pressure drive the fun; expose it and
 tune it.
 **Where:** `WANTED` (`addHeat`, `clearHeat`, `updateWanted`, `spawnCop`),
@@ -836,7 +914,7 @@ screens.
 minimap blips are self-explanatory; HUD is legible at phone size in bright and
 dark scenes.
 
-#### U2 — Onboarding / How-to-Play `P2 · Risk: Low`
+#### U2 — Onboarding / How-to-Play `P2 · Risk: Low` `OPEN`
 **Why:** Controls are only a one-line hint; a short first-run guide lowers the
 bounce rate.
 **Where:** start flow, `controlsHint`, pause menu (F2) "How to Play".
@@ -845,6 +923,57 @@ reachable again from the pause menu. Don't gate the fun behind a tutorial —
 keep it a glanceable card, remembered as "seen" via the save (F1).
 **Acceptance:** First launch shows the card once; it's re-openable from pause;
 skipping works; "seen" persists so it doesn't nag.
+
+**Onboarding Design (for U2 implementation):**
+
+**Controls Card Spec:**
+
+*Presentation:* A centered modal overlay (like `#bigEvent` or pause menu) that slides in on first boot, after the animated intro clears but before gameplay. Tap/click anywhere or click "GOT IT" to dismiss. Clicking "HOW TO PLAY" in pause menu recalls it anytime (with a close button instead of "GOT IT").
+
+*Content Structure:*
+```
+CONTROLS
+═══════════════════════════════════════════════════════════════
+
+[TAB: TOUCH]  [TAB: DESKTOP]  ← Tab buttons, one per input method
+
+TOUCH TAB:
+📱 MOVE: Left thumb stick
+👁 LOOK: Swipe right side
+⚡ GAS/BRAKE: Bottom pedals
+🔥 BOOST/DRIFT: Pedal buttons
+🎯 SHOOT/PUNCH: Action buttons
+[Fine print: Rotate phone to landscape for best play]
+
+DESKTOP TAB:
+⌨️ MOVE: W A S D
+👁 LOOK: Drag right mouse button
+⚡ GAS/BRAKE: W / S
+🔥 BOOST: Shift  |  DRIFT: Space
+🎯 PUNCH: F  |  SHOOT: G
+[Fine print: No keyboard config yet—these are hardcoded]
+
+═══════════════════════════════════════════════════════════════
+THE JOB: Deb wants $800 by tonight. Rob stores. Run missions.
+Avoid the cops. Use [HOW TO PLAY] anytime to re-read this.
+═══════════════════════════════════════════════════════════════
+
+[GOT IT]  (or [CLOSE] if called from pause menu)
+```
+
+*Implementation Notes:*
+- Style: match the existing `#bigEvent` / `#pauseMenu` look (dark overlay, bold fonts, neon accents)
+- Tab switching: simple CSS-based toggle (show/hide tab content on click)
+- Storage: add `G.controlsCardSeen` to the save blob (F1), default false. On boot, if false, show card auto. "GOT IT" sets it true and saves.
+- Reachability: wire a "HOW TO PLAY" button into the pause menu (F2) that recalls the card. Must work whether seen before or not.
+- Responsive: ensure font sizes and layout work at 800×390 landscape (phone minimum).
+
+*Acceptance for U2:*
+- First launch shows card auto, dismissing lands you in gameplay without losing progress
+- Pause menu has "HOW TO PLAY" button that re-opens the card
+- Card is skippable (doesn't nag on revisit)
+- "Seen" flag persists after reload (once F1 is confirmed working)
+- All button/tab interactions are smooth and responsive at mobile touch speed
 
 #### U3 — Death / busted / respawn flow `P2 · Risk: Med`
 **Why:** `busted`/`wasted` should feel fair — clear consequence, quick recovery,
@@ -857,7 +986,7 @@ quick to dismiss.
 **Acceptance:** Getting busted/wasted never loses saved progress, always respawns
 you playable (not inside a wall, not carless with no options), and reads clearly.
 
-#### A2 — Accessibility options `P3 · Risk: Low`
+#### A2 — Accessibility options `P3 · Risk: Low` `OPEN`
 **Why:** Small settings widen the audience and reduce motion sickness.
 **Where:** Settings (F2), `CAMERA`, `updateStarsHUD`/minimap colours.
 **Approach:** Add **Reduce Motion** (caps shake/hitstop/FOV kick — J2/J3 respect
@@ -865,6 +994,49 @@ it), a **larger-text / high-contrast HUD** toggle, and colour-blind-friendlier
 marker shapes/colours on the minimap. All persisted (F1).
 **Acceptance:** Each toggle has a real, visible effect and persists; reduce-motion
 noticeably calms the camera; HUD text scales without breaking layout.
+
+**Accessibility Options Spec (for A2 implementation):**
+
+Three toggles in Settings panel (F2), each with visual on/off indicator:
+
+| Setting | Type | Effect | Code Hook |
+|---------|------|--------|-----------|
+| **Reduce Motion** | Toggle | Caps camera shake, disables hitstop on impact, disables FOV kick | `SETTINGS.reduceMotion` → respected in `shake()`, J2/J3 code paths |
+| **High Contrast HUD** | Toggle | HUD text +20% size, darker backgrounds, stronger borders; keeps layout stable | `SETTINGS.highContrast` → CSS class on `#hud` + font-size override |
+| **Colorblind Mode** | Dropdown: OFF / Deuteranopia / Protanopia / Tritanopia | Minimap marker colors shift to accessible palettes (per mode); star/heat HUD text bolded | `SETTINGS.colorblindMode` → CSS class on `#minimap` + marker remap |
+
+**Settings Panel Integration:**
+- Add three rows in the existing Settings pane (`#pmSettings` in pause menu)
+- **Reduce Motion**: checkbox toggle (already familiar pattern from F2)
+- **High Contrast**: checkbox toggle
+- **Colorblind**: dropdown (OFF / Deuteranopia / Protanopia / Tritanopia)
+- All stored in `SETTINGS` blob via `saveSettings()` (already in F2)
+
+**Implementation Checklist:**
+
+*Canvas/3D (in `CAMERA`/`loop`):*
+- [ ] `if(SETTINGS.reduceMotion) { shake() returns immediately; hitstop skipped; FOV kick clamped to 0; }`
+- Line references: `shake()` around line 6500, hitstop in `carPhysics` (~5200), FOV kick in `updateCamera` (~6480)
+
+*DOM/CSS (HUD):*
+- [ ] Add `.gtb-high-contrast` class rules for `#money`, `#debt`, `#stars`, `#heatHint`, `#mission`
+  - Font-size: +20% (e.g., `1.2em`)
+  - Background: darker (e.g., `rgba(0,0,0,0.8)`)
+  - Border: thicker (e.g., `2px` solid) and brighter
+- [ ] Add `.gtb-colorblind-deut` / `-prot` / `-trit` classes for minimap marker colors
+
+*Minimap Colors (per mode):*
+- **Normal**: Blue cops, red gang, green mission, yellow Deb, cyan helis
+- **Deuteranopia** (red-green weakness): Blue cops, purple gang, yellow mission, orange Deb, cyan helis
+- **Protanopia** (red-green weakness variant): Blue cops, teal gang, white mission, orange Deb, magenta helis
+- **Tritanopia** (blue-yellow weakness): Red cops, green gang, magenta mission, pink Deb, cyan helis
+
+*Acceptance for A2:*
+- [ ] Toggling reduce-motion visibly stops screen shake + hitstop in gameplay
+- [ ] High-contrast mode renders HUD larger + darker; layout doesn't break at 800×390
+- [ ] Colorblind mode changes minimap markers correctly; all three variants tested
+- [ ] All three settings persist after reload (test with F1 save system)
+- [ ] No console errors; performance unchanged
 
 ---
 
@@ -898,7 +1070,7 @@ suite green (36/36), plus a standalone Playwright smoke pass confirming
 disposed meshes revive cleanly when the Replay system re-adds a recently-killed
 entity mid-scrub (no console errors, clean exit).
 
-#### R2 — Pool traffic / peds instead of churning them `P2 · Risk: Med`
+#### R2 — Pool traffic / peds instead of churning them `P2 · Risk: Med` `OPEN`
 **Why:** Cars and peds are spliced and re-`spawn`ed via timeouts, creating and
 GC-ing meshes constantly. Pooling smooths frame times.
 **Where:** `spawnTraffic`, `spawnPed`, `damageCar` respawn, `updateTraffic`/
@@ -911,7 +1083,7 @@ disposed until teardown).
 devtools Performance); population still feels alive; no "ghost" recycled entities
 appearing wrong.
 
-#### R3 — Anti-stuck & spawn-safety `P2 · Risk: Med`
+#### R3 — Anti-stuck & spawn-safety `P2 · Risk: Med` `OPEN`
 **Why:** Analytic collision can occasionally wedge the player in geometry or
 spawn NPCs inside buildings.
 **Where:** `resolveFootCollision`, `respawn`, `spawnPed`/`spawnTraffic`,
@@ -1020,7 +1192,7 @@ once this exists, same as gang members stay near `CHAOS`).
 **Acceptance:** the field is visible and reachable on foot/by car, shows on
 the minimap, doesn't break existing block/road generation, holds framerate.
 
-#### FB3 — "Revenge on Coach" mission `P1 · Risk: Med`
+#### FB3 — "Revenge on Coach" mission `P1 · Risk: Med` `OPEN`
 **Why:** The dramatic payoff of the backstory — Turbo settles the score with
 the man who ended his football career.
 **Where:** a new mission, built like the existing heist system
@@ -1038,7 +1210,7 @@ wire into the save system, `F1`) that unlocks **FB4**.
 a clear win state, sets the unlock flag, persists across reload (once `F1`
 exists), and doesn't re-trigger after being beaten.
 
-#### FB4 — Football minigame `P2 · Risk: High`
+#### FB4 — Football minigame `P2 · Risk: High` `OPEN`
 **Why:** The reward for beating Coach — Turbo gets to play again. This is the
 biggest single new system in the arc; scope it deliberately, don't let it
 balloon into a full sports sim.
@@ -1056,7 +1228,7 @@ on a win.
 feel good, stop and check in rather than over-building — the FB5 cutscene
 is the actual payoff, not the football mechanics themselves.
 
-#### FB5 — Cheerleaders cutscene (solo Turbo, no Dad on-screen) `P2 · Risk: Med`
+#### FB5 — Cheerleaders cutscene (solo Turbo, no Dad on-screen) `P2 · Risk: Med` `OPEN`
 **Why:** The character beat the whole arc is building to.
 **Where:** triggered on winning **FB4**; another `CUTSCENES` entry, using the
 new actor/pose work from `CHARACTERS.md` (**C8**) if that's landed yet, or a
@@ -1201,6 +1373,8 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
+**NEXT: P2 (Economy tuning)** — A P2 leverage task that tuning money rewards/sinks to feel earned. Pairs well with P1/P3. No new systems, just number audits and feedback polish.
+
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
 
@@ -1214,19 +1388,29 @@ throughout:
 ✔ F3  Adaptive quality           DONE
 ✔ F4  Audio mix + ducking        DONE
 ✔ J1  Haptics & impact feedback  DONE
-U1  Objective clarity/HUD       ← NEXT
-P1  Mission variety
-J3  Camera options
-J4  Control feel
-P3  Wanted + difficulty
-P2  Economy tuning
-J2  Hitstop + shake
-U2  Onboarding
-U3  Death/respawn flow
-R2  Pooling
-R3  Anti-stuck
-A2  Accessibility
-X1  (only if approved) modular split
+✔ U1  Objective clarity/HUD      DONE
+✔ P1  Mission variety (base)     DONE
+✔ FB1 Jock NPCs                  DONE
+✔ FB2 Football field             DONE
+✔ RV1 Mama rat mechanics         DONE (placeholder)
+—  D5  Time controls             OPEN (dev tool)
+—  D7  Deterministic seed        OPEN (dev tool)
+—  J2  Hitstop + shake           OPEN
+—  J3  Camera options            OPEN
+—  J4  Brake/reverse clarity     OPEN (dead-zone done)
+—  P3  Wanted + difficulty       OPEN
+—  P2  Economy tuning            OPEN
+—  U2  Onboarding                OPEN
+—  U3  Death/respawn flow        OPEN
+—  R2  Pooling traffic/peds      OPEN
+—  R3  Anti-stuck & spawn-safety OPEN
+—  A2  Accessibility             OPEN
+—  FB3 Coach mission             OPEN
+—  FB4 Football minigame         OPEN
+—  FB5 Cheerleaders cutscene     OPEN
+—  RV2 Mama rat model            OPEN
+—  RV3 Rat vengeance polish      OPEN (unscoped)
+—  X1  Modular split (if approved) OPEN
 ```
 
 **Character / cutscene track** (see `CHARACTERS.md`) runs in parallel and shares
