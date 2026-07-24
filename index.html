@@ -604,6 +604,62 @@ const $=id=>document.getElementById(id);
 // 'high' tier; applyQuality() overwrites them at boot and on any tier change.
 let TRAFFIC_CAP=16, PED_CAP=34, PARTICLE_SCALE=1, GFX_TIER='high';
 
+// ═════════════════════════════════════════════════════════════════════════════
+// CODE MAP — Search by section name to navigate quickly.
+// Format: "SECTION TITLE" (line range, size in lines, key functions)
+// ═════════════════════════════════════════════════════════════════════════════
+// HELPERS & GLOBAL STATE        (588–605, ~18 lines: rand, randi, pick, clamp, lerp, TAU, $)
+// DEVICE / ORIENTATION          (606–655, ~50 lines: IS_TOUCH, updateOrientationMode, vw, vh, remapXY, ROTATED)
+// AUDIO                         (656–818, ~163 lines: initAudio, AC, masterGain, engine synth, sfx)
+// PROCEDURAL 80s SYNTHWAVE      (819–1321, ~503 lines: SW_SONGS, STATIONS, scheduleMusic, stepSong, synth fx)
+// THREE SETUP                   (1322–1372, ~51 lines: scene, camera, renderer, sky/sun, lights)
+// CITY                          (1373–1983, ~611 lines: procCity, blockInfo, roads, buildings, textures)
+// FOOTBALL FIELD                (1984–2034, ~51 lines: FOOTBALL landmark, turf, goalposts, bleachers)
+// ELEVATED LIGHT RAIL           (2035–2158, ~124 lines: TRAIN, stations, rail track, animated loop)
+// STAIRS & FIRE ESCAPES         (2159–2383, ~225 lines: STAIR_RUNS, terrain knolls, hideouts)
+// PARTICLES                     (2384–2438, ~55 lines: burst, P_MAX, particle pool)
+// BLOB SHADOWS                  (2439–2443, ~5 lines: makeShadow)
+// GPU RESOURCE CLEANUP          (2444–2465, ~22 lines: disposeMesh, _sharedGPU)
+// CARS                          (2466–2658, ~193 lines: makeCar, CAR_SPECS, carModel, physics setup)
+// PEDESTRIANS                   (2659–2775, ~117 lines: makePerson, spawnPed, updatePeds)
+// PIZZA DELIVERY SYSTEM         (2776–2928, ~153 lines: pizza delivery missions, stages, reward)
+// RIVAL PIZZA GANG: CHAOS PIZZA (2932–3057, ~126 lines: CHAOS gang members, spawnGangMembers, taunts)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS (3059–3220, ~162 lines: JOCK_TAUNTS, spawnJocks, jock AI)
+// STRAY DOGS & DOG GANGS        (3223–3444, ~222 lines: dogs, dog gangs, pack behavior, meat drops)
+// PIZZA WARS MISSION            (3448–3520, ~73 lines: heist system, stages, guards, pizza exterior)
+// PLAYER                        (3523–3547, ~25 lines: player object creation, initial state)
+// PIZZA PLACE & INTERIOR        (3548–3798, ~251 lines: pizza interior geometry, robbery, NPC setup)
+// DAY/NIGHT & HEIST SYSTEM      (3802–3990, ~189 lines: toggleNight, night sky, heist triggers)
+// PICKUPS                       (3993–4031, ~39 lines: money pickups, spawn/despawn)
+// HELICOPTERS                   (4032–4492, ~461 lines: makeHeli, heli physics, pilot AI, rotor anim)
+// TALKING PEDS                  (4493–4581, ~89 lines: showBubble, wahVoice, NPC speech bubbles)
+// WEAPONS                       (4582–5032, ~451 lines: doAttack, pistol/RPG logic, collision, damage)
+// WANTED                        (5033–5126, ~94 lines: addHeat, clearHeat, star system, heat decay)
+// CAR PHYSICS                   (5127–5310, ~184 lines: carPhysics, collision, acceleration, damage)
+// PLAYER: FOOT & CAR            (5311–5688, ~378 lines: footCamDistance, input, kick mode, car entry/exit)
+// HUD / TOASTS                  (5689–5719, ~31 lines: toast, HUD updates, on-screen feedback)
+// MISSIONS                      (5720–5825, ~106 lines: startMission, updateMission, missions, reward)
+// AI                            (5826–5850, ~25 lines: cop/ped goal/walk logic)
+// FOOT COPS                     (5851–5893, ~43 lines: spawnCop, updateCops, cop AI, roaming)
+// SEWER RATS                    (5894–6010, ~117 lines: RAT_POOL, makeRatMesh, spawnRats, updateRats)
+// MAMA RAT (rat vengeance)      (6011–6381, ~371 lines: spawnMamaRat, updateMamaRat, bite logic, mama model)
+// BUSTED / WASTED               (6382–6455, ~74 lines: busted, wasted, respawn logic, state reset)
+// CAMERA                        (6456–6542, ~87 lines: updateCamera, shake, collision pull-in, look math)
+// MINIMAP                       (6543–6589, ~47 lines: drawMinimap, blips, legend, position tracking)
+// MAIN LOOP                     (6590–6750, ~161 lines: loop, substep simulation, entity updates, frame pacing)
+// ORIENTATION (pause on rotate) (6751–6808, ~58 lines: orientationchange, portrait warning overlay)
+// ANIMATED INTRO                (6809–6878, ~70 lines: intro cinematic, title screen animation)
+// STORY: TURBO JONES, CHAPTER 1 (6879–7141, ~263 lines: story flags, Deb intro, debt system, mission gates)
+// CUTSCENE SYSTEM               (7142–7383, ~242 lines: playCutscene, cutscene definitions, actor positioning)
+// VOICEOVER SYSTEM              (7387–7771, ~385 lines: playVOFile, playVOLine, TTS, voiceover queue)
+// INTRO NARRATION               (7469–7771, ~303 lines: intro voiceover, narrative setup)
+// DEV TOOLS                     (7774–7849, ~76 lines: devPanel, cheats, god mode, teleports, ?dev=1 gate)
+// REPLAY SYSTEM                 (7852–7973, ~122 lines: enterReplay, updateReplay, free-fly camera, buffer)
+// PAUSE MENU & SETTINGS         (7974–8141, ~168 lines: pauseMenu, Settings panel, volume/quality sliders)
+// SAVE SYSTEM                   (8142–8191, ~50 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                (8192–end, ~200 lines: boot, init, resize handlers, quality apply)
+// ═════════════════════════════════════════════════════════════════════════════
+
 // ================= DEVICE / ORIENTATION =================
 // Coarse pointer == touch is the primary input (robust vs. UA-sniffing or
 // touch-event feature detection, which false-positive on touch-capable
