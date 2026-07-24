@@ -1387,6 +1387,283 @@ window.NPC_TYPES = {
     hairColors: [0x1a1a1a, 0x8a8a8a, 0xd9d9d9],
   }),
 
+  // === TRANSPORTATION ===
+  bus_driver: createNPCType('bus_driver', {
+    palette: {
+      shirts: [0x1a1a1a, 0x2a2a2a, 0x3a5a9e],
+      pants: [0x1a1a1a, 0x2a2a2a],
+      shoes: [0x1a1a1a, 0x4a4a4a],
+    },
+    buildRange: [0.95, 1.2],
+    hairStyles: ['short', 'buzz', 'bald'],
+  }),
+
+  truck_driver: createNPCType('truck_driver', {
+    palette: PALETTES.worker,
+    buildRange: [1.0, 1.25],
+    hairStyles: ['short', 'buzz', 'bald'],
+    beard: true,
+  }),
+
+  parking_attendant: createNPCType('parking_attendant', {
+    palette: {
+      shirts: [0x3a6b9d, 0x6b7c9e],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0x1a1a1a, 0x4a4a4a],
+    },
+    buildRange: [0.95, 1.15],
+  }),
+
+  valet: createNPCType('valet', {
+    palette: PALETTES.business,
+    buildRange: [0.9, 1.08],
+    tank: 0,
+  }),
+
+  // === HEALTH / WELLNESS (EXPANDED) ===
+  therapist: createNPCType('therapist', {
+    palette: PALETTES.business,
+    buildRange: [0.88, 1.1],
+    hairStyles: ['long', 'short', 'bun'],
+  }),
+
+  dentist: createNPCType('dentist', {
+    palette: PALETTES.upscale,
+    buildRange: [0.9, 1.1],
+    tank: 0,
+  }),
+
+  pharmacist: createNPCType('pharmacist', {
+    palette: {
+      shirts: [0xf0f0f0, 0xf0e8d8],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0x1a1a1a, 0xf0f0f0],
+    },
+    buildRange: [0.88, 1.08],
+  }),
+
+  physical_therapist: createNPCType('physical_therapist', {
+    palette: PALETTES.athletic,
+    buildRange: [0.9, 1.1],
+    tank: 0.3,
+  }),
+
+  meditation_enthusiast: createNPCType('meditation_enthusiast', {
+    palette: PALETTES.hippie,
+    buildRange: [0.88, 1.15],
+    hairStyles: ['long', 'short'],
+  }),
+
+  // === ENVIRONMENTAL ===
+  park_ranger: createNPCType('park_ranger', {
+    palette: {
+      shirts: [0x4a7c4a, 0x5a6b3a],
+      pants: [0x3a2a1a, 0x4a3a2a],
+      shoes: [0x4a3a2a, 0x5a4a3a],
+    },
+    buildRange: [0.95, 1.15],
+  }),
+
+  environmental_activist: createNPCType('environmental_activist', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+    hairColors: [0x1a1a1a, 0x8a6030],
+  }),
+
+  gardener: createNPCType('gardener', {
+    palette: PALETTES.worker,
+    buildRange: [0.95, 1.15],
+    hairColors: [0x8a8a8a, 0xd9d9d9, 0x6b4a2f],
+  }),
+
+  // === MEDIA / COMMUNICATION ===
+  journalist: createNPCType('journalist', {
+    palette: PALETTES.business,
+    buildRange: [0.88, 1.1],
+    tank: 0,
+    hairStyles: ['short', 'long', 'ponytail'],
+  }),
+
+  news_anchor: createNPCType('news_anchor', {
+    palette: PALETTES.upscale,
+    buildRange: [0.88, 1.08],
+    tank: 0,
+    hairStyles: ['short', 'long'],
+  }),
+
+  radio_host: createNPCType('radio_host', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+    hairStyles: ['short', 'long', 'buzz'],
+  }),
+
+  podcast_bro: createNPCType('podcast_bro', {
+    genderBias: 'guy',
+    palette: PALETTES.casual,
+    buildRange: [0.9, 1.15],
+    shorts: 0.4,
+    tank: 0.3,
+  }),
+
+  // === EDUCATION ===
+  teacher: createNPCType('teacher', {
+    palette: PALETTES.business,
+    buildRange: [0.88, 1.1],
+    tank: 0,
+  }),
+
+  professor: createNPCType('professor', {
+    palette: PALETTES.business,
+    buildRange: [0.88, 1.12],
+    hairColors: [0x8a8a8a, 0xd9d9d9, 0x6b4a2f],
+  }),
+
+  tutor: createNPCType('tutor', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.08],
+  }),
+
+  student_nerd: createNPCType('student_nerd', {
+    palette: PALETTES.casual,
+    buildRange: [0.85, 1.05],
+    shorts: 0.2,
+    tank: 0.1,
+  }),
+
+  // === EMERGENCY / SERVICES ===
+  firefighter: createNPCType('firefighter', {
+    palette: {
+      shirts: [0xff6b1a, 0xd96b3a],
+      pants: [0x1a1a1a, 0x2a2a2a],
+      shoes: [0x1a1a1a, 0x4a4a4a],
+    },
+    buildRange: [1.05, 1.2],
+  }),
+
+  paramedic: createNPCType('paramedic', {
+    palette: {
+      shirts: [0x6b8a2a, 0x8a9a4a],
+      pants: [0x2a2a2a, 0x3a3a3a],
+      shoes: [0x1a1a1a, 0x4a4a4a],
+    },
+    buildRange: [0.95, 1.15],
+  }),
+
+  animal_control: createNPCType('animal_control', {
+    palette: PALETTES.worker,
+    buildRange: [0.95, 1.15],
+  }),
+
+  // === ARTS / DESIGN ===
+  fashion_designer: createNPCType('fashion_designer', {
+    genderBias: 'girl',
+    palette: PALETTES.avant_garde,
+    buildRange: [0.88, 1.05],
+    tank: 0.3,
+  }),
+
+  interior_designer: createNPCType('interior_designer', {
+    palette: PALETTES.upscale,
+    buildRange: [0.88, 1.08],
+    shorts: 0.2,
+  }),
+
+  makeup_artist: createNPCType('makeup_artist', {
+    genderBias: 'girl',
+    palette: PALETTES.sleazy,
+    buildRange: [0.88, 1.05],
+  }),
+
+  stylist: createNPCType('stylist', {
+    genderBias: 'girl',
+    palette: PALETTES.upscale,
+    buildRange: [0.88, 1.08],
+    hairStyles: ['long', 'short', 'bun'],
+  }),
+
+  // === FINANCE / BUSINESS ===
+  accountant: createNPCType('accountant', {
+    palette: PALETTES.business,
+    buildRange: [0.88, 1.1],
+    tank: 0,
+    hairColors: [0x1a1a1a, 0x8a8a8a],
+  }),
+
+  realtor: createNPCType('realtor', {
+    palette: PALETTES.upscale,
+    buildRange: [0.88, 1.08],
+    tank: 0,
+    hairStyles: ['long', 'short'],
+  }),
+
+  banker: createNPCType('banker', {
+    palette: PALETTES.business,
+    buildRange: [0.9, 1.1],
+    tank: 0,
+    hairColors: [0x1a1a1a, 0x8a8a8a],
+  }),
+
+  investment_bro: createNPCType('investment_bro', {
+    genderBias: 'guy',
+    palette: PALETTES.upscale,
+    buildRange: [0.95, 1.12],
+    tank: 0,
+  }),
+
+  // === UNIQUE / UNLIKELY ===
+  time_traveler: createNPCType('time_traveler', {
+    palette: PALETTES.futuristic,
+    buildRange: [0.88, 1.12],
+    hairColors: [0x1a1a1a, 0x00ffff],
+  }),
+
+  space_cadet: createNPCType('space_cadet', {
+    palette: PALETTES.neon,
+    buildRange: [0.85, 1.1],
+    hairColors: [0xff00ff, 0x00ffff, 0xffff00],
+  }),
+
+  wild_west_fan: createNPCType('wild_west_fan', {
+    palette: PALETTES.western,
+    buildRange: [0.95, 1.15],
+    hairStyles: ['short', 'buzz', 'long'],
+  }),
+
+  retro_enthusiast: createNPCType('retro_enthusiast', {
+    palette: PALETTES.vintage,
+    buildRange: [0.88, 1.1],
+    hairColors: [0x8a6030, 0xb88a60, 0xd9b44f],
+  }),
+
+  futurism_nerd: createNPCType('futurism_nerd', {
+    palette: PALETTES.futuristic,
+    buildRange: [0.85, 1.05],
+  }),
+
+  // === REGIONAL VARIETIES ===
+  downtown_type: createNPCType('downtown_type', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.1],
+  }),
+
+  suburb_resident: createNPCType('suburb_resident', {
+    palette: PALETTES.casual,
+    buildRange: [0.88, 1.15],
+  }),
+
+  industrial_worker: createNPCType('industrial_worker', {
+    palette: PALETTES.worker,
+    buildRange: [1.0, 1.2],
+    hairStyles: ['short', 'buzz', 'bald'],
+  }),
+
+  port_worker: createNPCType('port_worker', {
+    palette: PALETTES.worker,
+    buildRange: [1.0, 1.25],
+    hairStyles: ['short', 'buzz', 'bald'],
+    beard: 0.4,
+  }),
+
   // === MISC ===
   none: createNPCType('none', {
     // Truly random
