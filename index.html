@@ -231,18 +231,31 @@
     #storyBtn { margin-top:10px; font-size:14px; padding:8px 28px; }
   }
 
-  /* ===== REPLAY ===== */
+  /* ===== CINEMA MODE (formerly REPLAY) ===== */
   #btnReplay { display:none; position:fixed; top:10px; right:120px; z-index:30;
     color:#9be7ff; font-size:12px; font-weight:900; letter-spacing:1px; font-family:Arial,sans-serif;
     background:rgba(10,6,20,.6); border:2px solid #9be7ff66; border-radius:10px; padding:6px 10px; }
   #replayBar { display:none; position:fixed; bottom:8px; left:50%; transform:translateX(-50%);
-    z-index:40; align-items:center; gap:6px; background:rgba(10,6,20,.75); border:2px solid #ff3ea066;
+    z-index:40; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px;
+    max-width:min(calc(var(--lvw)*0.97),920px); background:rgba(10,6,20,.75); border:2px solid #ff3ea066;
     border-radius:12px; padding:6px 10px; }
   #replayBar button { font-size:12px; font-weight:900; color:#fff; background:rgba(40,16,70,.85);
     border:1px solid #ff3ea088; border-radius:8px; padding:6px 10px; font-family:Arial,sans-serif; }
   #replayBar button.on { background:rgba(20,90,40,.85); border-color:#7dff8a; }
-  #replayScrub { width:min(calc(var(--lvw)*0.38),260px); accent-color:#ff3ea0; }
+  #cinemaScene { font-size:12px; font-weight:900; color:#fff; background:rgba(40,16,70,.95);
+    border:1px solid #ff3ea088; border-radius:8px; padding:6px 8px; font-family:Arial,sans-serif;
+    max-width:min(calc(var(--lvw)*0.6),200px); }
+  #cinemaScene optgroup { color:#9be7ff; background:#1a0a24; }
+  #cinemaScene option { color:#fff; background:#1a0a24; }
+  #cinemaScrub { display:inline-flex; align-items:center; gap:6px; }
+  #cinemaHud { background:rgba(60,20,90,.9); border-color:#c07dff; }
+  #replayScrub { width:min(calc(var(--lvw)*0.30),220px); accent-color:#ff3ea0; }
   #replayTime { color:#9be7ff; font-size:11px; font-family:monospace; min-width:52px; text-align:center; }
+  #cinemaShow { display:none; position:fixed; bottom:8px; left:50%; transform:translateX(-50%); z-index:41;
+    color:#9be7ff; font-size:12px; font-weight:900; letter-spacing:1px; font-family:Arial,sans-serif;
+    background:rgba(10,6,20,.55); border:2px solid #9be7ff66; border-radius:10px; padding:6px 12px;
+    cursor:pointer; opacity:0.35; transition:opacity .15s; }
+  #cinemaShow:hover { opacity:1; }
   /* ===== DEV MENU (only present when ?dev=1) ===== */
   #devPanel { display:none; position:fixed; top:10px; left:50%; transform:translateX(-50%);
     z-index:70; width:min(calc(var(--lvw)*0.94),720px); max-height:calc(var(--lvh)*0.88); overflow:auto;
@@ -562,26 +575,49 @@
       <b>TOUCH:</b> left stick moves &middot; swipe the right side to look &middot; pedals drive.
       ENTER steals cars &middot; PUNCH / gun button fights &middot; TALK chats up peds.<br>
       <b>DESKTOP:</b> WASD move &middot; E enter/exit &middot; F attack &middot; G weapon &middot; T talk &middot; Space jump/drift &middot;
-      H horn &middot; Q radio &middot; N day/night &middot; C crouch &middot; R replay &middot; P pause.<br>
+      H horn &middot; Q radio &middot; N day/night &middot; C crouch &middot; R cinema &middot; P pause.<br>
       <b>THE JOB:</b> Deb wants <b>$800</b> by tonight. Rob glowing stores, stick up
       peds with the pistol, run missions &mdash; and shake the cops before they bust you.
     </div>
     <button class="pmBtn" id="pmHowBack">BACK</button>
   </div>
 </div>
-<div id="btnReplay">&#10227; REPLAY</div>
+<div id="btnReplay">&#127916; CINEMA</div>
 <div id="replayBar">
-  <button id="replayBack">-5s</button>
-  <button id="replayPlay">&#9654;</button>
-  <input type="range" id="replayScrub" min="0" max="0" value="0">
-  <span id="replayTime"></span>
+  <select id="cinemaScene" title="Pick a scene to watch">
+    <option value="">&#127916; PICK A SCENE&hellip;</option>
+    <option value="freeroam">&#9654; Free-Roam Camera</option>
+    <option value="intro">&#127909; Intro Flythrough</option>
+    <optgroup label="Scripted Convos">
+      <option value="deb_confrontation">&#128172; Deb Confrontation</option>
+      <option value="deb_payoff">&#128172; Deb Payoff</option>
+      <option value="first_score">&#128172; First Score</option>
+      <option value="pizza_warning">&#128172; Pizza Warning</option>
+    </optgroup>
+    <optgroup label="Action / Events">
+      <option value="jockfight">&#129354; Jock Fight</option>
+      <option value="blowcar">&#128165; Blow Up a Car</option>
+      <option value="blowcop">&#128658; Blow Up a Cop Car</option>
+      <option value="shootped">&#128299; Shoot a Pedestrian</option>
+      <option value="ratmother">&#128000; Rat Mother Incident</option>
+    </optgroup>
+    <option value="replaybuf">&#9198; Replay (last 30s)</option>
+  </select>
+  <span id="cinemaScrub">
+    <button id="replayBack">-5s</button>
+    <button id="replayPlay">&#9654;</button>
+    <input type="range" id="replayScrub" min="0" max="0" value="0">
+    <span id="replayTime"></span>
+  </span>
   <button id="replayUp">UP</button>
   <button id="replayDn">DN</button>
   <button id="replayTalk">TALK</button>
   <button id="shadesOn">&#128374;&#65039; ON</button>
   <button id="shadesOff">&#128374;&#65039; OFF</button>
+  <button id="cinemaHud">HIDE HUD</button>
   <button id="replayExit">EXIT</button>
 </div>
+<div id="cinemaShow">&#127916; SHOW BAR</div>
 <script src="three.min.js"></script>
 <script src="js/person.js"></script>
 <script src="js/npc-types.js"></script>
@@ -7221,14 +7257,16 @@ function loop(){
     return;
   }
 
-  // Replay mode: frozen gameplay, scrub the ring buffer, free-fly camera
-  if(G.replay){
+  // Cinema — frozen buffer scrub renders here; the live director (replay.live)
+  // falls through to the normal sim loop so staged scenes actually play out.
+  if(G.replay&&(!replay||!replay.live)){
     updateReplay(dt);
     renderer.render(scene,camera);
     return;
   }
 
   if(G.started&&!G.paused){
+    const cine=G.replay&&replay&&replay.live;   // live cinema director over a running world
     scheduleMusic();
     if(!G.over){
       pollKeys();
@@ -7236,7 +7274,8 @@ function loop(){
       const steps=Math.min(4,Math.max(1,Math.ceil(dt/0.017)));
       const sdt=dt/steps;
       for(let s=0;s<steps;s++){
-        if(G.mode==='foot') updateFoot(sdt);
+        if(cine){}   // cinema: the player is a frozen actor; the world keeps living around him
+        else if(G.mode==='foot') updateFoot(sdt);
         else if(G.mode==='car') updateCarMode(sdt);
         else if(G.mode==='heli') updateHeliMode(sdt);
         updateRockets(sdt);
@@ -7285,14 +7324,16 @@ function loop(){
     }
     updateParticles(dt);
     updatePickupVisuals(now/1000);
-    if(G.intro) updateIntroCam(dt); else updateCamera(dt);
+    if(cine) updateCinemaCam(dt);
+    else if(G.intro) updateIntroCam(dt);
+    else updateCamera(dt);
     waterTex.offset.x+=dt*0.014; waterTex.offset.y+=dt*0.007;
     water.position.y=-0.34+Math.sin(now/1400)*0.05;
     updateClouds(dt);
     updateGulls(dt);
     updateLights(dt);
-    updateStory(dt);
-    if(G.mode==='foot') updateStores(dt);
+    if(!cine) updateStory(dt);   // don't let proximity auto-fire convos while directing
+    if(!cine&&G.mode==='foot') updateStores(dt);
     positionChatBubbles(dt);
     // burning cars pour flame, then go up — with you inside or not
     for(let i=cars.length-1;i>=0;i--){
@@ -8466,8 +8507,9 @@ showDialogue=function(speaker,text,duration,voice){
 })();
 // ================= END DEV TOOLS =================
 
-// ================= REPLAY SYSTEM =================
-// ring buffer of the last REC_DUR seconds; replay freezes the sim and frees the camera
+// ================= CINEMA MODE (was REPLAY) =================
+// ring buffer of the last REC_DUR seconds; the "Replay last 30s" scene freezes
+// the sim and scrubs it, while the rest of Cinema Mode flies live (see below)
 const REC_DUR=30, REC_HZ=15, REC_MAX=REC_DUR*REC_HZ;
 const recBuf=[]; let recTimer=0, replay=null;
 const REC_ARRS=()=>[cars,peds,cops,helis,gangMembers,jocks,chaosDrivers];
@@ -8496,22 +8538,29 @@ function applySnap(a,b,f,frameId){
 function hideStale(frameId){ // anything replay moved but not in this frame gets hidden
   REC_ARRS().forEach(arr=>{ for(const o of arr){ if(o.mesh&&o._rf!==undefined&&o._rf!==frameId&&frameId-o._rf<REC_MAX) o.mesh.visible=false; } });
 }
+// CINEMA MODE — the old replay screen grown into a scene viewer. It enters as a
+// live free-fly director over the running world (so staged scenes actually play
+// out); the frozen ring-buffer scrub is now just one item on the scene menu.
 function enterReplay(){
-  if(G.replay||!G.started||G.over||G.intro||activeCutscene||recBuf.length<REC_HZ){ if(recBuf.length<REC_HZ) toast('REPLAY: nothing recorded yet','bad'); return; }
+  if(G.replay||!G.started||G.over||G.intro||activeCutscene) return;
   G.replay=true;
   const d=new THREE.Vector3(); camera.getWorldDirection(d);
   replay={ pos:recBuf.length-1, playing:false, frame:0, talk:false, talkT:0, shadesAnim:null,
+    live:true, staged:[], stagedRat:false, introPlay:null, hudHidden:false, _prevGod:DEV_STATE.god,
     cam:{ x:camera.position.x, y:camera.position.y, z:camera.position.z,
           yaw:Math.atan2(d.x,d.z), pitch:Math.asin(clamp(d.y,-1,1)), up:0, dn:0 } };
-  ['btns','pedals','mission','heistHUD','pauseBtn'].forEach(id=>{ const el=$(id); if(el){ el.dataset.rv=el.style.display; el.style.display='none'; } });
+  DEV_STATE.god=true;   // the director is a ghost — explosions and rats can't waste him mid-shot
+  ['btns','pedals','mission','heistHUD','pauseBtn','btnReplay'].forEach(id=>{ const el=$(id); if(el){ el.dataset.rv=el.style.display; el.style.display='none'; } });
   $('replayBar').style.display='flex';
-  $('replayScrub').max=recBuf.length-1; $('replayScrub').value=replay.pos;
-  toast('REPLAY — drag right side to look, stick to fly','gold');
+  $('cinemaScrub').style.display='none';
+  const sel=$('cinemaScene'); if(sel) sel.value='';
+  $('cinemaHud').classList.remove('on'); $('cinemaShow').style.display='none';
+  cinemaFrameOnPlayer();
+  toast('CINEMA — pick a scene, fly with the stick','gold');
 }
-function toggleReplayPlay(){ if(replay){ replay.playing=!replay.playing; $('replayPlay').textContent=replay.playing?'❚❚':'▶'; } }
-function exitReplay(){
-  if(!replay) return;
-  // restore every entity replay touched to its live state
+function toggleReplayPlay(){ if(replay&&!replay.live){ replay.playing=!replay.playing; $('replayPlay').textContent=replay.playing?'❚❚':'▶'; } }
+// put every entity the frozen-buffer scrub borrowed back where it lives
+function restoreReplayEntities(){
   REC_ARRS().forEach(arr=>{ for(const o of arr){
     if(!o.mesh) continue;
     o.mesh.position.set(o.x,o.y||0,o.z); if(o.heading!==undefined) o.mesh.rotation.y=o.heading;
@@ -8521,15 +8570,26 @@ function exitReplay(){
   }});
   player.mesh.position.set(player.x,player.y,player.z); player.mesh.rotation.y=player.heading;
   player.mesh.visible=(G.mode==='foot');
-  G.replay=false; replay=null;
   const u=player.mesh.userData; // jaw back to neutral (shades stay however you left them)
   if(u.jaw){ u.jaw.position.y=-0.105; u.jaw.scale.y=0.62; u.mouth.scale.set(1,1,1); }
-  ['btns','pedals','mission','heistHUD','pauseBtn'].forEach(id=>{ const el=$(id); if(el&&el.dataset.rv!==undefined){ el.style.display=el.dataset.rv; delete el.dataset.rv; } });
+}
+function exitReplay(){
+  if(!replay) return;
+  cinemaClearStaged();
+  restoreReplayEntities();
+  if(replay._prevGod!==undefined) DEV_STATE.god=replay._prevGod;
+  G.replay=false; replay=null;
+  ['btns','pedals','mission','heistHUD','pauseBtn','btnReplay'].forEach(id=>{ const el=$(id); if(el&&el.dataset.rv!==undefined){ el.style.display=el.dataset.rv; delete el.dataset.rv; } });
   $('replayBar').style.display='none';
+  $('cinemaShow').style.display='none';
+  $('hud').style.display='block';
+  $('introLogo').style.display='none';
+  $('cineTop').style.display='none'; $('cineBot').style.display='none';
   footCamYaw=player.heading; camPos.set(player.x-Math.sin(player.heading)*6.5,player.y+3.2,player.z-Math.cos(player.heading)*6.5);
   toast('BACK TO LIVE','gold');
 }
-function updateReplay(dt){
+// ---- shared free-fly camera + Turbo photo-op anims (used by live + scrub) ----
+function cinemaCamStep(dt){
   const r=replay, c=r.cam;
   // fly cam: joystick/arrow keys move in the look plane, look-drag orbits
   let jx=input.jx, jy=input.jy;
@@ -8544,21 +8604,13 @@ function updateReplay(dt){
   c.y=clamp(c.y,0.5,300);
   camera.position.set(c.x,c.y,c.z);
   camera.lookAt(c.x+fx,c.y+fy,c.z+fz);
-  // playback
-  if(r.playing){ r.pos+=dt*REC_HZ; if(r.pos>=recBuf.length-1){ r.pos=recBuf.length-1; r.playing=false; $('replayPlay').textContent='▶'; } }
-  const i=clamp(Math.floor(r.pos),0,recBuf.length-2), f=r.pos-i;
-  r.frame++;
-  applySnap(recBuf[i],recBuf[i+1],f,r.frame);
-  hideStale(r.frame);
-  if(document.activeElement!==$('replayScrub')) $('replayScrub').value=r.pos;
-  $('replayTime').textContent=((recBuf.length-1-r.pos)/REC_HZ).toFixed(1)+'s ago';
   // Turbo photo-op anims: flapping jaw + sliding shades
   const u=player.mesh.userData;
   if(r.talk){
     r.talkT+=dt; const o=Math.abs(Math.sin(r.talkT*11));
     u.jaw.position.y=-0.105-o*0.028; u.jaw.scale.y=0.62+o*0.3;
     u.mouth.scale.set(1+o*0.3,1+o*2.4,1);
-  } else if(u.jaw.position.y!==-0.105){
+  } else if(u.jaw&&u.jaw.position.y!==-0.105){
     u.jaw.position.y=-0.105; u.jaw.scale.y=0.62; u.mouth.scale.set(1,1,1);
   }
   if(r.shadesAnim){
@@ -8567,6 +8619,191 @@ function updateReplay(dt){
     u.shades.position.y=a.dir>0?lerp(0.4,0,e):lerp(0,0.4,e);
     if(k>=1){ if(a.dir<0) u.shades.visible=false; r.shadesAnim=null; }
   }
+}
+// live director: fly-cam over the running world (or run the intro flythrough)
+function updateCinemaCam(dt){
+  const r=replay; if(!r) return;
+  if(r.introPlay){ updateCinemaIntro(dt); return; }
+  cinemaCamStep(dt);
+}
+// frozen ring-buffer scrub (the "Replay last 30s" scene)
+function updateReplay(dt){
+  const r=replay;
+  cinemaCamStep(dt);
+  if(r.playing){ r.pos+=dt*REC_HZ; if(r.pos>=recBuf.length-1){ r.pos=recBuf.length-1; r.playing=false; $('replayPlay').textContent='▶'; } }
+  const i=clamp(Math.floor(r.pos),0,recBuf.length-2), f=r.pos-i;
+  r.frame++;
+  applySnap(recBuf[i],recBuf[i+1],f,r.frame);
+  hideStale(r.frame);
+  if(document.activeElement!==$('replayScrub')) $('replayScrub').value=r.pos;
+  $('replayTime').textContent=((recBuf.length-1-r.pos)/REC_HZ).toFixed(1)+'s ago';
+}
+
+// ================= CINEMA: SCENES & STAGING =================
+// point d metres ahead of Turbo (his forward is +sin/+cos of heading)
+function cinemaAhead(d){ return {x:player.x+Math.sin(player.heading)*d, z:player.z+Math.cos(player.heading)*d}; }
+// swing the free-fly camera onto a target from a cinematic 3/4 angle
+function cinemaFrame(tx,ty,tz,dist,height){
+  if(!replay) return;
+  ty=(ty===undefined)?1.4:ty;
+  const a=player.heading+2.3;
+  const cx=tx+Math.sin(a)*dist, cz=tz+Math.cos(a)*dist, cy=ty+height;
+  const dx=tx-cx, dy=ty-cy, dz=tz-cz, d=Math.hypot(dx,dy,dz)||1;
+  const c=replay.cam;
+  c.x=cx; c.y=Math.max(0.6,cy); c.z=cz;
+  c.yaw=Math.atan2(dx,dz); c.pitch=Math.asin(clamp(dy/d,-1,1));
+}
+function cinemaFrameOnPlayer(){ cinemaFrame(player.x,1.4,player.z,8,3.4); }
+// tidy up anything a previous staged scene left in the world
+function cinemaClearStaged(){
+  if(!replay) return;
+  if(replay.staged) for(const s of replay.staged){
+    if(!s.ref) continue;
+    if(s.kind==='jock'){ const i=jocks.indexOf(s.ref); if(i>=0) jocks.splice(i,1); if(s.ref.mesh) scene.remove(s.ref.mesh); }
+    else if(s.kind==='ped'){ const i=peds.indexOf(s.ref); if(i>=0) peds.splice(i,1); if(s.ref.bub) s.ref.bub.remove(); if(s.ref.dog&&s.ref.dog.mesh) scene.remove(s.ref.dog.mesh); if(s.ref.mesh) scene.remove(s.ref.mesh); }
+    else if(s.kind==='car'){ const c=s.ref; if(!c.dead){ if(c.mesh){ scene.remove(c.mesh); disposeMesh(c.mesh); } c.dead=true; const i=cars.indexOf(c); if(i>=0) cars.splice(i,1); } }
+  }
+  replay.staged=[];
+  if(replay.stagedRat&&mamaRat){ scene.remove(mamaRat.mesh); mamaRat=null; }
+  replay.stagedRat=false;
+}
+// leave the frozen scrub and hand the world back to the live sim
+function cinemaGoLive(){
+  if(!replay) return;
+  if(!replay.live){ restoreReplayEntities(); replay.live=true; replay.playing=false; }
+  $('cinemaScrub').style.display='none';
+}
+// intro city flythrough, self-contained: reuses INTRO_PATH but returns to the
+// director when it's done instead of starting the game
+function cinemaIntro(){
+  if(!replay) return;
+  cinemaClearStaged();
+  replay.introPlay={t:0};
+  const lg=$('introLogo'); lg.style.display='flex'; lg.style.opacity='0';
+  $('cineTop').style.display='block'; $('cineBot').style.display='block';
+  toast('INTRO FLYTHROUGH','gold');
+}
+function updateCinemaIntro(dt){
+  const ip=replay.introPlay; ip.t+=dt;
+  const SEG=INTRO_PATH.length-1, segT=INTRO_DUR/SEG;
+  const i=Math.min(SEG-1,Math.floor(ip.t/segT));
+  let f=(ip.t-i*segT)/segT; f=f*f*(3-2*f);
+  const A=INTRO_PATH[i], B=INTRO_PATH[i+1];
+  camera.position.set(lerp(A.p[0],B.p[0],f),lerp(A.p[1],B.p[1],f),lerp(A.p[2],B.p[2],f));
+  camera.lookAt(lerp(A.l[0],B.l[0],f),lerp(A.l[1],B.l[1],f),lerp(A.l[2],B.l[2],f));
+  const lg=$('introLogo');
+  if(ip.t<1.3) lg.style.opacity=ip.t/1.3;
+  else if(ip.t<4.2) lg.style.opacity=1;
+  else if(ip.t<5.4) lg.style.opacity=Math.max(0,1-(ip.t-4.2)/1.2);
+  else lg.style.opacity=0;
+  lg.style.transform=`scale(${1+Math.min(ip.t,5.4)*0.025})`;
+  if(ip.t>=INTRO_DUR){
+    replay.introPlay=null; lg.style.display='none';
+    $('cineTop').style.display='none'; $('cineBot').style.display='none';
+    cinemaFrameOnPlayer();
+  }
+}
+// scripted convo: hand off to the real cutscene system, then re-dress the
+// cinema UI once it returns (the cutscene restores the game HUD on its own)
+function cinemaCutscene(id){
+  if(!replay) return;
+  cinemaClearStaged();
+  $('replayBar').style.display='none';
+  $('cinemaShow').style.display='none';
+  playCutscene(id, player.x, player.z, ()=>{
+    if(!replay) return;                 // exited cinema during the cutscene
+    applyCinemaHud();
+  });
+}
+// --- staged live events (world keeps ticking, camera frames the action) ---
+function stageJockFight(){
+  cinemaClearStaged();
+  const p=cinemaAhead(6);
+  for(let k=0;k<3;k++){
+    const a=player.heading+(k-1)*0.5;
+    const j=spawnJock(p.x+Math.sin(a)*2.2, p.z+Math.cos(a)*2.2);
+    j.state='chase';
+    replay.staged.push({kind:'jock',ref:j});
+  }
+  cinemaFrame(player.x,1.4,player.z,8,3.4);
+  toast('JOCK FIGHT — they\'re squaring up on Turbo','gold');
+}
+function stageCarBoom(isCop){
+  cinemaClearStaged();
+  const p=cinemaAhead(9);
+  const type=isCop?'cop':pick(['sedan','muscle','van','sports','pickup']);
+  const c=makeCar(type,p.x,p.z,player.heading+Math.PI,{parked:true});
+  c.driver=null;
+  replay.staged.push({kind:'car',ref:c});
+  cinemaFrame(c.x,1.2,c.z,10,3.2);
+  toast((isCop?'COP CAR':'CAR')+' staged — lighting it up','gold');
+  let n=0;
+  const shots=setInterval(()=>{
+    if(!replay||c.dead){ clearInterval(shots); return; }
+    sfx.gunshot();
+    burst(c.x+rand(-0.8,0.8),1+rand(0,0.8),c.z+rand(-0.8,0.8),5,COL_SPARK,2,0.3,4);
+    if(++n>=4){ clearInterval(shots); if(!c.dead) killCar(c,true); }
+  },260);
+}
+function stageShootPed(){
+  cinemaClearStaged();
+  const b=blockInfo.reduce((a,x)=>Math.hypot(x.cx-player.x,x.cz-player.z)<Math.hypot(a.cx-player.x,a.cz-player.z)?x:a, blockInfo[0]);
+  const ped=spawnPed(b,'local');
+  const p=cinemaAhead(4.5);
+  ped.x=p.x; ped.z=p.z; ped.state='walk'; ped.heading=player.heading+Math.PI;
+  ped.mesh.position.set(ped.x,groundH(ped.x,ped.z),ped.z); ped.mesh.rotation.y=ped.heading;
+  replay.staged.push({kind:'ped',ref:ped});
+  cinemaFrame(ped.x,1.3,ped.z,7,2.6);
+  toast('PEDESTRIAN staged','gold');
+  setTimeout(()=>{
+    if(!replay||ped.state==='down') return;
+    sfx.gunshot();
+    burst(player.x+Math.sin(player.heading)*1.2,1.4,player.z+Math.cos(player.heading)*1.2,5,COL_FIRE,2,0.14,0);
+    knockPed(ped,false);
+  },900);
+}
+function stageRatMother(){
+  cinemaClearStaged();
+  if(mamaRat){ scene.remove(mamaRat.mesh); mamaRat=null; }
+  const p=cinemaAhead(6);
+  spawnMamaRat({x:p.x,z:p.z});   // spawnMamaRat toasts + rumbles on its own
+  replay.stagedRat=true;
+  cinemaFrame(player.x,2.5,player.z,12,5);
+}
+// re-apply the hide-HUD state (also used after a cutscene hands control back)
+function applyCinemaHud(){
+  if(!replay) return;
+  const hidden=replay.hudHidden;
+  $('hud').style.display=hidden?'none':'block';
+  $('replayBar').style.display=hidden?'none':'flex';
+  $('cinemaShow').style.display=hidden?'block':'none';
+  $('cinemaHud').classList.toggle('on',hidden);
+}
+function cinemaStartReplay(){
+  if(!replay) return;
+  if(recBuf.length<REC_HZ){ toast('Nothing recorded yet — roam a bit first','bad'); return; }
+  cinemaClearStaged();
+  replay.live=false; replay.playing=false; replay.pos=recBuf.length-1; replay.frame=0;
+  $('replayScrub').max=recBuf.length-1; $('replayScrub').value=replay.pos;
+  $('replayPlay').textContent='▶';
+  $('cinemaScrub').style.display='inline-flex';
+  toast('REPLAY — last 30s (drag to scrub, ▶ to play)','gold');
+}
+function cinemaPlayScene(id){
+  if(!replay||!id) return;
+  if(id!=='replaybuf') cinemaGoLive();
+  switch(id){
+    case 'freeroam': cinemaClearStaged(); cinemaFrameOnPlayer(); toast('FREE-ROAM CAM — fly with the stick','gold'); break;
+    case 'intro': cinemaIntro(); break;
+    case 'deb_confrontation': case 'deb_payoff': case 'first_score': case 'pizza_warning': cinemaCutscene(id); break;
+    case 'jockfight': stageJockFight(); break;
+    case 'blowcar': stageCarBoom(false); break;
+    case 'blowcop': stageCarBoom(true); break;
+    case 'shootped': stageShootPed(); break;
+    case 'ratmother': stageRatMother(); break;
+    case 'replaybuf': cinemaStartReplay(); break;
+  }
+  const sel=$('cinemaScene'); if(sel) sel.value='';   // reset so the same scene can be re-picked
 }
 // replay bar wiring
 (function initReplayUI(){
@@ -8586,6 +8823,12 @@ function updateReplay(dt){
   $('replayTalk').addEventListener('click',()=>{ if(replay){ replay.talk=!replay.talk; $('replayTalk').classList.toggle('on',replay.talk); } });
   $('shadesOn').addEventListener('click',()=>{ if(replay&&!replay.shadesAnim) replay.shadesAnim={t:0,dir:1}; });
   $('shadesOff').addEventListener('click',()=>{ if(replay&&!replay.shadesAnim) replay.shadesAnim={t:0,dir:-1}; });
+  // scene menu
+  $('cinemaScene').addEventListener('change',e=>cinemaPlayScene(e.target.value));
+  // hide-HUD toggle (clean frame for screen-recording) + the SHOW BAR restore pill
+  $('cinemaHud').addEventListener('click',()=>{ if(replay){ replay.hudHidden=!replay.hudHidden; applyCinemaHud(); } });
+  $('cinemaShow').addEventListener('click',()=>{ if(replay){ replay.hudHidden=false; applyCinemaHud(); } });
+  $('cinemaShow').addEventListener('touchend',e=>{ e.preventDefault(); if(replay){ replay.hudHidden=false; applyCinemaHud(); } });
 })();
 
 // ================= PAUSE MENU & SETTINGS =================
