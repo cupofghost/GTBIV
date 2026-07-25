@@ -1045,7 +1045,12 @@ Avoid the cops. Use [HOW TO PLAY] anytime to re-read this.
 - "Seen" flag persists after reload (once F1 is confirmed working)
 - All button/tab interactions are smooth and responsive at mobile touch speed
 
-#### U3 — Death / busted / respawn flow `P2 · Risk: Med`
+#### U3 — Death / busted / respawn flow `P2 · Risk: Med` `DONE`
+**Status: implemented & verified** (Codex). BUSTED fines and WASTED hospital
+bills now persist immediately before the `G.over` respawn lock; both clear all
+pursuit timers. The existing downtown recovery returns Turbo terrain-seated,
+healthy, on foot, with a nearby sedan. `tests/cases/respawn-flow.test.js` is
+green (2/2).
 **Why:** `busted`/`wasted` should feel fair — clear consequence, quick recovery,
 progress kept.
 **Where:** `BUSTED / WASTED` (`busted`, `wasted`, `respawn`, `bigEvent`).
@@ -1446,7 +1451,8 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: D5 (Time controls)** — A dev-tool leverage task; pause-step / slow-mo / fast-forward makes iterating on feel and missions much cheaper.
+**NEXT: R2 (Pool traffic / peds)** — The next focused performance-hygiene task;
+recycle traffic and pedestrian entities to reduce GC churn during sustained play.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -1474,8 +1480,8 @@ throughout:
 ✔ D5  Time controls             DONE
 ✔ D7  Deterministic seed        DONE
 —  J2  Hitstop + shake           DONE
-—  U3  Death/respawn flow        ← NEXT
-—  R2  Pooling traffic/peds      OPEN
+✔ U3  Death/respawn flow         DONE
+—  R2  Pooling traffic/peds      ← NEXT
 —  R3  Anti-stuck & spawn-safety OPEN
 —  A2  Accessibility             OPEN
 —  FB3 Coach mission             OPEN

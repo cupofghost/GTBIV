@@ -1,6 +1,6 @@
 # STATUS
 
-Last consolidation: 2026-07-25 (sixth pass — archived bug-fix pass, D5 time controls, D7 deterministic seed, and J2 hitstop/shake; all from OpenCode | Kimi K2 on `claude/bugfix-jump-streets-killables`) — Signed: OpenCode | Kimi K2 | medium
+Last consolidation: 2026-07-25 (seventh pass — archived the PR #40 Terra/U3 batch and reconciled U3 plus the NEXT marker in `HANDOFF.md`) — Signed: Codex | GPT-5 | high
 
 ## Active work
 _Nothing claimed right now._ Add your row below per AGENTS.md §1.3 — and escape
@@ -8,19 +8,11 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-| 2026-07-25 | `index.html`, focused respawn-flow test, `CODEX/HANDOFF_CODEX_U3.md` | Done: U3 persists fines/bills before respawn locks, clears pursuit state, and verifies a terrain-seated recovery with a nearby car. | Signed: Codex \| GPT-5 \| high |
-| 2026-07-25 | Audio loading, RNG, tests/CI | Done: lazy cached VO, shared seeded RNG, broader syntax checks, and GitHub Actions. | Signed: Codex \| GPT-5 \| high |
-| 2026-07-25 | `index.html`, player/vehicle/camera/FX/dogs, Codex workflow, focused tests | Done: camera, terrain/traffic, Turbo, controls/kick/aim, dog-count, mushroom cloud, and MP3-only VO work. PR #40 handoff complete. | Signed: Codex \| GPT-5 \| high |
-| 2026-07-25 | `index.html`, focused Playwright tests | Done: Terra follow-up—solid mushroom cloud, MP3-only Turbo paths, regenerated code map, and focused coverage. | Signed: Codex \| GPT-5 \| high |
-| 2026-07-25 | `CODEX/HANDOFF_TERRA.md` | Done: refreshed for a new chat after PR #40 push; records exact validation and next step. | Signed: Codex \| GPT-5 \| medium |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
 possible change and add a line here.
 - `index.html` — the whole game. Hot spots, in order of how often they conflict: the AUDIO section (the `let AC=null,…` declaration line and the `exitCarSoft()` reset block each grow a variable every time someone adds a sound layer), `updateFoot`, and the terrain/ground block (`groundH`, `terrainLines`/`terrainGeo`) — terrain is settled as of #31, so read `TERRAIN.md` before reopening it.
-- `index.html` — 2026-07-25: RNG bootstrap plus lazy VO cache/loading path. Signed: Codex | GPT-5 | high
-- `index.html` — 2026-07-25: consolidated camera, vehicle, player, combat, explosion, dog-lifecycle, and VO pass. Signed: Codex | GPT-5 | high
-- `index.html` — 2026-07-25: Terra follow-up for explosion FX and Turbo VO-only behavior. Signed: Codex | GPT-5 | high
 - `index.html`'s `// CODE MAP` comment block — its line ranges go stale the moment anyone inserts code. It is mechanical to regenerate from the section banners; don't hand-edit the numbers.
 - `HANDOFF.md` — §5 code map and §8 backlog get edited by most sessions; edit the row, not the structure.
 - `TERRAIN.md` — the terrain contract. Read the Tier 1 revision note before touching `groundH`.
@@ -33,6 +25,12 @@ possible change and add a line here.
 - `tests/cases/save-restore.test.js` (and later files in a long run) time out loading the page in the local Playwright Chromium headless shell, with GPU stall warnings in the browser log. The same suite runs fine in other contexts; appears environmental. Syntax check, economy suite, regression, and mission-variety all pass. — 2026-07-25, OpenCode
 
 ## Archive
+- Consolidation (Codex | GPT-5 | high, 2026-07-25): archived the completed PR #40 batch, reconciled U3 as DONE, and advanced the authoritative NEXT marker to R2. Signed: Codex | GPT-5 | high
+- U3 recovery flow (Codex | GPT-5 | high, 2026-07-25): BUSTED/WASTED penalties persist before the respawn lock; pursuit clears and focused coverage verifies playable terrain-seated recovery. Signed: Codex | GPT-5 | high
+- Audio/RNG/CI (Codex | GPT-5 | high, 2026-07-25): lazy cached VO, shared seeded RNG, broader syntax checks, and GitHub Actions. Signed: Codex | GPT-5 | high
+- PR #40 gameplay pass (Codex | GPT-5 | high, 2026-07-25): camera/terrain/controls/dog lifecycle, solid mushroom cloud, MP3-only Turbo dialogue, and focused coverage. Signed: Codex | GPT-5 | high
+- Terra follow-up (Codex | GPT-5 | high, 2026-07-25): solid mushroom cloud, MP3-only Turbo paths, regenerated code map, and focused tests. Signed: Codex | GPT-5 | high
+- Terra handoff refresh (Codex | GPT-5 | medium, 2026-07-25): captured exact PR #40 validation and the next-step guidance. Signed: Codex | GPT-5 | medium
 - City Glow (Kimi K3, medium, 2026-07-25): lit-window night swap, instanced neon signs on street-facing facades, grade-tilted streetlight glow pools; `facadeMats` buckets wired into `applyDayNight`. `index.html` §CITY GLOW; `tests/cases/city-glow.test.js` added. Merged to `main` as #37; suite 3/3 + boot green.
 - P2 Economy tuning (OpenCode | Kimi K2 | high, 2026-07-25): flattened heist loot ($250–$500 + $150 escape), raised stickup/store/delivery/pizza payouts, routed raw payouts through `addMoney()` for persistence and gold-class feedback. `index.html` §HUD/TOASTS, §WEAPONS, §STORY, §DAY/NIGHT, §MISSIONS; `tests/cases/economy.test.js` added. Merged to `main` as #38; economy suite 6/6 + regression + mission-variety green.
 - Intro camera terrain clamp (Kimi K3, medium, 2026-07-25): `flySample()` clamps flythrough cam + look target above `groundH`; Cinema Mode free-fly floor uses `groundH+0.5`. `index.html` §ANIMATED INTRO / §CINEMA MODE; `tests/cases/intro-camera.test.js` added. Merged to `main` as #36; suite 3/3 + cinema 6/6 + boot green.
