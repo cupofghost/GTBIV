@@ -677,6 +677,23 @@
   <button id="replayExit">EXIT</button>
 </div>
 <div id="cinemaShow">&#127916; SHOW BAR</div>
+<script>
+// Bootstrap the shared RNG before external character modules load. Those
+// modules also run in viewer.html, where they fall back to Math.random.
+(function(){
+  const seedStr=new URLSearchParams(location.search).get('seed');
+  const seed=seedStr===null?NaN:parseInt(seedStr,10);
+  if(isNaN(seed)){ window.GTB_RNG=Math.random; return; }
+  window.GTB_RNG=(function(a){
+    return function(){
+      let t=a+=0x6D2B79F5;
+      t=Math.imul(t^(t>>>15),t|1);
+      t^=t+Math.imul(t^(t>>>7),t|61);
+      return ((t^(t>>>14))>>>0)/4294967296;
+    };
+  }(seed));
+})();
+</script>
 <script src="three.min.js"></script>
 <script src="js/person.js"></script>
 <script src="js/npc-types.js"></script>
@@ -684,7 +701,7 @@
 'use strict';
 /* GRAND TURBO BOOST IV: SAN CHAOS — 100% procedural, zero trademarks harmed. */
 
-let _rng=Math.random;
+let _rng=window.GTB_RNG||Math.random;
 const rand=(a,b)=>a+_rng()*(b-a);
 const randi=(a,b)=>Math.floor(a+_rng()*(b-a+1));
 const pick=arr=>arr[Math.floor(_rng()*arr.length)];
@@ -811,21 +828,6 @@ function stepOneFrame(){ if(!DEV) return; STEP_FRAMES++; }
 // J2 — hitstop: brief simulation freeze on big impacts/explosions
 let HIT_STOP=0;
 function triggerHitStop(ms){ if(SETTINGS.reduceMotion) return; HIT_STOP=Math.max(HIT_STOP, Math.min(0.08, ms)); }
-// D7 — deterministic seed: route all game RNG through a seedable PRNG when ?seed=<n>
-(function initSeededRng(){
-  const seedStr=_PARAMS.get('seed');
-  if(!seedStr) return;
-  const seed=parseInt(seedStr,10);
-  if(isNaN(seed)) return;
-  _rng=(function(a){
-    return function(){
-      let t=a+=0x6D2B79F5;
-      t=Math.imul(t^(t>>>15),t|1);
-      t^=t+Math.imul(t^(t>>>7),t|61);
-      return ((t^(t>>>14))>>>0)/4294967296;
-    };
-  }(seed));
-})();
 const QS={
   skipintro:DEV||_PARAMS.has('skipintro'),
   scene:(_PARAMS.get('scene')||'').toLowerCase(),
@@ -8864,43 +8866,12 @@ let introLinesSpoken=[];
 // one line at a time — no HTMLAudio unlock hacks, no overlapping speech
 const voBuffers=[null,null,null,null];
 let voCurrentSrc=null;
-function loadVOFiles(){
-  if(!AC) return;
+function loadVOFiles(preloadIntro){
+  if(!AC||!preloadIntro) return;
+  // Only the four time-critical intro lines are warmed at startup. Ambient,
+  // story, and cutscene recordings load on first use through loadVOBuffer().
   INTRO_LINES.forEach((l,i)=>{
-    fetch(l.src).then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab))
-      .then(buf=>{ voBuffers[i]=buf; }).catch(()=>{});
-  });
-  // preload Turbo's recorded catchphrases too
-  ['voice/turbo/ambient/run_over/run_over_01_look-both-ways.mp3',
-   'voice/turbo/ambient/run_over/run_over_02_leave-a-mark.mp3',
-   'voice/turbo/ambient/run_over/run_over_03_court-hearing.mp3',
-   'voice/turbo/ambient/firing/firing_01_say-goodnight.mp3'].forEach(src=>{
-    voExtra[src]=null;
-    fetch(src).then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab))
-      .then(buf=>{ voExtra[src]=buf; }).catch(()=>{});
-  });
-  // every recorded Turbo catchphrase up front, so turboSay never goes quiet
-  Object.keys(TURBO_LINES).forEach(cat=>{
-    TURBO_LINES[cat].forEach(l=>{
-      if(!l.src||voExtra[l.src]!==undefined) return;
-      voExtra[l.src]=null;
-      fetch(l.src).then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab))
-        .then(buf=>{ voExtra[l.src]=buf; }).catch(()=>{});
-    });
-  });
-  // recorded story-cutscene VO (Turbo's lines in the Chapter-1 cutscenes) —
-  // preload every shot's dialogue.voice so the real voice is ready the instant
-  // a cutscene fires, instead of falling back to the synth voice on first play
-  Object.values(CUTSCENES).forEach(cs=>{
-    (cs.shots||[]).forEach(s=>{
-      const v=s.dialogue&&s.dialogue.voice; if(!v) return;
-      (Array.isArray(v)?v:[v]).forEach(src=>{
-        if(voExtra[src]!==undefined) return;
-        voExtra[src]=null;
-        fetch(src).then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab))
-          .then(buf=>{ voExtra[src]=buf; }).catch(()=>{});
-      });
-    });
+    loadVOBuffer(l.src).then(buf=>{ if(buf) voBuffers[i]=buf; });
   });
 }
 function playVOLine(i){
@@ -8919,12 +8890,24 @@ function stopIntroVO(){
 
 // ---- one-shot VO lines (catchphrases + trailer reads), same pipeline as intro VO ----
 const voExtra={};   // filename -> AudioBuffer (loaded lazily, null = unavailable)
+const voLoads={};   // filename -> in-flight Promise; deduplicates concurrent requests
+function loadVOBuffer(src){
+  if(!AC||!src) return Promise.resolve(null);
+  if(voExtra[src]) return Promise.resolve(voExtra[src]);
+  if(voLoads[src]) return voLoads[src];
+  voExtra[src]=null;
+  voLoads[src]=fetch(src)
+    .then(r=>{ if(!r.ok) throw new Error('VO '+r.status); return r.arrayBuffer(); })
+    .then(ab=>AC.decodeAudioData(ab))
+    .then(buf=>{ voExtra[src]=buf; return buf; })
+    .catch(()=>{ delete voExtra[src]; return null; })
+    .finally(()=>{ delete voLoads[src]; });
+  return voLoads[src];
+}
 function playVOFile(src,rate,gain){
   if(!AC) return false;
   if(voExtra[src]===undefined){
-    voExtra[src]=null;
-    fetch(src).then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab))
-      .then(buf=>{ voExtra[src]=buf; }).catch(()=>{});
+    loadVOBuffer(src);
     return false;
   }
   if(!voExtra[src]) return false;
@@ -9114,12 +9097,16 @@ function turboSay(cat){
   if(!G.started||G.over||turboCool>0) return;
   const arr=TURBO_LINES[cat];
   if(!arr) return;
-  // recorded voice ONLY — if the mp3 hasn't landed yet, Turbo keeps quiet
-  // rather than letting the robot read his lines
-  const ready=arr.filter(l=>l.src&&voExtra[l.src]);
-  if(!ready.length) return;
+  const recorded=arr.filter(l=>l.src);
+  if(!recorded.length) return;
+  const line=pick(recorded), requestedAt=performance.now();
   turboCool=2.2;
-  playVOFile(pick(ready).src,1.0,0.95);
+  // Load only the selected bark. Play it when ready if it still belongs to the
+  // current moment; slow/stale requests are cached for the next trigger.
+  loadVOBuffer(line.src).then(buf=>{
+    if(!buf||!G.started||G.over||performance.now()-requestedAt>2500) return;
+    playVOFile(line.src,1.0,0.95);
+  });
 }
 
 function updateIntroNarration(dt){
@@ -9868,7 +9855,7 @@ function beginGame(){
       screen.orientation.lock('landscape').catch(()=>{});
   }catch(e){}
   initAudio();
-  loadVOFiles();
+  loadVOFiles(!QS.skipintro);
   if(QS.skipintro){ skipToGameplay(); applySceneJump(); }
   else startIntro();
 }
@@ -9884,7 +9871,7 @@ $('continueBtn').addEventListener('click',()=>{
       screen.orientation.lock('landscape').catch(()=>{});
   }catch(e){}
   initAudio();
-  loadVOFiles();
+  loadVOFiles(false);
   skipToGameplay();
   restoreSave(s);
   if(QS.skipintro) applySceneJump();

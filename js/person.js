@@ -3,8 +3,9 @@
 // CHARACTERS.md §3). randomPersonSpec() reproduces the old random NPC look.
 // Legacy shim: makePerson(shirtColor, gender) still works for old call sites.
 (function(){
-const R=(a,b)=>a+Math.random()*(b-a);
-const PK=arr=>arr[Math.floor(Math.random()*arr.length)];
+const RNG=()=>typeof window.GTB_RNG==='function'?window.GTB_RNG():Math.random();
+const R=(a,b)=>a+RNG()*(b-a);
+const PK=arr=>arr[Math.floor(RNG()*arr.length)];
 
 const SKINS=[0xf0c8a0,0xc89060,0x8a5c30,0xffd9b0];
 const PANTS=[0x2a3a5c,0x3a2a2a,0x2a2a2a,0x4a3a5c,0x50422a,0x5c2a3a];
@@ -14,9 +15,9 @@ const SHIRTS=[0xff6b9d,0x6bc8ff,0xffd23e,0x8aff6b,0xd98aff,0xff8a5c,0x5cffd4,0xf
 
 // Reproduces the pre-refactor random look: same distributions, same rolls.
 function randomPersonSpec(shirt,gender){
-  gender=gender||(Math.random()<0.5?'guy':'girl');
-  const dress=gender==='girl'&&Math.random()<0.4;
-  const style=Math.random();               // one roll drives hair, like before
+  gender=gender||(RNG()<0.5?'guy':'girl');
+  const dress=gender==='girl'&&RNG()<0.4;
+  const style=RNG();                       // one roll drives hair, like before
   let hstyle, beard=false;
   if(gender==='girl') hstyle=style<0.5?'long':'ponytail';
   else if(style<0.12) hstyle='bald';
@@ -28,9 +29,9 @@ function randomPersonSpec(shirt,gender){
     hair:{style:hstyle,color:PK(HAIRS),beard},
     outfit:{
       shirt:{color:(typeof shirt==='number')?shirt:PK(SHIRTS),tex:null},
-      pants:{color:PK(PANTS),tex:null,shorts:!dress&&Math.random()<0.3},
+      pants:{color:PK(PANTS),tex:null,shorts:!dress&&RNG()<0.3},
       shoes:{color:PK(SHOES)},
-      dress, tank:Math.random()<0.3,
+      dress, tank:RNG()<0.3,
     },
     face:{tex:null},
   };

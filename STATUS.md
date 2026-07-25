@@ -8,12 +8,13 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-| — | — | _Nothing active — all recent work archived below._ | — |
+| 2026-07-25 | Audio loading, RNG, tests/CI | Done: lazy cached VO, shared seeded RNG, broader syntax checks, and GitHub Actions. | Signed: Codex \| GPT-5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
 possible change and add a line here.
 - `index.html` — the whole game. Hot spots, in order of how often they conflict: the AUDIO section (the `let AC=null,…` declaration line and the `exitCarSoft()` reset block each grow a variable every time someone adds a sound layer), `updateFoot`, and the terrain/ground block (`groundH`, `terrainLines`/`terrainGeo`) — terrain is settled as of #31, so read `TERRAIN.md` before reopening it.
+- `index.html` — 2026-07-25: RNG bootstrap plus lazy VO cache/loading path. Signed: Codex | GPT-5 | high
 - `index.html`'s `// CODE MAP` comment block — its line ranges go stale the moment anyone inserts code. It is mechanical to regenerate from the section banners; don't hand-edit the numbers.
 - `HANDOFF.md` — §5 code map and §8 backlog get edited by most sessions; edit the row, not the structure.
 - `TERRAIN.md` — the terrain contract. Read the Tier 1 revision note before touching `groundH`.

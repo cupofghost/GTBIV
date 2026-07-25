@@ -29,6 +29,32 @@ const CUTSCENE_VO = {
 
 module.exports = [
   {
+    name: 'voice assets load lazily and concurrent requests are deduplicated',
+    query: '?dev=1&skipintro=1',
+    start: false,
+    run: async (page, { assert, assertEqual }) => {
+      const voiceRequests = [];
+      page.on('request', req => {
+        const path = new URL(req.url()).pathname;
+        if(path.startsWith('/voice/') && path.endsWith('.mp3')) voiceRequests.push(path);
+      });
+
+      await page.evaluate(() => document.getElementById('startBtn').click());
+      await page.waitForTimeout(200);
+      assertEqual(voiceRequests.length, 0, 'skip-intro startup should not preload voice assets');
+
+      const src = 'voice/turbo/ambient/approach/approach_01_oh-honey.mp3';
+      await page.evaluate((path) => {
+        loadVOBuffer(path);
+        loadVOBuffer(path);
+      }, src);
+      await page.waitForTimeout(500);
+      assertEqual(voiceRequests.length, 1, 'duplicate lazy loads should share one request');
+      assert(voiceRequests[0].endsWith('/voice/turbo/ambient/approach/approach_01_oh-honey.mp3'),
+        `unexpected lazy-loaded voice asset: ${voiceRequests[0]}`);
+    },
+  },
+  {
     name: 'wired story barks exist and every mp3 resolves to a real file',
     run: async (page, { assert }) => {
       const pools = await page.evaluate((cats) => {

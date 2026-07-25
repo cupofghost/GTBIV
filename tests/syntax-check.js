@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 'use strict';
-// GTB IV fast syntax check — validates index.html <script> body in <1s.
+// GTB IV fast syntax check — validates the inline game and all project JS.
 // Run before the slow Playwright suite to catch typos immediately.
 // Exit code: 0 = clean, 1 = syntax error.
 
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
 const INDEX_PATH = path.join(ROOT, 'index.html');
@@ -35,12 +36,9 @@ function main() {
 
   const scriptBody = scriptMatch[1];
 
-  // Try to parse it as a function body — catches syntax errors without executing
+  // Parse the main inline game body without executing it.
   try {
     new Function(scriptBody);
-    const elapsed = Date.now() - t0;
-    console.log(`${GREEN}✓${RESET} Syntax OK — ${scriptBody.length.toLocaleString()} bytes parsed in ${elapsed}ms\n`);
-    process.exit(0);
   } catch (e) {
     const elapsed = Date.now() - t0;
     console.error(`${RED}✗${RESET} Syntax error in index.html (${elapsed}ms):`);
@@ -62,6 +60,31 @@ function main() {
 
     process.exit(1);
   }
+
+  // Also parse every external/project JavaScript file. This catches breakage in
+  // js/person.js and js/npc-types.js, which the old inline-only check missed.
+  const jsFiles = [];
+  function collect(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === 'node_modules' || entry.name === '.git') continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) collect(full);
+      else if (entry.isFile() && entry.name.endsWith('.js')) jsFiles.push(full);
+    }
+  }
+  collect(ROOT);
+
+  for (const file of jsFiles) {
+    const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+    if (result.status !== 0) {
+      console.error(`${RED}✗${RESET} Syntax error in ${path.relative(ROOT, file)}:`);
+      console.error(result.stderr || result.stdout);
+      process.exit(1);
+    }
+  }
+
+  const elapsed = Date.now() - t0;
+  console.log(`${GREEN}✓${RESET} Syntax OK — inline game + ${jsFiles.length} JavaScript files parsed in ${elapsed}ms\n`);
 }
 
 main();

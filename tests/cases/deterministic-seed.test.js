@@ -1,4 +1,5 @@
-// D7 — deterministic seed: ?seed=<n> reproduces the same RNG stream and city layout
+// D7 — deterministic seed: ?seed=<n> reproduces the same RNG stream, city,
+// and character appearance across the inline game and external modules.
 module.exports = {
   cases: [
     {
@@ -10,6 +11,8 @@ module.exports = {
           rand: rand(0, 1),
           buildings: buildings.length,
           roadPoint: randomRoadPoint(),
+          person: randomPersonSpec(0xabcdef),
+          npcType: randomNPCType().build(),
         }));
         await page.reload({ waitUntil: 'load' });
         await page.waitForTimeout(800);
@@ -17,10 +20,14 @@ module.exports = {
           rand: rand(0, 1),
           buildings: buildings.length,
           roadPoint: randomRoadPoint(),
+          person: randomPersonSpec(0xabcdef),
+          npcType: randomNPCType().build(),
         }));
         assertEqual(first.rand, second.rand, 'first rand mismatch across reloads');
         assertEqual(first.buildings, second.buildings, 'building count mismatch across reloads');
         assertEqual(JSON.stringify(first.roadPoint), JSON.stringify(second.roadPoint), 'randomRoadPoint mismatch across reloads');
+        assertEqual(JSON.stringify(first.person), JSON.stringify(second.person), 'person module RNG mismatch across reloads');
+        assertEqual(JSON.stringify(first.npcType), JSON.stringify(second.npcType), 'NPC type module RNG mismatch across reloads');
         assert(first.rand >= 0 && first.rand < 1, 'rand should be in [0,1)');
       },
     },
