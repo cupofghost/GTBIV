@@ -8,6 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-25 | `CODEX/HANDOFF_TERRA_R3.md`, `STATUS.md` | Done: implementation-ready Terra medium handoff for R3 anti-stuck and spawn safety. | Signed: Codex \| GPT-5 \| medium |
 | 2026-07-25 | `index.html` (car/ped lifecycle), `tests/cases/traffic-pooling.test.js`, `HANDOFF.md`, `CODEX/HANDOFF_TERRA_R2.md`, `STATUS.md` | Done: R2 bounded generic traffic/ped pools; active-only/F3, mission-target, cinema, and ownerless-dog rules covered. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `CODEX/HANDOFF_TERRA_R2.md`, `STATUS.md` | Done: wrote implementation-ready Terra medium handoff for the R2 pooling task. | Signed: Codex \| GPT-5 \| medium |
 
