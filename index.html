@@ -700,61 +700,62 @@ let TRAFFIC_CAP=16, PED_CAP=34, PARTICLE_SCALE=1, GFX_TIER='high';
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS & GLOBAL STATE                          (683–697, ~15 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                            (760–810, ~51 lines: IS_TOUCH, updateOrientationMode, vw, vh, remapXY, ROTATED)
-// AUDIO                                           (811–1034, ~224 lines: initAudio, AC, masterGain, engine synth, sfx)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK             (1035–1537, ~503 lines: SW_SONGS, STATIONS, scheduleMusic, stepSong, synth fx)
-// THREE SETUP                                     (1538–1588, ~51 lines: scene, camera, renderer, sky/sun, lights)
-// CITY                                            (1589–2428, ~840 lines: procCity, blockInfo, roads, buildings, textures)
-//   └ RADIO TOWERS                                (2032–2138, ~107 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                  (2429–2479, ~51 lines: FOOTBALL landmark, turf, goalposts, bleachers)
-// ELEVATED LIGHT RAIL                             (2480–2604, ~125 lines: TRAIN, stations, rail track, animated loop)
-// STAIRS & FIRE ESCAPES                           (2605–2679, ~75 lines: STAIR_RUNS, terrain knolls, hideouts)
-// WALL LADDERS                                    (2680–2934, ~255 lines: LADDERS, ladderGrab, mountLadder, updateClimb, ramps/addRamp)
-// PARTICLES                                       (2935–2989, ~55 lines: burst, P_MAX, particle pool)
-// BLOB SHADOWS                                    (2990–2994, ~5 lines: makeShadow)
-// GPU RESOURCE CLEANUP                            (2995–3016, ~22 lines: disposeMesh, _sharedGPU)
-// CARS                                            (3017–3211, ~195 lines: makeCar, CAR_SPECS, carModel, physics setup)
-// PEDESTRIANS                                     (3212–3328, ~117 lines: makePerson, spawnPed, updatePeds)
-// PIZZA DELIVERY SYSTEM                           (3329–3484, ~156 lines: pizza delivery missions, stages, reward)
-// RIVAL PIZZA GANG: CHAOS PIZZA                   (3485–3612, ~128 lines: chaosDrivers, makeChaosCar, spawnChaosDrivers, updateChaosDrivers, gangMembers)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS               (3613–3776, ~164 lines: JOCK_TAUNTS, jocks, addLettermanJacket, JOCK_TEAMS, spawnJock)
-// STRAY DOGS & DOG GANGS                          (3777–4004, ~228 lines: dogs, dog gangs, pack behavior, meat drops)
-// PIZZA WARS MISSION                              (4005–4079, ~75 lines: heist system, stages, guards, pizza exterior)
-// PLAYER                                          (4080–4105, ~26 lines: player object creation, initial state)
-// PIZZA PLACE & INTERIOR                          (4106–4266, ~161 lines: pizza interior geometry, robbery, NPC setup)
-// SIDEWALKS & STOREFRONT AWNINGS                  (4267–4375, ~109 lines: 3D kerb strips, sidewalk slabs, awnings, storefront dressing)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS (4376–4575, ~200 lines: street trees, planters, cafe tables, pole banners (+ pizza enter/exit tail))
-// DAY/NIGHT & HEIST SYSTEM                        (4576–4766, ~191 lines: toggleNight, night sky, heist triggers)
-// PICKUPS                                         (4767–4809, ~43 lines: money pickups, spawn/despawn)
-// HELICOPTERS                                     (4810–5281, ~472 lines: makeHeli, heli physics, pilot AI, rotor anim)
-// TALKING PEDS                                    (5282–5370, ~89 lines: showBubble, wahVoice, NPC speech bubbles)
-// WEAPONS                                         (5371–5940, ~570 lines: doAttack, pistol/RPG logic, collision, damage)
-// WANTED                                          (5941–6046, ~106 lines: addHeat, clearHeat, star system, heat decay)
-// CAR PHYSICS                                     (6047–6236, ~190 lines: carPhysics, collision, acceleration, damage)
-// PLAYER: FOOT & CAR                              (6237–6729, ~493 lines: footCamDistance, input, kick mode, car entry/exit, updateFoot)
-// HUD / TOASTS                                    (6730–6770, ~41 lines: toast, HUD updates, on-screen feedback)
-// MISSIONS                                        (6771–6937, ~167 lines: startMission, updateMission, missions, reward)
-// AI                                              (6938–6962, ~25 lines: cop/ped goal/walk logic)
-// FOOT COPS                                       (6963–7006, ~44 lines: spawnCop, updateCops, cop AI, roaming)
-// SEWER RATS                                      (7007–7123, ~117 lines: RAT_POOL, makeRatMesh, spawnRats, updateRats)
-// MAMA RAT (rat vengeance) — PLACEHOLDER          (7124–7494, ~371 lines: spawnMamaRat, updateMamaRat, bite logic, mama model)
-// BUSTED / WASTED                                 (7495–7573, ~79 lines: busted, wasted, respawn logic, state reset)
-// CAMERA                                          (7574–7665, ~92 lines: updateCamera, shake, collision pull-in, look math)
-// MINIMAP                                         (7666–7713, ~48 lines: drawMinimap, blips, legend, position tracking)
-// MAIN LOOP                                       (7714–7880, ~167 lines: loop, substep simulation, entity updates, frame pacing)
-// ORIENTATION                                     (7881–7938, ~58 lines: checkOrientation, fitScreen, toggleFullscreen)
-// ANIMATED INTRO                                  (7939–8020, ~82 lines: intro cinematic, title screen animation)
-// STORY: TURBO JONES, CHAPTER 1                   (8021–8287, ~267 lines: story flags, Deb intro, debt system, mission gates)
-// CUTSCENE SYSTEM                                 (8288–8532, ~245 lines: playCutscene, cutscene definitions, actor positioning)
-// VOICEOVER SYSTEM                                (8533–8614, ~82 lines: playVOFile, playVOLine, TTS, voiceover queue)
-// INTRO NARRATION                                 (8615–8919, ~305 lines: intro voiceover, narrative setup)
-// DEV TOOLS                                       (8920–8997, ~78 lines: devPanel, cheats, god mode, teleports, ?dev=1 gate)
-// CINEMA MODE (was REPLAY)                        (8998–9129, ~132 lines: enterReplay/enterCinema, updateCinemaCam, free-fly camera, buffer scrub, HIDE HUD)
-// CINEMA: SCENES & STAGING                        (9130–9322, ~193 lines: cinemaIntro, cinemaCutscene, stageJockFight, stageCarBoom, stageShootPed, stageRatMother)
-// PAUSE MENU & SETTINGS                           (9323–9519, ~197 lines: pauseMenu, Settings panel, volume/quality sliders)
-// CONTROLS CARD (U2 onboarding)                   (9520–9552, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                     (9553–9605, ~53 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                  (9606–end, ~41 lines: boot, init, resize handlers, quality apply)
+// DEVICE / ORIENTATION                            (761–811, ~51 lines: IS_TOUCH, updateOrientationMode, vw, vh, remapXY, ROTATED)
+// AUDIO                                           (812–1035, ~224 lines: initAudio, AC, masterGain, engine synth, sfx)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK             (1036–1538, ~503 lines: SW_SONGS, STATIONS, scheduleMusic, stepSong, synth fx)
+// THREE SETUP                                     (1539–1589, ~51 lines: scene, camera, renderer, sky/sun, lights)
+// CITY                                            (1590–2431, ~842 lines: procCity, blockInfo, roads, buildings, textures)
+//   └ RADIO TOWERS                                (2035–2141, ~107 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
+// FOOTBALL FIELD                                  (2432–2482, ~51 lines: FOOTBALL landmark, turf, goalposts, bleachers)
+// ELEVATED LIGHT RAIL                             (2483–2607, ~125 lines: TRAIN, stations, rail track, animated loop)
+// STAIRS & FIRE ESCAPES                           (2608–2682, ~75 lines: STAIR_RUNS, terrain knolls, hideouts)
+// WALL LADDERS                                    (2683–2937, ~255 lines: LADDERS, ladderGrab, mountLadder, updateClimb, ramps/addRamp)
+// PARTICLES                                       (2938–2992, ~55 lines: burst, P_MAX, particle pool)
+// BLOB SHADOWS                                    (2993–2997, ~5 lines: makeShadow)
+// GPU RESOURCE CLEANUP                            (2998–3019, ~22 lines: disposeMesh, _sharedGPU)
+// CARS                                            (3020–3214, ~195 lines: makeCar, CAR_SPECS, carModel, physics setup)
+// PEDESTRIANS                                     (3215–3331, ~117 lines: makePerson, spawnPed, updatePeds)
+// PIZZA DELIVERY SYSTEM                           (3332–3487, ~156 lines: pizza delivery missions, stages, reward)
+// RIVAL PIZZA GANG: CHAOS PIZZA                   (3488–3615, ~128 lines: chaosDrivers, makeChaosCar, spawnChaosDrivers, updateChaosDrivers, gangMembers)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS               (3616–3779, ~164 lines: JOCK_TAUNTS, jocks, addLettermanJacket, JOCK_TEAMS, spawnJock)
+// STRAY DOGS & DOG GANGS                          (3780–4007, ~228 lines: dogs, dog gangs, pack behavior, meat drops)
+// PIZZA WARS MISSION                              (4008–4082, ~75 lines: heist system, stages, guards, pizza exterior)
+// PLAYER                                          (4083–4108, ~26 lines: player object creation, initial state)
+// PIZZA PLACE & INTERIOR                          (4109–4269, ~161 lines: pizza interior geometry, robbery, NPC setup)
+// SIDEWALKS & STOREFRONT AWNINGS                  (4270–4378, ~109 lines: 3D kerb strips, sidewalk slabs, awnings, storefront dressing)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS (4379–4578, ~200 lines: street trees, planters, cafe tables, pole banners (+ pizza enter/exit tail))
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS      (4579–4694, ~116 lines: cityGlowDayNight, neon signs, night window swap, streetlight pools)
+// DAY/NIGHT & HEIST SYSTEM                        (4695–4886, ~192 lines: toggleNight, night sky, heist triggers)
+// PICKUPS                                         (4887–4929, ~43 lines: money pickups, spawn/despawn)
+// HELICOPTERS                                     (4930–5401, ~472 lines: makeHeli, heli physics, pilot AI, rotor anim)
+// TALKING PEDS                                    (5402–5490, ~89 lines: showBubble, wahVoice, NPC speech bubbles)
+// WEAPONS                                         (5491–6060, ~570 lines: doAttack, pistol/RPG logic, collision, damage)
+// WANTED                                          (6061–6166, ~106 lines: addHeat, clearHeat, star system, heat decay)
+// CAR PHYSICS                                     (6167–6356, ~190 lines: carPhysics, collision, acceleration, damage)
+// PLAYER: FOOT & CAR                              (6357–6849, ~493 lines: footCamDistance, input, kick mode, car entry/exit, updateFoot)
+// HUD / TOASTS                                    (6850–6890, ~41 lines: toast, HUD updates, on-screen feedback)
+// MISSIONS                                        (6891–7057, ~167 lines: startMission, updateMission, missions, reward)
+// AI                                              (7058–7082, ~25 lines: cop/ped goal/walk logic)
+// FOOT COPS                                       (7083–7126, ~44 lines: spawnCop, updateCops, cop AI, roaming)
+// SEWER RATS                                      (7127–7243, ~117 lines: RAT_POOL, makeRatMesh, spawnRats, updateRats)
+// MAMA RAT (rat vengeance) — PLACEHOLDER          (7244–7614, ~371 lines: spawnMamaRat, updateMamaRat, bite logic, mama model)
+// BUSTED / WASTED                                 (7615–7693, ~79 lines: busted, wasted, respawn logic, state reset)
+// CAMERA                                          (7694–7785, ~92 lines: updateCamera, shake, collision pull-in, look math)
+// MINIMAP                                         (7786–7833, ~48 lines: drawMinimap, blips, legend, position tracking)
+// MAIN LOOP                                       (7834–8000, ~167 lines: loop, substep simulation, entity updates, frame pacing)
+// ORIENTATION                                     (8001–8058, ~58 lines: checkOrientation, fitScreen, toggleFullscreen)
+// ANIMATED INTRO                                  (8059–8140, ~82 lines: intro cinematic, title screen animation)
+// STORY: TURBO JONES, CHAPTER 1                   (8141–8407, ~267 lines: story flags, Deb intro, debt system, mission gates)
+// CUTSCENE SYSTEM                                 (8408–8652, ~245 lines: playCutscene, cutscene definitions, actor positioning)
+// VOICEOVER SYSTEM                                (8653–8734, ~82 lines: playVOFile, playVOLine, TTS, voiceover queue)
+// INTRO NARRATION                                 (8735–9039, ~305 lines: intro voiceover, narrative setup)
+// DEV TOOLS                                       (9040–9117, ~78 lines: devPanel, cheats, god mode, teleports, ?dev=1 gate)
+// CINEMA MODE (was REPLAY)                        (9118–9249, ~132 lines: enterReplay/enterCinema, updateCinemaCam, free-fly camera, buffer scrub, HIDE HUD)
+// CINEMA: SCENES & STAGING                        (9250–9442, ~193 lines: cinemaIntro, cinemaCutscene, stageJockFight, stageCarBoom, stageShootPed, stageRatMother)
+// PAUSE MENU & SETTINGS                           (9443–9639, ~197 lines: pauseMenu, Settings panel, volume/quality sliders)
+// CONTROLS CARD (U2 onboarding)                   (9640–9672, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                     (9673–9725, ~53 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                  (9726–end, ~41 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -1936,6 +1937,7 @@ const WATER_R=WORLD.size/2+13;   // past this line, you're swimming
 function overWater(x,z){ return Math.abs(x)>WATER_R||Math.abs(z)>WATER_R; }
 
 // buildings — instanced, three facade families so the skyline isn't clones
+const facadeMats=[];   // buckets collect here so CITY GLOW can swap night windows
 (function(){
   function facadeTex(style){
     const c=document.createElement('canvas'); c.width=128; c.height=256;
@@ -1971,6 +1973,7 @@ function overWater(x,z){ return Math.abs(x)>WATER_R||Math.abs(z)>WATER_R; }
     if(!list.length) return;
     const tex=facadeTex(style);
     const mat=new THREE.MeshLambertMaterial({map:tex,emissive:0xffffff,emissiveMap:tex,emissiveIntensity:0.28});
+    facadeMats.push({mat,style,dayTex:tex});
     const inst=new THREE.InstancedMesh(geo,mat,list.length);
     const m=new THREE.Matrix4(), q=new THREE.Quaternion(),
           pos=new THREE.Vector3(), scl=new THREE.Vector3(), col=new THREE.Color();
@@ -4573,6 +4576,122 @@ doEnterExit=function(){
 // ================= END PIZZA PLACE & INTERIOR =================
 
 
+// ================= CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS =================
+// Carry-over cosmetic systems (owner's asset plan: procedural now, final art
+// later). These are placement + state systems, not final textures — real
+// sign/window art can drop into the same canvases without touching layout,
+// groundH seating, or the day/night swap. All instanced: 1 draw call per
+// system, so every quality tier keeps them.
+let glowPools=null; const neonSets=[];
+function cityGlowDayNight(){
+  facadeMats.forEach(f=>{
+    if(!f.nightTex) return;
+    f.mat.emissiveMap=G.night?f.nightTex:f.dayTex;
+    f.mat.emissiveIntensity=G.night?0.95:0.28;
+    f.mat.needsUpdate=true;
+  });
+  neonSets.forEach(s=>s.mat.color.setScalar(G.night?1.2:0.85));
+  if(glowPools) glowPools.visible=G.night;
+}
+(function(){
+  // ---- 1. lit-window night variants: same window grids as facadeTex() in
+  // CITY, but windows glow on black — swapped in as emissiveMap after dark ----
+  function nightFacadeTex(style){
+    const c=document.createElement('canvas'); c.width=128; c.height=256;
+    const g=c.getContext('2d'); g.fillStyle='#000'; g.fillRect(0,0,128,256);
+    const warm=['#ffd98a','#ffe9b0','#ffb36b','#aef0ff','#ff9de2'];
+    const lit=(x,y,w,h)=>{ g.fillStyle=pick(warm); g.globalAlpha=rand(0.5,1); g.fillRect(x,y,w,h); g.globalAlpha=1; };
+    if(style===0){ for(let y=8;y<248;y+=16) for(let x=8;x<120;x+=18){ if(Math.random()<0.62) lit(x,y,11,9); } }
+    else if(style===1){ for(let y=6;y<252;y+=13){ let x=4; while(x<120){ const w=rand(6,26); if(Math.random()<0.6) lit(x,y,Math.min(w,124-x),8); x+=w+rand(2,10); } } }
+    else { for(let y=10;y<248;y+=22) for(let x=10;x<118;x+=24){ if(Math.random()<0.5) lit(x,y,10,14); } }
+    return new THREE.CanvasTexture(c);
+  }
+  facadeMats.forEach(f=>{ f.nightTex=nightFacadeTex(f.style); });
+
+  // ---- 2. neon storefront signs: shared procedural textures, one instanced
+  // mesh per design, on the building face toward the nearest street ----
+  const NEON=[['LIQUOR','#41e6ff'],['BAR','#ff3ea0'],['24 HR','#ffd23e'],['MOTEL','#7dff8a'],['PIZZA','#ff7a3d'],
+              ['DINER','#41e6ff'],['HOTEL','#ff3ea0'],['CLUB','#c98fff'],['XXX','#ff5c5c'],['GAS','#ffd23e']];
+  function neonTex(txt,color){
+    const c=document.createElement('canvas'); c.width=160; c.height=80;
+    const g=c.getContext('2d');
+    g.fillStyle='rgba(6,4,16,0.88)';
+    g.strokeStyle=color; g.lineWidth=3; g.shadowColor=color; g.shadowBlur=12;
+    g.beginPath(); if(g.roundRect) g.roundRect(6,6,148,68,10); else g.rect(6,6,148,68); g.fill(); g.stroke();
+    g.font='900 32px "Arial Black",Arial,sans-serif'; g.textAlign='center'; g.textBaseline='middle';
+    g.shadowBlur=16; g.fillStyle=color; g.fillText(txt,80,42);
+    g.shadowBlur=0; g.globalAlpha=0.85; g.fillStyle='#fff'; g.fillText(txt,80,42); g.globalAlpha=1;
+    return new THREE.CanvasTexture(c);
+  }
+  const signGeo=new THREE.PlaneGeometry(5,2.5);
+  const signSpots=[];
+  buildings.forEach(b=>{
+    const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
+    if(b.maxX-b.minX<9) return;
+    const downtown=Math.hypot(cx,cz)<210;
+    if(Math.random()>(downtown?0.5:0.16)) return;
+    let bv={d:1e9,r:0}, bh={d:1e9,r:0};
+    roadLines.forEach(r=>{ const dv=Math.abs(r-cx); if(dv<bv.d) bv={d:dv,r}; const dh=Math.abs(r-cz); if(dh<bh.d) bh={d:dh,r}; });
+    let x,z,ry;
+    if(bv.d<bh.d){ const dir=bv.r<cx?-1:1; x=(dir<0?b.minX:b.maxX)+dir*0.18; z=cz; ry=dir<0?-Math.PI/2:Math.PI/2; }
+    else { const dir=bh.r<cz?-1:1; z=(dir<0?b.minZ:b.maxZ)+dir*0.18; x=cx; ry=dir<0?Math.PI:0; }
+    signSpots.push({x,z,ry,y:groundH(x,z)+rand(3.2,4.6),tex:randi(0,NEON.length-1),s:rand(0.8,1.5)});
+  });
+  const byTex=[]; signSpots.forEach(s=>{ (byTex[s.tex]=byTex[s.tex]||[]).push(s); });
+  byTex.forEach((list,ti)=>{
+    if(!list||!list.length) return;
+    const mat=new THREE.MeshBasicMaterial({map:neonTex(NEON[ti][0],NEON[ti][1]),transparent:true});
+    const inst=new THREE.InstancedMesh(signGeo,mat,list.length);
+    const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
+          pos=new THREE.Vector3(), scl=new THREE.Vector3();
+    list.forEach((s,i)=>{
+      pos.set(s.x,s.y,s.z); e.set(0,s.ry,0); q.setFromEuler(e); scl.set(s.s,s.s,s.s);
+      m.compose(pos,q,scl); inst.setMatrixAt(i,m);
+    });
+    inst.instanceMatrix.needsUpdate=true;
+    scene.add(inst); neonSets.push({mat,inst});
+  });
+
+  // ---- 3. streetlight glow pools: additive light discs straddling the kerb,
+  // tilted to the street's grade, night only ----
+  const poolTex=(function(){
+    const c=document.createElement('canvas'); c.width=c.height=128;
+    const g=c.getContext('2d'), gr=g.createRadialGradient(64,64,4,64,64,64);
+    gr.addColorStop(0,'rgba(255,222,150,0.5)'); gr.addColorStop(0.4,'rgba(255,190,110,0.22)');
+    gr.addColorStop(1,'rgba(255,170,80,0)');
+    g.fillStyle=gr; g.fillRect(0,0,128,128);
+    return new THREE.CanvasTexture(c);
+  })();
+  const poolSpots=[];
+  roadLines.forEach(r=>{
+    if(Math.abs(r)>H-10) return;
+    let k=0;
+    for(let t=-H+22;t<=H-22;t+=26,k++){
+      const side=(k%2)?1:-1;   // alternate kerb sides along each street
+      poolSpots.push({x:r+side*(ROAD/2+0.7),z:t,vert:true});
+      poolSpots.push({x:t,z:r+side*(ROAD/2+0.7),vert:false});
+    }
+  });
+  if(poolSpots.length){
+    const geo=new THREE.PlaneGeometry(7,7); geo.rotateX(-Math.PI/2);
+    const mat=new THREE.MeshBasicMaterial({map:poolTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
+    glowPools=new THREE.InstancedMesh(geo,mat,poolSpots.length);
+    const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
+          pos=new THREE.Vector3(), scl=new THREE.Vector3(1,1,1);
+    poolSpots.forEach((s,i)=>{
+      // tilt to the grade along travel so the pool hugs sloped streets
+      let rx=0,rz=0;
+      if(s.vert) rx=-Math.atan2(groundH(s.x,s.z+3)-groundH(s.x,s.z-3),6);
+      else rz=Math.atan2(groundH(s.x+3,s.z)-groundH(s.x-3,s.z),6);
+      pos.set(s.x,groundH(s.x,s.z)+0.07,s.z); e.set(rx,0,rz); q.setFromEuler(e);
+      m.compose(pos,q,scl); glowPools.setMatrixAt(i,m);
+    });
+    glowPools.instanceMatrix.needsUpdate=true;
+    glowPools.visible=G.night;
+    scene.add(glowPools);
+  }
+})();
+
 // ================= DAY/NIGHT & HEIST SYSTEM =================
 G.night=true; G.heist=null; G.crouching=false;   // the purple city IS night — game starts after dark
 const HEIST_PHASES=['SCOUTING','BREAK-IN','CRACKING','ESCAPE'];
@@ -4595,6 +4714,7 @@ function applyDayNight(){
     amb.intensity=0.75; amb.color.setHex(0x8899aa);
     scene.fog.color.setHex(0x9cc3e8); scene.fog.near=150; scene.fog.far=680;
   }
+  cityGlowDayNight();   // CITY GLOW: swap lit windows / neon brightness / light pools
 }
 applyDayNight(); // start at night
 function toggleNight(){

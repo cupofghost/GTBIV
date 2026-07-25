@@ -220,6 +220,7 @@ Sections, in file order, with what lives in each:
 | `PIZZA PLACE & INTERIOR` | Pizza-place exterior/interior, robbery, enter/exit, heist funcs (`spawnGuards`, `updateGuards`, `updateSafeCrack`, `checkHeistTriggers`) |
 | `SIDEWALKS & STOREFRONT AWNINGS` | 3D kerb strips, sidewalk slabs, awnings |
 | `MORE CITY BEAUTIFICATION` | Street trees, planters, cafe tables, pole banners |
+| `CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS` | `cityGlowDayNight`, facade night-window swap (`facadeMats`), instanced neon signs, streetlight glow pools |
 | `DAY/NIGHT & HEIST SYSTEM` | `toggleNight`, night sky, heist triggers |
 | `PICKUPS` | `pickups`, `pickupDefs`, `spawnPickup`, `scatterPickups`, `collectPickups`, `updatePickupVisuals` |
 | `HELICOPTERS` | Player heli + `spawnCopHeli`/`updateCopHeli`, pilotless helis |
