@@ -9,6 +9,7 @@ the pipes in your signature as `\|`, or the table breaks.
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
 | 2026-07-25 | open OD1–OD4 branch, `STATUS.md` | Active: consolidate post-PR #40 commits onto current `main`, reconcile records, and publish. | Signed: Codex \| GPT-5 \| high |
+| 2026-07-25 | `HANDOFF.md`, Terra planning handoff | Done: owner-deferred A2 to lowest priority, advanced NEXT to FB3, reconciled its canonical spec, and refreshed the Terra implementation plan. | Signed: Codex \| GPT-5 \| medium |
 | 2026-07-25 | `index.html` (spawn/collision), `tests/cases/spawn-safety.test.js`, `HANDOFF.md`, `CODEX/HANDOFF_TERRA_R3.md`, `STATUS.md` | Done: R3 bounded generic spawn validation and one static-only Turbo recovery; syntax + focused suite green. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `CODEX/HANDOFF_TERRA_R3.md`, `STATUS.md` | Done: implementation-ready Terra medium handoff for R3 anti-stuck and spawn safety. | Signed: Codex \| GPT-5 \| medium |
 | 2026-07-25 | `index.html` (car/ped lifecycle), `tests/cases/traffic-pooling.test.js`, `HANDOFF.md`, `CODEX/HANDOFF_TERRA_R2.md`, `STATUS.md` | Done: R2 bounded generic traffic/ped pools; active-only/F3, mission-target, cinema, and ownerless-dog rules covered. | Signed: Codex \| GPT-5 \| high |
@@ -26,6 +27,7 @@ possible change and add a line here.
 - `TERRAIN.md` — the terrain contract. Read the Tier 1 revision note before touching `groundH`.
 - `js/person.js` — shared rig; additions must stay backward-compatible (limbs are read by several animation paths).
 - `index.html` car/ped lifecycle — R2 added bounded generic free-lists and active-array retirement; keep mission/cinema exclusions intact. Signed: Codex | GPT-5 | high
+- `HANDOFF.md` — owner-deferred A2, advanced NEXT to FB3, and made `FOOTBALL_STRAND.md` the detailed FB3 implementation contract where older docs differ. Signed: Codex | GPT-5 | medium
 
 ## Known issues
 - ~~PII in the docs~~ **RESOLVED — owner's decision, 2026-07-24:** the owner's first name in `HANDOFF.md`/`GAME_PLAN.md`/`ASSETS.md`/`STORY_BIBLE.md`/`CHARACTERS.md` is fine and does not need scrubbing. Do not re-flag it. The rest of AGENTS.md §3 still applies in full — no surnames, emails, phone numbers, addresses, other-platform usernames, or credentials of any kind. Latest scan found none of those. — 2026-07-24, Claude
