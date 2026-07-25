@@ -11,6 +11,7 @@ the pipes in your signature as `\|`, or the table breaks.
 | 2026-07-25 | Audio loading, RNG, tests/CI | Done: lazy cached VO, shared seeded RNG, broader syntax checks, and GitHub Actions. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `index.html`, player/vehicle/camera/FX/dogs, Codex workflow, focused tests | Done: camera, terrain/traffic, Turbo, controls/kick/aim, dog-count, mushroom cloud, and MP3-only VO work. PR #40 handoff complete. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `index.html`, focused Playwright tests | Done: Terra follow-up—solid mushroom cloud, MP3-only Turbo paths, regenerated code map, and focused coverage. | Signed: Codex \| GPT-5 \| high |
+| 2026-07-25 | `CODEX/HANDOFF_TERRA.md` | Done: refreshed for a new chat after PR #40 push; records exact validation and next step. | Signed: Codex \| GPT-5 \| medium |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
