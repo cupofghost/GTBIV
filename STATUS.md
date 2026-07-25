@@ -8,7 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-| 2026-07-25 | `index.html`, `HANDOFF.md`, `STATUS.md`, `tests/cases/{rpg-flight,bubble-occlusion,sprint,street-density}.test.js` | Done OD1–OD2: RPG sweep and shared building-occluded world bubbles; syntax + focused tests green. Active: OD3 next. | Signed: Codex \| GPT-5 \| high |
+| 2026-07-25 | `index.html`, `HANDOFF.md`, `STATUS.md`, `tests/cases/{rpg-flight,bubble-occlusion,sprint,street-density}.test.js` | Done OD1–OD3: RPG sweep, occluded bubbles, hold sprint + distinct pose; syntax + focused tests green. Active: OD4 next. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `HANDOFF.md`, owner-priority gameplay handoff | Done: specced OD1–OD4 as four ordered commits—straight RPGs, occluded bubbles, Turbo sprint, and locally maintained street density. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `HANDOFF.md`, Terra planning handoff | Done: owner-deferred A2 to lowest priority, advanced NEXT to FB3, reconciled its canonical spec, and refreshed the Terra implementation plan. | Signed: Codex \| GPT-5 \| medium |
 | 2026-07-25 | `index.html` (spawn/collision), `tests/cases/spawn-safety.test.js`, `HANDOFF.md`, `CODEX/HANDOFF_TERRA_R3.md`, `STATUS.md` | Done: R3 bounded generic spawn validation and one static-only Turbo recovery; syntax + focused suite green. | Signed: Codex \| GPT-5 \| high |
