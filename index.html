@@ -2312,7 +2312,7 @@ blockInfo.forEach(b=>{
     }
   }
   if(b.type==='bldg'&&Math.random()<0.65){
-    const per=BLOCK/2+3;
+    const per=BLOCK/2+1.6;   // sidewalk edge, not the street
     treeSpots.push({x:b.cx+rand(-per,per),z:b.cz+pick([-1,1])*per});
     if(Math.random()<0.5) treeSpots.push({x:b.cx+pick([-1,1])*per,z:b.cz+rand(-per,per)});
   }
@@ -3673,7 +3673,7 @@ function spawnJock(x,z){
   const mesh=makePerson(spec);
   addLettermanJacket(mesh,team.body,team.letter);
   const j={mesh,x,z,homeX:x,homeZ:z,heading:rand(0,TAU),speed:2.6,state:'guard',
-    tauntT:rand(1,4),swingT:0,hitT:0,phase:rand(0,TAU)};
+    tauntT:rand(1,4),swingT:0,hitT:0,phase:rand(0,TAU),hp:90,downT:0};
   mesh.position.set(x,0,z); scene.add(mesh);
   jocks.push(j); return j;
 }
@@ -3682,6 +3682,16 @@ function spawnJocks(n){
     const b=pick(blockInfo);
     spawnJock(b.cx+rand(-BLOCK/2,BLOCK/2),b.cz+rand(-BLOCK/2,BLOCK/2));
   }
+}
+function downJock(j,byCar){
+  j.state='down'; j.downT=8;
+  j.mesh.rotation.x=-Math.PI/2; j.mesh.position.y=groundH(j.x,j.z)+0.3;
+  j.eatParts=null;
+  burst(j.x,1,j.z,8,[[1,0.4,0.4],[0.9,0.2,0.2]],2,0.5,5);
+  if(byCar) shake(0.25);
+  addHeat(18);
+  if(Math.random()<0.45) spawnPickup('cash',j.x+rand(-1.5,1.5),j.z+rand(-1.5,1.5));
+  toast('JOCK DOWN','gold');
 }
 // circle vs jocks — they're solid, same as peds
 function jockHit(x,z,r){
@@ -3697,7 +3707,13 @@ function jockHit(x,z,r){
   return null;
 }
 function updateJocks(dt){
-  for(const j of jocks){
+  for(let i=jocks.length-1;i>=0;i--){
+    const j=jocks[i];
+    if(j.state==='down'){
+      j.downT-=dt;
+      if(j.downT<=0){ scene.remove(j.mesh); disposeMesh(j.mesh); jocks.splice(i,1); }
+      continue;
+    }
     const d=Math.hypot(player.x-j.x,player.z-j.z);
     if(j.hitT>0) j.hitT-=dt;
     // pick a fight: spot Turbo, square up, chase him down
@@ -5697,6 +5713,7 @@ function doAttack(){
     };
     peds.forEach(pd=>{ if(pd.state!=='down') consider(pd.x,pd.z,pd,'ped'); });
     footCops.forEach(fc=>{ if(fc.state!=='down') consider(fc.x,fc.z,fc,'footcop'); });
+    jocks.forEach(j=>{ if(j.state!=='down') consider(j.x,j.z,j,'jock'); });
     cars.forEach(c=>{ if(!c.dead) consider(c.x,c.z,c,'car'); });
     strayDogs.forEach(d=>consider(d.x,d.z,d,'dog'));
     if(copHeli&&!copHeli.dead) consider(copHeli.x,copHeli.z,copHeli,'heli');
@@ -5716,6 +5733,12 @@ function doAttack(){
         fc.hp-=50; addHeat(22);
         burst(fc.x,1.2,fc.z,8,[[1,0.4,0.4],[0.9,0.2,0.2]],2.5,0.5,4);
         if(fc.hp<=0) downFootCop(fc);
+        turboSay('shoot');
+      } else if(best.kind==='jock'){
+        const j=best.ref;
+        j.hp-=50; addHeat(18);
+        burst(j.x,1.2,j.z,8,[[1,0.4,0.4],[0.9,0.2,0.2]],2.5,0.5,4);
+        if(j.hp<=0) downJock(j,false);
         turboSay('shoot');
       } else if(best.kind==='car'){
         damageCar(best.ref,25,'shot');
@@ -5872,6 +5895,8 @@ function updateBoomFx(dt){
 }
 function damageArea(x,z,rad,dmg){
   peds.forEach(pd=>{ if(pd.state!=='down'&&Math.hypot(pd.x-x,pd.z-z)<rad) knockPed(pd,false); });
+  footCops.forEach(fc=>{ if(fc.state!=='down'&&Math.hypot(fc.x-x,fc.z-z)<rad) downFootCop(fc); });
+  jocks.forEach(j=>{ if(j.state!=='down'&&Math.hypot(j.x-x,j.z-z)<rad) downJock(j,false); });
   for(const c of cars){
     if(c.dead) continue;
     const d=Math.hypot(c.x-x,c.z-z);
@@ -5923,11 +5948,19 @@ Object.keys(btnMap).forEach(id=>{
   el.addEventListener('touchcancel',off,{passive:false});
   el.addEventListener('mousedown',on); el.addEventListener('mouseup',off); el.addEventListener('mouseleave',off);
 });
+function footGround(p){
+  const roofHere=roofAt(p.x,p.z);
+  const st=stairHitRun(p.x,p.z), sh=st?st.h:0;
+  const onStairs=sh>0&&p.y>sh-1.2;
+  return (roofHere>0&&p.y>roofHere-1.0)?roofHere:
+    Math.max(groundH(p.x,p.z),onStairs?sh:0);
+}
 function doJump(){
   if(!G.started||G.over||G.mode!=='foot') return;
   if(player.climb){ bailLadder(); return; }   // push off the rungs
-  if(player.y<=0.02&&player.vy<=0){
-    player.vy=8.6; player.y=0.03;
+  const ground=footGround(player);
+  if(player.y<=ground+0.05&&player.vy<=0){
+    player.vy=8.6; player.y=ground+0.06;
     blip(300,520,0.12,0.12,'triangle');
   }
 }
@@ -6743,6 +6776,24 @@ function updateCarMode(dt){
       if(mission&&mission.type==='rampage') mission.value+=50;
     }
   }
+  for(const j of jocks){
+    if(j.state==='down') continue;
+    if(Math.hypot(j.x-c.x,j.z-c.z)<1.7&&Math.abs(c.speed)>5){
+      downJock(j,true);
+      turboSay('runover');
+      addHeat(22);
+      if(mission&&mission.type==='rampage') mission.value+=60;
+    }
+  }
+  for(const fc of footCops){
+    if(fc.state==='down') continue;
+    if(Math.hypot(fc.x-c.x,fc.z-c.z)<1.7&&Math.abs(c.speed)>5){
+      downFootCop(fc);
+      turboSay('runover');
+      addHeat(30);
+      if(mission&&mission.type==='rampage') mission.value+=70;
+    }
+  }
   for(const o of cars){
     if(o===c||o.dead) continue;
     const d=Math.hypot(o.x-c.x,o.z-c.z);
@@ -6800,6 +6851,19 @@ function doPunch(heavy){
       burst(fc.x,1.2,fc.z,6,COL_SPARK,2,0.3,4);
       addHeat(heavy?20:16);
       if(fc.hp<=0) downFootCop(fc);
+      toast('POW!','gold');
+    }
+  }
+  // jocks finally answer for the locker-room thing
+  for(const j of jocks){
+    if(j.state==='down') continue;
+    const dx=j.x-p.x, dz=j.z-p.z, d=Math.hypot(dx,dz);
+    if(d<reach&&Math.abs(angDiff(p.heading,Math.atan2(dx,dz)))<1.1){
+      j.hp-=heavy?55:30;
+      j.x+=Math.sin(p.heading)*0.9; j.z+=Math.cos(p.heading)*0.9;
+      burst(j.x,1.2,j.z,6,COL_SPARK,2,0.3,4);
+      addHeat(heavy?18:14);
+      if(j.hp<=0) downJock(j,false);
       toast('POW!','gold');
     }
   }

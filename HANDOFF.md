@@ -1218,11 +1218,10 @@ units on a cooldown, and closing to melee range to trigger the same
 simplified auto-counter (`doPunch()`) the gang members use. No new UI, no new
 systems — pure reuse of existing patterns.
 **Left for later polish (optional, not blocking):** a distinct "letterman
-jacket" look once `CHARACTERS.md`'s paint system (C3) lands; a dedicated
-knockdown/defeat state (currently, like gang members, jocks can't actually be
-knocked down — punching near one just triggers the same auto-counter loop);
-tying jock density to the football field once **FB2** exists instead of pure
-random blocks.
+jacket" look once `CHARACTERS.md`'s paint system (C3) lands; tying jock density
+to the football field once **FB2** exists instead of pure random blocks. (The
+knockdown/defeat state was added in the 2026-07-25 bug-fix pass — jocks are now
+killable by fists, gunfire, car hits, and explosions.)
 
 #### FB2 — Chaos High football field (new landmark) `P1 · Risk: Med` `DONE`
 **Status: implemented & verified.** A `FOOTBALL_FIELD` section reserves one
