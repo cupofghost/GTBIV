@@ -5638,6 +5638,39 @@ const TALK_LINES=[
 ];
 const YELLS=['AAAH!','MY SPLEEN!','WHY?!','NOT AGAIN!','HELP!','RUDE!','I JUST GOT HERE!'];
 let bubbleT=null, bubblePed=null;
+const bubbleProject=new THREE.Vector3();
+function segmentHitsBuilding(x0,y0,z0,x1,y1,z1){
+  const dX=x1-x0,dY=y1-y0,dZ=z1-z0;
+  for(const b of buildings){
+    let lo=0,hi=1, hit=true;
+    const slabs=[[x0,dX,b.minX,b.maxX],[y0,dY,b.baseY,b.baseY+b.h],[z0,dZ,b.minZ,b.maxZ]];
+    for(const s of slabs){
+      if(Math.abs(s[1])<1e-6){ if(s[0]<s[2]||s[0]>s[3]){ hit=false; break; } }
+      else{
+        let a=(s[2]-s[0])/s[1], c=(s[3]-s[0])/s[1];
+        if(a>c){ const t=a;a=c;c=t; }
+        lo=Math.max(lo,a); hi=Math.min(hi,c);
+        if(lo>hi){ hit=false; break; }
+      }
+    }
+    if(hit) return true;
+  }
+  return false;
+}
+function placeWorldBubble(el,x,y,z,maxDist,expired){
+  if(expired||(maxDist!==undefined&&Math.hypot(x-camera.position.x,z-camera.position.z)>maxDist)){
+    el.style.display='none'; return false;
+  }
+  const v=bubbleProject.set(x,y,z).project(camera);
+  if(v.z<-1||v.z>1||Math.abs(v.x)>1||Math.abs(v.y)>1||
+     segmentHitsBuilding(camera.position.x,camera.position.y,camera.position.z,x,y,z)){
+    el.style.display='none'; return false;
+  }
+  el.style.left=((v.x*0.5+0.5)*vw())+'px';
+  el.style.top=((-v.y*0.5+0.5)*vh())+'px';
+  el.style.display='block';
+  return true;
+}
 function showBubble(ped,text,dur){
   $('bubble').textContent=text;
   $('bubble').style.display='block';
@@ -5647,10 +5680,7 @@ function showBubble(ped,text,dur){
 }
 function positionBubble(){
   if(!bubblePed) return;
-  const v=new THREE.Vector3(bubblePed.x,2.4,bubblePed.z).project(camera);
-  if(v.z>1){ $('bubble').style.display='none'; bubblePed=null; clearTimeout(bubbleT); return; }
-  $('bubble').style.left=((v.x*0.5+0.5)*vw())+'px';
-  $('bubble').style.top=((-v.y*0.5+0.5)*vh())+'px';
+  placeWorldBubble($('bubble'),bubblePed.x,2.4,bubblePed.z);
 }
 // ambient chat bubbles over gossiping pairs
 function positionChatBubbles(dt){
@@ -5662,10 +5692,8 @@ function positionChatBubbles(dt){
       if(Math.hypot(ped.x-camera.position.x,ped.z-camera.position.z)>42){
         ped.bub.style.display='none'; ped.bubT=0; continue;
       }
-      const v=new THREE.Vector3(ped.x,2.4,ped.z).project(camera);
-      if(v.z>1||ped.bubT<=0){ ped.bub.style.display='none'; ped.bubT=0; continue; }
-      ped.bub.style.left=((v.x*0.5+0.5)*vw())+'px';
-      ped.bub.style.top=((-v.y*0.5+0.5)*vh())+'px';
+      if(ped.bubT<=0){ ped.bub.style.display='none'; continue; }
+      placeWorldBubble(ped.bub,ped.x,2.4,ped.z,42);
     }
   }
 }
@@ -8705,12 +8733,7 @@ function updateStory(dt){
   // project her speech bubble
   if(deb.bub&&deb.bubT>0){
     deb.bubT-=dt;
-    const v=new THREE.Vector3(deb.x,2.5,deb.z).project(camera);
-    if(v.z>1||deb.bubT<=0){ deb.bub.style.display='none'; deb.bubT=0; }
-    else{
-      deb.bub.style.left=((v.x*0.5+0.5)*vw())+'px';
-      deb.bub.style.top=((-v.y*0.5+0.5)*vh())+'px';
-    }
+    placeWorldBubble(deb.bub,deb.x,2.5,deb.z,undefined,deb.bubT<=0);
   }
   if(!G.story.metDeb){
     if(d<3&&G.mode==='foot'&&!activeCutscene){ 
