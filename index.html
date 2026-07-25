@@ -718,7 +718,7 @@ const $=id=>document.getElementById(id);
 // every system that spawns/renders can read the current tier's limits without
 // caring where in the file quality.js-style logic lives. Defaults are the
 // 'high' tier; applyQuality() overwrites them at boot and on any tier change.
-let TRAFFIC_CAP=16, PED_CAP=34, PARTICLE_SCALE=1, GFX_TIER='high';
+let TRAFFIC_CAP=30, PED_CAP=60, PARTICLE_SCALE=1, GFX_TIER='high';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // CODE MAP — Search by section name to navigate quickly.
@@ -3262,7 +3262,7 @@ for(let k=0;k<8;k++){
 // traffic
 const traffic=[];
 const trafficPool=[];
-const TRAFFIC_POOL_CAP=16;
+const TRAFFIC_POOL_CAP=30;
 function resetTrafficCar(car,it,target){
   const heading=Math.atan2(target.x-it.x,target.z-it.z), t=CARTYPES[car.type];
   const offset=()=>({x:it.x+rand(-2,2),z:it.z+rand(-2,2)});
@@ -3312,13 +3312,13 @@ function spawnTraffic(n){
     traffic.push(car);
   }
 }
-spawnTraffic(16);
+spawnTraffic(30);
 // pizza/chaos/gang/guard spawns deferred to bootSpawns() — their systems init later in the file
 
 // ================= PEDESTRIANS =================
 const peds=[];
 const pedPool=[];
-const PED_POOL_CAP=34;
+const PED_POOL_CAP=60;
 const PEDCOLS=[0xff6b9d,0x6bc8ff,0xffd23e,0x8aff6b,0xd98aff,0xff8a5c,0x5cffd4,0xf0f0f0];
 // makePerson moved to js/person.js (C1 spec refactor)
 function makeDog(){
@@ -3467,6 +3467,47 @@ for(let k=0;k<12;k++){
   ped.home={cx:ped.x,cz:ped.z};
 }
 spawnChatPairs();
+
+// OD4 — gently keep ordinary streets alive around Turbo without breaking R2's
+// active-only pools or rehoming visible/special actors.
+let densityTick=0;
+const densityProject=new THREE.Vector3();
+function densityOffscreen(x,y,z){
+  const v=densityProject.set(x,y,z).project(camera);
+  return v.z<-1||v.z>1||Math.abs(v.x)>1||Math.abs(v.y)>1;
+}
+function genericPed(p){ return (p.kind==='local'||p.kind==='commute')&&p.state!=='down'&&!p.dog&&!(replay&&replay.staged&&replay.staged.some(s=>s.ref===p)); }
+function densityCandidate(min,max){
+  const near=intersections.filter(q=>{ const d=Math.hypot(q.x-player.x,q.z-player.z); return d>=min&&d<=max&&densityOffscreen(q.x,1,q.z); });
+  return near.length?pick(near):null;
+}
+function maintainStreetDensity(dt){
+  densityTick+=dt; if(densityTick<1||!G.started||G.replay) return;
+  densityTick=0;
+  const cfg=QUALITY_TIERS[GFX_TIER], carNear=traffic.filter(c=>Math.hypot(c.x-player.x,c.z-player.z)<120).length;
+  const pedNear=peds.filter(genericPed).filter(p=>Math.hypot(p.x-player.x,p.z-player.z)<120).length;
+  let carsAdded=0, pedsAdded=0;
+  while(carNear+carsAdded<cfg.localCars&&carsAdded<2){
+    if(traffic.length>=TRAFFIC_CAP){
+      const old=traffic.find(c=>canPoolTraffic(c)&&Math.hypot(c.x-player.x,c.z-player.z)>180&&densityOffscreen(c.x,c.y,c.z));
+      if(!old) break; retireTraffic(old);
+    }
+    const it=densityCandidate(55,140); if(!it) break;
+    const opts=intersections.filter(q=>(Math.abs(q.i-it.i)+Math.abs(q.j-it.j))===1);
+    const target=opts.length?pick(opts):pick(intersections); let c=trafficPool.pop();
+    if(c){ resetTrafficCar(c,it,target); scene.add(c.mesh); cars.push(c); } else { c=makeCar('sedan',it.x,it.z,Math.atan2(target.x-it.x,target.z-it.z),{driver:'civ'}); resetTrafficCar(c,it,target); }
+    traffic.push(c); carsAdded++;
+  }
+  while(pedNear+pedsAdded<cfg.localPeds&&pedsAdded<4){
+    if(peds.length>=PED_CAP){
+      const old=peds.find(p=>genericPed(p)&&Math.hypot(p.x-player.x,p.z-player.z)>180&&densityOffscreen(p.x,1,p.z));
+      if(!old) break; retirePed(old,false);
+    }
+    const it=densityCandidate(55,140); if(!it) break;
+    const b=blockInfo.reduce((best,q)=>Math.hypot(q.cx-it.x,q.cz-it.z)<Math.hypot(best.cx-it.x,best.cz-it.z)?q:best,blockInfo[0]);
+    spawnPed(b,'local'); pedsAdded++;
+  }
+}
 
 
 // ================= PIZZA DELIVERY SYSTEM =================
@@ -8338,6 +8379,7 @@ function loop(){
           else if(G.mode==='car') updateCarMode(sdt);
           else if(G.mode==='heli') updateHeliMode(sdt);
           updateRockets(sdt);
+          maintainStreetDensity(sdt);
           updateCopHeli(sdt);
           updatePilotlessHelis(sdt);
           updateTraffic(sdt);
@@ -10013,9 +10055,9 @@ function setInvertY(on){ SETTINGS.invertY=on; saveSettings(); refreshInvertYButt
 // shed entities right now), and particle-burst size. Persisted alongside the
 // volume sliders in the same SETTINGS blob.
 const QUALITY_TIERS={
-  low:   { pixelRatio:1.0,  trafficCap:8,  pedCap:16, particleScale:0.5,  fogNear:70,  fogFar:280 },
-  medium:{ pixelRatio:1.35, trafficCap:12, pedCap:24, particleScale:0.75, fogNear:95,  fogFar:420 },
-  high:  { pixelRatio:1.75, trafficCap:16, pedCap:34, particleScale:1,    fogNear:120, fogFar:560 },
+  low:   { pixelRatio:1.0,  trafficCap:12, pedCap:24, localCars:4,  localPeds:8,  particleScale:0.5,  fogNear:70,  fogFar:280 },
+  medium:{ pixelRatio:1.35, trafficCap:22, pedCap:44, localCars:7,  localPeds:14, particleScale:0.75, fogNear:95,  fogFar:420 },
+  high:  { pixelRatio:1.75, trafficCap:30, pedCap:60, localCars:10, localPeds:20, particleScale:1,    fogNear:120, fogFar:560 },
 };
 let qualityMode=SETTINGS.quality||'auto';   // 'auto'|'low'|'medium'|'high' — the user's choice
 let autoLowStreak=0, autoHighStreak=0;
