@@ -1432,6 +1432,105 @@ unapproved scope.
 
 ---
 
+### Phase 9 — Owner-directed immediate gameplay pass `approved`
+
+These four tasks supersede FB3 in the immediate `NEXT` sequence. Build them as
+four focused commits in order; they share `index.html`, so one agent should
+carry the sequence rather than several agents editing the hot file in parallel.
+
+#### OD1 — Straight-flight RPGs `P0 · Risk: Low` `OPEN`
+**Owner direction:** RPG rounds must fly in a straight line.
+**Where:** `doAttack()`'s RPG branch and `updateRockets()`.
+**Approach:** Freeze one normalized 3D direction vector at launch from Turbo's
+heading plus camera pitch, then move the rocket at constant speed along that
+vector. Remove gravity/drop and do not home or re-read aim after launch. Align
+the mesh to the frozen trajectory. Preserve lifetime, smoke, flight audio,
+heat, explosions, car/heli damage, and cleanup. Use terrain-aware ground impact
+(`groundH`) and bounded swept/substep collision so a fast rocket cannot tunnel
+through a building or car during a long frame.
+**Acceptance:** horizontal, upward, and downward shots follow a constant line;
+turning/aiming after firing does not bend them; impacts still resolve once and
+clean up mesh/audio; seeded runs stay deterministic.
+**Focused test:** `tests/cases/rpg-flight.test.js`.
+
+#### OD2 — Speech-bubble building occlusion `P0 · Risk: Low` `OPEN`
+**Owner direction:** speech bubbles must not appear through buildings.
+**Where:** `positionBubble()`, `positionChatBubbles()`, and Deb's bubble
+projection in `updateStory()`.
+**Approach:** add one allocation-light world-to-bubble placement helper shared
+by all three paths. In addition to clip-space/range checks, test the segment
+from `camera.position` to the speaker's head against the existing building
+AABBs including `baseY`/roof height. Hide an occluded bubble without cancelling
+its remaining lifetime, so it can reappear if the camera clears the corner.
+Do not use `buildingHit()` alone: its 2D footprint would incorrectly hide a
+rooftop speaker when the sightline passes above the roof.
+**Acceptance:** generic TALK/yell bubbles, ambient chat bubbles, jock bubbles,
+and Deb bubbles all hide behind a building, reappear during their remaining
+time when visible again, and still hide off-screen/expired/far away. No
+per-frame DOM creation or raycaster allocation.
+**Focused test:** `tests/cases/bubble-occlusion.test.js`.
+
+#### OD3 — Turbo sprint control and animation `P0 · Risk: Med` `OPEN`
+**Owner direction:** add a sprint button and sprint animation for Turbo.
+**Where:** touch HUD/buttons, input polling, controls card/hints,
+`refreshButtons()`, and `updateFoot()`. Keep `js/person.js` backward-compatible;
+the required joints are already exposed.
+**Approach:** add explicit `input.sprint`. On desktop, Shift means sprint only
+on foot and keeps its existing boost/up meaning in vehicles. On touch, put a
+hold-style **SPRINT** button beside JUMP (remove JUMP's two-column span) so the
+existing four-row action cluster does not grow taller. Sprint activates only
+while moving strongly on foot and not crouching, climbing, bailing, stunned,
+or in an attack. It needs no stamina system or new HUD bar. Target roughly
+12u/s versus the current 8.2u/s full-stick run.
+
+Give sprint a distinct cycle: faster cadence, longer leg drive/knee bend,
+strong opposite arm pump, forward torso lean, and slightly reduced vertical
+bob. Sprint locomotion wins over the ranged aiming pose; attacking cancels
+sprint for that attack. Preserve stairs, slopes, roofs, jumping, collision,
+anti-stuck recovery, and ordinary walk/run animation.
+**Acceptance:** holding the touch button or Shift makes Turbo materially faster
+and visibly sprint; releasing returns immediately to the normal run; no stuck
+input after touch cancel, mode change, pause, or entering a car; the 800×390
+touch layout does not overlap.
+**Focused test:** `tests/cases/sprint.test.js`.
+
+#### OD4 — Denser traffic and street life `P0 · Risk: Med` `OPEN`
+**Owner direction:** the streets feel empty; add more cars and life.
+**Where:** generic traffic/ped boot spawns, R2 pools, F3 quality tiers,
+`spawnTraffic()`/`spawnPed()`, and the main-loop population maintenance path.
+**Approach:** raising global caps alone is insufficient because entities spread
+across the whole city. Increase the quality-tier targets, then add a throttled
+local population maintainer that reuses the R2 pools to keep generic traffic
+and pedestrians near Turbo as he moves.
+
+Starting targets (tune down only if the focused busy-scene check proves they
+are too expensive):
+
+| Tier | Moving traffic | Generic pedestrians |
+|------|----------------|---------------------|
+| Low | 12 | 24 |
+| Medium | 22 | 44 |
+| High / Auto start | 30 | 60 |
+
+Run maintenance about once per second, adding at most 2 cars and 4 peds per
+tick. Prefer clear road intersections/sidewalk blocks in a roughly 55–140u
+annulus around the player, ideally just off-screen. If the active arrays are
+at cap but the nearby streets are sparse, retire only far-away, off-screen
+generic civilians (roughly 180u+) and recycle them nearby. Never recycle the
+player's vehicle, parked/special/mission/cinema cars, cops, downed peds, Deb,
+jocks, dogs, named/story actors, or mission targets. Preserve R2 active-only
+arrays, spawn-safety validation, deterministic `_rng`, and F3 downshift
+trimming. Grow the pool caps to the high-tier maxima and let tier changes refill
+gradually rather than in one hitch.
+**Acceptance:** after settling near ordinary downtown roads, High has visibly
+more moving cars and pedestrians near Turbo than the current build; travelling
+several blocks repopulates the new area without visible pop-in; counts remain
+bounded by the active tier; Auto can still downshift; no meaningful busy-scene
+fps regression or unbounded mesh/DOM growth.
+**Focused test:** `tests/cases/street-density.test.js`.
+
+---
+
 ## 9. Verification & Definition of Done
 
 Before committing **any** task:
@@ -1464,10 +1563,8 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: FB3 (Coach mission)** — Build the one-shot "Revenge on Coach" field
-encounter that unlocks the football minigame. Follow the detailed
-`FOOTBALL_STRAND.md` flow; the older `STORY_BIBLE.md` worked example is
-background only where the two differ.
+**NEXT: OD1 (Straight-flight RPGs)** — Start the owner-directed immediate
+gameplay pass, then complete OD2 → OD3 → OD4 before returning to FB3.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -1498,7 +1595,11 @@ throughout:
 ✔ U3  Death/respawn flow         DONE
 ✔ R2  Pooling traffic/peds       DONE
 ✔ R3  Anti-stuck & spawn-safety  DONE
-—  FB3 Coach mission             ← NEXT
+—  OD1 Straight-flight RPGs      ← NEXT
+—  OD2 Bubble building occlusion OPEN
+—  OD3 Turbo sprint              OPEN
+—  OD4 Denser street life        OPEN
+—  FB3 Coach mission             OPEN
 —  FB4 Football minigame         OPEN
 —  FB5 Cheerleaders cutscene     OPEN
 —  RV2 Mama rat model            OPEN
