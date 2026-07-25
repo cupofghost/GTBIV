@@ -308,8 +308,24 @@
     letter-spacing:1px; cursor:pointer; background:rgba(40,16,70,.85);
     border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:7px 2px; text-align:center; }
   .qBtn.on { background:rgba(255,62,160,.55); border-color:#ff3ea0; }
-  .pmHowTxt { color:#e8e8f0; font-family:Arial,sans-serif; font-size:12px; line-height:1.8; text-align:left; }
-  .pmHowTxt b { color:#ffd23e; }
+  #controlsCard { display:none; position:fixed; inset:0; z-index:56; background:rgba(5,2,12,.93);
+    align-items:center; justify-content:center; pointer-events:auto; }
+  #ccPanel { width:min(calc(var(--lvw)*0.92),430px); max-height:calc(var(--lvh)*0.9); overflow:auto; text-align:center;
+    background:rgba(8,3,18,.96); border:1px solid #9be7ff; border-radius:14px;
+    padding:12px 16px 14px; box-shadow:0 0 30px rgba(155,231,255,.3); }
+  #ccPanel h2 { color:#9be7ff; font-size:18px; font-style:italic; letter-spacing:4px; margin:0 0 10px; }
+  #ccTabs { display:flex; gap:6px; margin-bottom:10px; }
+  .ccTab { flex:1; font-size:11px; font-weight:900; color:#fff; font-family:Arial,sans-serif;
+    letter-spacing:2px; cursor:pointer; background:rgba(40,16,70,.85);
+    border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:8px 2px; }
+  .ccTab.on { background:rgba(155,231,255,.3); border-color:#9be7ff; }
+  .ccBody { color:#e8e8f0; font-family:Arial,sans-serif; font-size:12px; line-height:1.8; text-align:left; }
+  .ccBody b { color:#ffd23e; }
+  .ccFine { color:#9be7ff; font-size:10px; margin-top:6px; }
+  #ccJob { color:#e8e8f0; font-family:Arial,sans-serif; font-size:12px; line-height:1.6;
+    border-top:1px solid rgba(255,255,255,.15); margin-top:10px; padding-top:10px; }
+  #ccJob b { color:#ffd23e; }
+  #ccBtn { margin-top:12px; background:rgba(20,90,40,.85); border-color:#7dff8a; color:#7dff8a; }
 
   /* ===== CUTSCENE CINEMATICS ===== */
   #cineVignette { display:none; position:fixed; inset:0; z-index:20; pointer-events:none;
@@ -432,6 +448,32 @@
     His ex-wife <b>Deb</b> is waiting downtown &mdash; she wants her child support.
     All <b>$800</b> of it. Pay up&hellip; or it&rsquo;s straight back to jail.</div>
   <button id="storyBtn">BEGIN</button>
+</div>
+<div id="controlsCard">
+  <div id="ccPanel">
+    <h2>CONTROLS</h2>
+    <div id="ccTabs">
+      <button class="ccTab" id="ccTabTouch">TOUCH</button>
+      <button class="ccTab" id="ccTabDesk">DESKTOP</button>
+    </div>
+    <div class="ccBody" id="ccTouch">
+      <b>MOVE</b> left thumb stick &middot; <b>LOOK</b> swipe the right side<br>
+      <b>DRIVE</b> GAS / BRAKE pedals &middot; <b>BOOST</b> &amp; <b>DRIFT</b> pedal buttons<br>
+      <b>ENTER</b> steals cars &middot; <b>PUNCH</b> / gun button fights &middot; <b>TALK</b> chats up peds
+      <div class="ccFine">Portrait phone? The game rotates itself &mdash; landscape plays best.</div>
+    </div>
+    <div class="ccBody" id="ccDesk" style="display:none">
+      <b>MOVE</b> WASD / arrows &middot; <b>LOOK</b> drag the mouse<br>
+      <b>DRIVE</b> W gas / S brake &middot; <b>SHIFT</b> boost &middot; <b>SPACE</b> jump / drift<br>
+      <b>E</b> enter/exit &middot; <b>F</b> punch &middot; <b>G</b> weapon &middot; <b>T</b> talk &middot;
+      <b>H</b> horn &middot; <b>Q</b> radio &middot; <b>C</b> crouch &middot; <b>N</b> day/night &middot;
+      <b>R</b> cinema &middot; <b>P</b> pause
+      <div class="ccFine">Keys are hardcoded &mdash; no remapping yet.</div>
+    </div>
+    <div id="ccJob"><b>THE JOB:</b> Deb wants <b>$800</b> by tonight. Rob stores. Run missions.
+      Shake the cops. Re-read this anytime from PAUSE &rarr; HOW TO PLAY.</div>
+    <button class="pmBtn" id="ccBtn">GOT IT</button>
+  </div>
 </div>
 <div id="hud">
   <div id="money" class="hudBox">$0</div>
@@ -594,18 +636,6 @@
     </div></div>
     <button class="pmBtn" id="pmSetBack">BACK</button>
   </div>
-  <div class="pmPanel" id="pmHow" style="display:none">
-    <h2>HOW TO PLAY</h2>
-    <div class="pmHowTxt">
-      <b>TOUCH:</b> left stick moves &middot; swipe the right side to look &middot; pedals drive.
-      ENTER steals cars &middot; PUNCH / gun button fights &middot; TALK chats up peds.<br>
-      <b>DESKTOP:</b> WASD move &middot; E enter/exit &middot; F attack &middot; G weapon &middot; T talk &middot; Space jump/drift &middot;
-      H horn &middot; Q radio &middot; N day/night &middot; C crouch &middot; R cinema &middot; P pause.<br>
-      <b>THE JOB:</b> Deb wants <b>$800</b> by tonight. Rob glowing stores, stick up
-      peds with the pistol, run missions &mdash; and shake the cops before they bust you.
-    </div>
-    <button class="pmBtn" id="pmHowBack">BACK</button>
-  </div>
 </div>
 <div id="btnReplay">&#127916; CINEMA</div>
 <div id="replayBar">
@@ -669,61 +699,62 @@ let TRAFFIC_CAP=16, PED_CAP=34, PARTICLE_SCALE=1, GFX_TIER='high';
 // CODE MAP — Search by section name to navigate quickly.
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
-// HELPERS & GLOBAL STATE                          (617–631, ~15 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                            (729–779, ~51 lines: IS_TOUCH, updateOrientationMode, vw, vh, remapXY, ROTATED)
-// AUDIO                                           (780–1003, ~224 lines: initAudio, AC, masterGain, engine synth, sfx)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK             (1004–1506, ~503 lines: SW_SONGS, STATIONS, scheduleMusic, stepSong, synth fx)
-// THREE SETUP                                     (1507–1557, ~51 lines: scene, camera, renderer, sky/sun, lights)
-// CITY                                            (1558–2397, ~840 lines: procCity, blockInfo, roads, buildings, textures)
-//   └ RADIO TOWERS                                (2001–2107, ~107 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                  (2398–2448, ~51 lines: FOOTBALL landmark, turf, goalposts, bleachers)
-// ELEVATED LIGHT RAIL                             (2449–2573, ~125 lines: TRAIN, stations, rail track, animated loop)
-// STAIRS & FIRE ESCAPES                           (2574–2648, ~75 lines: STAIR_RUNS, terrain knolls, hideouts)
-// WALL LADDERS                                    (2649–2903, ~255 lines: LADDERS, ladderGrab, mountLadder, updateClimb, ramps/addRamp)
-// PARTICLES                                       (2904–2958, ~55 lines: burst, P_MAX, particle pool)
-// BLOB SHADOWS                                    (2959–2963, ~5 lines: makeShadow)
-// GPU RESOURCE CLEANUP                            (2964–2985, ~22 lines: disposeMesh, _sharedGPU)
-// CARS                                            (2986–3180, ~195 lines: makeCar, CAR_SPECS, carModel, physics setup)
-// PEDESTRIANS                                     (3181–3297, ~117 lines: makePerson, spawnPed, updatePeds)
-// PIZZA DELIVERY SYSTEM                           (3298–3453, ~156 lines: pizza delivery missions, stages, reward)
-// RIVAL PIZZA GANG: CHAOS PIZZA                   (3454–3581, ~128 lines: chaosDrivers, makeChaosCar, spawnChaosDrivers, updateChaosDrivers, gangMembers)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS               (3582–3745, ~164 lines: JOCK_TAUNTS, jocks, addLettermanJacket, JOCK_TEAMS, spawnJock)
-// STRAY DOGS & DOG GANGS                          (3746–3973, ~228 lines: dogs, dog gangs, pack behavior, meat drops)
-// PIZZA WARS MISSION                              (3974–4048, ~75 lines: heist system, stages, guards, pizza exterior)
-// PLAYER                                          (4049–4074, ~26 lines: player object creation, initial state)
-// PIZZA PLACE & INTERIOR                          (4075–4235, ~161 lines: pizza interior geometry, robbery, NPC setup)
-// SIDEWALKS & STOREFRONT AWNINGS                  (4236–4344, ~109 lines: 3D kerb strips, sidewalk slabs, awnings, storefront dressing)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS (4345–4544, ~200 lines: street trees, planters, cafe tables, pole banners (+ pizza enter/exit tail))
-// DAY/NIGHT & HEIST SYSTEM                        (4545–4735, ~191 lines: toggleNight, night sky, heist triggers)
-// PICKUPS                                         (4736–4778, ~43 lines: money pickups, spawn/despawn)
-// HELICOPTERS                                     (4779–5250, ~472 lines: makeHeli, heli physics, pilot AI, rotor anim)
-// TALKING PEDS                                    (5251–5339, ~89 lines: showBubble, wahVoice, NPC speech bubbles)
-// WEAPONS                                         (5340–5909, ~570 lines: doAttack, pistol/RPG logic, collision, damage)
-// WANTED                                          (5910–6015, ~106 lines: addHeat, clearHeat, star system, heat decay)
-// CAR PHYSICS                                     (6016–6205, ~190 lines: carPhysics, collision, acceleration, damage)
-// PLAYER: FOOT & CAR                              (6206–6698, ~493 lines: footCamDistance, input, kick mode, car entry/exit, updateFoot)
-// HUD / TOASTS                                    (6699–6739, ~41 lines: toast, HUD updates, on-screen feedback)
-// MISSIONS                                        (6740–6906, ~167 lines: startMission, updateMission, missions, reward)
-// AI                                              (6907–6931, ~25 lines: cop/ped goal/walk logic)
-// FOOT COPS                                       (6932–6975, ~44 lines: spawnCop, updateCops, cop AI, roaming)
-// SEWER RATS                                      (6976–7092, ~117 lines: RAT_POOL, makeRatMesh, spawnRats, updateRats)
-// MAMA RAT (rat vengeance) — PLACEHOLDER          (7093–7463, ~371 lines: spawnMamaRat, updateMamaRat, bite logic, mama model)
-// BUSTED / WASTED                                 (7464–7542, ~79 lines: busted, wasted, respawn logic, state reset)
-// CAMERA                                          (7543–7634, ~92 lines: updateCamera, shake, collision pull-in, look math)
-// MINIMAP                                         (7635–7682, ~48 lines: drawMinimap, blips, legend, position tracking)
-// MAIN LOOP                                       (7683–7849, ~167 lines: loop, substep simulation, entity updates, frame pacing)
-// ORIENTATION                                     (7850–7907, ~58 lines: checkOrientation, fitScreen, toggleFullscreen)
-// ANIMATED INTRO                                  (7908–7977, ~70 lines: intro cinematic, title screen animation)
-// STORY: TURBO JONES, CHAPTER 1                   (7978–8241, ~264 lines: story flags, Deb intro, debt system, mission gates)
-// CUTSCENE SYSTEM                                 (8242–8486, ~245 lines: playCutscene, cutscene definitions, actor positioning)
-// VOICEOVER SYSTEM                                (8487–8568, ~82 lines: playVOFile, playVOLine, TTS, voiceover queue)
-// INTRO NARRATION                                 (8569–8873, ~305 lines: intro voiceover, narrative setup)
-// DEV TOOLS                                       (8874–8951, ~78 lines: devPanel, cheats, god mode, teleports, ?dev=1 gate)
-// CINEMA MODE (was REPLAY)                        (8952–9083, ~132 lines: enterReplay/enterCinema, updateCinemaCam, free-fly camera, buffer scrub, HIDE HUD)
-// CINEMA: SCENES & STAGING                        (9084–9275, ~192 lines: cinemaIntro, cinemaCutscene, stageJockFight, stageCarBoom, stageShootPed, stageRatMother)
-// PAUSE MENU & SETTINGS                           (9276–9473, ~198 lines: pauseMenu, Settings panel, volume/quality sliders)
-// SAVE SYSTEM                                     (9474–9523, ~50 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                  (9524–end, ~41 lines: boot, init, resize handlers, quality apply)
+// HELPERS & GLOBAL STATE                          (683–697, ~15 lines: rand, randi, pick, clamp, lerp, TAU, $)
+// DEVICE / ORIENTATION                            (760–810, ~51 lines: IS_TOUCH, updateOrientationMode, vw, vh, remapXY, ROTATED)
+// AUDIO                                           (811–1034, ~224 lines: initAudio, AC, masterGain, engine synth, sfx)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK             (1035–1537, ~503 lines: SW_SONGS, STATIONS, scheduleMusic, stepSong, synth fx)
+// THREE SETUP                                     (1538–1588, ~51 lines: scene, camera, renderer, sky/sun, lights)
+// CITY                                            (1589–2428, ~840 lines: procCity, blockInfo, roads, buildings, textures)
+//   └ RADIO TOWERS                                (2032–2138, ~107 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
+// FOOTBALL FIELD                                  (2429–2479, ~51 lines: FOOTBALL landmark, turf, goalposts, bleachers)
+// ELEVATED LIGHT RAIL                             (2480–2604, ~125 lines: TRAIN, stations, rail track, animated loop)
+// STAIRS & FIRE ESCAPES                           (2605–2679, ~75 lines: STAIR_RUNS, terrain knolls, hideouts)
+// WALL LADDERS                                    (2680–2934, ~255 lines: LADDERS, ladderGrab, mountLadder, updateClimb, ramps/addRamp)
+// PARTICLES                                       (2935–2989, ~55 lines: burst, P_MAX, particle pool)
+// BLOB SHADOWS                                    (2990–2994, ~5 lines: makeShadow)
+// GPU RESOURCE CLEANUP                            (2995–3016, ~22 lines: disposeMesh, _sharedGPU)
+// CARS                                            (3017–3211, ~195 lines: makeCar, CAR_SPECS, carModel, physics setup)
+// PEDESTRIANS                                     (3212–3328, ~117 lines: makePerson, spawnPed, updatePeds)
+// PIZZA DELIVERY SYSTEM                           (3329–3484, ~156 lines: pizza delivery missions, stages, reward)
+// RIVAL PIZZA GANG: CHAOS PIZZA                   (3485–3612, ~128 lines: chaosDrivers, makeChaosCar, spawnChaosDrivers, updateChaosDrivers, gangMembers)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS               (3613–3776, ~164 lines: JOCK_TAUNTS, jocks, addLettermanJacket, JOCK_TEAMS, spawnJock)
+// STRAY DOGS & DOG GANGS                          (3777–4004, ~228 lines: dogs, dog gangs, pack behavior, meat drops)
+// PIZZA WARS MISSION                              (4005–4079, ~75 lines: heist system, stages, guards, pizza exterior)
+// PLAYER                                          (4080–4105, ~26 lines: player object creation, initial state)
+// PIZZA PLACE & INTERIOR                          (4106–4266, ~161 lines: pizza interior geometry, robbery, NPC setup)
+// SIDEWALKS & STOREFRONT AWNINGS                  (4267–4375, ~109 lines: 3D kerb strips, sidewalk slabs, awnings, storefront dressing)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS (4376–4575, ~200 lines: street trees, planters, cafe tables, pole banners (+ pizza enter/exit tail))
+// DAY/NIGHT & HEIST SYSTEM                        (4576–4766, ~191 lines: toggleNight, night sky, heist triggers)
+// PICKUPS                                         (4767–4809, ~43 lines: money pickups, spawn/despawn)
+// HELICOPTERS                                     (4810–5281, ~472 lines: makeHeli, heli physics, pilot AI, rotor anim)
+// TALKING PEDS                                    (5282–5370, ~89 lines: showBubble, wahVoice, NPC speech bubbles)
+// WEAPONS                                         (5371–5940, ~570 lines: doAttack, pistol/RPG logic, collision, damage)
+// WANTED                                          (5941–6046, ~106 lines: addHeat, clearHeat, star system, heat decay)
+// CAR PHYSICS                                     (6047–6236, ~190 lines: carPhysics, collision, acceleration, damage)
+// PLAYER: FOOT & CAR                              (6237–6729, ~493 lines: footCamDistance, input, kick mode, car entry/exit, updateFoot)
+// HUD / TOASTS                                    (6730–6770, ~41 lines: toast, HUD updates, on-screen feedback)
+// MISSIONS                                        (6771–6937, ~167 lines: startMission, updateMission, missions, reward)
+// AI                                              (6938–6962, ~25 lines: cop/ped goal/walk logic)
+// FOOT COPS                                       (6963–7006, ~44 lines: spawnCop, updateCops, cop AI, roaming)
+// SEWER RATS                                      (7007–7123, ~117 lines: RAT_POOL, makeRatMesh, spawnRats, updateRats)
+// MAMA RAT (rat vengeance) — PLACEHOLDER          (7124–7494, ~371 lines: spawnMamaRat, updateMamaRat, bite logic, mama model)
+// BUSTED / WASTED                                 (7495–7573, ~79 lines: busted, wasted, respawn logic, state reset)
+// CAMERA                                          (7574–7665, ~92 lines: updateCamera, shake, collision pull-in, look math)
+// MINIMAP                                         (7666–7713, ~48 lines: drawMinimap, blips, legend, position tracking)
+// MAIN LOOP                                       (7714–7880, ~167 lines: loop, substep simulation, entity updates, frame pacing)
+// ORIENTATION                                     (7881–7938, ~58 lines: checkOrientation, fitScreen, toggleFullscreen)
+// ANIMATED INTRO                                  (7939–8008, ~70 lines: intro cinematic, title screen animation)
+// STORY: TURBO JONES, CHAPTER 1                   (8009–8275, ~267 lines: story flags, Deb intro, debt system, mission gates)
+// CUTSCENE SYSTEM                                 (8276–8520, ~245 lines: playCutscene, cutscene definitions, actor positioning)
+// VOICEOVER SYSTEM                                (8521–8602, ~82 lines: playVOFile, playVOLine, TTS, voiceover queue)
+// INTRO NARRATION                                 (8603–8907, ~305 lines: intro voiceover, narrative setup)
+// DEV TOOLS                                       (8908–8985, ~78 lines: devPanel, cheats, god mode, teleports, ?dev=1 gate)
+// CINEMA MODE (was REPLAY)                        (8986–9117, ~132 lines: enterReplay/enterCinema, updateCinemaCam, free-fly camera, buffer scrub, HIDE HUD)
+// CINEMA: SCENES & STAGING                        (9118–9309, ~192 lines: cinemaIntro, cinemaCutscene, stageJockFight, stageCarBoom, stageShootPed, stageRatMother)
+// PAUSE MENU & SETTINGS                           (9310–9506, ~197 lines: pauseMenu, Settings panel, volume/quality sliders)
+// CONTROLS CARD (U2 onboarding)                   (9507–9539, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                     (9540–9592, ~53 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                  (9593–end, ~41 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -5814,7 +5845,7 @@ function applyLook(dx,dy){
   }
   lookHoldT=1.2; // keep the auto-follow from fighting your thumb
 }
-const lookSkip=el=>el&&el.closest&&el.closest('.tbtn,#fsBtn,#radioBtn,#pauseBtn,#pauseMenu,button,.hudBox,#minimap,#storyCard,#start,#replayBar,#btnReplay');
+const lookSkip=el=>el&&el.closest&&el.closest('.tbtn,#fsBtn,#radioBtn,#pauseBtn,#pauseMenu,button,.hudBox,#minimap,#storyCard,#controlsCard,#start,#replayBar,#btnReplay');
 // remapXY() converts raw (physical) touch/mouse coords into the logical,
 // post-rotation space everything else here is authored against — a no-op
 // unless we've self-rotated a portrait phone (see ROTATED up top).
@@ -7978,6 +8009,7 @@ $('skipIntro').addEventListener('touchend',e=>{ e.preventDefault(); endIntro(); 
 // ================= STORY: TURBO JONES, CHAPTER 1 =================
 G.story={cardShown:false,metDeb:false,debt:0,paidOff:false,
   pizzaHeat:0,pizzaWarned:false,pizzaRepeatWarned:false,firstScoreShown:false,hardcastleShown:false};
+G.controlsCardSeen=false; // U2 — first-boot controls card, persisted in the save blob
 let deb=null, debBeacon=null;
 const DEB_LINES=[
   'Turbo. We need to talk.',
@@ -8146,6 +8178,8 @@ function dismissStoryCard(){
   spawnDeb();
   toast('Meet Deb — follow the pink beacon','gold');
   setTimeout(()=>toast('CHAPTER 1: PAYING DEBTS','bad'),2400);
+  // U2: brand-new players get the controls card once, right as they land
+  if(!G.controlsCardSeen) openControlsCard(false);
 }
 $('storyBtn').addEventListener('click',dismissStoryCard);
 $('storyBtn').addEventListener('touchend',e=>{ e.preventDefault(); $('storyBtn').click(); });
@@ -9443,15 +9477,14 @@ function resumeGame(){
   try{ if(VO) VO.resume(); }catch(e){}
 }
 function togglePauseMenu(){ if(G.menuPaused) resumeGame(); else pauseGame(); }
-function showPausePanel(id){ ['pmMain','pmSettings','pmHow'].forEach(p=>{ $(p).style.display=p===id?'block':'none'; }); }
+function showPausePanel(id){ ['pmMain','pmSettings'].forEach(p=>{ $(p).style.display=p===id?'block':'none'; }); }
 (function initPauseUI(){
   $('pauseBtn').addEventListener('click',togglePauseMenu);
   $('pauseBtn').addEventListener('touchend',e=>{ e.preventDefault(); togglePauseMenu(); });
   $('pmResume').addEventListener('click',resumeGame);
   $('pmSetBtn').addEventListener('click',()=>showPausePanel('pmSettings'));
-  $('pmHowBtn').addEventListener('click',()=>showPausePanel('pmHow'));
+  $('pmHowBtn').addEventListener('click',()=>openControlsCard(true));
   $('pmSetBack').addEventListener('click',()=>showPausePanel('pmMain'));
-  $('pmHowBack').addEventListener('click',()=>showPausePanel('pmMain'));
   // restart reloads the page (save already flushed on pause) — armed tap so a stray touch can't fire it
   let armT=0;
   $('pmRestart').addEventListener('click',()=>{
@@ -9471,13 +9504,46 @@ function showPausePanel(id){ ['pmMain','pmSettings','pmHow'].forEach(p=>{ $(p).s
   slider('volLookSens','lookSens',()=>{}); // read live off SETTINGS in applyLook, nothing to re-apply
 })();
 
+// ================= CONTROLS CARD (U2 onboarding) =================
+// First-boot controls card: auto-shows once when a new player lands (after the
+// story card, or after a save restore for saves that predate the flag) and is
+// remembered in the save blob so it never nags again. Re-openable anytime from
+// the pause menu's HOW TO PLAY — that path is a re-read, not a first run.
+let ccFromPause=false;
+function setCcTab(which){
+  $('ccTabTouch').classList.toggle('on',which==='touch');
+  $('ccTabDesk').classList.toggle('on',which==='desk');
+  $('ccTouch').style.display=which==='touch'?'block':'none';
+  $('ccDesk').style.display=which==='desk'?'block':'none';
+}
+function openControlsCard(fromPause){
+  ccFromPause=!!fromPause;
+  $('ccBtn').textContent=ccFromPause?'CLOSE':'GOT IT';
+  setCcTab(IS_TOUCH?'touch':'desk');
+  $('controlsCard').style.display='flex';
+}
+function closeControlsCard(){
+  $('controlsCard').style.display='none';
+  // only the first-boot GOT IT marks the card seen; CLOSE from the pause menu
+  // is just a re-read and mustn't teach the save anything
+  if(!ccFromPause&&!G.controlsCardSeen){ G.controlsCardSeen=true; queueSave(); }
+}
+(function initControlsCard(){
+  $('ccBtn').addEventListener('click',closeControlsCard);
+  $('ccBtn').addEventListener('touchend',e=>{ e.preventDefault(); closeControlsCard(); });
+  $('ccTabTouch').addEventListener('click',()=>setCcTab('touch'));
+  $('ccTabTouch').addEventListener('touchend',e=>{ e.preventDefault(); setCcTab('touch'); });
+  $('ccTabDesk').addEventListener('click',()=>setCcTab('desk'));
+  $('ccTabDesk').addEventListener('touchend',e=>{ e.preventDefault(); setCcTab('desk'); });
+})();
+
 // ================= SAVE SYSTEM =================
 // one versioned JSON blob in localStorage; writes are debounced, never per-frame
 const SAVE_KEY='gtb4.save';
 let saveDirty=false, saveT=null;
 function saveGame(){
   const blob={ v:1, money:G.money, missionsDone:G.missionsDone, night:!!G.night,
-    station:G.station, coachBeaten:!!G.coachBeaten,
+    station:G.station, coachBeaten:!!G.coachBeaten, controlsCardSeen:!!G.controlsCardSeen,
     story:{ metDeb:G.story.metDeb, debt:G.story.debt, paidOff:G.story.paidOff,
       pizzaHeat:G.story.pizzaHeat, pizzaWarned:G.story.pizzaWarned,
       pizzaRepeatWarned:G.story.pizzaRepeatWarned, firstScoreShown:G.story.firstScoreShown,
@@ -9499,6 +9565,7 @@ function restoreSave(s){
   G.money=s.money||0; $('money').textContent='$'+G.money;
   G.missionsDone=s.missionsDone||0;
   G.coachBeaten=!!s.coachBeaten;
+  G.controlsCardSeen=!!s.controlsCardSeen;
   if(!!s.night!==!!G.night) toggleNight();
   G.station=s.station||0;
   const st=STATIONS[G.station];
@@ -9516,6 +9583,8 @@ function restoreSave(s){
     if(G.story.debt>0){ $('debtHud').style.display='block'; $('debtNum').textContent='$'+G.story.debt; }
   }
   toast('SAVE LOADED — $'+G.money,'gold');
+  // U2: saves from before the card existed have no flag — show it once, then save
+  if(!G.controlsCardSeen) openControlsCard(false);
 }
 // last-chance flush when the tab is backgrounded/closed (mobile Safari kills fast)
 window.addEventListener('pagehide',()=>{ if(G.started&&!G.over) saveGame(); });

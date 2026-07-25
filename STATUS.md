@@ -8,6 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-25 | `index.html` (controls card UI, pause menu, save blob), `tests/cases/controls-card.test.js` | U2 onboarding controls card — DONE. First-boot modal w/ TOUCH/DESKTOP tabs, `controlsCardSeen` in save blob, pause HOW TO PLAY recall (replaced old `pmHow` panel). CODE MAP regenerated. New suite 5/5 + save-restore + boot green. | Signed: Kimi \| K3 \| medium |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
@@ -17,6 +18,7 @@ possible change and add a line here.
 - `HANDOFF.md` — §5 code map and §8 backlog get edited by most sessions; edit the row, not the structure.
 - `TERRAIN.md` — the terrain contract. Read the Tier 1 revision note before touching `groundH`.
 - `js/person.js` — shared rig; additions must stay backward-compatible (limbs are read by several animation paths).
+- 2026-07-25 (Kimi): `index.html` — added `CONTROLS CARD (U2 onboarding)` section + `#controlsCard` markup/styles, removed the `pmHow` pause panel (HOW TO PLAY now opens the card), touched the save blob (`controlsCardSeen`) and `lookSkip`'s selector. CODE MAP regenerated from banners after the insert.
 
 ## Known issues
 - ~~PII in the docs~~ **RESOLVED — owner's decision, 2026-07-24:** the owner's first name in `HANDOFF.md`/`GAME_PLAN.md`/`ASSETS.md`/`STORY_BIBLE.md`/`CHARACTERS.md` is fine and does not need scrubbing. Do not re-flag it. The rest of AGENTS.md §3 still applies in full — no surnames, emails, phone numbers, addresses, other-platform usernames, or credentials of any kind. Latest scan found none of those. — 2026-07-24, Claude

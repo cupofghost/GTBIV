@@ -248,6 +248,7 @@ Sections, in file order, with what lives in each:
 | `CINEMA MODE (was REPLAY)` | `enterReplay`/`exitReplay`, `updateCinemaCam`, `cinemaCamStep` free-fly camera, the `REC_DUR` ring buffer + scrub, HIDE HUD |
 | `CINEMA: SCENES & STAGING` | `cinemaPlayScene` and the scene menu — `cinemaIntro`, `cinemaCutscene`, `stageJockFight`, `stageCarBoom`, `stageShootPed`, `stageRatMother`, `cinemaStartReplay`, plus `cinemaFrame`/`cinemaClearStaged` helpers |
 | `PAUSE MENU & SETTINGS` | Pause menu, volume/quality sliders |
+| `CONTROLS CARD (U2 onboarding)` | `openControlsCard`/`closeControlsCard`, first-boot auto-show, tab switching |
 | `SAVE SYSTEM` | `queueSave`, `restoreSave`, the localStorage blob |
 | `START / RESIZE` | Boot, resize, event wiring |
 
@@ -989,7 +990,15 @@ clearly at phone size (dark chip background + text-shadow, existing shrink
 breakpoint), so no change was made there; revisit only if a real-device test
 says otherwise.
 
-#### U2 — Onboarding / How-to-Play `P2 · Risk: Low` `OPEN`
+#### U2 — Onboarding / How-to-Play `P2 · Risk: Low` `DONE`
+**Status: implemented & verified** (Kimi K3). `#controlsCard` overlay in the new
+`CONTROLS CARD (U2 onboarding)` section: TOUCH/DESKTOP tabs (default follows
+`IS_TOUCH`), THE JOB footer, GOT IT on first boot / CLOSE from the pause menu.
+Auto-shows once in `dismissStoryCard()` and in `restoreSave()` for pre-flag
+saves; `G.controlsCardSeen` persists in the save blob. The old `pmHow` pause
+panel was replaced — HOW TO PLAY now opens this card over the pause menu.
+Suite: `tests/cases/controls-card.test.js` 5/5 green; save-restore and boot
+suites green alongside.
 **Why:** Controls are only a one-line hint; a short first-run guide lowers the
 bounce rate.
 **Where:** start flow, `controlsHint`, pause menu (F2) "How to Play".
