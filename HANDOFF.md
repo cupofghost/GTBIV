@@ -1061,7 +1061,12 @@ quick to dismiss.
 **Acceptance:** Getting busted/wasted never loses saved progress, always respawns
 you playable (not inside a wall, not carless with no options), and reads clearly.
 
-#### A2 — Accessibility options `P3 · Risk: Low` `OPEN`
+#### A2 — Accessibility options `P3 · Risk: Low` `DEFERRED — LOWEST PRIORITY`
+**Owner direction (2026-07-25):** this is a personal game, so accessibility
+work is not worth prioritising right now. Keep the spec for possible future
+use, but do not select A2 through the `NEXT` workflow while any other approved
+backlog item remains open. The already-shipped Reduce Motion setting stays;
+no accessibility work needs to be removed.
 **Why:** Small settings widen the audience and reduce motion sickness.
 **Where:** Settings (F2), `CAMERA`, `updateStarsHUD`/minimap colours.
 **Approach:** Add **Reduce Motion** (caps shake/hitstop/FOV kick — J2/J3 respect
@@ -1273,17 +1278,21 @@ the minimap, doesn't break existing block/road generation, holds framerate.
 #### FB3 — "Revenge on Coach" mission `P1 · Risk: Med` `OPEN`
 **Why:** The dramatic payoff of the backstory — Turbo settles the score with
 the man who ended his football career.
+**Canonical spec:** use `FOOTBALL_STRAND.md` §§3–6 for the detailed Old
+Scores → Rematch flow, dialogue, soft retry, and cutscenes. The shorter
+`STORY_BIBLE.md` worked example predates that expansion; keep it as background,
+not as the implementation contract where the two differ.
 **Where:** a new mission, built like the existing heist system
 (`spawnGuards`/`updateGuards`/`checkHeistTriggers` is the closest existing
 model for a "triggered, staged encounter with a named NPC") rather than the
 random `startMission()` pool — this is a **story/side mission**, one-shot, not
-part of the repeating rotation. See `STORY_BIBLE.md`'s mission spec for Coach's
-dialogue beats and the exact win condition.
-**Approach:** A `Coach` NPC stationed at **FB2**'s field; approaching him
-(or a trigger radius) starts a short cutscene (reuse the `CUTSCENES` system —
-see `deb_confrontation` as the template) where Coach taunts Turbo, then a
-fight begins. On winning the fight, set a persistent flag (`G.coachBeaten` —
-wire into the save system, `F1`) that unlocks **FB4**.
+part of the repeating rotation.
+**Approach:** Reaching **FB2**'s field starts a bounded warm-up against existing
+jocks, then `coach_rematch_intro` leads into a fists-only fight against a named
+Coach NPC. Coach yields rather than dies; a Turbo loss soft-retries at the
+field instead of using WASTED/BUSTED. On winning, play `coach_defeat`, set and
+save the existing `G.coachBeaten` flag, and make ambient jocks non-hostile.
+That flag unlocks **FB4**.
 **Acceptance:** the mission triggers once, plays a real cutscene, resolves to
 a clear win state, sets the unlock flag, persists across reload (once `F1`
 exists), and doesn't re-trigger after being beaten.
@@ -1455,8 +1464,10 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: A2 (Accessibility)** — Add focused accessibility options without
-disturbing existing controls or the zero-build path.
+**NEXT: FB3 (Coach mission)** — Build the one-shot "Revenge on Coach" field
+encounter that unlocks the football minigame. Follow the detailed
+`FOOTBALL_STRAND.md` flow; the older `STORY_BIBLE.md` worked example is
+background only where the two differ.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -1487,13 +1498,13 @@ throughout:
 ✔ U3  Death/respawn flow         DONE
 ✔ R2  Pooling traffic/peds       DONE
 ✔ R3  Anti-stuck & spawn-safety  DONE
-—  A2  Accessibility             ← NEXT
-—  FB3 Coach mission             OPEN
+—  FB3 Coach mission             ← NEXT
 —  FB4 Football minigame         OPEN
 —  FB5 Cheerleaders cutscene     OPEN
 —  RV2 Mama rat model            OPEN
 —  RV3 Rat vengeance polish      OPEN (unscoped)
 —  X1  Modular split (if approved) OPEN
+—  A2  Accessibility             DEFERRED — LOWEST PRIORITY (owner direction)
 ```
 
 **Character / cutscene track** (see `CHARACTERS.md`) runs in parallel and shares
