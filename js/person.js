@@ -153,6 +153,18 @@ function makePerson(spec,gender){
       c.scale.set(0.98,0.55,1); c.position.y=0.075; headG.add(c); },
     short(h){ const c=new THREE.Mesh(new THREE.SphereGeometry(0.162,16,12),h);
       c.scale.set(0.98,0.75,1); c.position.y=0.075; headG.add(c); },
+    spiky(h){
+      const c=new THREE.Mesh(new THREE.SphereGeometry(0.162,16,12),h);
+      c.scale.set(0.98,0.62,1); c.position.y=0.075; headG.add(c);
+      [[0,0.19,0],[0.09,0.15,0.04],[-0.09,0.15,0.04],
+       [0.07,0.14,-0.08],[-0.07,0.14,-0.08],[0,0.15,0.1]].forEach((p,i)=>{
+        const spike=new THREE.Mesh(new THREE.ConeGeometry(0.045,0.16+(i%2)*0.025,7),h);
+        spike.position.set(p[0],p[1],p[2]);
+        spike.rotation.z=p[0]*2.2;
+        spike.rotation.x=-p[2]*1.8;
+        headG.add(spike);
+      });
+    },
     fade(h){ const c=new THREE.Mesh(new THREE.SphereGeometry(0.162,16,12),h);
       c.scale.set(0.9,0.5,0.92); c.position.y=0.095; headG.add(c);
       const top=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.06,0.2),h);
