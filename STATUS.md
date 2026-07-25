@@ -14,6 +14,7 @@ the pipes in your signature as `\|`, or the table breaks.
 | 2026-07-25 | `CODEX/HANDOFF_TERRA_R2.md`, `STATUS.md` | Done: wrote implementation-ready Terra medium handoff for the R2 pooling task. | Signed: Codex \| GPT-5 \| medium |
 | 2026-07-25 | PR #40 metadata, `STATUS.md` | Done: reconciled the final 11-commit scope, verified green CI/no review blockers, and prepared the PR for `main`. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `tests/cases/deterministic-seed.test.js`, `tests/cases/new-features.test.js`, `STATUS.md` | Done: replaced timing/terrain/cap-sensitive assertions without changing game behavior; focused suites green 3/3 + 11/11. | Signed: Codex \| GPT-5 \| high |
+| 2026-07-25 | `tests/cases/traffic-pooling.test.js`, `STATUS.md` | Done: distinguish a valid newly assigned dog from a stale inherited dog after ped reuse; focused suite green 4/4. | Signed: Codex \| GPT-5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest

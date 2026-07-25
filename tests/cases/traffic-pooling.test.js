@@ -37,13 +37,14 @@ module.exports = [
         const retired={ pooled:pedPool.includes(ped), inactive:!peds.includes(ped)&&!ped.mesh.visible,
           stray:strayDogs.some(d=>d.mesh===dog.mesh&&d.orphaned), partnerCleared:partner.partner===null&&partner.kind==='local' };
         const revived=spawnPed(pick(blockInfo));
-        return { retired, reused:revived===ped, dog:revived.dog, bub:revived.bub,
+        return { retired, reused:revived===ped, inheritedDog:revived.dog===dog, bub:revived.bub,
           partner:revived.partner, active:peds.includes(revived)&&revived.mesh.visible };
       });
       assert(r.retired.pooled&&r.retired.inactive, 'downed ped must leave active simulation before pooling');
       assert(r.retired.stray, 'a downed ped\'s dog must become an orphaned stray');
       assert(r.retired.partnerCleared, 'the former chat partner must not retain a pooled reference');
-      assert(r.reused&&r.active&&!r.dog&&!r.bub&&!r.partner, 'revived ped must not inherit dog, bubble, or partner state');
+      assert(r.reused&&r.active&&!r.inheritedDog&&!r.bub&&!r.partner,
+        'revived ped must not inherit the old dog, bubble, or partner state');
     },
   },
   {
