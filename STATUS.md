@@ -8,6 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-25 | `HANDOFF.md`, owner-priority gameplay handoff | Done: specced OD1–OD4 as four ordered commits—straight RPGs, occluded bubbles, Turbo sprint, and locally maintained street density. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `HANDOFF.md`, Terra planning handoff | Done: owner-deferred A2 to lowest priority, advanced NEXT to FB3, reconciled its canonical spec, and refreshed the Terra implementation plan. | Signed: Codex \| GPT-5 \| medium |
 | 2026-07-25 | `index.html` (spawn/collision), `tests/cases/spawn-safety.test.js`, `HANDOFF.md`, `CODEX/HANDOFF_TERRA_R3.md`, `STATUS.md` | Done: R3 bounded generic spawn validation and one static-only Turbo recovery; syntax + focused suite green. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `CODEX/HANDOFF_TERRA_R3.md`, `STATUS.md` | Done: implementation-ready Terra medium handoff for R3 anti-stuck and spawn safety. | Signed: Codex \| GPT-5 \| medium |
@@ -27,6 +28,7 @@ possible change and add a line here.
 - `js/person.js` — shared rig; additions must stay backward-compatible (limbs are read by several animation paths).
 - `index.html` car/ped lifecycle — R2 added bounded generic free-lists and active-array retirement; keep mission/cinema exclusions intact. Signed: Codex | GPT-5 | high
 - `HANDOFF.md` — owner-deferred A2, advanced NEXT to FB3, and made `FOOTBALL_STRAND.md` the detailed FB3 implementation contract where older docs differ. Signed: Codex | GPT-5 | medium
+- `HANDOFF.md` — inserted owner-approved OD1–OD4 ahead of FB3 and advanced NEXT to straight-flight RPGs; implementation stays sequential because all four touch `index.html`. Signed: Codex | GPT-5 | high
 
 ## Known issues
 - ~~PII in the docs~~ **RESOLVED — owner's decision, 2026-07-24:** the owner's first name in `HANDOFF.md`/`GAME_PLAN.md`/`ASSETS.md`/`STORY_BIBLE.md`/`CHARACTERS.md` is fine and does not need scrubbing. Do not re-flag it. The rest of AGENTS.md §3 still applies in full — no surnames, emails, phone numbers, addresses, other-platform usernames, or credentials of any kind. Latest scan found none of those. — 2026-07-24, Claude
