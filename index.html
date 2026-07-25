@@ -98,7 +98,7 @@
   #btnEnter { grid-column:span 2; width:100%; height:52px; font-size:14px;
     background:rgba(20,90,40,.55); border-color:#7dff8a88; }
   #btnEnter.steal { background:rgba(120,60,10,.6); border-color:#ffd23e99; }
-  #btnJump { grid-column:span 2; width:100%; height:52px; }
+  #btnJump, #btnSprint { width:74px; height:52px; }
   #btnPunch, #btnKick { width:74px; }
   #radioBtn { position:absolute; top:calc(44px + env(safe-area-inset-top)); left:14px;
     width:44px; height:36px; border-radius:10px; border:1px solid #ffffff44;
@@ -465,7 +465,7 @@
     </div>
     <div class="ccBody" id="ccDesk" style="display:none">
       <b>MOVE</b> WASD / arrows &middot; <b>LOOK</b> drag the mouse<br>
-      <b>DRIVE</b> W gas / S brake &middot; <b>SHIFT</b> boost &middot; <b>SPACE</b> jump / drift<br>
+      <b>DRIVE</b> W gas / S brake &middot; <b>SHIFT</b> boost / sprint &middot; <b>SPACE</b> jump / drift<br>
       <b>E</b> enter/exit &middot; <b>F</b> attack &middot; <b>G</b> swap weapon &middot; <b>K</b> kick unarmed &middot; <b>T</b> talk &middot;
       <b>H</b> horn &middot; <b>Q</b> radio &middot; <b>C</b> crouch &middot; <b>N</b> day/night &middot;
       <b>R</b> cinema &middot; <b>P</b> pause
@@ -505,6 +505,7 @@
     <div class="tbtn" id="btnGun">FISTS</div>
     <div class="tbtn" id="btnTalk">TALK</div>
     <div class="tbtn" id="btnJump">JUMP</div>
+    <div class="tbtn" id="btnSprint">SPRINT</div>
     <div class="tbtn" id="btnPunch">PUNCH</div>
     <div class="tbtn" id="btnKick">KICK</div>
     <div class="tbtn" id="btnEnter">ENTER</div>
@@ -555,11 +556,11 @@
       <div class="touch-hint">
         Left thumb: move &middot; <b>right thumb: swipe to look around</b> &middot; pedals drive<br>
         Stick people up with the pistol &middot; rob glowing stores &middot; pay Deb her $800<br>
-        ENTER steals cars &middot; SWAP changes weapons &middot; PUNCH / KICK fights unarmed &middot; TALK chats up peds<br>
+        ENTER steals cars &middot; hold SPRINT to run fast &middot; SWAP changes weapons &middot; PUNCH / KICK fights unarmed &middot; TALK chats up peds<br>
         Tap &#9834; for radio/night
       </div>
       <div class="desktop-hint">
-        <b>WASD</b> move &middot; <b>drag right side to look/aim</b> &middot; <b>E</b> enter/steal/bail &middot; <b>F</b> attack &middot; <b>G</b> swap weapon &middot; <b>K</b> kick unarmed &middot; <b>T</b> talk &middot; Space jump/drift/chute &middot; <b>V</b> meat &middot; <b>B</b> dismiss dogs<br>
+        <b>WASD</b> move &middot; <b>SHIFT</b> sprint / boost &middot; <b>drag right side to look/aim</b> &middot; <b>E</b> enter/steal/bail &middot; <b>F</b> attack &middot; <b>G</b> swap weapon &middot; <b>K</b> kick unarmed &middot; <b>T</b> talk &middot; Space jump/drift/chute &middot; <b>V</b> meat &middot; <b>B</b> dismiss dogs<br>
         Stick people up with the pistol &middot; rob glowing stores &middot; pay Deb her $800<br>
         <b>N</b> = day/night &middot; <b>C</b> = crouch &middot; <b>H</b> = horn &middot; <b>Q</b> = radio &middot; <b>M</b> = Pizza Wars mission &middot; <b>P</b> = pause
       </div>
@@ -5584,6 +5585,8 @@ function refreshButtons(){
   $('btnBrake').style.display=car?'flex':'none';
   $('btnGun').style.display=foot?'flex':'none';
   $('btnJump').style.display=foot?'flex':'none';
+  $('btnSprint').style.display=foot?'flex':'none';
+  if(!foot) clearSprint();
   $('btnPunch').style.display=foot?'flex':'none';
   $('btnKick').style.display=(foot&&G.weapon==='fists')?'flex':'none';
   $('btns').style.right=foot?'14px':'auto';
@@ -5933,6 +5936,7 @@ function startMissileFlight(){
 }
 function doAttack(){
   if(!G.started||G.over||G.mode!=='foot'||player.punchT>0||player.kickT>0) return;
+  clearSprint();
   if(G.weapon==='fists'){ doPunch(false); return; }
   if(G.weapon==='baton'){ doPunch(true); return; }
   const p=player;
@@ -6213,7 +6217,7 @@ function damageArea(x,z,rad,dmg){
   addHeat(25);
 }
 
-const input={jx:0,jy:0,boost:false,drift:false,horn:false,gas:false,brake:false};
+const input={jx:0,jy:0,boost:false,sprint:false,drift:false,horn:false,gas:false,brake:false};
 let joyTouch=null, joyCX=0, joyCY=0;
 const joyEl=$('joy'), knobEl=$('joyKnob');
 function joyStart(x,y,id){
@@ -6235,8 +6239,8 @@ function joyEnd(){
   knobEl.style.transform='translate(-50%,-50%)';
   joyEl.style.left='22px'; joyEl.style.top='auto'; joyEl.style.bottom='calc(26px + env(safe-area-inset-bottom))';
 }
-const btnHold={boost:false,drift:false,gas:false,brake:false};
-const btnMap={btnBoost:'boost',btnDrift:'drift',btnHorn:'horn',btnGas:'gas',btnBrake:'brake'};
+const btnHold={boost:false,sprint:false,drift:false,gas:false,brake:false};
+const btnMap={btnBoost:'boost',btnSprint:'sprint',btnDrift:'drift',btnHorn:'horn',btnGas:'gas',btnBrake:'brake'};
 Object.keys(btnMap).forEach(id=>{
   const el=$(id), key=btnMap[id];
   const on=e=>{ e.preventDefault(); input[key]=true; btnHold[key]=true; el.classList.add('on'); if(key==='horn')doHorn(); };
@@ -6349,6 +6353,7 @@ const joyReset=e=>{ for(const t of e.changedTouches){
 } };
 document.addEventListener('touchend',joyReset);
 document.addEventListener('touchcancel',joyReset);
+function clearSprint(){ input.sprint=false; btnHold.sprint=false; player.sprinting=false; const b=$('btnSprint'); if(b) b.classList.remove('on'); }
 document.addEventListener('mousedown',e=>{
   const p=remapXY(e.clientX,e.clientY);
   if(p.x>vw()*0.55&&lookTouch===null&&G.started&&!G.over&&!lookSkip(e.target)){
@@ -6410,7 +6415,9 @@ function pollKeys(){
   if(keys['KeyW']||keys['ArrowUp']) input.jy=-1;
   else if(keys['KeyS']||keys['ArrowDown']) input.jy=1;
   else if(joyTouch===null) input.jy=0;
-  input.boost=btnHold.boost||!!(keys['ShiftLeft']||keys['ShiftRight']);
+  const shift=!!(keys['ShiftLeft']||keys['ShiftRight']);
+  input.boost=btnHold.boost||shift;
+  input.sprint=G.mode==='foot'&&(btnHold.sprint||shift);
   input.drift=btnHold.drift||!!keys['Space'];
   input.gas=btnHold.gas||!!(keys['KeyW']||keys['ArrowUp']);
   input.brake=btnHold.brake||!!(keys['KeyS']||keys['ArrowDown']);
@@ -6726,21 +6733,27 @@ function nearestCar(x,z,r){
   }
   return best;
 }
+function canSprint(p,mag){
+  return G.mode==='foot'&&input.sprint&&mag>0.85&&!G.crouching&&!p.climb&&!p.bailing&&!p.stunT&&p.punchT<=0&&p.kickT<=0;
+}
 function updateFoot(dt){
   const p=player;
   p.punchT=Math.max(0,p.punchT-dt);
   p.kickT=Math.max(0,p.kickT-dt);
-  if(p.bailing){ updateBail(dt); return; }
+  if(p.bailing){ clearSprint(); updateBail(dt); return; }
   if(p.stunT>0){   // clocked — flat on your back for a beat
+    clearSprint();
     p.stunT-=dt;
     p.mesh.rotation.x=-1.25*clamp(p.stunT/0.8,0,1);
     p.mesh.position.set(p.x,groundH(p.x,p.z)+0.25,p.z);
     if(p.stunT<=0) p.mesh.rotation.x=0;
     return;
   }
-  if(p.climb){ updateClimb(dt); return; }   // on a wall ladder — vertical rules take over
+  if(p.climb){ clearSprint(); updateClimb(dt); return; }   // on a wall ladder — vertical rules take over
   const mx=input.jx, mz=input.jy;
   const mag=Math.min(1,Math.hypot(mx,mz));
+  const sprinting=canSprint(p,mag);
+  p.sprinting=sprinting;
   p.moveMag=mag;
   if(mag>0.12){
     const camYaw=Math.atan2(camera.position.x-p.x,camera.position.z-p.z);
@@ -6748,7 +6761,7 @@ function updateFoot(dt){
     // walk into the foot of a ladder (or step off the roof edge onto one) to grab on
     const grab=ladderGrab(p.x,p.z,p.y,moveAng);
     if(grab){ mountLadder(grab); return; }
-    const sp=mag>0.85?8.2:4.6;
+    const sp=sprinting?12:(mag>0.85?8.2:4.6);
     let nx=p.x+Math.sin(moveAng)*sp*mag*dt, nz=p.z+Math.cos(moveAng)*sp*mag*dt;
     // on a sloped staircase your feet find the steps: movement follows the climb
     const stM=stairHitRun(p.x,p.z);
@@ -6769,7 +6782,7 @@ function updateFoot(dt){
     }
     p.x=clamp(nx,-(WATER_R-2),WATER_R-2); p.z=clamp(nz,-(WATER_R-2),WATER_R-2);
     p.heading=moveAng; p.phase+=dt*sp*2.2;
-  } else p.phase*=0.8;
+  } else { p.phase*=0.8; p.sprinting=false; }
   // floor under our feet: a roof if we're standing on one, else the street
   const roofHere=roofAt(p.x,p.z);
   const st=stairHitRun(p.x,p.z), sh=st?st.h:0;
@@ -6788,7 +6801,7 @@ function updateFoot(dt){
   }
   else if(p.y<ground){ p.y=ground; p.vy=0; }   // stairs & slopes lift you as you climb
   updateFootStuckRecovery(p,dt);
-  p.mesh.position.set(p.x,p.y+Math.abs(Math.sin(p.phase))*0.06,p.z);
+  p.mesh.position.set(p.x,p.y+Math.abs(Math.sin(p.phase))*(sprinting?0.04:0.06),p.z);
   p.mesh.rotation.y=p.heading;
   const u=p.mesh.userData;
   // the grade under his feet, measured the way he's facing: + = walking uphill.
@@ -6823,6 +6836,14 @@ function updateFoot(dt){
     u.armL.rotation.x=asw; u.armR.rotation.x=-asw;
     u.head.rotation.x=0.12;
     if(u.torso){ u.torso.rotation.y=Math.sin(ph)*0.08; u.torso.rotation.x=0.2; }
+  } else if(sprinting){
+    const sw=Math.sin(p.phase);
+    u.legL.rotation.x=sw*0.92; u.legR.rotation.x=-sw*0.92;
+    if(u.kneeL) u.kneeL.rotation.x=Math.max(0,-sw)*1.05;
+    if(u.kneeR) u.kneeR.rotation.x=Math.max(0,sw)*1.05;
+    u.armL.rotation.x=-sw*0.82; u.armR.rotation.x=sw*0.82;
+    u.head.rotation.x=0.04;
+    if(u.torso){ u.torso.rotation.y=sw*0.07; u.torso.rotation.x=0.28; }
   } else {
     const sw=airborne?0:Math.sin(p.phase)*0.55;
     u.legL.rotation.x=airborne?-0.5:sw; u.legR.rotation.x=airborne?0.35:-sw;
@@ -6843,7 +6864,7 @@ function updateFoot(dt){
     if(u.kneeR) u.kneeR.rotation.x=0.55*(1-snap);
     u.armL.rotation.x=-0.85; u.armR.rotation.x=-0.75;
     if(u.torso){ u.torso.rotation.y=0.32*snap; u.torso.rotation.x=-0.16*snap; }
-  } else if(G.weapon==='pistol'||G.weapon==='rpg'){
+  } else if(!sprinting&&(G.weapon==='pistol'||G.weapon==='rpg')){
     // twin-stick: Turbo faces wherever the camera aims, gun arm leveled —
     // left stick strafes, right thumb swings the reticule
     p.heading=footCamYaw;
@@ -9637,6 +9658,7 @@ function hideStale(frameId){ // anything replay moved but not in this frame gets
 // out); the frozen ring-buffer scrub is now just one item on the scene menu.
 function enterReplay(){
   if(G.replay||!G.started||G.over||G.intro||activeCutscene) return;
+  clearSprint();
   G.replay=true;
   const d=new THREE.Vector3(); camera.getWorldDirection(d);
   replay={ pos:recBuf.length-1, playing:false, frame:0, talk:false, talkT:0, shadesAnim:null,
@@ -10090,6 +10112,7 @@ function setReduceMotion(on){ SETTINGS.reduceMotion=on; saveSettings(); refreshR
 function syncPause(){ G.paused=G.started&&G.menuPaused; }
 function pauseGame(){
   if(G.menuPaused||!G.started||G.over||G.intro||activeCutscene||G.replay) return;
+  clearSprint();
   if($('storyCard').style.display==='flex') return;
   G.menuPaused=true; syncPause();
   showPausePanel('pmMain');

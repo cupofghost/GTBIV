@@ -1470,7 +1470,7 @@ time when visible again, and still hide off-screen/expired/far away. No
 per-frame DOM creation or raycaster allocation.
 **Focused test:** `tests/cases/bubble-occlusion.test.js`.
 
-#### OD3 — Turbo sprint control and animation `P0 · Risk: Med` `OPEN`
+#### OD3 — Turbo sprint control and animation `P0 · Risk: Med` `DONE — Codex | GPT-5 | high (2026-07-25)`
 **Owner direction:** add a sprint button and sprint animation for Turbo.
 **Where:** touch HUD/buttons, input polling, controls card/hints,
 `refreshButtons()`, and `updateFoot()`. Keep `js/person.js` backward-compatible;
@@ -1563,8 +1563,8 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: OD3 (Turbo sprint control and animation)** — Continue the owner-directed
-immediate gameplay pass through OD4 before returning to FB3.
+**NEXT: OD4 (Denser traffic and pedestrian life)** — Finish the owner-directed
+immediate gameplay pass before returning to FB3.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -1597,8 +1597,8 @@ throughout:
 ✔ R3  Anti-stuck & spawn-safety  DONE
 ✔ OD1 Straight-flight RPGs       DONE
 ✔ OD2 Bubble building occlusion  DONE
-—  OD3 Turbo sprint              ← NEXT
-—  OD4 Denser street life        OPEN
+✔ OD3 Turbo sprint               DONE
+—  OD4 Denser street life        ← NEXT
 —  FB3 Coach mission             OPEN
 —  FB4 Football minigame         OPEN
 —  FB5 Cheerleaders cutscene     OPEN
