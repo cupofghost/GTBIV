@@ -220,6 +220,7 @@ Sections, in file order, with what lives in each:
 | `PIZZA PLACE & INTERIOR` | Pizza-place exterior/interior, robbery, enter/exit, heist funcs (`spawnGuards`, `updateGuards`, `updateSafeCrack`, `checkHeistTriggers`) |
 | `SIDEWALKS & STOREFRONT AWNINGS` | 3D kerb strips, sidewalk slabs, awnings |
 | `MORE CITY BEAUTIFICATION` | Street trees, planters, cafe tables, pole banners |
+| `CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS` | `cityGlowDayNight`, facade night-window swap (`facadeMats`), instanced neon signs, streetlight glow pools |
 | `DAY/NIGHT & HEIST SYSTEM` | `toggleNight`, night sky, heist triggers |
 | `PICKUPS` | `pickups`, `pickupDefs`, `spawnPickup`, `scatterPickups`, `collectPickups`, `updatePickupVisuals` |
 | `HELICOPTERS` | Player heli + `spawnCopHeli`/`updateCopHeli`, pilotless helis |
@@ -898,29 +899,31 @@ flatlining. Keep each mission self-contained and failable. Persist unlocks (F1).
 proportional; later missions are meatier than the first; nothing soft-locks if a
 mission is abandoned (drive away → it fails/cleans up correctly).
 
-#### P2 — Economy & debt-loop tuning `P2 · Risk: Med`
+#### P2 — Economy & debt-loop tuning `P2 · Risk: Med` `DONE`
+**Status: done** — shipped in #38. Heist no longer solo-funds the debt, stickups
+and stores are worth doing, and every payout routes through `addMoney()` so it
+persists and gets consistent toast feedback. Big paydays ($50+) use the gold
+class and larger amounts ($200+) get a longer toast.
 **Why:** The $800 debt is the spine; income sources (robberies, missions,
 deliveries, air-time) should make it a satisfying push, not trivial or grindy.
 **Where:** `addMoney` call sites, `STORY`, mission rewards, pizza delivery
 reward.
 **Approach:** Audit every money source and sink, then tune to a target: a
 focused player clears the $800 in a satisfying session, a careless one takes
-longer. Add clear **payday feedback** (toast + sfx already exist — make big ones
-feel big). Don't touch the debt mechanic itself, just the numbers + feedback.
-**Acceptance:** A test playthrough to $800 feels earned (not 2 minutes, not an
-hour). Every income source is reachable and worth doing.
+longer. Add clear **payday feedback**.
+**Acceptance:** A test playthrough to $800 feels earned. Every income source is
+reachable and worth doing.
 
-**Economy Audit (for P2 implementation):**
-
-All money sources and current values (as of 2026-07-24):
+**Economy Audit (final tuned values, 2026-07-25):**
 
 | Activity | Amount | Notes |
 |----------|--------|-------|
 | **Robbery** | | |
-| — Stickup (pedestrian at gunpoint) | $25–70 | Base income, always available |
-| — Pizza heist (crack safe) | $400–900 | One-time per chapter, high-reward encounter |
-| **Missions** | $120–200+ | Base $120 + distance/3; every 5th mission bonus $500 |
-| **Deliveries** | Variable | Pizza runs (not implemented, placeholder in code) |
+| — Stickup (pedestrian at gunpoint) | $45–90 | Base income, always available |
+| — Store robbery (glowing stores) | $150–260 | 90s cooldown, high heat |
+| — Pizza heist (crack safe) | $250–500 + $150 escape | One-time per chapter, high-reward encounter |
+| **Missions** | $140–200+ | Base $140 + distance/3; every 5th mission bonus $500 |
+| **Deliveries** | $55 + time bonus | Pizza-jack delivery reward |
 | **Passive** | | |
 | — Heat loss (cool down after escape) | $G.stars×60 | Encourages heat-cooldown play (stars 1–6 = $60–360) |
 | — Helicopter air time | $airT×110 | Bonus for time spent flying (~$110–500+ per flight) |
@@ -929,26 +932,6 @@ All money sources and current values (as of 2026-07-24):
 | **Pickups** | $15–25 | Random money on street (minimal) |
 | **Chapter milestones** | $500 | Every 5 missions |
 | **Debt** | $800 | Target to pay Deb; once paid, game continues |
-
-**Estimated playthrough to $800 (rough math):**
-- 5–6 stickups: $150–420
-- 1 heist: $400–900 (often exceeds target alone)
-- 2–3 missions: $240–600
-- Heat losses + air time: $100–300 (opportunistic)
-- **Total: $800–2100** depending on playstyle
-
-**Current balance assessment:**
-- **Heist can solo-fund the debt**, making stickups/missions optional
-- **Stickup is low-reward but always-available** — should feel like grinding if overly used
-- **Missions are mid-tier but distance-weighted**, encouraging exploration
-- **Heat loss / air time are bonuses** for active play, not required
-
-**Tuning recommendation:**
-- If playthrough feels **too quick** (heist dominates): reduce heist to $200–500 or gate it behind heat/time
-- If playthrough feels **grindy** (too many stickups needed): bump stickup to $50–100 or increase mission rewards
-- If playthrough feels **right**: document the balanced feel and preserve these numbers as canon
-
-**Next agent: Test a fresh playthrough focusing on natural earning pace. Time yourself from boot to $800. Report: fast/moderate/grindy?**
 
 #### P3 — Wanted-system feel + difficulty options `P2 · Risk: Med` `DONE`
 **Status: done** — see `§19`. The escalation curve, HUD hints ("THEY SEE
@@ -1461,7 +1444,7 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: P2 (Economy tuning)** — A P2 leverage task that tuning money rewards/sinks to feel earned. Pairs well with P1/P3. No new systems, just number audits and feedback polish.
+**NEXT: D5 (Time controls)** — A dev-tool leverage task; pause-step / slow-mo / fast-forward makes iterating on feel and missions much cheaper.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -1484,11 +1467,11 @@ throughout:
 ✔ FB1 Jock NPCs                  DONE
 ✔ FB2 Football field             DONE
 ✔ RV1 Mama rat mechanics         DONE (placeholder)
-P2  Economy tuning              ← NEXT (audit already written below; tuning itself not yet done)
-—  D5  Time controls             OPEN (dev tool)
+✔ P2  Economy tuning              DONE (#38)
+✔ U2  Onboarding                 DONE (controls card #35)
+—  D5  Time controls             ← NEXT (dev tool)
 —  D7  Deterministic seed        OPEN (dev tool)
 —  J2  Hitstop + shake           OPEN
-—  U2  Onboarding                OPEN
 —  U3  Death/respawn flow        OPEN
 —  R2  Pooling traffic/peds      OPEN
 —  R3  Anti-stuck & spawn-safety OPEN
