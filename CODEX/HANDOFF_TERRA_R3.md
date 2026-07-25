@@ -4,8 +4,10 @@ Branch: `codex/audit-fixes-1-3-5`
 
 Draft PR: `cupofghost/GTBIV#40`
 
-Completed in the worktree; commit/push pending. Focused syntax and
-`spawn-safety.test.js` passed 4/4. The local browser runner required loopback
+Implementation commit: `7dbc513` (`Harden generic spawns and Turbo recovery`),
+pushed to the existing branch/PR. Focused syntax and `spawn-safety.test.js`
+passed 4/4. PR #40 remains open and draft with no review decision or checks
+reported at the post-push check. The local browser runner required loopback
 server permission in this environment.
 
 ## Completed task
