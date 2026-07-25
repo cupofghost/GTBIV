@@ -1145,7 +1145,7 @@ suite green (36/36), plus a standalone Playwright smoke pass confirming
 disposed meshes revive cleanly when the Replay system re-adds a recently-killed
 entity mid-scrub (no console errors, clean exit).
 
-#### R2 — Pool traffic / peds instead of churning them `P2 · Risk: Med` `OPEN`
+#### R2 — Pool traffic / peds instead of churning them `P2 · Risk: Med` `DONE`
 **Why:** Cars and peds are spliced and re-`spawn`ed via timeouts, creating and
 GC-ing meshes constantly. Pooling smooths frame times.
 **Where:** `spawnTraffic`, `spawnPed`, `damageCar` respawn, `updateTraffic`/
@@ -1154,9 +1154,11 @@ GC-ing meshes constantly. Pooling smooths frame times.
 despawn instead of destroy+recreate. Follow the particle pool philosophy.
 Coordinate with F3's population caps and R1's disposal (pooled objects aren't
 disposed until teardown).
-**Acceptance:** Sustained play shows fewer GC pauses / steadier frame time (
-devtools Performance); population still feels alive; no "ghost" recycled entities
-appearing wrong.
+**Delivered:** Bounded active-only free-lists recycle generic civilian traffic
+and pedestrians. Reuse resets terrain placement, physics/AI/animation state,
+and ped dog/bubble/partner links; a downed owner's dog remains an orphaned
+stray. F3 trimming pools eligible entities, while mission targets and cinema
+actors are permanently retired. Focused coverage: `traffic-pooling.test.js`.
 
 #### R3 — Anti-stuck & spawn-safety `P2 · Risk: Med` `OPEN`
 **Why:** Analytic collision can occasionally wedge the player in geometry or
@@ -1451,8 +1453,8 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: R2 (Pool traffic / peds)** — The next focused performance-hygiene task;
-recycle traffic and pedestrian entities to reduce GC churn during sustained play.
+**NEXT: R3 (Anti-stuck & spawn-safety)** — Validate pedestrian/traffic spawn
+points and add a bounded player un-stick nudge without changing normal movement.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -1481,8 +1483,8 @@ throughout:
 ✔ D7  Deterministic seed        DONE
 —  J2  Hitstop + shake           DONE
 ✔ U3  Death/respawn flow         DONE
-—  R2  Pooling traffic/peds      ← NEXT
-—  R3  Anti-stuck & spawn-safety OPEN
+✔ R2  Pooling traffic/peds       DONE
+—  R3  Anti-stuck & spawn-safety ← NEXT
 —  A2  Accessibility             OPEN
 —  FB3 Coach mission             OPEN
 —  FB4 Football minigame         OPEN

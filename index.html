@@ -724,61 +724,61 @@ let TRAFFIC_CAP=16, PED_CAP=34, PARTICLE_SCALE=1, GFX_TIER='high';
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS & GLOBAL STATE                           (706–720, ~15 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                             (785–842, ~58 lines: IS_TOUCH, updateOrientationMode, vw, vh, remapXY, ROTATED)
-// AUDIO                                            (843–1066, ~224 lines: initAudio, AC, masterGain, engine synth, sfx)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1067–1569, ~503 lines: SW_SONGS, STATIONS, scheduleMusic, stepSong, synth fx)
-// THREE SETUP                                      (1570–1620, ~51 lines: scene, camera, renderer, sky/sun, lights)
-// CITY                                             (1621–2462, ~842 lines: procCity, blockInfo, roads, buildings, textures)
+// DEVICE / ORIENTATION                              (785–842, ~58 lines:58
+// AUDIO                                             (843–1066, ~224 lines:224
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK               (1067–1569, ~503 lines:503
+// THREE SETUP                                       (1570–1620, ~51 lines:51
+// CITY                                              (1621–2462, ~842 lines:842
 //   └ RADIO TOWERS                                 (2066–2171, ~106 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                   (2463–2513, ~51 lines: FOOTBALL landmark, turf, goalposts, bleachers)
-// ELEVATED LIGHT RAIL                              (2514–2638, ~125 lines: TRAIN, stations, rail track, animated loop)
-// STAIRS & FIRE ESCAPES                            (2639–2713, ~75 lines: STAIR_RUNS, terrain knolls, hideouts)
-// WALL LADDERS                                     (2714–2968, ~255 lines: LADDERS, ladderGrab, mountLadder, updateClimb, ramps/addRamp)
-// PARTICLES                                        (2969–3023, ~55 lines: burst, P_MAX, particle pool)
-// BLOB SHADOWS                                     (3024–3028, ~5 lines: makeShadow)
-// GPU RESOURCE CLEANUP                             (3029–3050, ~22 lines: disposeMesh, _sharedGPU)
-// CARS                                             (3051–3252, ~202 lines: makeCar, CAR_SPECS, carModel, physics setup)
-// PEDESTRIANS                                      (3253–3370, ~118 lines: makePerson, spawnPed, updatePeds)
-// PIZZA DELIVERY SYSTEM                            (3371–3526, ~156 lines: pizza delivery missions, stages, reward)
-// RIVAL PIZZA GANG: CHAOS PIZZA                    (3527–3654, ~128 lines: chaosDrivers, makeChaosCar, spawnChaosDrivers, updateChaosDrivers, gangMembers)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (3655–3834, ~180 lines: JOCK_TAUNTS, jocks, addLettermanJacket, JOCK_TEAMS, spawnJock)
-// STRAY DOGS & DOG GANGS                           (3835–4106, ~272 lines: dogs, dog gangs, pack behavior, meat drops)
-// PIZZA WARS MISSION                               (4107–4181, ~75 lines: heist system, stages, guards, pizza exterior)
-// PLAYER                                           (4182–4225, ~44 lines: player object creation, initial state)
-// PIZZA PLACE & INTERIOR                           (4226–4386, ~161 lines: pizza interior geometry, robbery, NPC setup)
-// SIDEWALKS & STOREFRONT AWNINGS                   (4387–4495, ~109 lines: 3D kerb strips, sidewalk slabs, awnings, storefront dressing)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (4496–4695, ~200 lines: street trees, planters, cafe tables, pole banners (+ pizza enter/exit tail))
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (4696–4811, ~116 lines: cityGlowDayNight, neon signs, night window swap, streetlight pools)
-// DAY/NIGHT & HEIST SYSTEM                         (4812–5004, ~193 lines: toggleNight, night sky, heist triggers)
-// PICKUPS                                          (5005–5047, ~43 lines: money pickups, spawn/despawn)
-// HELICOPTERS                                      (5048–5526, ~479 lines: makeHeli, heli physics, pilot AI, rotor anim)
-// TALKING PEDS                                     (5527–5615, ~89 lines: showBubble, wahVoice, NPC speech bubbles)
-// WEAPONS                                          (5616–6259, ~644 lines: doAttack, pistol/RPG logic, collision, damage)
-// WANTED                                           (6260–6365, ~106 lines: addHeat, clearHeat, star system, heat decay)
-// CAR PHYSICS                                      (6366–6561, ~196 lines: carPhysics, collision, acceleration, damage)
-// PLAYER: FOOT & CAR                               (6562–7102, ~541 lines: footCamDistance, input, kick mode, car entry/exit, updateFoot)
-// HUD / TOASTS                                     (7103–7147, ~45 lines: toast, HUD updates, on-screen feedback)
-// MISSIONS                                         (7148–7314, ~167 lines: startMission, updateMission, missions, reward)
-// AI                                               (7315–7339, ~25 lines: cop/ped goal/walk logic)
-// FOOT COPS                                        (7340–7383, ~44 lines: spawnCop, updateCops, cop AI, roaming)
-// SEWER RATS                                       (7384–7500, ~117 lines: RAT_POOL, makeRatMesh, spawnRats, updateRats)
-// MAMA RAT (rat vengeance) — PLACEHOLDER           (7501–7871, ~371 lines: spawnMamaRat, updateMamaRat, bite logic, mama model)
-// BUSTED / WASTED                                  (7872–7953, ~82 lines: busted, wasted, respawn logic, state reset)
-// CAMERA                                           (7954–8059, ~106 lines: updateCamera, shake, collision pull-in, look math)
-// MINIMAP                                          (8060–8107, ~48 lines: drawMinimap, blips, legend, position tracking)
-// MAIN LOOP                                        (8108–8286, ~179 lines: loop, substep simulation, entity updates, frame pacing)
-// ORIENTATION                                      (8287–8344, ~58 lines: checkOrientation, fitScreen, toggleFullscreen)
-// ANIMATED INTRO                                   (8345–8473, ~129 lines: intro cinematic, title screen animation)
-// STORY: TURBO JONES, CHAPTER 1                    (8474–8739, ~266 lines: story flags, Deb intro, debt system, mission gates)
-// CUTSCENE SYSTEM                                  (8740–8984, ~245 lines: playCutscene, cutscene definitions, actor positioning)
-// VOICEOVER SYSTEM                                 (8985–9066, ~82 lines: playVOFile, playVOLine, TTS, voiceover queue)
-// INTRO NARRATION                                  (9067–9368, ~302 lines: intro voiceover, narrative setup)
-// DEV TOOLS                                        (9369–9446, ~78 lines: devPanel, cheats, god mode, teleports, ?dev=1 gate)
-// CINEMA MODE (was REPLAY)                         (9447–9578, ~132 lines: enterReplay/enterCinema, updateCinemaCam, free-fly camera, buffer scrub, HIDE HUD)
-// CINEMA: SCENES & STAGING                         (9579–9771, ~193 lines: cinemaIntro, cinemaCutscene, stageJockFight, stageCarBoom, stageShootPed, stageRatMother)
-// PAUSE MENU & SETTINGS                            (9772–9983, ~212 lines: pauseMenu, Settings panel, volume/quality sliders)
-// CONTROLS CARD (U2 onboarding)                    (9984–10016, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (10017–10072, ~56 lines: queueSave, restoreSave, localStorage blob)
+// FOOTBALL FIELD                                    (2463–2513, ~51 lines:51
+// ELEVATED LIGHT RAIL                               (2514–2638, ~125 lines:125
+// STAIRS & FIRE ESCAPES                             (2639–2713, ~75 lines:75
+// WALL LADDERS                                      (2714–2968, ~255 lines:255
+// PARTICLES                                         (2969–3023, ~55 lines:55
+// BLOB SHADOWS                                      (3024–3028, ~5 lines:5
+// GPU RESOURCE CLEANUP                              (3029–3050, ~22 lines:22
+// CARS                                              (3051–3287, ~237 lines:237
+// PEDESTRIANS                                       (3288–3438, ~151 lines:151
+// PIZZA DELIVERY SYSTEM                             (3439–3594, ~156 lines:156
+// RIVAL PIZZA GANG: CHAOS PIZZA                     (3595–3722, ~128 lines:128
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                 (3723–3902, ~180 lines:180
+// STRAY DOGS & DOG GANGS                            (3903–4174, ~272 lines:272
+// PIZZA WARS MISSION                                (4175–4249, ~75 lines:75
+// PLAYER                                            (4250–4293, ~44 lines:44
+// PIZZA PLACE & INTERIOR                            (4294–4454, ~161 lines:161
+// SIDEWALKS & STOREFRONT AWNINGS                    (4455–4563, ~109 lines:109
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS   (4564–4763, ~200 lines:200
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS        (4764–4879, ~116 lines:116
+// DAY/NIGHT & HEIST SYSTEM                          (4880–5072, ~193 lines:193
+// PICKUPS                                           (5073–5115, ~43 lines:43
+// HELICOPTERS                                       (5116–5594, ~479 lines:479
+// TALKING PEDS                                      (5595–5683, ~89 lines:89
+// WEAPONS                                           (5684–6327, ~644 lines:644
+// WANTED                                            (6328–6433, ~106 lines:106
+// CAR PHYSICS                                       (6434–6627, ~194 lines:196
+// PLAYER: FOOT & CAR                                (6628–7168, ~541 lines:541
+// HUD / TOASTS                                      (7169–7213, ~45 lines:45
+// MISSIONS                                          (7214–7380, ~167 lines:167
+// AI                                                (7381–7405, ~25 lines:25
+// FOOT COPS                                         (7406–7449, ~44 lines:44
+// SEWER RATS                                        (7450–7566, ~117 lines:117
+// MAMA RAT (rat vengeance) — PLACEHOLDER            (7567–7933, ~367 lines:371
+// BUSTED / WASTED                                   (7934–8020, ~87 lines:82
+// CAMERA                                            (8021–8126, ~106 lines:106
+// MINIMAP                                           (8127–8174, ~48 lines:48
+// MAIN LOOP                                         (8175–8353, ~179 lines:179
+// ORIENTATION                                       (8354–8411, ~58 lines:58
+// ANIMATED INTRO                                    (8412–8540, ~129 lines:129
+// STORY: TURBO JONES, CHAPTER 1                     (8541–8806, ~266 lines:266
+// CUTSCENE SYSTEM                                   (8807–9051, ~245 lines:245
+// VOICEOVER SYSTEM                                  (9052–9133, ~82 lines:82
+// INTRO NARRATION                                   (9134–9435, ~302 lines:302
+// DEV TOOLS                                         (9436–9513, ~78 lines:78
+// CINEMA MODE (was REPLAY)                          (9514–9645, ~132 lines:132
+// CINEMA: SCENES & STAGING                          (9646–9838, ~193 lines:193
+// PAUSE MENU & SETTINGS                             (9839–10046, ~208 lines:212
+// CONTROLS CARD (U2 onboarding)                    (10052–10084, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (10085–10140, ~56 lines: queueSave, restoreSave, localStorage blob)
 // START / RESIZE                                   (10073–end, ~40 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
@@ -3233,17 +3233,52 @@ for(let k=0;k<8;k++){
 
 // traffic
 const traffic=[];
+const trafficPool=[];
+const TRAFFIC_POOL_CAP=16;
+function resetTrafficCar(car,it,target){
+  const heading=Math.atan2(target.x-it.x,target.z-it.z), t=CARTYPES[car.type];
+  car.x=it.x+rand(-2,2); car.z=it.z+rand(-2,2); car.y=groundH(car.x,car.z);
+  car.vy=0; car.heading=heading; car.vel.set(0,0,0); car.hp=t.hp; car.maxhp=t.hp;
+  car.parked=false; car.crashed=0; car.stuckT=0; car.cool=0; car.airT=0;
+  car.target=target; car.speed=0; car.airborne=false; car.driver='civ'; car.dead=false;
+  car.burning=false; car.burnT=0; car._tailOn=true;
+  car.mesh.visible=true; car.mesh.position.set(car.x,car.y,car.z);
+  car.mesh.rotation.set(0,heading,0);
+  const frontH=groundH(car.x+Math.sin(heading)*2,car.z+Math.cos(heading)*2);
+  const rearH=groundH(car.x-Math.sin(heading)*2,car.z-Math.cos(heading)*2);
+  car.mesh.rotation.x=clamp(Math.atan2(rearH-frontH,4),-0.4,0.4);
+  const wheels=car.mesh.userData.wheels;
+  if(wheels) wheels.forEach(w=>{ w.rotation.x=0; w.rotation.y=0; });
+  setTail(car,false);
+}
+function canPoolTraffic(car){
+  return car.driver==='civ'&&traffic.includes(car)&&!(mission&&mission.car===car)&&
+    !(replay&&replay.staged&&replay.staged.some(s=>s.ref===car));
+}
+function retireTraffic(car){
+  const poolable=canPoolTraffic(car);
+  const ci=cars.indexOf(car); if(ci>=0) cars.splice(ci,1);
+  const ti=traffic.indexOf(car); if(ti>=0) traffic.splice(ti,1);
+  if(poolable&&trafficPool.length<TRAFFIC_POOL_CAP){
+    scene.remove(car.mesh); car.mesh.visible=false; trafficPool.push(car); return true;
+  }
+  scene.remove(car.mesh); disposeMesh(car.mesh); return false;
+}
 function spawnTraffic(n){
   for(let k=0;k<n;k++){
     const it=pick(intersections);
-    const type=pick(['sedan','sedan','sedan','taxi','pickup','van','compact','muscle']);
     const opts=intersections.filter(p=>(Math.abs(p.i-it.i)+Math.abs(p.j-it.j))===1);
     const target=opts.length?pick(opts):pick(intersections);
     // Face the chosen road before applying throttle. The old random heading
     // sent fresh traffic diagonally into a block while steering caught up.
-    const heading=Math.atan2(target.x-it.x,target.z-it.z);
-    const car=makeCar(type,it.x+rand(-2,2),it.z+rand(-2,2),heading,{driver:'civ'});
-    car.target=target;
+    let car=trafficPool.pop();
+    if(car){ resetTrafficCar(car,it,target); scene.add(car.mesh); cars.push(car); }
+    else {
+      const type=pick(['sedan','sedan','sedan','taxi','pickup','van','compact','muscle']);
+      const heading=Math.atan2(target.x-it.x,target.z-it.z);
+      car=makeCar(type,it.x+rand(-2,2),it.z+rand(-2,2),heading,{driver:'civ'});
+      car.target=target;
+    }
     traffic.push(car);
   }
 }
@@ -3252,6 +3287,8 @@ spawnTraffic(16);
 
 // ================= PEDESTRIANS =================
 const peds=[];
+const pedPool=[];
+const PED_POOL_CAP=34;
 const PEDCOLS=[0xff6b9d,0x6bc8ff,0xffd23e,0x8aff6b,0xd98aff,0xff8a5c,0x5cffd4,0xf0f0f0];
 // makePerson moved to js/person.js (C1 spec refactor)
 function makeDog(){
@@ -3287,17 +3324,36 @@ function updateDog(ped,dt){
   d.mesh.position.set(d.x,groundH(d.x,d.z)+Math.abs(Math.sin(d.phase))*0.05,d.z);
   d.mesh.userData.tail.rotation.y=Math.sin(d.phase*1.7)*0.6;
 }
-function spawnPed(b,kind){
-  const mesh=makePerson(pick(PEDCOLS));
+function releasePedReferences(ped,orphanDog){
+  if(ped.dog){ makeStray(ped.dog,orphanDog?{orphaned:true}:undefined); ped.dog=null; }
+  if(ped.bub){ ped.bub.remove(); ped.bub=null; }
+  ped.bubT=0;
+  if(ped.partner){
+    if(ped.partner.partner===ped) ped.partner.partner=null;
+    if(ped.partner.kind==='chat') ped.partner.kind='local';
+    ped.partner=null;
+  }
+}
+function canPoolPed(ped){ return !(replay&&replay.staged&&replay.staged.some(s=>s.ref===ped)); }
+function retirePed(ped,orphanDog){
+  releasePedReferences(ped,orphanDog);
+  const pi=peds.indexOf(ped); if(pi>=0) peds.splice(pi,1);
+  if(canPoolPed(ped)&&pedPool.length<PED_POOL_CAP){
+    scene.remove(ped.mesh); ped.mesh.visible=false; pedPool.push(ped); return true;
+  }
+  scene.remove(ped.mesh); disposeMesh(ped.mesh); return false;
+}
+function resetPed(ped,b,kind){
   const per=BLOCK/2+1.6, side=randi(0,3), t=rand(-BLOCK/2+3,BLOCK/2-3);
   let x,z;
   if(side===0){ x=b.cx-per; z=b.cz+t; }
   else if(side===1){ x=b.cx+per; z=b.cz+t; }
   else if(side===2){ x=b.cx+t; z=b.cz-per; }
   else { x=b.cx+t; z=b.cz+per; }
-  scene.add(mesh);
-  const ped={mesh,x,z,heading:rand(0,TAU),speed:rand(1.2,2),phase:rand(0,TAU),
-    state:'walk',stateT:rand(2,6),downT:0,home:b,kind:kind||'local',bound:H+4};
+  ped.x=x; ped.z=z; ped.heading=rand(0,TAU); ped.speed=rand(1.2,2); ped.phase=rand(0,TAU);
+  ped.state='walk'; ped.stateT=rand(2,6); ped.downT=0; ped.home=b; ped.kind=kind||'local'; ped.bound=H+4;
+  delete ped.walkAxis; delete ped.walkLine; delete ped.walkPos; delete ped.walkDir;
+  delete ped.chatT; delete ped.eatParts; delete ped.ratSwarm; delete ped.eaten;
   if(kind==='commute'){
     // sidewalk commuter: walks a straight line along a road, back and forth
     ped.walkAxis=pick(['x','z']);
@@ -3307,7 +3363,19 @@ function spawnPed(b,kind){
     else { ped.x=ped.walkLine; ped.z=ped.walkPos; }
   }
   if(kind==='beach') ped.bound=WATER_R-3;
-  mesh.position.set(ped.x,groundH(ped.x,ped.z),ped.z);
+  ped.mesh.visible=true; ped.mesh.position.set(ped.x,groundH(ped.x,ped.z),ped.z);
+  ped.mesh.rotation.set(0,ped.heading,0);
+  const u=ped.mesh.userData;
+  [u.legL,u.legR,u.armL,u.armR].forEach(l=>{ if(l) l.rotation.x=0; });
+  if(u.torso){ u.torso.rotation.x=0; u.torso.rotation.y=0; }
+}
+function spawnPed(b,kind){
+  let ped=pedPool.pop();
+  if(ped){ resetPed(ped,b,kind); scene.add(ped.mesh); }
+  else {
+    ped={mesh:makePerson(pick(PEDCOLS))};
+    resetPed(ped,b,kind); scene.add(ped.mesh);
+  }
   if(_rng()<(kind==='local'?0.28:0.12)) attachDog(ped);
   peds.push(ped); return ped;
 }
@@ -6551,10 +6619,8 @@ function killCar(car,boom){
     burst(car.x,1,car.z,26,COL_FIRE,6,0.9,4);
     burst(car.x,1,car.z,16,COL_SMOKE,3,1.4,1);
   }
-  scene.remove(car.mesh); disposeMesh(car.mesh);
   if(car.driver==='cop'&&_rng()<0.35) spawnPickup('rpg',car.x+rand(-1,1),car.z+rand(-1,1));
-  const ci=cars.indexOf(car); if(ci>=0) cars.splice(ci,1);
-  const ti=traffic.indexOf(car); if(ti>=0) traffic.splice(ti,1);
+  retireTraffic(car);
   setTimeout(()=>{ if(traffic.length<TRAFFIC_CAP) spawnTraffic(1); },4000);
 }
 function addStyle(n){ if(mission&&mission.type==='style') mission.value+=n; }
@@ -7737,11 +7803,7 @@ function updatePeds(dt){
     if(ped.state==='down'){
       ped.downT-=dt;
       if(ped.downT<=0){
-        scene.remove(ped.mesh); disposeMesh(ped.mesh);
-        if(ped.dog) makeStray(ped.dog,{orphaned:true});   // persists nearby, then joins the city count
-        if(ped.bub) ped.bub.remove();
-        peds.splice(i,1);
-        if(ped.kind==='chat'&&ped.partner) ped.partner.kind='local';
+        retirePed(ped,true);   // its dog persists nearby, then joins the city count
         if(peds.length<PED_CAP) spawnPed(pick(blockInfo));
       }
       continue;
@@ -9851,18 +9913,14 @@ function trimToCaps(){
     for(let i=0;i<traffic.length;i++){ const c=traffic[i]; const d=Math.hypot(c.x-px0(),c.z-pz0()); if(d>fd){fd=d;fi=i;} }
     if(fi<0) break;
     const c=traffic[fi];
-    scene.remove(c.mesh); disposeMesh(c.mesh);
-    const ci=cars.indexOf(c); if(ci>=0) cars.splice(ci,1);
-    traffic.splice(fi,1);
+    retireTraffic(c);
   }
   while(peds.length>PED_CAP){
     let fi=-1,fd=-1;
     for(let i=0;i<peds.length;i++){ const p=peds[i]; if(p.state==='down') continue; const d=Math.hypot(p.x-px0(),p.z-pz0()); if(d>fd){fd=d;fi=i;} }
     if(fi<0) break;
     const p=peds[fi];
-    scene.remove(p.mesh); disposeMesh(p.mesh);
-    if(p.bub) p.bub.remove();
-    peds.splice(fi,1);
+    retirePed(p,false);
   }
 }
 function applyQuality(tier){

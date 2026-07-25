@@ -8,6 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-25 | `index.html` (car/ped lifecycle), `tests/cases/traffic-pooling.test.js`, `HANDOFF.md`, `CODEX/HANDOFF_TERRA_R2.md`, `STATUS.md` | Done: R2 bounded generic traffic/ped pools; active-only/F3, mission-target, cinema, and ownerless-dog rules covered. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `CODEX/HANDOFF_TERRA_R2.md`, `STATUS.md` | Done: wrote implementation-ready Terra medium handoff for the R2 pooling task. | Signed: Codex \| GPT-5 \| medium |
 
 ## Shared-file touches
@@ -18,6 +19,7 @@ possible change and add a line here.
 - `HANDOFF.md` — §5 code map and §8 backlog get edited by most sessions; edit the row, not the structure.
 - `TERRAIN.md` — the terrain contract. Read the Tier 1 revision note before touching `groundH`.
 - `js/person.js` — shared rig; additions must stay backward-compatible (limbs are read by several animation paths).
+- `index.html` car/ped lifecycle — R2 added bounded generic free-lists and active-array retirement; keep mission/cinema exclusions intact. Signed: Codex | GPT-5 | high
 
 ## Known issues
 - ~~PII in the docs~~ **RESOLVED — owner's decision, 2026-07-24:** the owner's first name in `HANDOFF.md`/`GAME_PLAN.md`/`ASSETS.md`/`STORY_BIBLE.md`/`CHARACTERS.md` is fine and does not need scrubbing. Do not re-flag it. The rest of AGENTS.md §3 still applies in full — no surnames, emails, phone numbers, addresses, other-platform usernames, or credentials of any kind. Latest scan found none of those. — 2026-07-24, Claude
