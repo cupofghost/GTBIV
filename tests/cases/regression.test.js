@@ -68,5 +68,68 @@ module.exports = {
         assert(r.debt === 800, 'expected the debt to be set to exactly $800, got ' + r.debt);
       },
     },
+    {
+      name: 'Turbo can jump while standing on elevated terrain',
+      query: '?dev=1&skipintro=1',
+      run: async (page, { assert }) => {
+        const r = await page.evaluate(() => {
+          const hill = SIGNATURE_HILLS[0];
+          player.x = hill.x; player.z = hill.z; player.y = groundH(hill.x, hill.z); player.vy = 0;
+          player.car = null; G.mode = 'foot'; player.climb = null;
+          const before = { y: player.y, vy: player.vy };
+          doJump();
+          return { beforeY: before.y, afterY: player.y, afterVy: player.vy, hillH: before.y };
+        });
+        assert(r.hillH > 1, 'expected a signature hill to be elevated, got ' + r.hillH.toFixed(2));
+        assert(r.afterVy > 0, 'expected doJump() to give vertical velocity on a hill, got vy=' + r.afterVy);
+        assert(r.afterY > r.beforeY, 'expected Turbo to leave the ground, y before=' + r.beforeY.toFixed(2) + ' after=' + r.afterY.toFixed(2));
+      },
+    },
+    {
+      name: 'jocks are killable with fists',
+      query: '?dev=1&skipintro=1',
+      run: async (page, { assert }) => {
+        const r = await page.evaluate(() => {
+          // spawn a jock directly in front of Turbo and punch repeatedly
+          const j = spawnJock(player.x, player.z + 0.4);
+          const startHp = j.hp;
+          G.mode = 'foot'; G.weapon = 'fists'; G.started = true; G.over = false; player.punchT = 0;
+          let punches = 0;
+          while (j.state !== 'down' && punches < 10) {
+            player.x = j.x; player.z = j.z - 0.4;
+            player.heading = Math.atan2(j.x - player.x, j.z - player.z);
+            player.punchT = 0;
+            doPunch(false);
+            punches++;
+          }
+          return { startHp, endHp: j.hp, state: j.state, punches };
+        });
+        assert(r.startHp > 0, 'expected spawned jock to have positive HP');
+        assert(r.state === 'down', 'expected jock to be knocked down, got state=' + r.state + ' after ' + r.punches + ' punches, hp=' + r.endHp);
+      },
+    },
+    {
+      name: 'foot cops are killable with fists',
+      query: '?dev=1&skipintro=1',
+      run: async (page, { assert }) => {
+        const r = await page.evaluate(() => {
+          const fc = makeCopPerson(player.x, player.z + 0.4);
+          footCops.push(fc);
+          const startHp = fc.hp;
+          G.mode = 'foot'; G.weapon = 'fists'; G.started = true; G.over = false; player.punchT = 0;
+          let punches = 0;
+          while (fc.state !== 'down' && punches < 10) {
+            player.x = fc.x; player.z = fc.z - 0.4;
+            player.heading = Math.atan2(fc.x - player.x, fc.z - player.z);
+            player.punchT = 0;
+            doPunch(false);
+            punches++;
+          }
+          return { startHp, endHp: fc.hp, state: fc.state, punches };
+        });
+        assert(r.startHp > 0, 'expected spawned cop to have positive HP');
+        assert(r.state === 'down', 'expected foot cop to be knocked down, got state=' + r.state + ' after ' + r.punches + ' punches');
+      },
+    },
   ],
 };

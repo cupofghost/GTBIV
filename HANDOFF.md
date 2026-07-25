@@ -601,7 +601,8 @@ math. Great for composing cutscene shots (feeds D-work in CHARACTERS.md).
 **Acceptance:** Toggle → camera detaches and flies smoothly anywhere; toggle back
 → returns to normal follow-cam exactly.
 
-#### D5 — Time controls (pause-step / slow-mo / fast-forward) `P2 · Risk: Low` `OPEN`
+#### D5 — Time controls (pause-step / slow-mo / fast-forward) `P2 · Risk: Low` `DONE`
+**Status: implemented & verified** (OpenCode | Kimi K2). `TIME_SCALE` global (default `1`) scales the gameplay simulation dt in `MAIN LOOP` while keeping UI, recording, and fps counters on real time. Dev-only hotkeys `1` (1×), `2` (0.25×), `3` (4×), `0` (step one frame) plus dev-panel TIME row buttons `1×`/`0.25×`/`4×`/`Step`. `STEP_FRAMES` queues a single forced sim frame even while the pause menu is open, using a fixed `0.017s` step. Debug HUD shows the current speed. World visuals (particles, clouds, camera, burning cars, alarms, traffic lights, radio towers) scale with the time control; `recTick(dt)` stays on wall-clock time. Verified: `tests/cases/time-controls.test.js` 5/5 green; boot, controls-card, cinema-mode, regression, mission-variety, economy, camera-polish, hud-objective, smoke, and intro-camera suites green.
 **Why:** Inspecting animations, physics, and cutscene timing needs sub-real-time
 control.
 **Where:** `MAIN LOOP` — introduce a `timeScale` applied to `dt` for simulation
@@ -635,7 +636,8 @@ point) so you can eyeball the rig. This *is* the creator's preview surface.
 updates the model live; poses play correctly. Uses the same builder the game
 uses (no forked model code).
 
-#### D7 — Deterministic seed (optional) `P2 · Risk: Med` `OPEN`
+#### D7 — Deterministic seed (optional) `P2 · Risk: Med` `DONE`
+**Status: implemented & verified** (OpenCode | Kimi K2). Added `_rng` as the central random source: it defaults to `Math.random`, and when `?seed=<n>` is present it swaps to a `mulberry32` generator. `rand`, `randi`, and `pick` now call `_rng`; every `Math.random()` call inside `index.html` was mechanicaly replaced with `_rng()`. `?seed=123` reproduces the same `rand(0,1)` sequence, `buildings.length`, and `randomRoadPoint()` across reloads; no seed leaves behavior unchanged. The `economy.test.js` mission-start helper was updated to override `_rng` instead of `Math.random`. Verified: `tests/cases/deterministic-seed.test.js` 3/3 green; boot, smoke, regression, economy, mission-variety, controls-card, cinema-mode, camera-polish, hud-objective, intro-camera, and time-controls suites green.
 **Why:** `Math.random()` is used everywhere, so bugs aren't reproducible.
 **Where:** central RNG; city/traffic/ped/mission spawns.
 **Approach:** When `?seed=<n>` is present, route randomness through a small
@@ -788,7 +790,8 @@ silenced when the setting is off, never throws when `navigator.vibrate` is
 absent, and the setting round-trips a reload) plus the full headless suite
 green (43/43, up from 39 with the four new haptics cases).
 
-#### J2 — Hitstop + refined screen shake `P2 · Risk: Med` `OPEN`
+#### J2 — Hitstop + refined screen shake `P2 · Risk: Med` `DONE`
+**Status: implemented & verified** (OpenCode | Kimi K2). Added `HIT_STOP` global and `triggerHitStop(ms)`; the `MAIN LOOP` scales `simDt` near-zero while `HIT_STOP` is active (capped at 80ms, decays by real dt). Triggered on player building/tree/prop crashes and hard landings in `carPhysics`, plus `explode` and `bigExplosion`. `shake()` now early-returns if `SETTINGS.reduceMotion` is on, and `updateCamera` uses `Math.pow(camShake,1.6)` displacement with speed-sensitive decay (slower decay for big shakes, faster for tiny taps). The car camera's boost FOV kick is also disabled when Reduce Motion is on. A **REDUCE MOTION** ON/OFF row was added to the pause-menu Settings panel, persisted in the `SETTINGS` blob. Verified: `tests/cases/hitstop.test.js` 5/5 green; boot, smoke, economy, camera-polish, controls-card, and haptics suites green.
 **Why:** Big impacts read as "meh". A few frames of freeze + a tuned shake curve
 makes collisions and explosions land.
 **Where:** `CAMERA` (`shake`, already exists), `MAIN LOOP`, `carPhysics`/`explode`.
@@ -1218,11 +1221,10 @@ units on a cooldown, and closing to melee range to trigger the same
 simplified auto-counter (`doPunch()`) the gang members use. No new UI, no new
 systems — pure reuse of existing patterns.
 **Left for later polish (optional, not blocking):** a distinct "letterman
-jacket" look once `CHARACTERS.md`'s paint system (C3) lands; a dedicated
-knockdown/defeat state (currently, like gang members, jocks can't actually be
-knocked down — punching near one just triggers the same auto-counter loop);
-tying jock density to the football field once **FB2** exists instead of pure
-random blocks.
+jacket" look once `CHARACTERS.md`'s paint system (C3) lands; tying jock density
+to the football field once **FB2** exists instead of pure random blocks. (The
+knockdown/defeat state was added in the 2026-07-25 bug-fix pass — jocks are now
+killable by fists, gunfire, car hits, and explosions.)
 
 #### FB2 — Chaos High football field (new landmark) `P1 · Risk: Med` `DONE`
 **Status: implemented & verified.** A `FOOTBALL_FIELD` section reserves one
@@ -1469,10 +1471,10 @@ throughout:
 ✔ RV1 Mama rat mechanics         DONE (placeholder)
 ✔ P2  Economy tuning              DONE (#38)
 ✔ U2  Onboarding                 DONE (controls card #35)
-—  D5  Time controls             ← NEXT (dev tool)
-—  D7  Deterministic seed        OPEN (dev tool)
-—  J2  Hitstop + shake           OPEN
-—  U3  Death/respawn flow        OPEN
+✔ D5  Time controls             DONE
+✔ D7  Deterministic seed        DONE
+—  J2  Hitstop + shake           DONE
+—  U3  Death/respawn flow        ← NEXT
 —  R2  Pooling traffic/peds      OPEN
 —  R3  Anti-stuck & spawn-safety OPEN
 —  A2  Accessibility             OPEN

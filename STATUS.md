@@ -1,6 +1,6 @@
 # STATUS
 
-Last consolidation: 2026-07-25 (fifth pass — after City Glow (#37), controls card (#35), intro camera (#36), and P2 economy (#38) landed on `main`; archived active work, regenerated CODE MAP) — Signed: OpenCode | Kimi K2 | high
+Last consolidation: 2026-07-25 (sixth pass — archived bug-fix pass, D5 time controls, D7 deterministic seed, and J2 hitstop/shake; all from OpenCode | Kimi K2 on `claude/bugfix-jump-streets-killables`) — Signed: OpenCode | Kimi K2 | medium
 
 ## Active work
 _Nothing claimed right now._ Add your row below per AGENTS.md §1.3 — and escape
@@ -8,6 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| — | — | _Nothing active — all recent work archived below._ | — |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
@@ -41,3 +42,7 @@ possible change and add a line here.
 - NPC types (Haiku 4.5, low, 2026-07-24): 303 character archetypes across 8 batches for diverse NPC spawning.
 - Docs & tooling (Haiku 4.5, 2026-07-24): backlog reconciled against real code (W1), `NEXT: P2` marker (W5), fast pre-flight test tier — `tests/syntax-check.js` + `smoke.test.js` (W3), plus specs written but not implemented: economy audit (P2), onboarding controls card (U2), accessibility options (A2), brake-vs-reverse clarity (J4).
 - Navigation (Claude, high, 2026-07-24): `index.html`'s `// CODE MAP` recomputed from the real banners (was ~58 lines adrift, missing 3 sections) and HANDOFF.md §5 re-synced to every banner in file order.
+- Bug-fix pass (OpenCode | Kimi K2 | high, 2026-07-25): terrain-aware jump via `footGround()`, sidewalk trees, killable jocks/cops/foot-cops; `tests/cases/regression.test.js` added/extended.
+- D5 Time controls (OpenCode | Kimi K2 | medium, 2026-07-25): dev-only `TIME_SCALE`/`STEP_FRAMES`, 1×/0.25×/4× hotkeys + dev-panel buttons, debug-HUD speed readout; `tests/cases/time-controls.test.js` added.
+- D7 Deterministic seed (OpenCode | Kimi K2 | medium, 2026-07-25): central `_rng` with optional `?seed=<n>` mulberry32 PRNG; all `index.html` randomness routed through it; `tests/cases/deterministic-seed.test.js` added.
+- J2 Hitstop + refined shake (OpenCode | Kimi K2 | medium, 2026-07-25): `HIT_STOP` freeze on big impacts, magnitude-squared camera shake with speed-sensitive decay, `SETTINGS.reduceMotion` toggle in pause settings; `tests/cases/hitstop.test.js` added.
