@@ -3,32 +3,43 @@
 module.exports = {
   cases: [
     {
-      name: 'same seed reproduces the same first rand value and city snapshot across reloads',
+      name: 'same seed reproduces the city snapshot and shared character-module RNG',
       query: '?dev=1&skipintro=1&seed=123',
       start: false,
       run: async (page, { assert, assertEqual }) => {
         const first = await page.evaluate(() => ({
-          rand: rand(0, 1),
-          buildings: buildings.length,
-          roadPoint: randomRoadPoint(),
-          person: randomPersonSpec(0xabcdef),
-          npcType: randomNPCType().build(),
+          buildings: buildings.map(b => [b.minX, b.maxX, b.minZ, b.maxZ, b.h, b.baseY]),
+          manholes: MANHOLE_SPOTS.map(p => [p.x, p.z]),
+          trees: treeSpots.map(p => [p.x, p.z]),
         }));
         await page.reload({ waitUntil: 'load' });
         await page.waitForTimeout(800);
         const second = await page.evaluate(() => ({
-          rand: rand(0, 1),
-          buildings: buildings.length,
-          roadPoint: randomRoadPoint(),
-          person: randomPersonSpec(0xabcdef),
-          npcType: randomNPCType().build(),
+          buildings: buildings.map(b => [b.minX, b.maxX, b.minZ, b.maxZ, b.h, b.baseY]),
+          manholes: MANHOLE_SPOTS.map(p => [p.x, p.z]),
+          trees: treeSpots.map(p => [p.x, p.z]),
         }));
-        assertEqual(first.rand, second.rand, 'first rand mismatch across reloads');
-        assertEqual(first.buildings, second.buildings, 'building count mismatch across reloads');
-        assertEqual(JSON.stringify(first.roadPoint), JSON.stringify(second.roadPoint), 'randomRoadPoint mismatch across reloads');
-        assertEqual(JSON.stringify(first.person), JSON.stringify(second.person), 'person module RNG mismatch across reloads');
-        assertEqual(JSON.stringify(first.npcType), JSON.stringify(second.npcType), 'NPC type module RNG mismatch across reloads');
-        assert(first.rand >= 0 && first.rand < 1, 'rand should be in [0,1)');
+        assertEqual(JSON.stringify(first), JSON.stringify(second), 'seeded city snapshot mismatch across reloads');
+
+        const modules = await page.evaluate(() => {
+          const original = window.GTB_RNG;
+          const sample = () => {
+            let state = 123;
+            window.GTB_RNG = () => {
+              let t = state += 0x6D2B79F5;
+              t = Math.imul(t ^ (t >>> 15), t | 1);
+              t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+              return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            };
+            return {
+              person: randomPersonSpec(0xabcdef),
+              npcType: randomNPCType().build(),
+            };
+          };
+          try { return [sample(), sample()]; }
+          finally { window.GTB_RNG = original; }
+        });
+        assertEqual(JSON.stringify(modules[0]), JSON.stringify(modules[1]), 'character modules should share the seeded RNG');
       },
     },
     {
