@@ -1494,7 +1494,7 @@ input after touch cancel, mode change, pause, or entering a car; the 800×390
 touch layout does not overlap.
 **Focused test:** `tests/cases/sprint.test.js`.
 
-#### OD4 — Denser traffic and street life `P0 · Risk: Med` `OPEN`
+#### OD4 — Denser traffic and street life `P0 · Risk: Med` `DONE — Codex | GPT-5 | high (2026-07-25)`
 **Owner direction:** the streets feel empty; add more cars and life.
 **Where:** generic traffic/ped boot spawns, R2 pools, F3 quality tiers,
 `spawnTraffic()`/`spawnPed()`, and the main-loop population maintenance path.
@@ -1563,8 +1563,8 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: OD4 (Denser traffic and pedestrian life)** — Finish the owner-directed
-immediate gameplay pass before returning to FB3.
+**NEXT: FB3 (Coach mission)** — The owner-directed immediate gameplay pass is
+complete; return to the Football Saga in its established order.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -1598,8 +1598,8 @@ throughout:
 ✔ OD1 Straight-flight RPGs       DONE
 ✔ OD2 Bubble building occlusion  DONE
 ✔ OD3 Turbo sprint               DONE
-—  OD4 Denser street life        ← NEXT
-—  FB3 Coach mission             OPEN
+✔ OD4 Denser street life         DONE
+—  FB3 Coach mission             ← NEXT
 —  FB4 Football minigame         OPEN
 —  FB5 Cheerleaders cutscene     OPEN
 —  RV2 Mama rat model            OPEN
