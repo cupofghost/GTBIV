@@ -636,7 +636,8 @@ point) so you can eyeball the rig. This *is* the creator's preview surface.
 updates the model live; poses play correctly. Uses the same builder the game
 uses (no forked model code).
 
-#### D7 — Deterministic seed (optional) `P2 · Risk: Med` `OPEN`
+#### D7 — Deterministic seed (optional) `P2 · Risk: Med` `DONE`
+**Status: implemented & verified** (OpenCode | Kimi K2). Added `_rng` as the central random source: it defaults to `Math.random`, and when `?seed=<n>` is present it swaps to a `mulberry32` generator. `rand`, `randi`, and `pick` now call `_rng`; every `Math.random()` call inside `index.html` was mechanicaly replaced with `_rng()`. `?seed=123` reproduces the same `rand(0,1)` sequence, `buildings.length`, and `randomRoadPoint()` across reloads; no seed leaves behavior unchanged. The `economy.test.js` mission-start helper was updated to override `_rng` instead of `Math.random`. Verified: `tests/cases/deterministic-seed.test.js` 3/3 green; boot, smoke, regression, economy, mission-variety, controls-card, cinema-mode, camera-polish, hud-objective, intro-camera, and time-controls suites green.
 **Why:** `Math.random()` is used everywhere, so bugs aren't reproducible.
 **Where:** central RNG; city/traffic/ped/mission spawns.
 **Approach:** When `?seed=<n>` is present, route randomness through a small
@@ -1470,8 +1471,8 @@ throughout:
 ✔ P2  Economy tuning              DONE (#38)
 ✔ U2  Onboarding                 DONE (controls card #35)
 ✔ D5  Time controls             DONE
-—  D7  Deterministic seed        ← NEXT (dev tool)
-—  J2  Hitstop + shake           OPEN
+✔ D7  Deterministic seed        DONE
+—  J2  Hitstop + shake           ← NEXT
 —  U3  Death/respawn flow        OPEN
 —  R2  Pooling traffic/peds      OPEN
 —  R3  Anti-stuck & spawn-safety OPEN

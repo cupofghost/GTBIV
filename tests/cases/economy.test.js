@@ -74,14 +74,15 @@ module.exports = {
         const r = await page.evaluate(() => {
           // startMission builds delivery rewards with base 140 + distance/3
           mission = null; missionCooldown = 0; lastType = '';
-          // Use a deterministic Math.random that still varies enough to pick two
+          // Use a deterministic RNG stream that still varies enough to pick two
           // different intersections, then force the type filter to leave only delivery.
+          // The game now routes randomness through _rng, so override that instead of Math.random.
           const seq = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
           let i = 0;
-          const origRandom = Math.random;
-          Math.random = () => { const v = seq[i % seq.length]; i++; return v; };
+          const origRng = _rng;
+          _rng = () => { const v = seq[i % seq.length]; i++; return v; };
           startMission();
-          Math.random = origRandom;
+          _rng = origRng;
           return mission && mission.type === 'delivery' ? mission.reward : null;
         });
         assert(r !== null, 'expected a delivery mission to start');

@@ -680,9 +680,10 @@
 'use strict';
 /* GRAND TURBO BOOST IV: SAN CHAOS — 100% procedural, zero trademarks harmed. */
 
-const rand=(a,b)=>a+Math.random()*(b-a);
-const randi=(a,b)=>Math.floor(rand(a,b+1));
-const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+let _rng=Math.random;
+const rand=(a,b)=>a+_rng()*(b-a);
+const randi=(a,b)=>Math.floor(a+_rng()*(b-a+1));
+const pick=arr=>arr[Math.floor(_rng()*arr.length)];
 const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
 const lerp=(a,b,t)=>a+(b-a)*t;
 const TAU=Math.PI*2;
@@ -803,6 +804,21 @@ const DEV_STATE={ open:false, god:false, inf:false, hud:false };
 let TIME_SCALE=1, STEP_FRAMES=0;
 function setTimeScale(v){ if(!DEV) return; TIME_SCALE=v; toast('TIME '+v+'×','gold'); }
 function stepOneFrame(){ if(!DEV) return; STEP_FRAMES++; }
+// D7 — deterministic seed: route all game RNG through a seedable PRNG when ?seed=<n>
+(function initSeededRng(){
+  const seedStr=_PARAMS.get('seed');
+  if(!seedStr) return;
+  const seed=parseInt(seedStr,10);
+  if(isNaN(seed)) return;
+  _rng=(function(a){
+    return function(){
+      let t=a+=0x6D2B79F5;
+      t=Math.imul(t^(t>>>15),t|1);
+      t^=t+Math.imul(t^(t>>>7),t|61);
+      return ((t^(t>>>14))>>>0)/4294967296;
+    };
+  }(seed));
+})();
 const QS={
   skipintro:DEV||_PARAMS.has('skipintro'),
   scene:(_PARAMS.get('scene')||'').toLowerCase(),
@@ -845,7 +861,7 @@ function initAudio(){
   engineSubOsc.connect(engineSubGain); engineSubGain.connect(sfxGain); engineSubOsc.start();
   // mechanical grit layer — filtered noise floor; baseline per car (snd.grit), worse when damaged
   const egb=AC.createBuffer(1,AC.sampleRate,AC.sampleRate), egd=egb.getChannelData(0);
-  for(let i=0;i<egd.length;i++) egd[i]=Math.random()*2-1;
+  for(let i=0;i<egd.length;i++) egd[i]=_rng()*2-1;
   const egSrc=AC.createBufferSource(); egSrc.buffer=egb; egSrc.loop=true;
   engineGritFilter=AC.createBiquadFilter(); engineGritFilter.type='bandpass'; engineGritFilter.frequency.value=350; engineGritFilter.Q.value=0.7;
   engineGritGain=AC.createGain(); engineGritGain.gain.value=0;
@@ -856,7 +872,7 @@ function initAudio(){
   turboGain=AC.createGain(); turboGain.gain.value=0;
   turboOsc.connect(turboFilter); turboFilter.connect(turboGain); turboGain.connect(sfxGain); turboOsc.start();
   const nb=AC.createBuffer(1,AC.sampleRate,AC.sampleRate), nd=nb.getChannelData(0);
-  for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1;
+  for(let i=0;i<nd.length;i++) nd[i]=_rng()*2-1;
   const skid=AC.createBufferSource(); skid.buffer=nb; skid.loop=true;
   const skF=AC.createBiquadFilter(); skF.type='bandpass'; skF.frequency.value=900; skF.Q.value=1.2;
   skidGain=AC.createGain(); skidGain.gain.value=0;
@@ -893,7 +909,7 @@ function initAudio(){
 function makeIR(sec,decay){
   const rate=AC.sampleRate, len=Math.max(1,Math.floor(rate*sec)), b=AC.createBuffer(2,len,rate);
   for(let c=0;c<2;c++){ const d=b.getChannelData(c);
-    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay); }
+    for(let i=0;i<len;i++) d[i]=(_rng()*2-1)*Math.pow(1-i/len,decay); }
   return b;
 }
 // The whole "vibe" lives here: a sidechain-pump bus, a plate-ish reverb send,
@@ -988,7 +1004,7 @@ function noiseBurst(dur,vol,freq,q,type){
   if(!AC) return;
   freq=freq||800; q=q||0.6;
   const len=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
-  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+  for(let i=0;i<len;i++) d[i]=(_rng()*2-1)*(1-i/len);
   const s=AC.createBufferSource(); s.buffer=b;
   const f=AC.createBiquadFilter(); f.type=type||'lowpass'; f.frequency.value=freq; f.Q.value=q;
   const g=AC.createGain(); g.gain.value=vol;
@@ -997,7 +1013,7 @@ function noiseBurst(dur,vol,freq,q,type){
 // badly damaged engine skips a beat — a sharp low pop, worse the closer to death
 function engineMisfire(dmg){
   blip(140,35,0.055,0.1+dmg*0.18,'square');
-  if(Math.random()<0.5) noiseBurst(0.04,0.06+dmg*0.1,1200,1);
+  if(_rng()<0.5) noiseBurst(0.04,0.06+dmg*0.1,1200,1);
 }
 // turbo dump valve — the classic "pssh" when you lift off the boost
 function turboBlowOff(amt){
@@ -1072,7 +1088,7 @@ function swKick(t,vel){
 function swClap(t){ // layered 80s clap into the reverb, for a wide backbeat
   const hit=(off,dur,v)=>{
     const len=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
-    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+    for(let i=0;i<len;i++) d[i]=(_rng()*2-1)*(1-i/len);
     const s=AC.createBufferSource(); s.buffer=b;
     const f=AC.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1650; f.Q.value=0.9;
     const g=AC.createGain(); g.gain.value=v;
@@ -1083,7 +1099,7 @@ function swClap(t){ // layered 80s clap into the reverb, for a wide backbeat
 function swSnare(t,vel){
   vel=vel||1;
   const len=Math.floor(AC.sampleRate*0.14), b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
-  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,1.4);
+  for(let i=0;i<len;i++) d[i]=(_rng()*2-1)*Math.pow(1-i/len,1.4);
   const s=AC.createBufferSource(); s.buffer=b;
   const f=AC.createBiquadFilter(); f.type='highpass'; f.frequency.value=1400;
   const g=AC.createGain(); g.gain.value=0.2*vel;
@@ -1091,7 +1107,7 @@ function swSnare(t,vel){
 }
 function swHat(t,v,open){
   const dur=open?0.14:0.035, len=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
-  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+  for(let i=0;i<len;i++) d[i]=(_rng()*2-1)*(1-i/len);
   const s=AC.createBufferSource(); s.buffer=b;
   const f=AC.createBiquadFilter(); f.type='highpass'; f.frequency.value=8200;
   const g=AC.createGain(); g.gain.value=v;
@@ -1105,7 +1121,7 @@ function swTom(t,freq,vel){ // fills
 }
 function swCrash(t){ // cymbal swell to mark a drop
   const dur=1.3, len=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
-  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,1.5);
+  for(let i=0;i<len;i++) d[i]=(_rng()*2-1)*Math.pow(1-i/len,1.5);
   const s=AC.createBufferSource(); s.buffer=b;
   const f=AC.createBiquadFilter(); f.type='highpass'; f.frequency.value=6000;
   const g=AC.createGain(); g.gain.setValueAtTime(0.13,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
@@ -1113,7 +1129,7 @@ function swCrash(t){ // cymbal swell to mark a drop
 }
 function swRiser(t,dur){ // filtered noise sweep up into a drop
   const len=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
-  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1);
+  for(let i=0;i<len;i++) d[i]=(_rng()*2-1);
   const s=AC.createBufferSource(); s.buffer=b;
   const f=AC.createBiquadFilter(); f.type='bandpass'; f.Q.value=1.3;
   f.frequency.setValueAtTime(300,t); f.frequency.exponentialRampToValueAtTime(6500,t+dur);
@@ -1565,9 +1581,9 @@ let skyMesh, sunSpr, skyTexNight, skyTexDay, sunTexNight, sunTexDay;
     if(stars){
       g.fillStyle='rgba(255,255,255,0.9)';
       for(let i=0;i<120;i++){
-        const y=Math.random()*300, r=Math.random()<0.85?1:2;
-        g.globalAlpha=0.3+Math.random()*0.7;
-        g.fillRect(Math.random()*64,y,r,r);
+        const y=_rng()*300, r=_rng()<0.85?1:2;
+        g.globalAlpha=0.3+_rng()*0.7;
+        g.fillRect(_rng()*64,y,r,r);
       }
       g.globalAlpha=1;
     }
@@ -1602,7 +1618,7 @@ const blockInfo=[];
 for(let i=0;i<WORLD.blocks;i++) for(let j=0;j<WORLD.blocks;j++){
   const cx=-H+ROAD+BLOCK/2+i*PITCH, cz=-H+ROAD+BLOCK/2+j*PITCH;
   const distC=Math.hypot(cx,cz);
-  const r=Math.random();
+  const r=_rng();
   let type='bldg';
   if(distC>80 && r<0.10) type='park';
   else if(r<0.22) type='parking';
@@ -1696,7 +1712,7 @@ function groundH(x,z){
 const MANHOLE_SPOTS=[];
 for(let k=0;k<26;k++){
   const l=pick(roadLines), t=rand(-H+ROAD+6,H-ROAD-6);
-  MANHOLE_SPOTS.push(Math.random()<0.5?{x:l+rand(-3,3),z:t}:{x:t,z:l+rand(-3,3)});
+  MANHOLE_SPOTS.push(_rng()<0.5?{x:l+rand(-3,3),z:t}:{x:t,z:l+rand(-3,3)});
 }
 // climbable stair/fire-escape runs (populated by the stair builder below)
 const STAIR_RUNS=[];
@@ -1732,7 +1748,7 @@ blockInfo.forEach(b=>{
   if(b.type!=='bldg') return;
   const distC=Math.hypot(b.cx,b.cz);
   const tall=distC<170 ? rand(24,64) : rand(10,30);
-  const pattern=Math.random();
+  const pattern=_rng();
   if(pattern<0.35){
     addBuilding(b.cx+rand(-3,3),b.cz+rand(-3,3),rand(26,40),rand(26,40),tall);
   } else if(pattern<0.7){
@@ -1741,7 +1757,7 @@ blockInfo.forEach(b=>{
     addBuilding(b.cx+BLOCK/4+rand(-2,2),b.cz+rand(-4,4),w,rand(28,38),tall*rand(0.6,1.2));
   } else {
     for(let a=-1;a<=1;a+=2) for(let c=-1;c<=1;c+=2){
-      if(Math.random()<0.85)
+      if(_rng()<0.85)
         addBuilding(b.cx+a*BLOCK/4,b.cz+c*BLOCK/4,rand(13,18),rand(13,18),tall*rand(0.5,1.15));
     }
   }
@@ -1765,7 +1781,7 @@ groundCanvas.width=groundCanvas.height=1024;
     g.strokeStyle='#514870'; g.lineWidth=4; g.strokeRect(x+2,y+2,w-4,w-4);
     if(b.type==='park'){
       g.fillStyle='rgba(255,255,255,0.05)';
-      for(let n=0;n<30;n++) g.fillRect(x+Math.random()*w,y+Math.random()*w,3,3);
+      for(let n=0;n<30;n++) g.fillRect(x+_rng()*w,y+_rng()*w,3,3);
     }
     if(b.helipad){
       const hx=px(b.cx), hz2=px(b.cz);
@@ -1949,19 +1965,19 @@ const facadeMats=[];   // buckets collect here so CITY GLOW can swap night windo
     if(style===0){          // classic punch-card windows
       g.fillStyle='#b8b4c8'; g.fillRect(0,0,128,256);
       for(let y=8;y<248;y+=16) for(let x=8;x<120;x+=18){
-        g.fillStyle=Math.random()<0.42?'#ffd98a':'#1c1830';
+        g.fillStyle=_rng()<0.42?'#ffd98a':'#1c1830';
         g.fillRect(x,y,11,9);
       }
     } else if(style===1){   // modern glass stripes
       g.fillStyle='#7a86a8'; g.fillRect(0,0,128,256);
       for(let y=6;y<252;y+=13){
-        g.fillStyle=Math.random()<0.5?'#aef0ff':'#141c2e';
+        g.fillStyle=_rng()<0.5?'#aef0ff':'#141c2e';
         g.fillRect(4,y,120,8);
       }
     } else {                // brick tenement, tiny windows + fire floors
       g.fillStyle='#a8765c'; g.fillRect(0,0,128,256);
       for(let y=10;y<248;y+=22) for(let x=10;x<118;x+=24){
-        g.fillStyle=Math.random()<0.35?'#ffe9b0':'#241418';
+        g.fillStyle=_rng()<0.35?'#ffe9b0':'#241418';
         g.fillRect(x,y,10,14);
       }
       g.fillStyle='rgba(0,0,0,0.25)';
@@ -1997,7 +2013,7 @@ const facadeMats=[];   // buckets collect here so CITY GLOW can swap night windo
   buildings.forEach(b=>{
     const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ, roof=b.baseY+b.h;
     lips.push([cx,roof,cz,w+0.7,0.5,d+0.7]);
-    if(b.h>34&&Math.random()<0.6)
+    if(b.h>34&&_rng()<0.6)
       crowns.push([cx+rand(-1,1),roof,cz+rand(-1,1),w*rand(0.55,0.75),b.h*rand(0.18,0.3),d*rand(0.55,0.75)]);
   });
   function slab(list,color){
@@ -2021,10 +2037,10 @@ const facadeMats=[];   // buckets collect here so CITY GLOW can swap night windo
   const acs=[],wts=[],ans=[];
   buildings.forEach(b=>{
     const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2, w=b.maxX-b.minX, d=b.maxZ-b.minZ, roof=b.baseY+b.h;
-    if(Math.random()<0.8) acs.push([cx+rand(-w/4,w/4),roof,cz+rand(-d/4,d/4)]);
-    if(Math.random()<0.5) acs.push([cx+rand(-w/4,w/4),roof,cz+rand(-d/4,d/4)]);
-    if(b.h>18&&Math.random()<0.4) wts.push([cx+rand(-w/6,w/6),roof,cz+rand(-d/6,d/6)]);
-    if(b.h>26&&Math.random()<0.55) ans.push([cx,roof,cz]);
+    if(_rng()<0.8) acs.push([cx+rand(-w/4,w/4),roof,cz+rand(-d/4,d/4)]);
+    if(_rng()<0.5) acs.push([cx+rand(-w/4,w/4),roof,cz+rand(-d/4,d/4)]);
+    if(b.h>18&&_rng()<0.4) wts.push([cx+rand(-w/6,w/6),roof,cz+rand(-d/6,d/6)]);
+    if(b.h>26&&_rng()<0.55) ans.push([cx,roof,cz]);
   });
   function inst(geo,color,list){
     if(!list.length) return;
@@ -2070,7 +2086,7 @@ function updateRadioTowers(t){
   // rooftop masts on a handful of the tall buildings, spread across the skyline
   const roofs=buildings.filter(b=>b.h>=30);
   for(let n=0;n<7&&roofs.length;n++){
-    const b=roofs.splice(Math.floor(Math.random()*roofs.length),1)[0];
+    const b=roofs.splice(Math.floor(_rng()*roofs.length),1)[0];
     const w=b.maxX-b.minX, d=b.maxZ-b.minZ;
     SITES.push({x:(b.minX+b.maxX)/2+w*rand(-0.22,0.22),
                 z:(b.minZ+b.maxZ)/2+d*rand(-0.22,0.22),
@@ -2193,7 +2209,7 @@ const clouds=[];
   const cc=document.createElement('canvas'); cc.width=cc.height=128;
   const g=cc.getContext('2d');
   for(let i=0;i<9;i++){
-    const x=20+Math.random()*88, y=40+Math.random()*48, r=14+Math.random()*18;
+    const x=20+_rng()*88, y=40+_rng()*48, r=14+_rng()*18;
     const rg=g.createRadialGradient(x,y,2,x,y,r);
     rg.addColorStop(0,'rgba(255,255,255,0.85)'); rg.addColorStop(1,'rgba(255,255,255,0)');
     g.fillStyle=rg; g.beginPath(); g.arc(x,y,r,0,TAU); g.fill();
@@ -2241,7 +2257,7 @@ function updateGulls(dt){
   const umbs=[],towels=[];
   for(let k=0;k<26;k++){
     const off=rand(WORLD.size/2+3,WATER_R-3.5);
-    const spot=Math.random()<0.5?{x:pick([-1,1])*off,z:rand(-H,H)}:{x:rand(-H,H),z:pick([-1,1])*off};
+    const spot=_rng()<0.5?{x:pick([-1,1])*off,z:rand(-H,H)}:{x:rand(-H,H),z:pick([-1,1])*off};
     (k%2?towels:umbs).push(spot);
   }
   const m=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),p=new THREE.Vector3(),s=new THREE.Vector3(),col=new THREE.Color();
@@ -2284,7 +2300,7 @@ blockInfo.forEach(b=>{
 for(let k=0;k<24;k++){
   const l=pick(roadLines), off=ROAD/2+2.2;
   const t=rand(-H+ROAD,H-ROAD);
-  palmSpots.push(Math.random()<0.5?{x:l+off,z:t}:{x:t,z:l-off});
+  palmSpots.push(_rng()<0.5?{x:l+off,z:t}:{x:t,z:l-off});
 }
 (function(){
   const trunkGeo=new THREE.CylinderGeometry(0.22,0.34,6,5); trunkGeo.translate(0,3,0);
@@ -2315,10 +2331,10 @@ blockInfo.forEach(b=>{
       treeSpots.push({x:px2,z:pz2});
     }
   }
-  if(b.type==='bldg'&&Math.random()<0.65){
+  if(b.type==='bldg'&&_rng()<0.65){
     const per=BLOCK/2+1.6;   // sidewalk edge, not the street
     treeSpots.push({x:b.cx+rand(-per,per),z:b.cz+pick([-1,1])*per});
-    if(Math.random()<0.5) treeSpots.push({x:b.cx+pick([-1,1])*per,z:b.cz+rand(-per,per)});
+    if(_rng()<0.5) treeSpots.push({x:b.cx+pick([-1,1])*per,z:b.cz+rand(-per,per)});
   }
 });
 (function(){
@@ -2349,7 +2365,7 @@ const poleSpots=[];
   const spots=poleSpots;
   roadLines.forEach(l=>{
     for(let t=-H+ROAD+8;t<H-ROAD-4;t+=46){
-      if(Math.random()<0.5) spots.push({x:l+ROAD/2+1.3,z:t});
+      if(_rng()<0.5) spots.push({x:l+ROAD/2+1.3,z:t});
       else spots.push({x:t,z:l-ROAD/2-1.3});
     }
   });
@@ -2373,14 +2389,14 @@ const HYDRANT_SPOTS=[], DUMPSTER_SPOTS=[], BENCH_SPOTS=[];
     if(b.type==='park'&&!b.football){
       for(let k=0;k<4;k++)
         bushes.push({x:b.cx+rand(-BLOCK/2+4,BLOCK/2-4),z:b.cz+rand(-BLOCK/2+4,BLOCK/2-4)});
-      if(!b.helipad&&Math.random()<0.8) benches.push({x:b.cx+rand(-10,10),z:b.cz+rand(-10,10)});
+      if(!b.helipad&&_rng()<0.8) benches.push({x:b.cx+rand(-10,10),z:b.cz+rand(-10,10)});
     }
-    if(b.type==='parking'&&Math.random()<0.8)
+    if(b.type==='parking'&&_rng()<0.8)
       dumpsters.push({x:b.cx+rand(-BLOCK/2+4,BLOCK/2-4),z:b.cz+rand(-BLOCK/2+4,BLOCK/2-4)});
   });
   for(let k=0;k<26;k++){
     const b=pick(blockInfo), per=BLOCK/2+1.2;
-    hydrants.push(Math.random()<0.5
+    hydrants.push(_rng()<0.5
       ?{x:b.cx+rand(-per,per),z:b.cz+pick([-1,1])*per}
       :{x:b.cx+pick([-1,1])*per,z:b.cz+rand(-per,per)});
   }
@@ -2671,7 +2687,7 @@ function addHideout(x,z,r,y){
       STAIR_RUNS.push(r1); stepsFor(r1,false);
     }
     // the roof of a climbable building makes a great hideout
-    if(Math.random()<0.6) addHideout(cx,cz,Math.min(w,d)*0.45,roof);
+    if(_rng()<0.6) addHideout(cx,cz,Math.min(w,d)*0.45,roof);
   }
   const mk=(geo,mats,cols)=>{
     if(!mats.length) return;
@@ -3182,7 +3198,7 @@ function makeCar(type,x,z,heading,opts){
 
 function randomRoadPoint(){
   const l=pick(roadLines), t=rand(-H+ROAD+4,H-ROAD-4);
-  return Math.random()<0.5?{x:l+rand(-2.5,2.5),z:t}:{x:t,z:l+rand(-2.5,2.5)};
+  return _rng()<0.5?{x:l+rand(-2.5,2.5),z:t}:{x:t,z:l+rand(-2.5,2.5)};
 }
 let parkedCount=0;
 blockInfo.forEach(b=>{
@@ -3273,7 +3289,7 @@ function spawnPed(b,kind){
     else { ped.x=ped.walkLine; ped.z=ped.walkPos; }
   }
   if(kind==='beach') ped.bound=WATER_R-3;
-  if(Math.random()<(kind==='local'?0.28:0.12)) attachDog(ped);
+  if(_rng()<(kind==='local'?0.28:0.12)) attachDog(ped);
   peds.push(ped); return ped;
 }
 const CHAT_LINES=['...you see that heli?','Heard the docks are hot tonight.','Gas prices are CRAZY.',
@@ -3298,7 +3314,7 @@ function chatSay(ped){
     document.body.appendChild(ped.bub);
   }
   const nearPlayer=Math.hypot(player.x-ped.x,player.z-ped.z)<8;
-  ped.bub.textContent=(nearPlayer&&Math.random()<0.45)?pick(CHAT_PLAYER):pick(CHAT_LINES);
+  ped.bub.textContent=(nearPlayer&&_rng()<0.45)?pick(CHAT_PLAYER):pick(CHAT_LINES);
   ped.bub.style.display='block';
   ped.bubT=2.2;
   wahVoice(ped.mesh.userData.gender==='girl'?rand(175,235):rand(95,140),ped.x,ped.z);
@@ -3319,14 +3335,14 @@ function spawnChatPairs(){
 let localCount=0;
 blockInfo.forEach(b=>{
   if(b.type==='parking') return;
-  const n=Math.random()<0.85?randi(2,4):randi(0,1);
+  const n=_rng()<0.85?randi(2,4):randi(0,1);
   for(let k=0;k<n&&localCount<56;k++){ spawnPed(b); localCount++; }
 });
 for(let k=0;k<34;k++) spawnPed(pick(blockInfo),'commute');
 for(let k=0;k<12;k++){
   const ped=spawnPed(pick(blockInfo),'beach');
   const off=rand(WORLD.size/2+3,WATER_R-4);
-  if(Math.random()<0.5){ ped.x=pick([-1,1])*off; ped.z=rand(-H,H); }
+  if(_rng()<0.5){ ped.x=pick([-1,1])*off; ped.z=rand(-H,H); }
   else { ped.x=rand(-H,H); ped.z=pick([-1,1])*off; }
   ped.home={cx:ped.x,cz:ped.z};
 }
@@ -3694,7 +3710,7 @@ function downJock(j,byCar){
   burst(j.x,1,j.z,8,[[1,0.4,0.4],[0.9,0.2,0.2]],2,0.5,5);
   if(byCar) shake(0.25);
   addHeat(18);
-  if(Math.random()<0.45) spawnPickup('cash',j.x+rand(-1.5,1.5),j.z+rand(-1.5,1.5));
+  if(_rng()<0.45) spawnPickup('cash',j.x+rand(-1.5,1.5),j.z+rand(-1.5,1.5));
   toast('JOCK DOWN','gold');
 }
 // circle vs jocks — they're solid, same as peds
@@ -4315,7 +4331,7 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
     const chance=downtown?1:0.4;
     const half=BLOCK/2;
     [[b.cx,b.cz-half,0],[b.cx,b.cz+half,0],[b.cx-half,b.cz,1],[b.cx+half,b.cz,1]]
-      .forEach(([x,z,axis])=>{ if(Math.random()<chance) curbSpots.push({x,z,axis,cx:b.cx,cz:b.cz,downtown}); });
+      .forEach(([x,z,axis])=>{ if(_rng()<chance) curbSpots.push({x,z,axis,cx:b.cx,cz:b.cz,downtown}); });
   });
   const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
         pos=new THREE.Vector3(), scl=new THREE.Vector3(1,1,1), col=new THREE.Color();
@@ -4334,7 +4350,7 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
   // (not the road side), denser downtown, purely decorative like the curbs.
   const planterSpots=[];
   curbSpots.forEach(s=>{
-    if(Math.random()>=(s.downtown?0.3:0.08)) return;
+    if(_rng()>=(s.downtown?0.3:0.08)) return;
     const t=rand(-BLOCK/2+3,BLOCK/2-3);
     if(s.axis===0) planterSpots.push({x:s.x+t,z:s.z+Math.sign(s.cz-s.z)*1.3});
     else planterSpots.push({x:s.x+Math.sign(s.cx-s.x)*1.3,z:s.z+t});
@@ -4362,7 +4378,7 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
     if(CHAOS.x!==undefined&&Math.abs(cx-CHAOS.x)<3&&Math.abs(cz-CHAOS.z)<3) return; // already has one
     if(PIZZA.x!==undefined&&Math.abs(cx-PIZZA.x)<3&&Math.abs(cz-PIZZA.z)<3) return; // already has one
     const downtown=Math.hypot(cx,cz)<DOWNTOWN_R;
-    if(Math.random()>=(downtown?0.55:0.18)) return;
+    if(_rng()>=(downtown?0.55:0.18)) return;
     const w=b.maxX-b.minX, d=b.maxZ-b.minZ;
     const sizeMul=rand(0.7,1.9);                       // some awnings much bigger than others
     const aw=Math.min(w,d)*rand(0.5,0.85)*Math.min(sizeMul,1.3);
@@ -4375,7 +4391,7 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
       default: x=b.minX-depth/2; ry=-Math.PI/2;
     }
     const spot={x,z,ry,w:aw,th:thick,dp:depth,h:hgt};
-    (Math.random()<0.6?wedgeSpots:boxSpots).push(spot);   // most awnings are the sloped prism
+    (_rng()<0.6?wedgeSpots:boxSpots).push(spot);   // most awnings are the sloped prism
   });
   const awnColors=[0xd93a3a,0xffd23e,0x37c8ff,0x2a6b3a,0xff7a3d,0xb04dff,0xf0f0f0];
   function buildAwnings(geo,list){
@@ -4411,7 +4427,7 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
   const treeDressSpots=[];
   blockInfo.forEach(b=>{
     const downtown=Math.hypot(b.cx,b.cz)<DOWNTOWN_R;
-    const n=downtown?randi(2,5):(Math.random()<0.4?randi(0,2):0);
+    const n=downtown?randi(2,5):(_rng()<0.4?randi(0,2):0);
     const half=BLOCK/2;
     for(let k=0;k<n;k++){
       const t=rand(-half+4,half-4);
@@ -4446,7 +4462,7 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
   buildings.forEach(b=>{
     const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
     const downtown=Math.hypot(cx,cz)<DOWNTOWN_R;
-    if(Math.random()>=(downtown?0.22:0.05)) return;
+    if(_rng()>=(downtown?0.22:0.05)) return;
     const w=b.maxX-b.minX, d=b.maxZ-b.minZ, side=randi(0,3), n=randi(1,3);
     for(let k=0;k<n;k++){
       const along=rand(-Math.min(w,d)/2+2,Math.min(w,d)/2-2), out=rand(1.8,3.0);
@@ -4483,7 +4499,7 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
   const bannerSpots=[];
   poleSpots.forEach(p=>{
     const downtown=Math.hypot(p.x,p.z)<DOWNTOWN_R;
-    if(Math.random()<(downtown?0.3:0.08)) bannerSpots.push(p);
+    if(_rng()<(downtown?0.3:0.08)) bannerSpots.push(p);
   });
   if(bannerSpots.length){
     const bannerGeo=new THREE.PlaneGeometry(0.6,1.4); bannerGeo.translate(0,-0.7,0);
@@ -4621,9 +4637,9 @@ function cityGlowDayNight(){
     const g=c.getContext('2d'); g.fillStyle='#000'; g.fillRect(0,0,128,256);
     const warm=['#ffd98a','#ffe9b0','#ffb36b','#aef0ff','#ff9de2'];
     const lit=(x,y,w,h)=>{ g.fillStyle=pick(warm); g.globalAlpha=rand(0.5,1); g.fillRect(x,y,w,h); g.globalAlpha=1; };
-    if(style===0){ for(let y=8;y<248;y+=16) for(let x=8;x<120;x+=18){ if(Math.random()<0.62) lit(x,y,11,9); } }
-    else if(style===1){ for(let y=6;y<252;y+=13){ let x=4; while(x<120){ const w=rand(6,26); if(Math.random()<0.6) lit(x,y,Math.min(w,124-x),8); x+=w+rand(2,10); } } }
-    else { for(let y=10;y<248;y+=22) for(let x=10;x<118;x+=24){ if(Math.random()<0.5) lit(x,y,10,14); } }
+    if(style===0){ for(let y=8;y<248;y+=16) for(let x=8;x<120;x+=18){ if(_rng()<0.62) lit(x,y,11,9); } }
+    else if(style===1){ for(let y=6;y<252;y+=13){ let x=4; while(x<120){ const w=rand(6,26); if(_rng()<0.6) lit(x,y,Math.min(w,124-x),8); x+=w+rand(2,10); } } }
+    else { for(let y=10;y<248;y+=22) for(let x=10;x<118;x+=24){ if(_rng()<0.5) lit(x,y,10,14); } }
     return new THREE.CanvasTexture(c);
   }
   facadeMats.forEach(f=>{ f.nightTex=nightFacadeTex(f.style); });
@@ -4649,7 +4665,7 @@ function cityGlowDayNight(){
     const cx=(b.minX+b.maxX)/2, cz=(b.minZ+b.maxZ)/2;
     if(b.maxX-b.minX<9) return;
     const downtown=Math.hypot(cx,cz)<210;
-    if(Math.random()>(downtown?0.5:0.16)) return;
+    if(_rng()>(downtown?0.5:0.16)) return;
     let bv={d:1e9,r:0}, bh={d:1e9,r:0};
     roadLines.forEach(r=>{ const dv=Math.abs(r-cx); if(dv<bv.d) bv={d:dv,r}; const dh=Math.abs(r-cz); if(dh<bh.d) bh={d:dh,r}; });
     let x,z,ry;
@@ -5638,7 +5654,7 @@ let _missileNoiseBuf=null;
 function missileNoiseBuffer(){
   if(_missileNoiseBuf) return _missileNoiseBuf;
   const len=AC.sampleRate, b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
-  for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+  for(let i=0;i<len;i++) d[i]=_rng()*2-1;
   return _missileNoiseBuf=b;
 }
 // world position -> {dist, pan} relative to the camera, for simple stereo
@@ -5731,7 +5747,7 @@ function doAttack(){
       } else if(best.kind==='ped'){
         knockPed(best.ref,false); addHeat(18);
         turboSay('shoot');
-        if(Math.random()<0.5) spawnPickup('cash',best.ref.x+rand(-1,1),best.ref.z+rand(-1,1));
+        if(_rng()<0.5) spawnPickup('cash',best.ref.x+rand(-1,1),best.ref.z+rand(-1,1));
       } else if(best.kind==='footcop'){
         const fc=best.ref;
         fc.hp-=50; addHeat(22);
@@ -5887,7 +5903,7 @@ function updateBoomFx(dt){
   for(let i=boomFx.length-1;i>=0;i--){
     const b=boomFx[i]; b.t-=dt; b.y+=dt*7;   // the column climbs
     burst(b.x,b.y,b.z,3,COL_SMOKE,2.2,1.6,-1.5);
-    if(Math.random()<0.5) burst(b.x,b.y-1.5,b.z,2,COL_FIRE,1.5,0.5,0);
+    if(_rng()<0.5) burst(b.x,b.y-1.5,b.z,2,COL_FIRE,1.5,0.5,0);
     if(b.t<=0) boomFx.splice(i,1);
   }
   if(shockwave&&shockwave.userData.t>0){
@@ -6390,7 +6406,7 @@ function killCar(car,boom){
     burst(car.x,1,car.z,16,COL_SMOKE,3,1.4,1);
   }
   scene.remove(car.mesh); disposeMesh(car.mesh);
-  if(car.driver==='cop'&&Math.random()<0.35) spawnPickup('rpg',car.x+rand(-1,1),car.z+rand(-1,1));
+  if(car.driver==='cop'&&_rng()<0.35) spawnPickup('rpg',car.x+rand(-1,1),car.z+rand(-1,1));
   const ci=cars.indexOf(car); if(ci>=0) cars.splice(ci,1);
   const ti=traffic.indexOf(car); if(ti>=0) traffic.splice(ti,1);
   setTimeout(()=>{ if(traffic.length<TRAFFIC_CAP) spawnTraffic(1); },4000);
@@ -6723,7 +6739,7 @@ function updateCarMode(dt){
     c.mesh.position.set(c.x,c.y,c.z);
     c.mesh.rotation.x=lerp(c.mesh.rotation.x,0.3,0.04);
     c.mesh.rotation.z=lerp(c.mesh.rotation.z,0.18,0.03);
-    if(Math.random()<dt*10) burst(c.x+rand(-1.4,1.4),0.15,c.z+rand(-1.4,1.4),3,COL_WATER,2,0.6,2);
+    if(_rng()<dt*10) burst(c.x+rand(-1.4,1.4),0.15,c.z+rand(-1.4,1.4),3,COL_WATER,2,0.6,2);
     if(c.y<-2.6){
       scene.remove(c.mesh); disposeMesh(c.mesh); c.dead=true;
       const ci=cars.indexOf(c); if(ci>=0) cars.splice(ci,1);
@@ -6775,7 +6791,7 @@ function updateCarMode(dt){
       c.turboOn=boosted;
     } else turboGain.gain.value=lerp(turboGain.gain.value,0,0.2);
     // --- damage misfire: engine skips a beat, more often the closer to death ---
-    if(dmg>0.45&&Math.random()<dt*(dmg-0.45)*7) engineMisfire(dmg);
+    if(dmg>0.45&&_rng()<dt*(dmg-0.45)*7) engineMisfire(dmg);
   }
   for(const ped of peds){
     if(ped.state==='down') continue;
@@ -6885,7 +6901,7 @@ function doPunch(heavy){
       if(Math.abs(angDiff(p.heading,ang))<1.1){
         knockPed(ped,false);
         addHeat(16);
-        if(Math.random()<0.6) spawnPickup('cash',ped.x+rand(-1,1),ped.z+rand(-1,1));
+        if(_rng()<0.6) spawnPickup('cash',ped.x+rand(-1,1),ped.z+rand(-1,1));
         toast('POW!','gold');
       }
     }
@@ -6914,8 +6930,8 @@ function knockPed(ped,byCar){
   ped.eatParts=null;   // rats haven't found this one yet
   burst(ped.x,1,ped.z,8,[[1,0.4,0.4],[0.9,0.2,0.2]],2,0.5,5);
   if(byCar) shake(0.25);
-  if(Math.random()<0.35) spawnPickup('cash',ped.x+rand(-1.5,1.5),ped.z+rand(-1.5,1.5));
-  if(Math.random()<0.3){
+  if(_rng()<0.35) spawnPickup('cash',ped.x+rand(-1.5,1.5),ped.z+rand(-1.5,1.5));
+  if(_rng()<0.3){
     showBubble(ped,pick(YELLS),1600);
     wahVoice(ped.mesh.userData.gender==='girl'?rand(230,280):rand(150,190),ped.x,ped.z);
   }
@@ -7447,7 +7463,7 @@ function updateFootCops(dt){
           fc.cool=rand(0.9,1.6);
           sfx.gunshot();
           burst(fc.x+Math.sin(fc.heading)*0.8,1.35,fc.z+Math.cos(fc.heading)*0.8,4,COL_FIRE,1.4,0.12,0);
-          if(Math.random()<clamp(1.05-d/32,0.2,0.85)){
+          if(_rng()<clamp(1.05-d/32,0.2,0.85)){
             if(G.mode==='car'&&player.car){
               damageCar(player.car,randi(4,8)*difficulty().dmgMult,'shot');
               burst(player.car.x+rand(-1,1),1,player.car.z+rand(-1,1),5,COL_SPARK,2,0.3,4);
@@ -7981,7 +7997,7 @@ function loop(){
             if(input.drift&&Math.abs(c.speed)>10){
               addStyle(38*sdt);
               const bx=-Math.sin(c.heading), bz=-Math.cos(c.heading);
-              if(Math.random()<0.5) burst(c.x+bx*2,0.3,c.z+bz*2,1,COL_SMOKE,1,0.6,0.5);
+              if(_rng()<0.5) burst(c.x+bx*2,0.3,c.z+bz*2,1,COL_SMOKE,1,0.6,0.5);
             }
           }
           if(G.over) break;
@@ -7989,7 +8005,7 @@ function loop(){
       }
       if(G.mode==='car'&&player.car){
         const c=player.car;
-        if(c.hp<35&&Math.random()<0.3)
+        if(c.hp<35&&_rng()<0.3)
           burst(c.x,1.2,c.z,1,[[0.2,0.2,0.2],[0.35,0.35,0.35]],0.8,1.2,-1);
         drawDash(Math.abs(c.speed)/(CARTYPES[c.type].top*1.45),Math.abs(c.speed)*4.2,
           c.type.toUpperCase()+(c.speed<-0.15?' · REV':''),G.carHP,G.boost);
@@ -8016,7 +8032,7 @@ function loop(){
       const bc=cars[i];
       if(!bc.burning) continue;
       burst(bc.x+rand(-0.8,0.8),1.1,bc.z+rand(-0.8,0.8),2,COL_FIRE,1.5,0.5,0);
-      if(Math.random()<0.4) burst(bc.x,1.6,bc.z,1,COL_SMOKE,1,1,-1);
+      if(_rng()<0.4) burst(bc.x,1.6,bc.z,1,COL_SMOKE,1,1,-1);
       bc.burnT-=simDt;
       if(bc.burnT<=0){
         const driving=(bc===player.car&&G.mode==='car');
@@ -8068,7 +8084,7 @@ loop();
     barEl.style.width=pct+'%';
     const statuses=['INITIALIZING SAN CHAOS...','SPAWNING TRAFFIC...','BAKING PIZZAS...','LOADING TEXTURES...','CALIBRATING PHYSICS...','WARMING UP ENGINES...','DEPLOYING COPS...','READY.'];
     statusEl.textContent=statuses[Math.min(statuses.length-1,Math.floor(pct/12.5))];
-    if(Math.random()<0.08){ tipIdx=(tipIdx+1)%tips.length; tipsEl.innerHTML=tips[tipIdx]; }
+    if(_rng()<0.08){ tipIdx=(tipIdx+1)%tips.length; tipsEl.innerHTML=tips[tipIdx]; }
     if(pct<100) setTimeout(tick,rand(80,180));
     else{
       $('loadScreen').classList.add('off');
@@ -8364,7 +8380,7 @@ function updateStory(dt){
     } else {
       idleBarkT-=dt;
       if(idleBarkT<=0){
-        turboSay(Math.random()<0.5?'debt_grumble':'idle_backstory');
+        turboSay(_rng()<0.5?'debt_grumble':'idle_backstory');
         idleBarkT=rand(35,60);
       }
     }
@@ -8474,7 +8490,7 @@ function updateStores(dt){
       }
       s.robT+=dt;
       if(!s.warned){ s.warned=true; toast('HOLDING UP THE STORE — stay close!','gold'); }
-      if(Math.random()<dt*6) blip(1200,900,0.05,0.05,'square');
+      if(_rng()<dt*6) blip(1200,900,0.05,0.05,'square');
       if(s.robT>2.6){
         const take=randi(150,260);
         addMoney(take,'STORE ROBBED!');
@@ -8795,7 +8811,7 @@ function procVoice(text,pitchBase,rate){
     const dur=word.length*rate+0.08;
     const o=AC.createOscillator(), g=AC.createGain(), f=AC.createBiquadFilter();
     o.type='sawtooth';
-    const base=pitchBase*(1+(Math.random()-0.5)*0.1);
+    const base=pitchBase*(1+(_rng()-0.5)*0.1);
     o.frequency.setValueAtTime(base,t);
     o.frequency.exponentialRampToValueAtTime(base*0.85,t+dur*0.7);
     f.type='bandpass'; f.frequency.value=base*3.5; f.Q.value=2.8;
