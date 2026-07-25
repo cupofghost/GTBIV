@@ -723,63 +723,63 @@ let TRAFFIC_CAP=16, PED_CAP=34, PARTICLE_SCALE=1, GFX_TIER='high';
 // CODE MAP — Search by section name to navigate quickly.
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
-// HELPERS & GLOBAL STATE                           (683–697, ~15 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                             (705–755, ~51 lines: IS_TOUCH, updateOrientationMode, vw, vh, remapXY, ROTATED)
-// AUDIO                                            (756–979, ~224 lines: initAudio, AC, masterGain, engine synth, sfx)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (980–1482, ~503 lines: SW_SONGS, STATIONS, scheduleMusic, stepSong, synth fx)
-// THREE SETUP                                      (1483–1533, ~51 lines: scene, camera, renderer, sky/sun, lights)
-// CITY                                             (1534–2375, ~842 lines: procCity, blockInfo, roads, buildings, textures)
-//   └ RADIO TOWERS                                 (1979–2084, ~106 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                   (2376–2426, ~51 lines: FOOTBALL landmark, turf, goalposts, bleachers)
-// ELEVATED LIGHT RAIL                              (2427–2551, ~125 lines: TRAIN, stations, rail track, animated loop)
-// STAIRS & FIRE ESCAPES                            (2552–2626, ~75 lines: STAIR_RUNS, terrain knolls, hideouts)
-// WALL LADDERS                                     (2627–2881, ~255 lines: LADDERS, ladderGrab, mountLadder, updateClimb, ramps/addRamp)
-// PARTICLES                                        (2882–2936, ~55 lines: burst, P_MAX, particle pool)
-// BLOB SHADOWS                                     (2937–2941, ~5 lines: makeShadow)
-// GPU RESOURCE CLEANUP                             (2942–2963, ~22 lines: disposeMesh, _sharedGPU)
-// CARS                                             (2964–3158, ~195 lines: makeCar, CAR_SPECS, carModel, physics setup)
-// PEDESTRIANS                                      (3159–3275, ~117 lines: makePerson, spawnPed, updatePeds)
-// PIZZA DELIVERY SYSTEM                            (3276–3431, ~156 lines: pizza delivery missions, stages, reward)
-// RIVAL PIZZA GANG: CHAOS PIZZA                    (3432–3559, ~128 lines: chaosDrivers, makeChaosCar, spawnChaosDrivers, updateChaosDrivers, gangMembers)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (3560–3723, ~164 lines: JOCK_TAUNTS, jocks, addLettermanJacket, JOCK_TEAMS, spawnJock)
-// STRAY DOGS & DOG GANGS                           (3724–3951, ~228 lines: dogs, dog gangs, pack behavior, meat drops)
-// PIZZA WARS MISSION                               (3952–4026, ~75 lines: heist system, stages, guards, pizza exterior)
-// PLAYER                                           (4027–4052, ~26 lines: player object creation, initial state)
-// PIZZA PLACE & INTERIOR                           (4053–4213, ~161 lines: pizza interior geometry, robbery, NPC setup)
-// SIDEWALKS & STOREFRONT AWNINGS                   (4214–4322, ~109 lines: 3D kerb strips, sidewalk slabs, awnings, storefront dressing)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (4323–4522, ~200 lines: street trees, planters, cafe tables, pole banners (+ pizza enter/exit tail))
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (4523–4638, ~116 lines: cityGlowDayNight, neon signs, night window swap, streetlight pools)
-// DAY/NIGHT & HEIST SYSTEM                         (4639–4831, ~193 lines: toggleNight, night sky, heist triggers)
-// PICKUPS                                          (4832–4874, ~43 lines: money pickups, spawn/despawn)
-// HELICOPTERS                                      (4875–5346, ~472 lines: makeHeli, heli physics, pilot AI, rotor anim)
-// TALKING PEDS                                     (5347–5435, ~89 lines: showBubble, wahVoice, NPC speech bubbles)
-// WEAPONS                                          (5436–6004, ~569 lines: doAttack, pistol/RPG logic, collision, damage)
-// WANTED                                           (6005–6110, ~106 lines: addHeat, clearHeat, star system, heat decay)
-// CAR PHYSICS                                      (6111–6300, ~190 lines: carPhysics, collision, acceleration, damage)
-// PLAYER: FOOT & CAR                               (6301–6793, ~493 lines: footCamDistance, input, kick mode, car entry/exit, updateFoot)
-// HUD / TOASTS                                     (6794–6838, ~45 lines: toast, HUD updates, on-screen feedback)
-// MISSIONS                                         (6839–7005, ~167 lines: startMission, updateMission, missions, reward)
-// AI                                               (7006–7030, ~25 lines: cop/ped goal/walk logic)
-// FOOT COPS                                        (7031–7074, ~44 lines: spawnCop, updateCops, cop AI, roaming)
-// SEWER RATS                                       (7075–7191, ~117 lines: RAT_POOL, makeRatMesh, spawnRats, updateRats)
-// MAMA RAT (rat vengeance) — PLACEHOLDER           (7192–7562, ~371 lines: spawnMamaRat, updateMamaRat, bite logic, mama model)
-// BUSTED / WASTED                                  (7563–7641, ~79 lines: busted, wasted, respawn logic, state reset)
-// CAMERA                                           (7642–7733, ~92 lines: updateCamera, shake, collision pull-in, look math)
-// MINIMAP                                          (7734–7781, ~48 lines: drawMinimap, blips, legend, position tracking)
-// MAIN LOOP                                        (7782–7948, ~167 lines: loop, substep simulation, entity updates, frame pacing)
-// ORIENTATION                                      (7949–8006, ~58 lines: checkOrientation, fitScreen, toggleFullscreen)
-// ANIMATED INTRO                                   (8007–8088, ~82 lines: intro cinematic, title screen animation)
-// STORY: TURBO JONES, CHAPTER 1                    (8089–8354, ~266 lines: story flags, Deb intro, debt system, mission gates)
-// CUTSCENE SYSTEM                                  (8355–8599, ~245 lines: playCutscene, cutscene definitions, actor positioning)
-// VOICEOVER SYSTEM                                 (8600–8681, ~82 lines: playVOFile, playVOLine, TTS, voiceover queue)
-// INTRO NARRATION                                  (8682–8986, ~305 lines: intro voiceover, narrative setup)
-// DEV TOOLS                                        (8987–9064, ~78 lines: devPanel, cheats, god mode, teleports, ?dev=1 gate)
-// CINEMA MODE (was REPLAY)                         (9065–9196, ~132 lines: enterReplay/enterCinema, updateCinemaCam, free-fly camera, buffer scrub, HIDE HUD)
-// CINEMA: SCENES & STAGING                         (9197–9389, ~193 lines: cinemaIntro, cinemaCutscene, stageJockFight, stageCarBoom, stageShootPed, stageRatMother)
-// PAUSE MENU & SETTINGS                            (9390–9586, ~197 lines: pauseMenu, Settings panel, volume/quality sliders)
-// CONTROLS CARD (U2 onboarding)                    (9587–9619, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (9620–9672, ~53 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                   (9673–end, ~40 lines: boot, init, resize handlers, quality apply)
+// HELPERS & GLOBAL STATE                           (706–720, ~15 lines: rand, randi, pick, clamp, lerp, TAU, $)
+// DEVICE / ORIENTATION                             (785–842, ~58 lines: IS_TOUCH, updateOrientationMode, vw, vh, remapXY, ROTATED)
+// AUDIO                                            (843–1066, ~224 lines: initAudio, AC, masterGain, engine synth, sfx)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1067–1569, ~503 lines: SW_SONGS, STATIONS, scheduleMusic, stepSong, synth fx)
+// THREE SETUP                                      (1570–1620, ~51 lines: scene, camera, renderer, sky/sun, lights)
+// CITY                                             (1621–2462, ~842 lines: procCity, blockInfo, roads, buildings, textures)
+//   └ RADIO TOWERS                                 (2066–2171, ~106 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
+// FOOTBALL FIELD                                   (2463–2513, ~51 lines: FOOTBALL landmark, turf, goalposts, bleachers)
+// ELEVATED LIGHT RAIL                              (2514–2638, ~125 lines: TRAIN, stations, rail track, animated loop)
+// STAIRS & FIRE ESCAPES                            (2639–2713, ~75 lines: STAIR_RUNS, terrain knolls, hideouts)
+// WALL LADDERS                                     (2714–2968, ~255 lines: LADDERS, ladderGrab, mountLadder, updateClimb, ramps/addRamp)
+// PARTICLES                                        (2969–3023, ~55 lines: burst, P_MAX, particle pool)
+// BLOB SHADOWS                                     (3024–3028, ~5 lines: makeShadow)
+// GPU RESOURCE CLEANUP                             (3029–3050, ~22 lines: disposeMesh, _sharedGPU)
+// CARS                                             (3051–3252, ~202 lines: makeCar, CAR_SPECS, carModel, physics setup)
+// PEDESTRIANS                                      (3253–3370, ~118 lines: makePerson, spawnPed, updatePeds)
+// PIZZA DELIVERY SYSTEM                            (3371–3526, ~156 lines: pizza delivery missions, stages, reward)
+// RIVAL PIZZA GANG: CHAOS PIZZA                    (3527–3654, ~128 lines: chaosDrivers, makeChaosCar, spawnChaosDrivers, updateChaosDrivers, gangMembers)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (3655–3834, ~180 lines: JOCK_TAUNTS, jocks, addLettermanJacket, JOCK_TEAMS, spawnJock)
+// STRAY DOGS & DOG GANGS                           (3835–4106, ~272 lines: dogs, dog gangs, pack behavior, meat drops)
+// PIZZA WARS MISSION                               (4107–4181, ~75 lines: heist system, stages, guards, pizza exterior)
+// PLAYER                                           (4182–4225, ~44 lines: player object creation, initial state)
+// PIZZA PLACE & INTERIOR                           (4226–4386, ~161 lines: pizza interior geometry, robbery, NPC setup)
+// SIDEWALKS & STOREFRONT AWNINGS                   (4387–4495, ~109 lines: 3D kerb strips, sidewalk slabs, awnings, storefront dressing)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (4496–4695, ~200 lines: street trees, planters, cafe tables, pole banners (+ pizza enter/exit tail))
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (4696–4811, ~116 lines: cityGlowDayNight, neon signs, night window swap, streetlight pools)
+// DAY/NIGHT & HEIST SYSTEM                         (4812–5004, ~193 lines: toggleNight, night sky, heist triggers)
+// PICKUPS                                          (5005–5047, ~43 lines: money pickups, spawn/despawn)
+// HELICOPTERS                                      (5048–5526, ~479 lines: makeHeli, heli physics, pilot AI, rotor anim)
+// TALKING PEDS                                     (5527–5615, ~89 lines: showBubble, wahVoice, NPC speech bubbles)
+// WEAPONS                                          (5616–6259, ~644 lines: doAttack, pistol/RPG logic, collision, damage)
+// WANTED                                           (6260–6365, ~106 lines: addHeat, clearHeat, star system, heat decay)
+// CAR PHYSICS                                      (6366–6561, ~196 lines: carPhysics, collision, acceleration, damage)
+// PLAYER: FOOT & CAR                               (6562–7102, ~541 lines: footCamDistance, input, kick mode, car entry/exit, updateFoot)
+// HUD / TOASTS                                     (7103–7147, ~45 lines: toast, HUD updates, on-screen feedback)
+// MISSIONS                                         (7148–7314, ~167 lines: startMission, updateMission, missions, reward)
+// AI                                               (7315–7339, ~25 lines: cop/ped goal/walk logic)
+// FOOT COPS                                        (7340–7383, ~44 lines: spawnCop, updateCops, cop AI, roaming)
+// SEWER RATS                                       (7384–7500, ~117 lines: RAT_POOL, makeRatMesh, spawnRats, updateRats)
+// MAMA RAT (rat vengeance) — PLACEHOLDER           (7501–7871, ~371 lines: spawnMamaRat, updateMamaRat, bite logic, mama model)
+// BUSTED / WASTED                                  (7872–7953, ~82 lines: busted, wasted, respawn logic, state reset)
+// CAMERA                                           (7954–8059, ~106 lines: updateCamera, shake, collision pull-in, look math)
+// MINIMAP                                          (8060–8107, ~48 lines: drawMinimap, blips, legend, position tracking)
+// MAIN LOOP                                        (8108–8286, ~179 lines: loop, substep simulation, entity updates, frame pacing)
+// ORIENTATION                                      (8287–8344, ~58 lines: checkOrientation, fitScreen, toggleFullscreen)
+// ANIMATED INTRO                                   (8345–8473, ~129 lines: intro cinematic, title screen animation)
+// STORY: TURBO JONES, CHAPTER 1                    (8474–8739, ~266 lines: story flags, Deb intro, debt system, mission gates)
+// CUTSCENE SYSTEM                                  (8740–8984, ~245 lines: playCutscene, cutscene definitions, actor positioning)
+// VOICEOVER SYSTEM                                 (8985–9066, ~82 lines: playVOFile, playVOLine, TTS, voiceover queue)
+// INTRO NARRATION                                  (9067–9368, ~302 lines: intro voiceover, narrative setup)
+// DEV TOOLS                                        (9369–9446, ~78 lines: devPanel, cheats, god mode, teleports, ?dev=1 gate)
+// CINEMA MODE (was REPLAY)                         (9447–9578, ~132 lines: enterReplay/enterCinema, updateCinemaCam, free-fly camera, buffer scrub, HIDE HUD)
+// CINEMA: SCENES & STAGING                         (9579–9771, ~193 lines: cinemaIntro, cinemaCutscene, stageJockFight, stageCarBoom, stageShootPed, stageRatMother)
+// PAUSE MENU & SETTINGS                            (9772–9983, ~212 lines: pauseMenu, Settings panel, volume/quality sliders)
+// CONTROLS CARD (U2 onboarding)                    (9984–10016, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (10017–10072, ~56 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                   (10073–end, ~40 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -5991,15 +5991,29 @@ function explode(x,y,z){
   damageArea(x,z,7,130);
 }
 // --- the BIG one: fireball, mushroom cloud, shockwave, and a camera moment ---
-const boomFx=[];      // climbing cloud emitters {x,y,z,t}
+const boomFx=[];      // solid, animated mushroom clouds
 let shockwave=null;   // one reusable expanding ring
+function makeMushroomCloud(x,y,z){
+  const group=new THREE.Group();
+  const stem=new THREE.Mesh(
+    new THREE.CylinderGeometry(0.72,1.05,1,18),
+    new THREE.MeshBasicMaterial({color:0x8e171d})
+  );
+  const cap=new THREE.Mesh(
+    new THREE.SphereGeometry(1,20,16),
+    new THREE.MeshBasicMaterial({color:0xd3292f})
+  );
+  group.position.set(x,y,z); group.visible=false;
+  group.add(stem); group.add(cap); scene.add(group);
+  return {group,stem,cap,t:0,bloom:0.55,dur:6.2};
+}
 function bigExplosion(x,y,z){
   sfx.carBoom(); shake(1.2); triggerHitStop(0.08); haptic([60,40,90,40,120]);
   spawnFireball(x,y+1,z,8.5);
   burst(x,y,z,70,COL_FIRE,12,1.6,4);
   burst(x,y,z,40,COL_FIRE,6,2.2,1);
   burst(x,y,z,30,COL_SMOKE,5,2.5,1);
-  boomFx.push({x,y:y+1,z,t:3.2});
+  boomFx.push(makeMushroomCloud(x,y+1,z));
   if(!shockwave){
     shockwave=new THREE.Mesh(new THREE.RingGeometry(0.8,1,40),
       new THREE.MeshBasicMaterial({color:0xffd9a0,transparent:true,opacity:0.8,side:THREE.DoubleSide,depthWrite:false}));
@@ -6014,10 +6028,20 @@ function bigExplosion(x,y,z){
 function updateBoomFx(dt){
   updateFireballs(dt);
   for(let i=boomFx.length-1;i>=0;i--){
-    const b=boomFx[i]; b.t-=dt; b.y+=dt*7;   // the column climbs
-    burst(b.x,b.y,b.z,3,COL_SMOKE,2.2,1.6,-1.5);
-    if(_rng()<0.5) burst(b.x,b.y-1.5,b.z,2,COL_FIRE,1.5,0.5,0);
-    if(b.t<=0) boomFx.splice(i,1);
+    const b=boomFx[i]; b.t+=dt;
+    if(b.t>=b.bloom){
+      // Let the fireball bloom first, then grow a solid stem into a red cap.
+      // No rising particles: this stays readable as one persistent cloud.
+      const age=b.t-b.bloom, grow=clamp(age/1.4,0,1);
+      const capY=1.0+age*3.7, capR=lerp(1.1,4.4,grow);
+      const stemH=Math.max(0.12,capY-capR*0.3);
+      b.group.visible=true;
+      b.cap.position.y=capY;
+      b.cap.scale.set(capR,capR*0.82,capR);
+      b.stem.position.y=stemH*0.5;
+      b.stem.scale.set(lerp(0.35,1.05,grow),stemH,lerp(0.35,1.05,grow));
+    }
+    if(b.t>=b.dur){ scene.remove(b.group); disposeMesh(b.group); boomFx.splice(i,1); }
   }
   if(shockwave&&shockwave.userData.t>0){
     shockwave.userData.t-=dt;
@@ -9109,7 +9133,7 @@ function playVOFile(src,rate,gain){
 }
 
 // ---- TURBO JONES CATCHPHRASES ----
-// Lines with an `src` play the recorded mp3; the rest use Turbo's text-to-speech.
+// Turbo only speaks from recorded mp3s. Unrecorded lines remain subtitled/silent.
 const TURBO_LINES={
   // walking up to a pedestrian (Talk button)
   approach:[
@@ -9302,9 +9326,17 @@ function updateIntroNarration(dt){
     if(introLinesSpoken[i]) return;
     if(introT>=line.t){
       introLinesSpoken[i]=true;
-      if(!playVOLine(i)) speak(line.text,'male',{pitch:0.8,rate:0.9}); // fallback if mp3 not loaded
+      if(!playVOLine(i)){
+        // Decode delays must not turn Turbo into generated speech. Play only
+        // while this line is still current; otherwise its subtitle stands alone.
+        const nextT=(i+1<INTRO_LINES.length)?INTRO_LINES[i+1].t:INTRO_DUR;
+        loadVOBuffer(line.src).then(buf=>{
+          if(!buf||!G.intro||!G.started||introT>=nextT) return;
+          voBuffers[i]=buf; playVOLine(i);
+        });
+      }
       // Hold the subtitle until the next line starts (or the intro ends) so it
-      // never disappears mid-sentence — covers both the mp3 and slower TTS.
+      // never disappears mid-sentence, even when a recording is unavailable.
       const nextT=(i+1<INTRO_LINES.length)?INTRO_LINES[i+1].t:INTRO_DUR;
       const holdDur=Math.max(line.dur,nextT-line.t);
       _origShowDialogue('TURBO JONES',line.text,holdDur); // subtitles, no robot voice
@@ -9312,17 +9344,21 @@ function updateIntroNarration(dt){
   });
 }
 
-// Override showDialogue to also speak the line
+// Override showDialogue to play recorded dialogue where supplied. Turbo is
+// strictly MP3-only; Deb and NPC dialogue may continue to use generated speech.
 const _origShowDialogue=showDialogue;
 showDialogue=function(speaker,text,duration,voice){
   _origShowDialogue(speaker,text,duration);
-  // Story cutscenes can hang a recorded Turbo line (or a small pool of takes)
-  // on the shot's dialogue.voice — play the real mp3 when it's decoded, and only
-  // fall back to the synth voice if it hasn't loaded yet, so a line is never silent.
+  const isTurbo=speaker==='TURBO'||speaker==='TURBO JONES';
   if(voice){
     const src=Array.isArray(voice)?pick(voice):voice;
     if(playVOFile(src,1.0,0.95)) return;
+    if(isTurbo){
+      loadVOBuffer(src).then(buf=>{ if(buf) playVOFile(src,1.0,0.95); });
+      return;
+    }
   }
+  if(isTurbo) return;
   const gender=speaker==='DEB'?'female':'male';
   const opts=speaker==='DEB'?{pitch:1.18,rate:1.08,volume:0.95}:{pitch:0.82,rate:0.92,volume:0.9};
   speak(text,gender,opts);

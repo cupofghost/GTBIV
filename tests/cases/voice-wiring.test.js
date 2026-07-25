@@ -17,10 +17,9 @@ const WIRED = {
   idle_backstory: { min: 5, trigger: 'ambient backstory musing (shared idleBarkT timer)' },
 };
 
-// Story cutscenes that now carry recorded Turbo VO on a shot's `dialogue.voice`
-// (the synth voice is only a fallback until the mp3 decodes). Keeps the cutscene
-// hookup honest: the id must exist, expose the wired mp3(s), and every file must
-// resolve on disk.
+// Story cutscenes that now carry recorded Turbo VO on a shot's `dialogue.voice`.
+// Turbo stays silent/subtitled until the mp3 decodes; this keeps the hookup
+// honest: the id must exist, expose the wired mp3(s), and every file must resolve.
 const CUTSCENE_VO = {
   first_score: { min: 2, note: 'both Turbo lines at the $200 milestone' },
   deb_confrontation: { min: 1, note: "Turbo's nervous pre-beat (turbo_meets_deb)" },
