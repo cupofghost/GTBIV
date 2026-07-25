@@ -9,6 +9,7 @@ the pipes in your signature as `\|`, or the table breaks.
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
 | 2026-07-25 | `index.html` (PLAYER: FOOT & CAR, CITY beautification, FOOTBALL RIVALS, FOOT COPS), `tests/cases/regression.test.js` | Bug-fix pass — DONE. Jump uses terrain-aware `footGround()`; building-edge trees moved to sidewalk; jocks killable by fists/gun/car/explosion; foot cops vulnerable to cars/explosions; regression suite 7/7 + terrain 13/13 + boot 3/3 green. | Signed: OpenCode \| Kimi K2 \| high |
+| 2026-07-25 | `index.html` (MAIN LOOP, DEV TOOLS), `tests/cases/time-controls.test.js` | D5 time controls — DONE. Dev-only `TIME_SCALE` + `STEP_FRAMES`; 1×/0.25×/4× hotkeys + dev-panel buttons; debug HUD readout; simulation dt scaled while UI/recording/fps stay real. Suite 5/5 + boot/cinema/regression/missions/controls-card/economy/camera/hud/smoke/intro-camera green. | Signed: OpenCode \| Kimi K2 \| medium |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest

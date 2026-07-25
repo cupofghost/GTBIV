@@ -601,7 +601,8 @@ math. Great for composing cutscene shots (feeds D-work in CHARACTERS.md).
 **Acceptance:** Toggle → camera detaches and flies smoothly anywhere; toggle back
 → returns to normal follow-cam exactly.
 
-#### D5 — Time controls (pause-step / slow-mo / fast-forward) `P2 · Risk: Low` `OPEN`
+#### D5 — Time controls (pause-step / slow-mo / fast-forward) `P2 · Risk: Low` `DONE`
+**Status: implemented & verified** (OpenCode | Kimi K2). `TIME_SCALE` global (default `1`) scales the gameplay simulation dt in `MAIN LOOP` while keeping UI, recording, and fps counters on real time. Dev-only hotkeys `1` (1×), `2` (0.25×), `3` (4×), `0` (step one frame) plus dev-panel TIME row buttons `1×`/`0.25×`/`4×`/`Step`. `STEP_FRAMES` queues a single forced sim frame even while the pause menu is open, using a fixed `0.017s` step. Debug HUD shows the current speed. World visuals (particles, clouds, camera, burning cars, alarms, traffic lights, radio towers) scale with the time control; `recTick(dt)` stays on wall-clock time. Verified: `tests/cases/time-controls.test.js` 5/5 green; boot, controls-card, cinema-mode, regression, mission-variety, economy, camera-polish, hud-objective, smoke, and intro-camera suites green.
 **Why:** Inspecting animations, physics, and cutscene timing needs sub-real-time
 control.
 **Where:** `MAIN LOOP` — introduce a `timeScale` applied to `dt` for simulation
@@ -1468,8 +1469,8 @@ throughout:
 ✔ RV1 Mama rat mechanics         DONE (placeholder)
 ✔ P2  Economy tuning              DONE (#38)
 ✔ U2  Onboarding                 DONE (controls card #35)
-—  D5  Time controls             ← NEXT (dev tool)
-—  D7  Deterministic seed        OPEN (dev tool)
+✔ D5  Time controls             DONE
+—  D7  Deterministic seed        ← NEXT (dev tool)
 —  J2  Hitstop + shake           OPEN
 —  U3  Death/respawn flow        OPEN
 —  R2  Pooling traffic/peds      OPEN

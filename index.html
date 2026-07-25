@@ -799,6 +799,10 @@ const WORLD={ blocks:10, block:50, road:16 };
 const _PARAMS=new URLSearchParams(location.search);
 const DEV=_PARAMS.get('dev')==='1';
 const DEV_STATE={ open:false, god:false, inf:false, hud:false };
+// D5 — dev time controls: scale gameplay simulation dt, never UI/recording
+let TIME_SCALE=1, STEP_FRAMES=0;
+function setTimeScale(v){ if(!DEV) return; TIME_SCALE=v; toast('TIME '+v+'×','gold'); }
+function stepOneFrame(){ if(!DEV) return; STEP_FRAMES++; }
 const QS={
   skipintro:DEV||_PARAMS.has('skipintro'),
   scene:(_PARAMS.get('scene')||'').toLowerCase(),
@@ -6076,6 +6080,12 @@ document.addEventListener('keydown',e=>{
   if(e.code==='KeyM'&&G.mode==='foot'&&!pizzaWars) startPizzaWars();
   if(DEV&&e.code==='Backquote') toggleDevMenu();
   if(DEV&&e.code==='KeyZ') toggleDebugHud();
+  if(DEV){
+    if(e.code==='Digit1'){ e.preventDefault(); setTimeScale(1); }
+    if(e.code==='Digit2'){ e.preventDefault(); setTimeScale(0.25); }
+    if(e.code==='Digit3'){ e.preventDefault(); setTimeScale(4); }
+    if(e.code==='Digit0'){ e.preventDefault(); stepOneFrame(); }
+  }
 });
 document.addEventListener('keyup',e=>{ keys[e.code]=false; });
 function pollKeys(){
@@ -7905,6 +7915,10 @@ function loop(){
   requestAnimationFrame(loop);
   const now=performance.now();
   const dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
+  // D5 — dev time controls: scale gameplay simulation dt, keep UI/recording on real time
+  let simDt=dt*TIME_SCALE;
+  let forceStep=false;
+  if(DEV&&STEP_FRAMES>0){ STEP_FRAMES--; forceStep=true; simDt=0.017; }
 
   // Cutscene mode: cinematic camera, frozen gameplay, ambient world still alive
   if(activeCutscene){
@@ -7924,52 +7938,54 @@ function loop(){
     return;
   }
 
-  if(G.started&&!G.paused){
+  if(G.started&&(!G.paused||forceStep)){
     const cine=G.replay&&replay&&replay.live;   // live cinema director over a running world
     scheduleMusic();
     if(!G.over){
       pollKeys();
       // fixed-ish substeps keep gameplay speed consistent on any framerate
-      const steps=Math.min(4,Math.max(1,Math.ceil(dt/0.017)));
-      const sdt=dt/steps;
-      for(let s=0;s<steps;s++){
-        if(cine){}   // cinema: the player is a frozen actor; the world keeps living around him
-        else if(G.mode==='foot') updateFoot(sdt);
-        else if(G.mode==='car') updateCarMode(sdt);
-        else if(G.mode==='heli') updateHeliMode(sdt);
-        updateRockets(sdt);
-        updateCopHeli(sdt);
-        updatePilotlessHelis(sdt);
-        updateTraffic(sdt);
-        updatePizzaDrivers(sdt);
-        updateChaosDrivers(sdt);
-        updateGangMembers(sdt);
-        updateJocks(sdt);
-        updateStrayDogs(sdt);
-        updateGuards(sdt);
-        updatePizzaDelivery(sdt);
-        updateSafeCrack(sdt);
-        checkHeistTriggers();
-        updateHeistHUD();
-        updatePizzaWars(sdt);
-        updateCops(sdt);
-        updateFootCops(sdt);
-        updateRats(sdt);
-        updateMamaRat(sdt);
-        updateRail(sdt);
-        updatePeds(sdt);
-        updateWanted(sdt);
-        updateMission(sdt);
-        ramps.forEach(r=>{ if(r.cool>0) r.cool-=sdt; });
-        if(G.mode==='car'&&player.car){
-          const c=player.car;
-          if(input.drift&&Math.abs(c.speed)>10){
-            addStyle(38*sdt);
-            const bx=-Math.sin(c.heading), bz=-Math.cos(c.heading);
-            if(Math.random()<0.5) burst(c.x+bx*2,0.3,c.z+bz*2,1,COL_SMOKE,1,0.6,0.5);
+      if(simDt>0){
+        const steps=Math.min(4,Math.max(1,Math.ceil(simDt/0.017)));
+        const sdt=simDt/steps;
+        for(let s=0;s<steps;s++){
+          if(cine){}   // cinema: the player is a frozen actor; the world keeps living around him
+          else if(G.mode==='foot') updateFoot(sdt);
+          else if(G.mode==='car') updateCarMode(sdt);
+          else if(G.mode==='heli') updateHeliMode(sdt);
+          updateRockets(sdt);
+          updateCopHeli(sdt);
+          updatePilotlessHelis(sdt);
+          updateTraffic(sdt);
+          updatePizzaDrivers(sdt);
+          updateChaosDrivers(sdt);
+          updateGangMembers(sdt);
+          updateJocks(sdt);
+          updateStrayDogs(sdt);
+          updateGuards(sdt);
+          updatePizzaDelivery(sdt);
+          updateSafeCrack(sdt);
+          checkHeistTriggers();
+          updateHeistHUD();
+          updatePizzaWars(sdt);
+          updateCops(sdt);
+          updateFootCops(sdt);
+          updateRats(sdt);
+          updateMamaRat(sdt);
+          updateRail(sdt);
+          updatePeds(sdt);
+          updateWanted(sdt);
+          updateMission(sdt);
+          ramps.forEach(r=>{ if(r.cool>0) r.cool-=sdt; });
+          if(G.mode==='car'&&player.car){
+            const c=player.car;
+            if(input.drift&&Math.abs(c.speed)>10){
+              addStyle(38*sdt);
+              const bx=-Math.sin(c.heading), bz=-Math.cos(c.heading);
+              if(Math.random()<0.5) burst(c.x+bx*2,0.3,c.z+bz*2,1,COL_SMOKE,1,0.6,0.5);
+            }
           }
+          if(G.over) break;
         }
-        if(G.over) break;
       }
       if(G.mode==='car'&&player.car){
         const c=player.car;
@@ -7981,38 +7997,38 @@ function loop(){
       checkPizzaJack();
       recTick(dt);
     }
-    updateParticles(dt);
+    updateParticles(simDt);
     updatePickupVisuals(now/1000);
-    if(cine) updateCinemaCam(dt);
-    else if(G.intro) updateIntroCam(dt);
-    else updateCamera(dt);
-    waterTex.offset.x+=dt*0.014; waterTex.offset.y+=dt*0.007;
+    if(cine) updateCinemaCam(simDt);
+    else if(G.intro) updateIntroCam(simDt);
+    else updateCamera(simDt);
+    waterTex.offset.x+=simDt*0.014; waterTex.offset.y+=simDt*0.007;
     water.position.y=-0.34+Math.sin(now/1400)*0.05;
-    updateClouds(dt);
-    updateGulls(dt);
-    updateLights(dt);
-    updateRadioTowers(now/1000);
-    if(!cine) updateStory(dt);   // don't let proximity auto-fire convos while directing
-    if(!cine&&G.mode==='foot') updateStores(dt);
-    positionChatBubbles(dt);
+    updateClouds(simDt);
+    updateGulls(simDt);
+    updateLights(simDt);
+    updateRadioTowers(now/1000*TIME_SCALE);
+    if(!cine) updateStory(simDt);   // don't let proximity auto-fire convos while directing
+    if(!cine&&G.mode==='foot') updateStores(simDt);
+    positionChatBubbles(simDt);
     // burning cars pour flame, then go up — with you inside or not
     for(let i=cars.length-1;i>=0;i--){
       const bc=cars[i];
       if(!bc.burning) continue;
       burst(bc.x+rand(-0.8,0.8),1.1,bc.z+rand(-0.8,0.8),2,COL_FIRE,1.5,0.5,0);
       if(Math.random()<0.4) burst(bc.x,1.6,bc.z,1,COL_SMOKE,1,1,-1);
-      bc.burnT-=dt;
+      bc.burnT-=simDt;
       if(bc.burnT<=0){
         const driving=(bc===player.car&&G.mode==='car');
         killCar(bc,true);
         if(driving){ player.car=null; wasted(); }
       }
     }
-    updateBoomFx(dt);
+    updateBoomFx(simDt);
     // car alarms: bumped parked cars beep and flash for a few seconds
     for(const c of cars){
       if(c.alarmT>0){
-        c.alarmT-=dt; c._beep=(c._beep||0)-dt;
+        c.alarmT-=simDt; c._beep=(c._beep||0)-simDt;
         if(c._beep<=0){ c._beep=0.38;
           if(Math.hypot(c.x-camera.position.x,c.z-camera.position.z)<55) blip(880,880,0.09,0.035,'square'); }
         setTail(c,Math.floor(c.alarmT*5)%2===0);
@@ -8022,7 +8038,7 @@ function loop(){
     drawMinimap();
     if(DEV) updateDebugHud(dt);
     positionBubble();
-    if(turboCool>0) turboCool-=dt;
+    if(turboCool>0) turboCool-=simDt;
     fpsAcc+=dt; fpsN++; fpsT+=dt;
     if(fpsT>2){ const fps=fpsN/fpsAcc; $('fpsWarn').textContent=Math.round(fps)+' fps'; autoQualityTick(fps); fpsAcc=0; fpsN=0; fpsT=0; }
   }
@@ -9131,7 +9147,7 @@ showDialogue=function(speaker,text,duration,voice){
   // Teleport
   row('TELEPORT', btn('Deb','devAct',()=>teleport(deb?deb.x:0,deb?deb.z:0)), btn('Pizza','devAct',()=>teleport(PIZZA.doorX,PIZZA.doorZ)), btn('Chaos','devAct',()=>teleport(CHAOS.x,CHAOS.z)), btn('Corner','devAct',()=>teleport(WORLD.half,WORLD.half)), btn('Random','devAct',()=>{const p=randomRoadPoint(); teleport(p.x,p.z);}));
   // Time
-  row('TIME', btn('Day','devAct',()=>{if(G.night)toggleNight();}), btn('Night','devAct',()=>{if(!G.night)toggleNight();}));
+  row('TIME', btn('Day','devAct',()=>{if(G.night)toggleNight();}), btn('Night','devAct',()=>{if(!G.night)toggleNight();}), btn('1×','devAct',()=>setTimeScale(1)), btn('0.25×','devAct',()=>setTimeScale(0.25)), btn('4×','devAct',()=>setTimeScale(4)), btn('Step','devAct',()=>stepOneFrame()));
   // Mission / cutscene
   row('MISSION', btn('Trigger','devAct',()=>{ if(!mission){ missionCooldown=0; lastType=''; } }), btn('Complete','devAct',()=>{ if(mission) completeMission(500); }), btn('Fail','devBad',()=>{ if(mission) failMission(); }));
   row('CUTSCENE', btn('Deb Confront','devAct',()=>playCutscene('deb_confrontation',player.x,player.z)), btn('Deb Payoff','devAct',()=>playCutscene('deb_payoff',player.x,player.z)), btn('Pizza Wars','devAct',()=>startPizzaWars()));
@@ -9172,7 +9188,7 @@ showDialogue=function(speaker,text,duration,voice){
     const heistStr=G.heist?HEIST_PHASES[G.heist.phase]:'-';
     debugHudEl.textContent=
       `POS ${player.x.toFixed(1)}, ${player.z.toFixed(1)}  HDG ${Math.round(player.heading*180/Math.PI)%360}\xB0  MODE ${G.mode}\n`+
-      `$${G.money}  HEAT ${G.heat.toFixed(0)}  STARS ${G.stars}\n`+
+      `$${G.money}  HEAT ${G.heat.toFixed(0)}  STARS ${G.stars}  SPEED ${TIME_SCALE.toFixed(2)}×\n`+
       `CARS ${cars.length} TRAF ${traffic.length} PEDS ${peds.length} COPS ${cops.length}\n`+
       `JOCK ${jocks.length} GANG ${gangMembers.length} HELI ${helis.length} PART ${liveParts}/${P_MAX}\n`+
       `MISSION ${missionStr}  HEIST ${heistStr}\n`+
