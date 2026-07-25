@@ -724,62 +724,62 @@ let TRAFFIC_CAP=16, PED_CAP=34, PARTICLE_SCALE=1, GFX_TIER='high';
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS & GLOBAL STATE                           (706–720, ~15 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                              (785–842, ~58 lines:58
-// AUDIO                                             (843–1066, ~224 lines:224
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK               (1067–1569, ~503 lines:503
-// THREE SETUP                                       (1570–1620, ~51 lines:51
-// CITY                                              (1621–2462, ~842 lines:842
+// DEVICE / ORIENTATION                              (785–842, ~58 lines)
+// AUDIO                                             (843–1066, ~224 lines)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK               (1067–1569, ~503 lines)
+// THREE SETUP                                       (1570–1620, ~51 lines)
+// CITY                                              (1621–2462, ~842 lines)
 //   └ RADIO TOWERS                                 (2066–2171, ~106 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                    (2463–2513, ~51 lines:51
-// ELEVATED LIGHT RAIL                               (2514–2638, ~125 lines:125
-// STAIRS & FIRE ESCAPES                             (2639–2713, ~75 lines:75
-// WALL LADDERS                                      (2714–2968, ~255 lines:255
-// PARTICLES                                         (2969–3023, ~55 lines:55
-// BLOB SHADOWS                                      (3024–3028, ~5 lines:5
-// GPU RESOURCE CLEANUP                              (3029–3050, ~22 lines:22
-// CARS                                              (3051–3287, ~237 lines:237
-// PEDESTRIANS                                       (3288–3438, ~151 lines:151
-// PIZZA DELIVERY SYSTEM                             (3439–3594, ~156 lines:156
-// RIVAL PIZZA GANG: CHAOS PIZZA                     (3595–3722, ~128 lines:128
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                 (3723–3902, ~180 lines:180
-// STRAY DOGS & DOG GANGS                            (3903–4174, ~272 lines:272
-// PIZZA WARS MISSION                                (4175–4249, ~75 lines:75
-// PLAYER                                            (4250–4293, ~44 lines:44
-// PIZZA PLACE & INTERIOR                            (4294–4454, ~161 lines:161
-// SIDEWALKS & STOREFRONT AWNINGS                    (4455–4563, ~109 lines:109
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS   (4564–4763, ~200 lines:200
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS        (4764–4879, ~116 lines:116
-// DAY/NIGHT & HEIST SYSTEM                          (4880–5072, ~193 lines:193
-// PICKUPS                                           (5073–5115, ~43 lines:43
-// HELICOPTERS                                       (5116–5594, ~479 lines:479
-// TALKING PEDS                                      (5595–5683, ~89 lines:89
-// WEAPONS                                           (5684–6327, ~644 lines:644
-// WANTED                                            (6328–6433, ~106 lines:106
-// CAR PHYSICS                                       (6434–6627, ~194 lines:196
-// PLAYER: FOOT & CAR                                (6628–7168, ~541 lines:541
-// HUD / TOASTS                                      (7169–7213, ~45 lines:45
-// MISSIONS                                          (7214–7380, ~167 lines:167
-// AI                                                (7381–7405, ~25 lines:25
-// FOOT COPS                                         (7406–7449, ~44 lines:44
-// SEWER RATS                                        (7450–7566, ~117 lines:117
-// MAMA RAT (rat vengeance) — PLACEHOLDER            (7567–7933, ~367 lines:371
-// BUSTED / WASTED                                   (7934–8020, ~87 lines:82
-// CAMERA                                            (8021–8126, ~106 lines:106
-// MINIMAP                                           (8127–8174, ~48 lines:48
-// MAIN LOOP                                         (8175–8353, ~179 lines:179
-// ORIENTATION                                       (8354–8411, ~58 lines:58
-// ANIMATED INTRO                                    (8412–8540, ~129 lines:129
-// STORY: TURBO JONES, CHAPTER 1                     (8541–8806, ~266 lines:266
-// CUTSCENE SYSTEM                                   (8807–9051, ~245 lines:245
-// VOICEOVER SYSTEM                                  (9052–9133, ~82 lines:82
-// INTRO NARRATION                                   (9134–9435, ~302 lines:302
-// DEV TOOLS                                         (9436–9513, ~78 lines:78
-// CINEMA MODE (was REPLAY)                          (9514–9645, ~132 lines:132
-// CINEMA: SCENES & STAGING                          (9646–9838, ~193 lines:193
-// PAUSE MENU & SETTINGS                             (9839–10046, ~208 lines:212
-// CONTROLS CARD (U2 onboarding)                    (10052–10084, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (10085–10140, ~56 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                   (10073–end, ~40 lines: boot, init, resize handlers, quality apply)
+// FOOTBALL FIELD                                    (2463–2513, ~51 lines)
+// ELEVATED LIGHT RAIL                               (2514–2638, ~125 lines)
+// STAIRS & FIRE ESCAPES                             (2639–2713, ~75 lines)
+// WALL LADDERS                                      (2714–2991, ~278 lines)
+// PARTICLES                                         (2992–3046, ~55 lines)
+// BLOB SHADOWS                                      (3047–3051, ~5 lines)
+// GPU RESOURCE CLEANUP                              (3052–3073, ~22 lines)
+// CARS                                              (3074–3316, ~243 lines)
+// PEDESTRIANS                                       (3317–3470, ~154 lines)
+// PIZZA DELIVERY SYSTEM                             (3471–3623, ~153 lines)
+// RIVAL PIZZA GANG: CHAOS PIZZA                     (3627–3754, ~128 lines)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                 (3755–3934, ~180 lines)
+// STRAY DOGS & DOG GANGS                            (3935–4206, ~272 lines)
+// PIZZA WARS MISSION                                (4207–4281, ~75 lines)
+// PLAYER                                            (4282–4325, ~44 lines)
+// PIZZA PLACE & INTERIOR                            (4326–4486, ~161 lines)
+// SIDEWALKS & STOREFRONT AWNINGS                    (4487–4595, ~109 lines)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS   (4596–4795, ~200 lines)
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS        (4796–4911, ~116 lines)
+// DAY/NIGHT & HEIST SYSTEM                          (4912–5104, ~193 lines)
+// PICKUPS                                           (5105–5147, ~43 lines)
+// HELICOPTERS                                       (5148–5626, ~479 lines)
+// TALKING PEDS                                      (5627–5715, ~89 lines)
+// WEAPONS                                           (5716–6377, ~662 lines)
+// WANTED                                            (6378–6483, ~106 lines)
+// CAR PHYSICS                                       (6484–6677, ~194 lines)
+// PLAYER: FOOT & CAR                                (6678–7219, ~542 lines)
+// HUD / TOASTS                                      (7220–7264, ~45 lines)
+// MISSIONS                                          (7265–7431, ~167 lines)
+// AI                                                (7432–7456, ~25 lines)
+// FOOT COPS                                         (7457–7500, ~44 lines)
+// SEWER RATS                                        (7501–7617, ~117 lines)
+// MAMA RAT (rat vengeance) — PLACEHOLDER            (7618–7984, ~367 lines)
+// BUSTED / WASTED                                   (7985–8074, ~90 lines)
+// CAMERA                                            (8075–8180, ~106 lines)
+// MINIMAP                                           (8181–8228, ~48 lines)
+// MAIN LOOP                                         (8229–8407, ~179 lines)
+// ORIENTATION                                       (8408–8465, ~58 lines)
+// ANIMATED INTRO                                    (8466–8594, ~129 lines)
+// STORY: TURBO JONES, CHAPTER 1                     (8595–8860, ~266 lines)
+// CUTSCENE SYSTEM                                   (8861–9105, ~245 lines)
+// VOICEOVER SYSTEM                                  (9106–9187, ~82 lines)
+// INTRO NARRATION                                   (9188–9489, ~302 lines)
+// DEV TOOLS                                         (9490–9567, ~78 lines)
+// CINEMA MODE (was REPLAY)                          (9568–9699, ~132 lines)
+// CINEMA: SCENES & STAGING                          (9700–9892, ~193 lines)
+// PAUSE MENU & SETTINGS                             (9893–10100, ~208 lines)
+// CONTROLS CARD (U2 onboarding)                    (10101–10133, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (10134–10189, ~56 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                   (10190–end, ~40 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -2924,6 +2924,32 @@ function propHit(x,z,r,forFoot){
     if(d2<rr*rr){ d=Math.sqrt(d2); return d>1e-6?{nx:dx/d,nz:dz/d,depth:rr-d}:{nx:1,nz:0,depth:rr}; } }
   return null;
 }
+// Static-only blocker pass: generic spawns and the player recovery path must
+// ignore live traffic/NPC contact, which is normal and transient.
+function staticBlockerHit(x,z,r){
+  return buildingHit(x,z,r)||rampHit(x,z,r)||treeHit(x,z,r)||propHit(x,z,r,true);
+}
+function resolveStaticFootCollision(obj,r){
+  const h1=buildingHit(obj.x,obj.z,r);
+  if(h1){ obj.x+=h1.nx*h1.depth; obj.z+=h1.nz*h1.depth; }
+  const h2=rampHit(obj.x,obj.z,r);
+  if(h2){ obj.x+=h2.nx*h2.depth; obj.z+=h2.nz*h2.depth; }
+  const h3=treeHit(obj.x,obj.z,r);
+  if(h3){ obj.x+=h3.nx*h3.depth; obj.z+=h3.nz*h3.depth; }
+  const h4=propHit(obj.x,obj.z,r,true);
+  if(h4){ obj.x+=h4.nx*h4.depth; obj.z+=h4.nz*h4.depth; }
+}
+function genericSpawnClear(p,r){ return !overWater(p.x,p.z)&&!staticBlockerHit(p.x,p.z,r); }
+// Keep generic population bounded and deterministic under ?seed=. A rejected
+// sequence always ends at its original intended point rather than looping.
+function safeGenericSpawnPoint(fallback,sample,r,tries=6){
+  if(genericSpawnClear(fallback,r)) return {x:fallback.x,z:fallback.z};
+  for(let i=0;i<tries;i++){
+    const p=sample();
+    if(genericSpawnClear(p,r)) return {x:p.x,z:p.z};
+  }
+  return {x:fallback.x,z:fallback.z};
+}
 // circle vs cars (parked or moving — same oriented-box shape the car mesh uses)
 function vehicleHit(x,z,r){
   for(let i=0;i<cars.length;i++){
@@ -2950,10 +2976,7 @@ function pedHit(x,z,r){
 }
 // resolve foot-unit collision against buildings, ramps, cars, and other peds
 function resolveFootCollision(obj,r){
-  const h1=buildingHit(obj.x,obj.z,r);
-  if(h1){ obj.x+=h1.nx*h1.depth; obj.z+=h1.nz*h1.depth; }
-  const h2=rampHit(obj.x,obj.z,r);
-  if(h2){ obj.x+=h2.nx*h2.depth; obj.z+=h2.nz*h2.depth; }
+  resolveStaticFootCollision(obj,r);
   const h3=vehicleHit(obj.x,obj.z,r);
   if(h3){ obj.x+=h3.nx*h3.depth; obj.z+=h3.nz*h3.depth; }
   const h4=pedHit(obj.x,obj.z,r);
@@ -3212,8 +3235,12 @@ function makeCar(type,x,z,heading,opts){
 }
 
 function randomRoadPoint(){
-  const l=pick(roadLines), t=rand(-H+ROAD+4,H-ROAD-4);
-  return _rng()<0.5?{x:l+rand(-2.5,2.5),z:t}:{x:t,z:l+rand(-2.5,2.5)};
+  const sample=()=>{
+    const l=pick(roadLines), t=rand(-H+ROAD+4,H-ROAD-4);
+    return _rng()<0.5?{x:l+rand(-2.5,2.5),z:t}:{x:t,z:l+rand(-2.5,2.5)};
+  };
+  const intended=sample();
+  return safeGenericSpawnPoint(intended,sample,0.7);
 }
 let parkedCount=0;
 blockInfo.forEach(b=>{
@@ -3237,7 +3264,9 @@ const trafficPool=[];
 const TRAFFIC_POOL_CAP=16;
 function resetTrafficCar(car,it,target){
   const heading=Math.atan2(target.x-it.x,target.z-it.z), t=CARTYPES[car.type];
-  car.x=it.x+rand(-2,2); car.z=it.z+rand(-2,2); car.y=groundH(car.x,car.z);
+  const offset=()=>({x:it.x+rand(-2,2),z:it.z+rand(-2,2)});
+  const p=safeGenericSpawnPoint(offset(),offset,Math.max(t.w,t.l)*0.5);
+  car.x=p.x; car.z=p.z; car.y=groundH(car.x,car.z);
   car.vy=0; car.heading=heading; car.vel.set(0,0,0); car.hp=t.hp; car.maxhp=t.hp;
   car.parked=false; car.crashed=0; car.stuckT=0; car.cool=0; car.airT=0;
   car.target=target; car.speed=0; car.airborne=false; car.driver='civ'; car.dead=false;
@@ -3276,8 +3305,8 @@ function spawnTraffic(n){
     else {
       const type=pick(['sedan','sedan','sedan','taxi','pickup','van','compact','muscle']);
       const heading=Math.atan2(target.x-it.x,target.z-it.z);
-      car=makeCar(type,it.x+rand(-2,2),it.z+rand(-2,2),heading,{driver:'civ'});
-      car.target=target;
+      car=makeCar(type,it.x,it.z,heading,{driver:'civ'});
+      resetTrafficCar(car,it,target);
     }
     traffic.push(car);
   }
@@ -3344,12 +3373,15 @@ function retirePed(ped,orphanDog){
   scene.remove(ped.mesh); disposeMesh(ped.mesh); return false;
 }
 function resetPed(ped,b,kind){
-  const per=BLOCK/2+1.6, side=randi(0,3), t=rand(-BLOCK/2+3,BLOCK/2-3);
-  let x,z;
-  if(side===0){ x=b.cx-per; z=b.cz+t; }
-  else if(side===1){ x=b.cx+per; z=b.cz+t; }
-  else if(side===2){ x=b.cx+t; z=b.cz-per; }
-  else { x=b.cx+t; z=b.cz+per; }
+  const sidewalkPoint=()=>{
+    const per=BLOCK/2+1.6, side=randi(0,3), t=rand(-BLOCK/2+3,BLOCK/2-3);
+    if(side===0) return {x:b.cx-per,z:b.cz+t};
+    if(side===1) return {x:b.cx+per,z:b.cz+t};
+    if(side===2) return {x:b.cx+t,z:b.cz-per};
+    return {x:b.cx+t,z:b.cz+per};
+  };
+  let {x,z}=sidewalkPoint();
+  if(!kind||kind==='local') ({x,z}=safeGenericSpawnPoint({x,z},sidewalkPoint,0.42));
   ped.x=x; ped.z=z; ped.heading=rand(0,TAU); ped.speed=rand(1.2,2); ped.phase=rand(0,TAU);
   ped.state='walk'; ped.stateT=rand(2,6); ped.downT=0; ped.home=b; ped.kind=kind||'local'; ped.bound=H+4;
   delete ped.walkAxis; delete ped.walkLine; delete ped.walkPos; delete ped.walkDir;
@@ -6180,6 +6212,24 @@ function footGround(p){
   return (roofHere>0&&p.y>roofHere-1.0)?roofHere:
     Math.max(groundH(p.x,p.z),onStairs?sh:0);
 }
+function resetFootStuck(p){ p.stuckT=0; p.stuckNudged=false; }
+// Analytic resolution normally clears an overlap in one frame. Only if a
+// static blocker persists do we make one short, terrain-seated nudge; dynamic
+// crowding is deliberately excluded by staticBlockerHit().
+function updateFootStuckRecovery(p,dt){
+  if(G.mode!=='foot'||p.climb||p.bailing||G.replay||activeCutscene){ resetFootStuck(p); return; }
+  const roof=roofAt(p.x,p.z), st=stairHitRun(p.x,p.z);
+  if((roof>0&&p.y>roof-1.0)||(st&&p.y>st.h-1.2)){ resetFootStuck(p); return; }
+  resolveStaticFootCollision(p,0.5);       // the normal static response comes first
+  const hit=staticBlockerHit(p.x,p.z,0.5);
+  if(!hit||hit.depth<=1e-5){ resetFootStuck(p); return; }
+  p.stuckT=(p.stuckT||0)+dt;
+  if(p.stuckT<0.45||p.stuckNudged) return;
+  const step=clamp(hit.depth+0.06,0.18,0.8);
+  p.x=clamp(p.x+hit.nx*step,-(WATER_R-2),WATER_R-2);
+  p.z=clamp(p.z+hit.nz*step,-(WATER_R-2),WATER_R-2);
+  p.y=footGround(p); p.vy=0; p.stuckNudged=true;
+}
 function doJump(){
   if(!G.started||G.over||G.mode!=='foot') return;
   if(player.climb){ bailLadder(); return; }   // push off the rungs
@@ -6696,6 +6746,7 @@ function updateFoot(dt){
     if(p.y<=ground){ p.y=ground; p.vy=0; blip(120,60,0.08,0.12,'sine'); }
   }
   else if(p.y<ground){ p.y=ground; p.vy=0; }   // stairs & slopes lift you as you climb
+  updateFootStuckRecovery(p,dt);
   p.mesh.position.set(p.x,p.y+Math.abs(Math.sin(p.phase))*0.06,p.z);
   p.mesh.rotation.y=p.heading;
   const u=p.mesh.userData;
@@ -7959,7 +8010,10 @@ function respawn(spot){
   setTimeout(()=>{
     const custom=!!spot;
     spot=spot||intersections[Math.floor(intersections.length/2)];
-    player.x=spot.x+(custom?0:4); player.z=spot.z+(custom?0:4); player.y=groundH(player.x,player.z);
+    const intended={x:spot.x+(custom?0:4),z:spot.z+(custom?0:4)};
+    const p=custom?intended:safeGenericSpawnPoint(intended,
+      ()=>({x:spot.x+rand(2,6),z:spot.z+rand(2,6)}),0.5);
+    player.x=p.x; player.z=p.z; player.y=groundH(player.x,player.z); resetFootStuck(player);
     player.mesh.visible=true; player.mesh.rotation.x=0; footCamYaw=player.heading;
     makeCar('sedan',spot.x-4,spot.z-3,rand(0,TAU),{parked:true});
     G.mode='foot'; player.car=null;

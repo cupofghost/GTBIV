@@ -1160,7 +1160,7 @@ and ped dog/bubble/partner links; a downed owner's dog remains an orphaned
 stray. F3 trimming pools eligible entities, while mission targets and cinema
 actors are permanently retired. Focused coverage: `traffic-pooling.test.js`.
 
-#### R3 — Anti-stuck & spawn-safety `P2 · Risk: Med` `OPEN`
+#### R3 — Anti-stuck & spawn-safety `P2 · Risk: Med` `DONE`
 **Why:** Analytic collision can occasionally wedge the player in geometry or
 spawn NPCs inside buildings.
 **Where:** `resolveFootCollision`, `respawn`, `spawnPed`/`spawnTraffic`,
@@ -1168,9 +1168,11 @@ spawn NPCs inside buildings.
 **Approach:** Validate spawn points against `buildingHit`/`overWater` and retry
 (bounded) if invalid. Add a gentle un-stick nudge if the player is inside a
 collider for more than a moment. Keep it cheap.
-**Acceptance:** Extended play produces no permanently-stuck states; NPCs don't
-spawn embedded in buildings or in the sea; the un-stick never fires during
-normal play.
+**Delivered:** Bounded seeded generic placement rejects water, buildings,
+ramps, trees, and solid props for road traffic, sidewalk peds, and downtown
+respawns. Turbo gets one terrain-seated recovery only after persistent
+static overlap; roofs, stairs, ladders, bailouts, and cinema/cutscenes bypass
+it. Focused coverage: `spawn-safety.test.js`.
 
 ---
 
@@ -1453,8 +1455,8 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: R3 (Anti-stuck & spawn-safety)** — Validate pedestrian/traffic spawn
-points and add a bounded player un-stick nudge without changing normal movement.
+**NEXT: A2 (Accessibility)** — Add focused accessibility options without
+disturbing existing controls or the zero-build path.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -1484,8 +1486,8 @@ throughout:
 —  J2  Hitstop + shake           DONE
 ✔ U3  Death/respawn flow         DONE
 ✔ R2  Pooling traffic/peds       DONE
-—  R3  Anti-stuck & spawn-safety ← NEXT
-—  A2  Accessibility             OPEN
+✔ R3  Anti-stuck & spawn-safety  DONE
+—  A2  Accessibility             ← NEXT
 —  FB3 Coach mission             OPEN
 —  FB4 Football minigame         OPEN
 —  FB5 Cheerleaders cutscene     OPEN

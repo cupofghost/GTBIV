@@ -4,12 +4,11 @@ Branch: `codex/audit-fixes-1-3-5`
 
 Draft PR: `cupofghost/GTBIV#40`
 
-Starting point: `838d9f4` (`Pool generic traffic and pedestrians`). The
-worktree was clean after that push. PR #40 has no reviewer feedback; its CI
-job was in progress when this handoff was written. Recheck both before claiming
-implementation work.
+Completed in the worktree; commit/push pending. Focused syntax and
+`spawn-safety.test.js` passed 4/4. The local browser runner required loopback
+server permission in this environment.
 
-## Task
+## Completed task
 
 Implement **R3 — Anti-stuck & spawn-safety**. It is the authoritative `NEXT`
 item in `HANDOFF.md` §10.
@@ -80,10 +79,12 @@ Run only `node tests/syntax-check.js` and the new focused suite. Do not run the
 full suite. If the local browser shell hits its known long-run timeout, record
 it rather than expanding scope.
 
-## Completion
+## Completion record
 
-Update the R3 backlog card and `NEXT` marker, `STATUS.md`, and this handoff.
-Commit with the required signature, push the same branch, and update PR #40;
-do not open a new PR.
+Implemented bounded static/water validation for generic road, traffic, ped,
+and downtown-respawn placements; preserved special paths. Added grace-timed,
+single-nudge static recovery that is inactive for roof/stair/ladder/bail/cinema
+states. Updated the backlog and advanced `NEXT` to A2. Commit with the required
+signature, push the same branch, and update PR #40; do not open a new PR.
 
 Signed: Codex | GPT-5 | medium
