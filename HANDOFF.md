@@ -1438,7 +1438,7 @@ These four tasks supersede FB3 in the immediate `NEXT` sequence. Build them as
 four focused commits in order; they share `index.html`, so one agent should
 carry the sequence rather than several agents editing the hot file in parallel.
 
-#### OD1 — Straight-flight RPGs `P0 · Risk: Low` `OPEN`
+#### OD1 — Straight-flight RPGs `P0 · Risk: Low` `DONE — Codex | GPT-5 | high (2026-07-25)`
 **Owner direction:** RPG rounds must fly in a straight line.
 **Where:** `doAttack()`'s RPG branch and `updateRockets()`.
 **Approach:** Freeze one normalized 3D direction vector at launch from Turbo's
@@ -1563,8 +1563,8 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: OD1 (Straight-flight RPGs)** — Start the owner-directed immediate
-gameplay pass, then complete OD2 → OD3 → OD4 before returning to FB3.
+**NEXT: OD2 (Speech-bubble building occlusion)** — Continue the owner-directed
+immediate gameplay pass through OD3 → OD4 before returning to FB3.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -1595,8 +1595,8 @@ throughout:
 ✔ U3  Death/respawn flow         DONE
 ✔ R2  Pooling traffic/peds       DONE
 ✔ R3  Anti-stuck & spawn-safety  DONE
-—  OD1 Straight-flight RPGs      ← NEXT
-—  OD2 Bubble building occlusion OPEN
+✔ OD1 Straight-flight RPGs       DONE
+—  OD2 Bubble building occlusion ← NEXT
 —  OD3 Turbo sprint              OPEN
 —  OD4 Denser street life        OPEN
 —  FB3 Coach mission             OPEN

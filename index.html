@@ -6011,9 +6011,12 @@ function doAttack(){
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(0.25,0.25,0.9),
       new THREE.MeshBasicMaterial({color:0xff7a3d}));
     scene.add(mesh);
-    const rp=-camPitch*1.1;   // aim up/down with the look thumb
+    const pitch=-camPitch;   // camera pitch is inverted relative to world-up
+    const cp=Math.cos(pitch);
+    const dir={x:Math.sin(p.heading)*cp,y:Math.sin(pitch),z:Math.cos(p.heading)*cp};
     const rocket={x:p.x+Math.sin(p.heading)*1.5,y:p.y+1.5,z:p.z+Math.cos(p.heading)*1.5,
-      heading:p.heading,hs:Math.cos(rp)*46,vy:Math.sin(rp)*46,life:3,mesh,snd:startMissileFlight()};
+      heading:p.heading,dir,speed:46,life:3,mesh,snd:startMissileFlight()};
+    mesh.rotation.set(-pitch,p.heading,0);
     rockets.push(rocket);
     refreshButtons();
   }
@@ -6021,35 +6024,45 @@ function doAttack(){
 function updateRockets(dt){
   for(let i=rockets.length-1;i>=0;i--){
     const r=rockets[i];
-    r.life-=dt;
-    const rspd=r.hs||46;
-    r.x+=Math.sin(r.heading)*rspd*dt;
-    r.z+=Math.cos(r.heading)*rspd*dt;
-    r.y+=(r.vy!==undefined?r.vy:-1.2)*dt;
-    if(r.vy!==undefined) r.vy-=9*dt;   // slight drop over distance
-    r.mesh.position.set(r.x,r.y,r.z);
-    r.mesh.rotation.y=r.heading;
-    if(r.vy!==undefined) r.mesh.rotation.x=clamp(-r.vy*0.02,-0.9,0.9);
-    if(r.snd) r.snd.update(r.x,r.y,r.z);
-    burst(r.x,r.y,r.z,1,COL_SMOKE,0.5,0.4,0);
-    let boom=r.life<=0||r.y<=0.15;
-    if(!boom&&buildingHit(r.x,r.z,0.5)) boom=true;
-    if(!boom){
-      for(const c of cars){
-        if(!c.dead&&Math.hypot(c.x-r.x,c.z-r.z)<2.2){ boom=true; break; }
+    const travel=Math.min(dt,Math.max(0,r.life));
+    const steps=Math.max(1,Math.ceil((r.speed||46)*travel));
+    const step=travel/steps, dir=r.dir||{x:Math.sin(r.heading),y:0,z:Math.cos(r.heading)};
+    let boom=r.life<=0;
+    for(let n=0;n<steps&&!boom;n++){
+      r.x+=dir.x*(r.speed||46)*step;
+      r.y+=dir.y*(r.speed||46)*step;
+      r.z+=dir.z*(r.speed||46)*step;
+      if(r.y<=groundH(r.x,r.z)+0.1||rocketBuildingHit(r.x,r.y,r.z,0.25)) boom=true;
+      if(!boom){
+        for(const c of cars){
+          if(!c.dead&&Math.hypot(c.x-r.x,c.z-r.z)<2.2){ boom=true; break; }
+        }
+      }
+      if(!boom&&copHeli&&!copHeli.dead&&
+         Math.hypot(copHeli.x-r.x,copHeli.z-r.z)<4&&Math.abs(copHeli.y-r.y)<4){
+        copHeli.hp-=150; if(copHeli.hp<=0) copHeli.dead=true;
+        boom=true;
       }
     }
-    if(!boom&&copHeli&&!copHeli.dead&&
-       Math.hypot(copHeli.x-r.x,copHeli.z-r.z)<4&&Math.abs(copHeli.y-r.y)<4){
-      copHeli.hp-=150; if(copHeli.hp<=0) copHeli.dead=true;
-      boom=true;
-    }
+    r.life-=dt;
+    r.mesh.position.set(r.x,r.y,r.z);
+    r.mesh.rotation.set(-Math.asin(dir.y),Math.atan2(dir.x,dir.z),0);
+    if(r.snd) r.snd.update(r.x,r.y,r.z);
+    burst(r.x,r.y,r.z,1,COL_SMOKE,0.5,0.4,0);
+    boom=boom||r.life<=0;
     if(boom){
       if(r.snd) r.snd.stop();
       explode(r.x,Math.max(r.y,0.3),r.z);
       scene.remove(r.mesh); disposeMesh(r.mesh); rockets.splice(i,1);
     }
   }
+}
+function rocketBuildingHit(x,y,z,r){
+  for(const b of buildings){
+    if(x>=b.minX-r&&x<=b.maxX+r&&z>=b.minZ-r&&z<=b.maxZ+r&&
+       y>=b.baseY-r&&y<=b.baseY+b.h+r) return true;
+  }
+  return false;
 }
 // expanding fireball: a red-orange sphere that blooms hard, then cools to embers
 const fireballs=[];
