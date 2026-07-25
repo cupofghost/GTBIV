@@ -8,6 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-25 | `index.html`, focused respawn-flow test, `CODEX/HANDOFF_CODEX_U3.md` | Done: U3 persists fines/bills before respawn locks, clears pursuit state, and verifies a terrain-seated recovery with a nearby car. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | Audio loading, RNG, tests/CI | Done: lazy cached VO, shared seeded RNG, broader syntax checks, and GitHub Actions. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `index.html`, player/vehicle/camera/FX/dogs, Codex workflow, focused tests | Done: camera, terrain/traffic, Turbo, controls/kick/aim, dog-count, mushroom cloud, and MP3-only VO work. PR #40 handoff complete. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `index.html`, focused Playwright tests | Done: Terra follow-up—solid mushroom cloud, MP3-only Turbo paths, regenerated code map, and focused coverage. | Signed: Codex \| GPT-5 \| high |
