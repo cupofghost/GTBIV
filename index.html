@@ -98,7 +98,8 @@
   #btnEnter { grid-column:span 2; width:100%; height:52px; font-size:14px;
     background:rgba(20,90,40,.55); border-color:#7dff8a88; }
   #btnEnter.steal { background:rgba(120,60,10,.6); border-color:#ffd23e99; }
-  #btnPunch { grid-column:span 2; width:100%; }
+  #btnJump { grid-column:span 2; width:100%; height:52px; }
+  #btnPunch, #btnKick { width:74px; }
   #radioBtn { position:absolute; top:calc(44px + env(safe-area-inset-top)); left:14px;
     width:44px; height:36px; border-radius:10px; border:1px solid #ffffff44;
     background:rgba(20,8,40,.6); color:#7dff8a; font-size:16px; pointer-events:auto;
@@ -459,13 +460,13 @@
     <div class="ccBody" id="ccTouch">
       <b>MOVE</b> left thumb stick &middot; <b>LOOK</b> swipe the right side<br>
       <b>DRIVE</b> GAS / BRAKE pedals &middot; <b>BOOST</b> &amp; <b>DRIFT</b> pedal buttons<br>
-      <b>ENTER</b> steals cars &middot; <b>PUNCH</b> / gun button fights &middot; <b>TALK</b> chats up peds
+      <b>ENTER</b> steals cars &middot; <b>SWAP</b> changes weapons &middot; <b>PUNCH / KICK</b> fights unarmed
       <div class="ccFine">Portrait phone? The game rotates itself &mdash; landscape plays best.</div>
     </div>
     <div class="ccBody" id="ccDesk" style="display:none">
       <b>MOVE</b> WASD / arrows &middot; <b>LOOK</b> drag the mouse<br>
       <b>DRIVE</b> W gas / S brake &middot; <b>SHIFT</b> boost &middot; <b>SPACE</b> jump / drift<br>
-      <b>E</b> enter/exit &middot; <b>F</b> punch &middot; <b>G</b> weapon &middot; <b>T</b> talk &middot;
+      <b>E</b> enter/exit &middot; <b>F</b> attack &middot; <b>G</b> swap weapon &middot; <b>K</b> kick unarmed &middot; <b>T</b> talk &middot;
       <b>H</b> horn &middot; <b>Q</b> radio &middot; <b>C</b> crouch &middot; <b>N</b> day/night &middot;
       <b>R</b> cinema &middot; <b>P</b> pause
       <div class="ccFine">Keys are hardcoded &mdash; no remapping yet.</div>
@@ -505,6 +506,7 @@
     <div class="tbtn" id="btnTalk">TALK</div>
     <div class="tbtn" id="btnJump">JUMP</div>
     <div class="tbtn" id="btnPunch">PUNCH</div>
+    <div class="tbtn" id="btnKick">KICK</div>
     <div class="tbtn" id="btnEnter">ENTER</div>
   </div>
   <div id="radioBtn">&#9834;</div>
@@ -553,11 +555,11 @@
       <div class="touch-hint">
         Left thumb: move &middot; <b>right thumb: swipe to look around</b> &middot; pedals drive<br>
         Stick people up with the pistol &middot; rob glowing stores &middot; pay Deb her $800<br>
-        ENTER steals cars &middot; PUNCH / gun button fights &middot; TALK chats up peds<br>
+        ENTER steals cars &middot; SWAP changes weapons &middot; PUNCH / KICK fights unarmed &middot; TALK chats up peds<br>
         Tap &#9834; for radio/night
       </div>
       <div class="desktop-hint">
-        <b>WASD</b> move &middot; <b>drag right side to look/aim</b> &middot; <b>E</b> enter/steal/bail &middot; <b>F</b> attack &middot; <b>G</b> weapon &middot; <b>T</b> talk &middot; Space jump/drift/chute &middot; <b>V</b> meat &middot; <b>B</b> dismiss dogs<br>
+        <b>WASD</b> move &middot; <b>drag right side to look/aim</b> &middot; <b>E</b> enter/steal/bail &middot; <b>F</b> attack &middot; <b>G</b> swap weapon &middot; <b>K</b> kick unarmed &middot; <b>T</b> talk &middot; Space jump/drift/chute &middot; <b>V</b> meat &middot; <b>B</b> dismiss dogs<br>
         Stick people up with the pistol &middot; rob glowing stores &middot; pay Deb her $800<br>
         <b>N</b> = day/night &middot; <b>C</b> = crouch &middot; <b>H</b> = horn &middot; <b>Q</b> = radio &middot; <b>M</b> = Pizza Wars mission &middot; <b>P</b> = pause
       </div>
@@ -677,6 +679,23 @@
   <button id="replayExit">EXIT</button>
 </div>
 <div id="cinemaShow">&#127916; SHOW BAR</div>
+<script>
+// Bootstrap the shared RNG before external character modules load. Those
+// modules also run in viewer.html, where they fall back to Math.random.
+(function(){
+  const seedStr=new URLSearchParams(location.search).get('seed');
+  const seed=seedStr===null?NaN:parseInt(seedStr,10);
+  if(isNaN(seed)){ window.GTB_RNG=Math.random; return; }
+  window.GTB_RNG=(function(a){
+    return function(){
+      let t=a+=0x6D2B79F5;
+      t=Math.imul(t^(t>>>15),t|1);
+      t^=t+Math.imul(t^(t>>>7),t|61);
+      return ((t^(t>>>14))>>>0)/4294967296;
+    };
+  }(seed));
+})();
+</script>
 <script src="three.min.js"></script>
 <script src="js/person.js"></script>
 <script src="js/npc-types.js"></script>
@@ -684,7 +703,7 @@
 'use strict';
 /* GRAND TURBO BOOST IV: SAN CHAOS — 100% procedural, zero trademarks harmed. */
 
-let _rng=Math.random;
+let _rng=window.GTB_RNG||Math.random;
 const rand=(a,b)=>a+_rng()*(b-a);
 const randi=(a,b)=>Math.floor(a+_rng()*(b-a+1));
 const pick=arr=>arr[Math.floor(_rng()*arr.length)];
@@ -704,63 +723,63 @@ let TRAFFIC_CAP=16, PED_CAP=34, PARTICLE_SCALE=1, GFX_TIER='high';
 // CODE MAP — Search by section name to navigate quickly.
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
-// HELPERS & GLOBAL STATE                           (683–697, ~15 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                             (705–755, ~51 lines: IS_TOUCH, updateOrientationMode, vw, vh, remapXY, ROTATED)
-// AUDIO                                            (756–979, ~224 lines: initAudio, AC, masterGain, engine synth, sfx)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (980–1482, ~503 lines: SW_SONGS, STATIONS, scheduleMusic, stepSong, synth fx)
-// THREE SETUP                                      (1483–1533, ~51 lines: scene, camera, renderer, sky/sun, lights)
-// CITY                                             (1534–2375, ~842 lines: procCity, blockInfo, roads, buildings, textures)
-//   └ RADIO TOWERS                                 (1979–2084, ~106 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                   (2376–2426, ~51 lines: FOOTBALL landmark, turf, goalposts, bleachers)
-// ELEVATED LIGHT RAIL                              (2427–2551, ~125 lines: TRAIN, stations, rail track, animated loop)
-// STAIRS & FIRE ESCAPES                            (2552–2626, ~75 lines: STAIR_RUNS, terrain knolls, hideouts)
-// WALL LADDERS                                     (2627–2881, ~255 lines: LADDERS, ladderGrab, mountLadder, updateClimb, ramps/addRamp)
-// PARTICLES                                        (2882–2936, ~55 lines: burst, P_MAX, particle pool)
-// BLOB SHADOWS                                     (2937–2941, ~5 lines: makeShadow)
-// GPU RESOURCE CLEANUP                             (2942–2963, ~22 lines: disposeMesh, _sharedGPU)
-// CARS                                             (2964–3158, ~195 lines: makeCar, CAR_SPECS, carModel, physics setup)
-// PEDESTRIANS                                      (3159–3275, ~117 lines: makePerson, spawnPed, updatePeds)
-// PIZZA DELIVERY SYSTEM                            (3276–3431, ~156 lines: pizza delivery missions, stages, reward)
-// RIVAL PIZZA GANG: CHAOS PIZZA                    (3432–3559, ~128 lines: chaosDrivers, makeChaosCar, spawnChaosDrivers, updateChaosDrivers, gangMembers)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (3560–3723, ~164 lines: JOCK_TAUNTS, jocks, addLettermanJacket, JOCK_TEAMS, spawnJock)
-// STRAY DOGS & DOG GANGS                           (3724–3951, ~228 lines: dogs, dog gangs, pack behavior, meat drops)
-// PIZZA WARS MISSION                               (3952–4026, ~75 lines: heist system, stages, guards, pizza exterior)
-// PLAYER                                           (4027–4052, ~26 lines: player object creation, initial state)
-// PIZZA PLACE & INTERIOR                           (4053–4213, ~161 lines: pizza interior geometry, robbery, NPC setup)
-// SIDEWALKS & STOREFRONT AWNINGS                   (4214–4322, ~109 lines: 3D kerb strips, sidewalk slabs, awnings, storefront dressing)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (4323–4522, ~200 lines: street trees, planters, cafe tables, pole banners (+ pizza enter/exit tail))
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (4523–4638, ~116 lines: cityGlowDayNight, neon signs, night window swap, streetlight pools)
-// DAY/NIGHT & HEIST SYSTEM                         (4639–4831, ~193 lines: toggleNight, night sky, heist triggers)
-// PICKUPS                                          (4832–4874, ~43 lines: money pickups, spawn/despawn)
-// HELICOPTERS                                      (4875–5346, ~472 lines: makeHeli, heli physics, pilot AI, rotor anim)
-// TALKING PEDS                                     (5347–5435, ~89 lines: showBubble, wahVoice, NPC speech bubbles)
-// WEAPONS                                          (5436–6004, ~569 lines: doAttack, pistol/RPG logic, collision, damage)
-// WANTED                                           (6005–6110, ~106 lines: addHeat, clearHeat, star system, heat decay)
-// CAR PHYSICS                                      (6111–6300, ~190 lines: carPhysics, collision, acceleration, damage)
-// PLAYER: FOOT & CAR                               (6301–6793, ~493 lines: footCamDistance, input, kick mode, car entry/exit, updateFoot)
-// HUD / TOASTS                                     (6794–6838, ~45 lines: toast, HUD updates, on-screen feedback)
-// MISSIONS                                         (6839–7005, ~167 lines: startMission, updateMission, missions, reward)
-// AI                                               (7006–7030, ~25 lines: cop/ped goal/walk logic)
-// FOOT COPS                                        (7031–7074, ~44 lines: spawnCop, updateCops, cop AI, roaming)
-// SEWER RATS                                       (7075–7191, ~117 lines: RAT_POOL, makeRatMesh, spawnRats, updateRats)
-// MAMA RAT (rat vengeance) — PLACEHOLDER           (7192–7562, ~371 lines: spawnMamaRat, updateMamaRat, bite logic, mama model)
-// BUSTED / WASTED                                  (7563–7641, ~79 lines: busted, wasted, respawn logic, state reset)
-// CAMERA                                           (7642–7733, ~92 lines: updateCamera, shake, collision pull-in, look math)
-// MINIMAP                                          (7734–7781, ~48 lines: drawMinimap, blips, legend, position tracking)
-// MAIN LOOP                                        (7782–7948, ~167 lines: loop, substep simulation, entity updates, frame pacing)
-// ORIENTATION                                      (7949–8006, ~58 lines: checkOrientation, fitScreen, toggleFullscreen)
-// ANIMATED INTRO                                   (8007–8088, ~82 lines: intro cinematic, title screen animation)
-// STORY: TURBO JONES, CHAPTER 1                    (8089–8354, ~266 lines: story flags, Deb intro, debt system, mission gates)
-// CUTSCENE SYSTEM                                  (8355–8599, ~245 lines: playCutscene, cutscene definitions, actor positioning)
-// VOICEOVER SYSTEM                                 (8600–8681, ~82 lines: playVOFile, playVOLine, TTS, voiceover queue)
-// INTRO NARRATION                                  (8682–8986, ~305 lines: intro voiceover, narrative setup)
-// DEV TOOLS                                        (8987–9064, ~78 lines: devPanel, cheats, god mode, teleports, ?dev=1 gate)
-// CINEMA MODE (was REPLAY)                         (9065–9196, ~132 lines: enterReplay/enterCinema, updateCinemaCam, free-fly camera, buffer scrub, HIDE HUD)
-// CINEMA: SCENES & STAGING                         (9197–9389, ~193 lines: cinemaIntro, cinemaCutscene, stageJockFight, stageCarBoom, stageShootPed, stageRatMother)
-// PAUSE MENU & SETTINGS                            (9390–9586, ~197 lines: pauseMenu, Settings panel, volume/quality sliders)
-// CONTROLS CARD (U2 onboarding)                    (9587–9619, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (9620–9672, ~53 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                   (9673–end, ~40 lines: boot, init, resize handlers, quality apply)
+// HELPERS & GLOBAL STATE                           (706–720, ~15 lines: rand, randi, pick, clamp, lerp, TAU, $)
+// DEVICE / ORIENTATION                              (785–842, ~58 lines)
+// AUDIO                                             (843–1066, ~224 lines)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK               (1067–1569, ~503 lines)
+// THREE SETUP                                       (1570–1620, ~51 lines)
+// CITY                                              (1621–2462, ~842 lines)
+//   └ RADIO TOWERS                                 (2066–2171, ~106 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
+// FOOTBALL FIELD                                    (2463–2513, ~51 lines)
+// ELEVATED LIGHT RAIL                               (2514–2638, ~125 lines)
+// STAIRS & FIRE ESCAPES                             (2639–2713, ~75 lines)
+// WALL LADDERS                                      (2714–2991, ~278 lines)
+// PARTICLES                                         (2992–3046, ~55 lines)
+// BLOB SHADOWS                                      (3047–3051, ~5 lines)
+// GPU RESOURCE CLEANUP                              (3052–3073, ~22 lines)
+// CARS                                              (3074–3316, ~243 lines)
+// PEDESTRIANS                                       (3317–3470, ~154 lines)
+// PIZZA DELIVERY SYSTEM                             (3471–3623, ~153 lines)
+// RIVAL PIZZA GANG: CHAOS PIZZA                     (3627–3754, ~128 lines)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                 (3755–3934, ~180 lines)
+// STRAY DOGS & DOG GANGS                            (3935–4206, ~272 lines)
+// PIZZA WARS MISSION                                (4207–4281, ~75 lines)
+// PLAYER                                            (4282–4325, ~44 lines)
+// PIZZA PLACE & INTERIOR                            (4326–4486, ~161 lines)
+// SIDEWALKS & STOREFRONT AWNINGS                    (4487–4595, ~109 lines)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS   (4596–4795, ~200 lines)
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS        (4796–4911, ~116 lines)
+// DAY/NIGHT & HEIST SYSTEM                          (4912–5104, ~193 lines)
+// PICKUPS                                           (5105–5147, ~43 lines)
+// HELICOPTERS                                       (5148–5626, ~479 lines)
+// TALKING PEDS                                      (5627–5715, ~89 lines)
+// WEAPONS                                           (5716–6377, ~662 lines)
+// WANTED                                            (6378–6483, ~106 lines)
+// CAR PHYSICS                                       (6484–6677, ~194 lines)
+// PLAYER: FOOT & CAR                                (6678–7219, ~542 lines)
+// HUD / TOASTS                                      (7220–7264, ~45 lines)
+// MISSIONS                                          (7265–7431, ~167 lines)
+// AI                                                (7432–7456, ~25 lines)
+// FOOT COPS                                         (7457–7500, ~44 lines)
+// SEWER RATS                                        (7501–7617, ~117 lines)
+// MAMA RAT (rat vengeance) — PLACEHOLDER            (7618–7984, ~367 lines)
+// BUSTED / WASTED                                   (7985–8074, ~90 lines)
+// CAMERA                                            (8075–8180, ~106 lines)
+// MINIMAP                                           (8181–8228, ~48 lines)
+// MAIN LOOP                                         (8229–8407, ~179 lines)
+// ORIENTATION                                       (8408–8465, ~58 lines)
+// ANIMATED INTRO                                    (8466–8594, ~129 lines)
+// STORY: TURBO JONES, CHAPTER 1                     (8595–8860, ~266 lines)
+// CUTSCENE SYSTEM                                   (8861–9105, ~245 lines)
+// VOICEOVER SYSTEM                                  (9106–9187, ~82 lines)
+// INTRO NARRATION                                   (9188–9489, ~302 lines)
+// DEV TOOLS                                         (9490–9567, ~78 lines)
+// CINEMA MODE (was REPLAY)                          (9568–9699, ~132 lines)
+// CINEMA: SCENES & STAGING                          (9700–9892, ~193 lines)
+// PAUSE MENU & SETTINGS                             (9893–10100, ~208 lines)
+// CONTROLS CARD (U2 onboarding)                    (10101–10133, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (10134–10189, ~56 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                   (10190–end, ~40 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -798,7 +817,7 @@ updateOrientationMode(); // set before THREE/HUD sizing below reads vw()/vh()
 const PISTOL_MAG=12;  // rounds per magazine; shared with WEAPON_SFX.pistol (see WEAPONS)
 const G={ mode:'foot', money:0, heat:0, stars:0, carHP:100, boost:100,
   escapeT:0, bustT:0, hiddenT:0, hp:100, hpT:0, hasBaton:false, missionsDone:0, over:false, started:false, paused:false,
-  menuPaused:false, meat:0,
+  menuPaused:false, meat:0, strayDogCount:0,
   station:0, weapon:'fists', rockets:0, pistolAmmo:PISTOL_MAG, reloading:false };
 const WORLD={ blocks:10, block:50, road:16 };
 const _PARAMS=new URLSearchParams(location.search);
@@ -811,21 +830,6 @@ function stepOneFrame(){ if(!DEV) return; STEP_FRAMES++; }
 // J2 — hitstop: brief simulation freeze on big impacts/explosions
 let HIT_STOP=0;
 function triggerHitStop(ms){ if(SETTINGS.reduceMotion) return; HIT_STOP=Math.max(HIT_STOP, Math.min(0.08, ms)); }
-// D7 — deterministic seed: route all game RNG through a seedable PRNG when ?seed=<n>
-(function initSeededRng(){
-  const seedStr=_PARAMS.get('seed');
-  if(!seedStr) return;
-  const seed=parseInt(seedStr,10);
-  if(isNaN(seed)) return;
-  _rng=(function(a){
-    return function(){
-      let t=a+=0x6D2B79F5;
-      t=Math.imul(t^(t>>>15),t|1);
-      t^=t+Math.imul(t^(t>>>7),t|61);
-      return ((t^(t>>>14))>>>0)/4294967296;
-    };
-  }(seed));
-})();
 const QS={
   skipintro:DEV||_PARAMS.has('skipintro'),
   scene:(_PARAMS.get('scene')||'').toLowerCase(),
@@ -2920,6 +2924,32 @@ function propHit(x,z,r,forFoot){
     if(d2<rr*rr){ d=Math.sqrt(d2); return d>1e-6?{nx:dx/d,nz:dz/d,depth:rr-d}:{nx:1,nz:0,depth:rr}; } }
   return null;
 }
+// Static-only blocker pass: generic spawns and the player recovery path must
+// ignore live traffic/NPC contact, which is normal and transient.
+function staticBlockerHit(x,z,r){
+  return buildingHit(x,z,r)||rampHit(x,z,r)||treeHit(x,z,r)||propHit(x,z,r,true);
+}
+function resolveStaticFootCollision(obj,r){
+  const h1=buildingHit(obj.x,obj.z,r);
+  if(h1){ obj.x+=h1.nx*h1.depth; obj.z+=h1.nz*h1.depth; }
+  const h2=rampHit(obj.x,obj.z,r);
+  if(h2){ obj.x+=h2.nx*h2.depth; obj.z+=h2.nz*h2.depth; }
+  const h3=treeHit(obj.x,obj.z,r);
+  if(h3){ obj.x+=h3.nx*h3.depth; obj.z+=h3.nz*h3.depth; }
+  const h4=propHit(obj.x,obj.z,r,true);
+  if(h4){ obj.x+=h4.nx*h4.depth; obj.z+=h4.nz*h4.depth; }
+}
+function genericSpawnClear(p,r){ return !overWater(p.x,p.z)&&!staticBlockerHit(p.x,p.z,r); }
+// Keep generic population bounded and deterministic under ?seed=. A rejected
+// sequence always ends at its original intended point rather than looping.
+function safeGenericSpawnPoint(fallback,sample,r,tries=6){
+  if(genericSpawnClear(fallback,r)) return {x:fallback.x,z:fallback.z};
+  for(let i=0;i<tries;i++){
+    const p=sample();
+    if(genericSpawnClear(p,r)) return {x:p.x,z:p.z};
+  }
+  return {x:fallback.x,z:fallback.z};
+}
 // circle vs cars (parked or moving — same oriented-box shape the car mesh uses)
 function vehicleHit(x,z,r){
   for(let i=0;i<cars.length;i++){
@@ -2946,10 +2976,7 @@ function pedHit(x,z,r){
 }
 // resolve foot-unit collision against buildings, ramps, cars, and other peds
 function resolveFootCollision(obj,r){
-  const h1=buildingHit(obj.x,obj.z,r);
-  if(h1){ obj.x+=h1.nx*h1.depth; obj.z+=h1.nz*h1.depth; }
-  const h2=rampHit(obj.x,obj.z,r);
-  if(h2){ obj.x+=h2.nx*h2.depth; obj.z+=h2.nz*h2.depth; }
+  resolveStaticFootCollision(obj,r);
   const h3=vehicleHit(obj.x,obj.z,r);
   if(h3){ obj.x+=h3.nx*h3.depth; obj.z+=h3.nz*h3.depth; }
   const h4=pedHit(obj.x,obj.z,r);
@@ -3194,18 +3221,26 @@ function makeCar(type,x,z,heading,opts){
   opts=opts||{};
   const color=opts.color!==undefined?opts.color:(type==='cop'?0xf0f0f0:(type==='taxi'?0xffc41f:pick(CARCOLS)));
   const mesh=makeCarMesh(type,color);
-  mesh.position.set(x,0,z); mesh.rotation.y=heading;
+  const groundY=groundH(x,z);
+  mesh.position.set(x,groundY,z); mesh.rotation.y=heading;
   scene.add(mesh);
   const t=CARTYPES[type];
-  const car={ type, mesh, x, z, y:0, vy:0, heading, vel:new THREE.Vector3(),
+  const car={ type, mesh, x, z, y:groundY, vy:0, heading, vel:new THREE.Vector3(),
     hp:t.hp, maxhp:t.hp, parked:!!opts.parked, crashed:0, stuckT:0, cool:0, airT:0,
     target:null, speed:0, airborne:false, driver:opts.driver||null, dead:false };
+  const frontH=groundH(x+Math.sin(heading)*2,z+Math.cos(heading)*2);
+  const rearH=groundH(x-Math.sin(heading)*2,z-Math.cos(heading)*2);
+  mesh.rotation.x=clamp(Math.atan2(rearH-frontH,4),-0.4,0.4);
   cars.push(car); return car;
 }
 
 function randomRoadPoint(){
-  const l=pick(roadLines), t=rand(-H+ROAD+4,H-ROAD-4);
-  return _rng()<0.5?{x:l+rand(-2.5,2.5),z:t}:{x:t,z:l+rand(-2.5,2.5)};
+  const sample=()=>{
+    const l=pick(roadLines), t=rand(-H+ROAD+4,H-ROAD-4);
+    return _rng()<0.5?{x:l+rand(-2.5,2.5),z:t}:{x:t,z:l+rand(-2.5,2.5)};
+  };
+  const intended=sample();
+  return safeGenericSpawnPoint(intended,sample,0.7);
 }
 let parkedCount=0;
 blockInfo.forEach(b=>{
@@ -3225,14 +3260,54 @@ for(let k=0;k<8;k++){
 
 // traffic
 const traffic=[];
+const trafficPool=[];
+const TRAFFIC_POOL_CAP=16;
+function resetTrafficCar(car,it,target){
+  const heading=Math.atan2(target.x-it.x,target.z-it.z), t=CARTYPES[car.type];
+  const offset=()=>({x:it.x+rand(-2,2),z:it.z+rand(-2,2)});
+  const p=safeGenericSpawnPoint(offset(),offset,Math.max(t.w,t.l)*0.5);
+  car.x=p.x; car.z=p.z; car.y=groundH(car.x,car.z);
+  car.vy=0; car.heading=heading; car.vel.set(0,0,0); car.hp=t.hp; car.maxhp=t.hp;
+  car.parked=false; car.crashed=0; car.stuckT=0; car.cool=0; car.airT=0;
+  car.target=target; car.speed=0; car.airborne=false; car.driver='civ'; car.dead=false;
+  car.burning=false; car.burnT=0; car._tailOn=true;
+  car.mesh.visible=true; car.mesh.position.set(car.x,car.y,car.z);
+  car.mesh.rotation.set(0,heading,0);
+  const frontH=groundH(car.x+Math.sin(heading)*2,car.z+Math.cos(heading)*2);
+  const rearH=groundH(car.x-Math.sin(heading)*2,car.z-Math.cos(heading)*2);
+  car.mesh.rotation.x=clamp(Math.atan2(rearH-frontH,4),-0.4,0.4);
+  const wheels=car.mesh.userData.wheels;
+  if(wheels) wheels.forEach(w=>{ w.rotation.x=0; w.rotation.y=0; });
+  setTail(car,false);
+}
+function canPoolTraffic(car){
+  return car.driver==='civ'&&traffic.includes(car)&&!(mission&&mission.car===car)&&
+    !(replay&&replay.staged&&replay.staged.some(s=>s.ref===car));
+}
+function retireTraffic(car){
+  const poolable=canPoolTraffic(car);
+  const ci=cars.indexOf(car); if(ci>=0) cars.splice(ci,1);
+  const ti=traffic.indexOf(car); if(ti>=0) traffic.splice(ti,1);
+  if(poolable&&trafficPool.length<TRAFFIC_POOL_CAP){
+    scene.remove(car.mesh); car.mesh.visible=false; trafficPool.push(car); return true;
+  }
+  scene.remove(car.mesh); disposeMesh(car.mesh); return false;
+}
 function spawnTraffic(n){
   for(let k=0;k<n;k++){
     const it=pick(intersections);
-    const type=pick(['sedan','sedan','sedan','taxi','pickup','van','compact','muscle']);
-    const car=makeCar(type,it.x+rand(-3,3),it.z+rand(-3,3),pick([0,Math.PI/2,Math.PI,-Math.PI/2]),{driver:'civ'});
-    const nearI=intersections.reduce((a,b)=>Math.hypot(b.x-car.x,b.z-car.z)<Math.hypot(a.x-car.x,a.z-car.z)?b:a);
-    const opts=intersections.filter(p=>(Math.abs(p.i-nearI.i)+Math.abs(p.j-nearI.j))===1);
-    car.target=opts.length?pick(opts):pick(intersections);
+    const opts=intersections.filter(p=>(Math.abs(p.i-it.i)+Math.abs(p.j-it.j))===1);
+    const target=opts.length?pick(opts):pick(intersections);
+    // Face the chosen road before applying throttle. The old random heading
+    // sent fresh traffic diagonally into a block while steering caught up.
+    let car=trafficPool.pop();
+    if(car){ resetTrafficCar(car,it,target); scene.add(car.mesh); cars.push(car); }
+    else {
+      const type=pick(['sedan','sedan','sedan','taxi','pickup','van','compact','muscle']);
+      const heading=Math.atan2(target.x-it.x,target.z-it.z);
+      car=makeCar(type,it.x,it.z,heading,{driver:'civ'});
+      resetTrafficCar(car,it,target);
+    }
     traffic.push(car);
   }
 }
@@ -3241,6 +3316,8 @@ spawnTraffic(16);
 
 // ================= PEDESTRIANS =================
 const peds=[];
+const pedPool=[];
+const PED_POOL_CAP=34;
 const PEDCOLS=[0xff6b9d,0x6bc8ff,0xffd23e,0x8aff6b,0xd98aff,0xff8a5c,0x5cffd4,0xf0f0f0];
 // makePerson moved to js/person.js (C1 spec refactor)
 function makeDog(){
@@ -3263,6 +3340,7 @@ function makeDog(){
 function attachDog(ped){
   const m=makeDog(); scene.add(m);
   ped.dog={mesh:m,x:ped.x,z:ped.z,phase:0};
+  m.position.set(ped.x,groundH(ped.x,ped.z),ped.z);
 }
 function updateDog(ped,dt){
   const d=ped.dog; if(!d) return;
@@ -3275,18 +3353,39 @@ function updateDog(ped,dt){
   d.mesh.position.set(d.x,groundH(d.x,d.z)+Math.abs(Math.sin(d.phase))*0.05,d.z);
   d.mesh.userData.tail.rotation.y=Math.sin(d.phase*1.7)*0.6;
 }
-function spawnPed(b,kind){
-  const mesh=makePerson(pick(PEDCOLS));
-  const per=BLOCK/2+1.6, side=randi(0,3), t=rand(-BLOCK/2+3,BLOCK/2-3);
-  let x,z;
-  if(side===0){ x=b.cx-per; z=b.cz+t; }
-  else if(side===1){ x=b.cx+per; z=b.cz+t; }
-  else if(side===2){ x=b.cx+t; z=b.cz-per; }
-  else { x=b.cx+t; z=b.cz+per; }
-  mesh.position.set(x,0,z);
-  scene.add(mesh);
-  const ped={mesh,x,z,heading:rand(0,TAU),speed:rand(1.2,2),phase:rand(0,TAU),
-    state:'walk',stateT:rand(2,6),downT:0,home:b,kind:kind||'local',bound:H+4};
+function releasePedReferences(ped,orphanDog){
+  if(ped.dog){ makeStray(ped.dog,orphanDog?{orphaned:true}:undefined); ped.dog=null; }
+  if(ped.bub){ ped.bub.remove(); ped.bub=null; }
+  ped.bubT=0;
+  if(ped.partner){
+    if(ped.partner.partner===ped) ped.partner.partner=null;
+    if(ped.partner.kind==='chat') ped.partner.kind='local';
+    ped.partner=null;
+  }
+}
+function canPoolPed(ped){ return !(replay&&replay.staged&&replay.staged.some(s=>s.ref===ped)); }
+function retirePed(ped,orphanDog){
+  releasePedReferences(ped,orphanDog);
+  const pi=peds.indexOf(ped); if(pi>=0) peds.splice(pi,1);
+  if(canPoolPed(ped)&&pedPool.length<PED_POOL_CAP){
+    scene.remove(ped.mesh); ped.mesh.visible=false; pedPool.push(ped); return true;
+  }
+  scene.remove(ped.mesh); disposeMesh(ped.mesh); return false;
+}
+function resetPed(ped,b,kind){
+  const sidewalkPoint=()=>{
+    const per=BLOCK/2+1.6, side=randi(0,3), t=rand(-BLOCK/2+3,BLOCK/2-3);
+    if(side===0) return {x:b.cx-per,z:b.cz+t};
+    if(side===1) return {x:b.cx+per,z:b.cz+t};
+    if(side===2) return {x:b.cx+t,z:b.cz-per};
+    return {x:b.cx+t,z:b.cz+per};
+  };
+  let {x,z}=sidewalkPoint();
+  if(!kind||kind==='local') ({x,z}=safeGenericSpawnPoint({x,z},sidewalkPoint,0.42));
+  ped.x=x; ped.z=z; ped.heading=rand(0,TAU); ped.speed=rand(1.2,2); ped.phase=rand(0,TAU);
+  ped.state='walk'; ped.stateT=rand(2,6); ped.downT=0; ped.home=b; ped.kind=kind||'local'; ped.bound=H+4;
+  delete ped.walkAxis; delete ped.walkLine; delete ped.walkPos; delete ped.walkDir;
+  delete ped.chatT; delete ped.eatParts; delete ped.ratSwarm; delete ped.eaten;
   if(kind==='commute'){
     // sidewalk commuter: walks a straight line along a road, back and forth
     ped.walkAxis=pick(['x','z']);
@@ -3296,6 +3395,19 @@ function spawnPed(b,kind){
     else { ped.x=ped.walkLine; ped.z=ped.walkPos; }
   }
   if(kind==='beach') ped.bound=WATER_R-3;
+  ped.mesh.visible=true; ped.mesh.position.set(ped.x,groundH(ped.x,ped.z),ped.z);
+  ped.mesh.rotation.set(0,ped.heading,0);
+  const u=ped.mesh.userData;
+  [u.legL,u.legR,u.armL,u.armR].forEach(l=>{ if(l) l.rotation.x=0; });
+  if(u.torso){ u.torso.rotation.x=0; u.torso.rotation.y=0; }
+}
+function spawnPed(b,kind){
+  let ped=pedPool.pop();
+  if(ped){ resetPed(ped,b,kind); scene.add(ped.mesh); }
+  else {
+    ped={mesh:makePerson(pick(PEDCOLS))};
+    resetPed(ped,b,kind); scene.add(ped.mesh);
+  }
   if(_rng()<(kind==='local'?0.28:0.12)) attachDog(ped);
   peds.push(ped); return ped;
 }
@@ -3611,7 +3723,7 @@ const gangMembers=[];
 function spawnGangMember(x,z){
   const mesh=makePerson(0x7a2a9a,'guy');
   const g={mesh,x,z,heading:rand(0,TAU),speed:2.5,state:'guard',alertT:0};
-  mesh.position.set(x,0,z); scene.add(mesh);
+  mesh.position.set(x,groundH(x,z),z); scene.add(mesh);
   gangMembers.push(g); return g;
 }
 function spawnGangMembers(n){
@@ -3701,7 +3813,7 @@ function spawnJock(x,z){
   addLettermanJacket(mesh,team.body,team.letter);
   const j={mesh,x,z,homeX:x,homeZ:z,heading:rand(0,TAU),speed:2.6,state:'guard',
     tauntT:rand(1,4),swingT:0,hitT:0,phase:rand(0,TAU),hp:90,downT:0};
-  mesh.position.set(x,0,z); scene.add(mesh);
+  mesh.position.set(x,groundH(x,z),z); scene.add(mesh);
   jocks.push(j); return j;
 }
 function spawnJocks(n){
@@ -3827,15 +3939,47 @@ function updateJocks(dt){
 const strayDogs=[];
 const dogGangs=[];
 const meatDrops=[];
-let dogBandT=1, gangSeq=0;
-function makeStray(dog){
-  if(strayDogs.length>=16){   // animal control: the oldest stray moves on
-    const old=strayDogs.shift();
-    scene.remove(old.mesh); disposeMesh(old.mesh);
-    if(old.gang){ const gi=old.gang.dogs.indexOf(old); if(gi>=0) old.gang.dogs.splice(gi,1); }
+const STRAY_ARCHIVE_DIST=WORLD.block+WORLD.road; // one full city block, road to road
+let dogBandT=1, straySpawnT=8, gangSeq=0;
+function removeStrayDog(d,archive){
+  const si=strayDogs.indexOf(d); if(si>=0) strayDogs.splice(si,1);
+  if(d.gang){
+    const g=d.gang, gi=g.dogs.indexOf(d); if(gi>=0) g.dogs.splice(gi,1);
+    if(!g.dogs.length){ const di=dogGangs.indexOf(g); if(di>=0) dogGangs.splice(di,1); }
   }
-  strayDogs.push({mesh:dog.mesh,x:dog.x,z:dog.z,phase:rand(0,TAU),gang:null,
-    hx:dog.x,hz:dog.z,wa:rand(0,TAU),offX:0,offZ:0,biteT:0});
+  scene.remove(d.mesh); disposeMesh(d.mesh);
+  if(archive&&!d.counted){
+    G.strayDogCount++;
+    queueSave();
+  }
+}
+function makeStray(dog,opts){
+  opts=opts||{};
+  if(strayDogs.length>=16){   // animal control: the oldest stray moves on
+    removeStrayDog(strayDogs[0],false);
+  }
+  const d={mesh:dog.mesh,x:dog.x,z:dog.z,phase:rand(0,TAU),gang:null,
+    hx:dog.x,hz:dog.z,wa:rand(0,TAU),offX:0,offZ:0,biteT:0,
+    orphaned:!!opts.orphaned,counted:!!opts.counted};
+  d.mesh.position.set(d.x,groundH(d.x,d.z),d.z);
+  strayDogs.push(d);
+  return d;
+}
+function spawnStrayPopulationPack(){
+  const visible=strayDogs.filter(d=>d.counted).length;
+  const target=Math.min(12,G.strayDogCount);
+  if(visible>=target||target<=0) return 0;
+  const packScale=Math.min(6,1+Math.floor(Math.max(0,G.strayDogCount-1)/3));
+  const n=Math.min(packScale,target-visible);
+  let p=randomRoadPoint();
+  for(let tries=0;tries<12&&Math.hypot(p.x-px0(),p.z-pz0())<35;tries++) p=randomRoadPoint();
+  const made=[];
+  for(let k=0;k<n;k++){
+    const mesh=makeDog(); scene.add(mesh);
+    made.push(makeStray({mesh,x:p.x+rand(-1.8,1.8),z:p.z+rand(-1.8,1.8)},{counted:true}));
+  }
+  if(made.length>1) makeGang(made);
+  return made.length;
 }
 function pickGangWp(g){
   const p=randomRoadPoint();
@@ -3916,6 +4060,18 @@ function antagonizeDogs(x,z,r){
   if(hit) sfx.dogGrowl();
 }
 function updateStrayDogs(dt){
+  // A dead owner's dog remains physically present while Turbo is nearby. Once
+  // he is a full block away, fold that individual into the persistent city
+  // population; later encounters are regenerated from the count in packs.
+  for(let i=strayDogs.length-1;i>=0;i--){
+    const d=strayDogs[i];
+    if(d.orphaned&&Math.hypot(d.x-px0(),d.z-pz0())>STRAY_ARCHIVE_DIST) removeStrayDog(d,true);
+  }
+  straySpawnT-=dt;
+  if(straySpawnT<=0){
+    spawnStrayPopulationPack();
+    straySpawnT=rand(8,14);
+  }
   // lone strays gravitate together and band into packs
   dogBandT-=dt;
   if(dogBandT<=0){
@@ -4124,12 +4280,30 @@ updatePizzaDelivery=function(dt){
 // ================= END PIZZA WARS MISSION =================
 
 // ================= PLAYER =================
+const TURBO_SPEC={
+  gender:'guy',detail:'hero',height:1.04,build:1.08,skin:0xc89060,
+  hair:{style:'spiky',color:0xf2cf55,beard:false},
+  outfit:{shirt:{color:0x37c8ff},pants:{color:0x2a2a36,shorts:false},
+    shoes:{color:0xf0f0f0},dress:false,tank:false},
+  face:{tex:null},
+};
 const player={
-  mesh:makePerson(0x37c8ff,'guy'), x:roadLines[4]+6, z:roadLines[4]+6,
-  heading:0, phase:0, punchT:0, car:null, vy:0, y:0,
+  mesh:makePerson(TURBO_SPEC), x:roadLines[4]+6, z:roadLines[4]+6,
+  heading:0, phase:0, punchT:0, kickT:0, car:null, vy:0, y:0,
   climb:null, climbPhase:0,   // set to {L} while hand-over-handing a wall ladder
 };
 scene.add(player.mesh);
+// Turbo's shirt mark: simple geometry stays crisp from any distance and avoids
+// a texture fetch. His front faces +Z, so this pink T sits just off the back.
+(function(){
+  const u=player.mesh.userData, mark=new THREE.Group();
+  const pink=new THREE.MeshBasicMaterial({color:0xff3ea0});
+  const stem=new THREE.Mesh(new THREE.BoxGeometry(0.075,0.3,0.018),pink);
+  const top=new THREE.Mesh(new THREE.BoxGeometry(0.27,0.075,0.018),pink);
+  top.position.y=0.115; mark.add(stem,top);
+  mark.position.set(0,0.3,-u.body.scale.z*0.5-0.03);
+  u.torso.add(mark); u.backT=mark;
+})();
 // Turbo's sunglasses — replay photo-op prop, slides on/off his face
 (function(){
   const hg=player.mesh.userData.head;
@@ -4801,7 +4975,7 @@ function spawnGuards(){
     const mesh=makePerson(pick([0x2a4a6a,0x3a3a4a]),'guy');
     const g={mesh,x:PIZZA.x+rand(-8,8),z:PIZZA.z+rand(-8,8),heading:rand(0,TAU),
       state:'patrol',patrolT:0,alertT:0,spotT:0};
-    mesh.position.set(g.x,0,g.z); scene.add(mesh);
+    mesh.position.set(g.x,groundH(g.x,g.z),g.z); scene.add(mesh);
     guards.push(g);
   }
 }
@@ -5014,7 +5188,7 @@ function makeHeliShadow(){
 function updateHeliShadow(h){
   const s=h.shadow; if(!s) return;
   const roof=roofAt(h.x,h.z);
-  const gy=(roof>0&&h.y>roof-0.5)?roof:0;
+  const gy=(roof>0&&h.y>roof-0.5)?roof:groundH(h.x,h.z);
   s.position.set(h.x,gy+0.03,h.z);
   const alt=clamp(h.y-gy,0,60);
   const sc=2.6*(1+alt*0.012);
@@ -5025,9 +5199,10 @@ function updateHeliShadow(h){
 function makeHeli(x,z,heading,opts){
   opts=opts||{};
   const mesh=makeHeliMesh(opts.color||0xffd23e);
-  mesh.position.set(x,0,z); mesh.rotation.y=heading;
+  const groundY=groundH(x,z);
+  mesh.position.set(x,groundY,z); mesh.rotation.y=heading;
   scene.add(mesh);
-  const h={mesh,x,z,y:0,vy:0,heading,vel:new THREE.Vector3(),hp:160,maxhp:160,
+  const h={mesh,x,z,y:groundY,vy:0,heading,vel:new THREE.Vector3(),hp:160,maxhp:160,
     spin:0,parked:true,driver:null,dead:false,cop:!!opts.cop,landed:true,cool:0,
     shadow:makeHeliShadow()};
   h.shadow.scale.set(2.6,2.6*0.7,1);
@@ -5269,7 +5444,7 @@ function endBail(){
 function updateBail(dt){
   const p=player;
   // hide the usual foot controls — the only thing that matters is the cord
-  ['btnPunch','btnJump','btnGun','btnTalk','btnEnter'].forEach(id=>$(id).style.display='none');
+  ['btnPunch','btnKick','btnJump','btnGun','btnTalk','btnEnter'].forEach(id=>$(id).style.display='none');
   $('reticule').style.display='none';
   if(!p.chute&&p.y>6) $('btnChute').style.display='flex';
   const roofHere=roofAt(p.x,p.z);
@@ -5401,7 +5576,8 @@ function nearestVehicle(x,z,r){
 function refreshButtons(){
   const m=G.mode;
   const car=m==='car', heli=m==='heli', foot=m==='foot';
-  // mode-based controls FIRST so early returns below can never leave stale pedals on screen
+  // Restore the complete mode layout FIRST so proximity returns below can never
+  // leave the action cluster centered or labelled like the car controls.
   $('btnHorn').style.display=car?'flex':'none';
   $('pedals').style.display=(car||heli)?'flex':'none';
   $('btnGas').style.display=car?'flex':'none';
@@ -5409,6 +5585,22 @@ function refreshButtons(){
   $('btnGun').style.display=foot?'flex':'none';
   $('btnJump').style.display=foot?'flex':'none';
   $('btnPunch').style.display=foot?'flex':'none';
+  $('btnKick').style.display=(foot&&G.weapon==='fists')?'flex':'none';
+  $('btns').style.right=foot?'14px':'auto';
+  $('btns').style.left=foot?'auto':'50%';
+  $('btns').style.transform=foot?'none':'translateX(-50%)';
+  $('btnBoost').textContent=heli?'UP':'BOOST';
+  $('btnDrift').textContent=heli?'DOWN':'DRIFT';
+  if(!foot) $('btnTalk').style.display='none';
+  if(foot){
+    btnBrakeReversing=false;
+    $('btnBrake').textContent='BRAKE';
+    $('btnBrake').classList.remove('reversing');
+  }
+  $('btnPunch').textContent=G.weapon==='fists'?'PUNCH':(G.weapon==='baton'?'SWING':
+    (G.weapon==='pistol'?(G.reloading?'RELOAD…':'SHOOT ('+G.pistolAmmo+')'):'RPG ('+G.rockets+')'));
+  $('btnGun').textContent='SWAP '+G.weapon.toUpperCase();
+  updateWeaponVisual();
   // Pizza place door buttons
   if(foot&&!G.interior){
     const d=Math.hypot(player.x-PIZZA.doorX,player.z-PIZZA.doorZ);
@@ -5430,17 +5622,6 @@ function refreshButtons(){
       }
     }
   }
-  // on foot the action cluster hugs the right edge; while driving, EXIT centers itself
-  $('btns').style.right=foot?'14px':'auto';
-  $('btns').style.left=foot?'auto':'50%';
-  $('btns').style.transform=foot?'none':'translateX(-50%)';
-  $('btnBoost').textContent=heli?'UP':'BOOST';
-  $('btnDrift').textContent=heli?'DOWN':'DRIFT';
-  if(!foot) $('btnTalk').style.display='none';
-  $('btnPunch').textContent=G.weapon==='fists'?'PUNCH':(G.weapon==='baton'?'SWING':
-    (G.weapon==='pistol'?(G.reloading?'RELOAD…':'SHOOT ('+G.pistolAmmo+')'):'RPG ('+G.rockets+')'));
-  $('btnGun').textContent=G.weapon.toUpperCase();
-  updateWeaponVisual();
 }
 
 // ================= TALKING PEDS =================
@@ -5576,7 +5757,32 @@ function updateWeaponVisual(){
   u.gun.visible=G.weapon==='pistol';
   u.rpg.visible=G.weapon==='rpg';
   u.baton.visible=G.weapon==='baton';
-  $('reticule').style.display=(G.mode==='foot'&&G.weapon!=='fists'&&!player.bailing)?'block':'none';
+  const aiming=G.mode==='foot'&&isRangedWeapon(G.weapon)&&!player.bailing;
+  $('reticule').style.display=aiming?'block':'none';
+  setTurboAimTransparency(aiming);
+}
+function isRangedWeapon(w){ return w==='pistol'||w==='rpg'; }
+let turboAimTransparent=false;
+const turboAimMats=new Map();
+function setTurboAimTransparency(on){
+  if(on===turboAimTransparent) return;
+  turboAimTransparent=on;
+  const u=player.mesh.userData, weaponRoots=[u.gun,u.rpg,u.baton].filter(Boolean);
+  player.mesh.traverse(o=>{
+    if(!o.material) return;
+    let n=o, weaponChild=false;
+    while(n&&n!==player.mesh){ if(weaponRoots.includes(n)){ weaponChild=true; break; } n=n.parent; }
+    if(weaponChild) return;
+    const mats=Array.isArray(o.material)?o.material:[o.material];
+    mats.forEach(m=>{
+      if(!turboAimMats.has(m)) turboAimMats.set(m,{transparent:m.transparent,opacity:m.opacity,depthWrite:m.depthWrite});
+      const base=turboAimMats.get(m);
+      m.transparent=on?true:base.transparent;
+      m.opacity=on?0.38:base.opacity;
+      m.depthWrite=on?false:base.depthWrite;
+      m.needsUpdate=true;
+    });
+  });
 }
 function cycleWeapon(){
   if(G.mode!=='foot') return;
@@ -5698,7 +5904,7 @@ function startMissileFlight(){
   };
 }
 function doAttack(){
-  if(!G.started||G.over||G.mode!=='foot'||player.punchT>0) return;
+  if(!G.started||G.over||G.mode!=='foot'||player.punchT>0||player.kickT>0) return;
   if(G.weapon==='fists'){ doPunch(false); return; }
   if(G.weapon==='baton'){ doPunch(true); return; }
   const p=player;
@@ -5885,15 +6091,29 @@ function explode(x,y,z){
   damageArea(x,z,7,130);
 }
 // --- the BIG one: fireball, mushroom cloud, shockwave, and a camera moment ---
-const boomFx=[];      // climbing cloud emitters {x,y,z,t}
+const boomFx=[];      // solid, animated mushroom clouds
 let shockwave=null;   // one reusable expanding ring
+function makeMushroomCloud(x,y,z){
+  const group=new THREE.Group();
+  const stem=new THREE.Mesh(
+    new THREE.CylinderGeometry(0.72,1.05,1,18),
+    new THREE.MeshBasicMaterial({color:0x8e171d})
+  );
+  const cap=new THREE.Mesh(
+    new THREE.SphereGeometry(1,20,16),
+    new THREE.MeshBasicMaterial({color:0xd3292f})
+  );
+  group.position.set(x,y,z); group.visible=false;
+  group.add(stem); group.add(cap); scene.add(group);
+  return {group,stem,cap,t:0,bloom:0.55,dur:6.2};
+}
 function bigExplosion(x,y,z){
   sfx.carBoom(); shake(1.2); triggerHitStop(0.08); haptic([60,40,90,40,120]);
   spawnFireball(x,y+1,z,8.5);
   burst(x,y,z,70,COL_FIRE,12,1.6,4);
   burst(x,y,z,40,COL_FIRE,6,2.2,1);
   burst(x,y,z,30,COL_SMOKE,5,2.5,1);
-  boomFx.push({x,y:y+1,z,t:3.2});
+  boomFx.push(makeMushroomCloud(x,y+1,z));
   if(!shockwave){
     shockwave=new THREE.Mesh(new THREE.RingGeometry(0.8,1,40),
       new THREE.MeshBasicMaterial({color:0xffd9a0,transparent:true,opacity:0.8,side:THREE.DoubleSide,depthWrite:false}));
@@ -5908,10 +6128,20 @@ function bigExplosion(x,y,z){
 function updateBoomFx(dt){
   updateFireballs(dt);
   for(let i=boomFx.length-1;i>=0;i--){
-    const b=boomFx[i]; b.t-=dt; b.y+=dt*7;   // the column climbs
-    burst(b.x,b.y,b.z,3,COL_SMOKE,2.2,1.6,-1.5);
-    if(_rng()<0.5) burst(b.x,b.y-1.5,b.z,2,COL_FIRE,1.5,0.5,0);
-    if(b.t<=0) boomFx.splice(i,1);
+    const b=boomFx[i]; b.t+=dt;
+    if(b.t>=b.bloom){
+      // Let the fireball bloom first, then grow a solid stem into a red cap.
+      // No rising particles: this stays readable as one persistent cloud.
+      const age=b.t-b.bloom, grow=clamp(age/1.4,0,1);
+      const capY=1.0+age*3.7, capR=lerp(1.1,4.4,grow);
+      const stemH=Math.max(0.12,capY-capR*0.3);
+      b.group.visible=true;
+      b.cap.position.y=capY;
+      b.cap.scale.set(capR,capR*0.82,capR);
+      b.stem.position.y=stemH*0.5;
+      b.stem.scale.set(lerp(0.35,1.05,grow),stemH,lerp(0.35,1.05,grow));
+    }
+    if(b.t>=b.dur){ scene.remove(b.group); disposeMesh(b.group); boomFx.splice(i,1); }
   }
   if(shockwave&&shockwave.userData.t>0){
     shockwave.userData.t-=dt;
@@ -5982,6 +6212,24 @@ function footGround(p){
   return (roofHere>0&&p.y>roofHere-1.0)?roofHere:
     Math.max(groundH(p.x,p.z),onStairs?sh:0);
 }
+function resetFootStuck(p){ p.stuckT=0; p.stuckNudged=false; }
+// Analytic resolution normally clears an overlap in one frame. Only if a
+// static blocker persists do we make one short, terrain-seated nudge; dynamic
+// crowding is deliberately excluded by staticBlockerHit().
+function updateFootStuckRecovery(p,dt){
+  if(G.mode!=='foot'||p.climb||p.bailing||G.replay||activeCutscene){ resetFootStuck(p); return; }
+  const roof=roofAt(p.x,p.z), st=stairHitRun(p.x,p.z);
+  if((roof>0&&p.y>roof-1.0)||(st&&p.y>st.h-1.2)){ resetFootStuck(p); return; }
+  resolveStaticFootCollision(p,0.5);       // the normal static response comes first
+  const hit=staticBlockerHit(p.x,p.z,0.5);
+  if(!hit||hit.depth<=1e-5){ resetFootStuck(p); return; }
+  p.stuckT=(p.stuckT||0)+dt;
+  if(p.stuckT<0.45||p.stuckNudged) return;
+  const step=clamp(hit.depth+0.06,0.18,0.8);
+  p.x=clamp(p.x+hit.nx*step,-(WATER_R-2),WATER_R-2);
+  p.z=clamp(p.z+hit.nz*step,-(WATER_R-2),WATER_R-2);
+  p.y=footGround(p); p.vy=0; p.stuckNudged=true;
+}
 function doJump(){
   if(!G.started||G.over||G.mode!=='foot') return;
   if(player.climb){ bailLadder(); return; }   // push off the rungs
@@ -5995,6 +6243,8 @@ $('btnJump').addEventListener('touchstart',e=>{e.preventDefault();doJump();},{pa
 $('btnJump').addEventListener('mousedown',doJump);
 $('btnPunch').addEventListener('touchstart',e=>{e.preventDefault();doAttack();},{passive:false});
 $('btnPunch').addEventListener('mousedown',doAttack);
+$('btnKick').addEventListener('touchstart',e=>{e.preventDefault();doKick();},{passive:false});
+$('btnKick').addEventListener('mousedown',doKick);
 $('btnGun').addEventListener('touchstart',e=>{e.preventDefault();cycleWeapon();},{passive:false});
 $('btnGun').addEventListener('mousedown',cycleWeapon);
 $('btnTalk').addEventListener('touchstart',e=>{e.preventDefault();doTalk();},{passive:false});
@@ -6092,6 +6342,7 @@ document.addEventListener('keydown',e=>{
     else doJump();
   }
   if(e.code==='KeyF') doAttack();
+  if(e.code==='KeyK') doKick();
   if(e.code==='KeyT') doTalk();
   if(e.code==='KeyH') doHorn();
   if(e.code==='KeyG') cycleWeapon();
@@ -6364,6 +6615,10 @@ function carPhysics(car,dt,ctl){
       }
     }
   }
+  // Sample after horizontal integration and collision resolution. Sampling
+  // before movement left every grounded car one frame behind a hill, which
+  // reads as buried tyres uphill and hovering tyres downhill.
+  if(!car.airborne) car.y=groundH(car.x,car.z);
   // visuals
   car.mesh.position.set(car.x,car.y,car.z);
   car.mesh.rotation.y=car.heading;
@@ -6414,10 +6669,8 @@ function killCar(car,boom){
     burst(car.x,1,car.z,26,COL_FIRE,6,0.9,4);
     burst(car.x,1,car.z,16,COL_SMOKE,3,1.4,1);
   }
-  scene.remove(car.mesh); disposeMesh(car.mesh);
   if(car.driver==='cop'&&_rng()<0.35) spawnPickup('rpg',car.x+rand(-1,1),car.z+rand(-1,1));
-  const ci=cars.indexOf(car); if(ci>=0) cars.splice(ci,1);
-  const ti=traffic.indexOf(car); if(ti>=0) traffic.splice(ti,1);
+  retireTraffic(car);
   setTimeout(()=>{ if(traffic.length<TRAFFIC_CAP) spawnTraffic(1); },4000);
 }
 function addStyle(n){ if(mission&&mission.type==='style') mission.value+=n; }
@@ -6435,6 +6688,7 @@ function nearestCar(x,z,r){
 function updateFoot(dt){
   const p=player;
   p.punchT=Math.max(0,p.punchT-dt);
+  p.kickT=Math.max(0,p.kickT-dt);
   if(p.bailing){ updateBail(dt); return; }
   if(p.stunT>0){   // clocked — flat on your back for a beat
     p.stunT-=dt;
@@ -6492,6 +6746,7 @@ function updateFoot(dt){
     if(p.y<=ground){ p.y=ground; p.vy=0; blip(120,60,0.08,0.12,'sine'); }
   }
   else if(p.y<ground){ p.y=ground; p.vy=0; }   // stairs & slopes lift you as you climb
+  updateFootStuckRecovery(p,dt);
   p.mesh.position.set(p.x,p.y+Math.abs(Math.sin(p.phase))*0.06,p.z);
   p.mesh.rotation.y=p.heading;
   const u=p.mesh.userData;
@@ -6539,7 +6794,15 @@ function updateFoot(dt){
       u.torso.rotation.x=airborne?0.12:mag*0.07;
     }
   }
-  if(G.weapon==='pistol'||G.weapon==='rpg'){
+  if(p.kickT>0){
+    // Slower than the punch: chamber, extend, then recover. The right leg
+    // supplies the hit while both arms stay up to keep Turbo balanced.
+    const kr=1-p.kickT/0.9, snap=Math.sin(Math.PI*clamp(kr/0.82,0,1));
+    u.legR.rotation.x=-1.35*snap;
+    if(u.kneeR) u.kneeR.rotation.x=0.55*(1-snap);
+    u.armL.rotation.x=-0.85; u.armR.rotation.x=-0.75;
+    if(u.torso){ u.torso.rotation.y=0.32*snap; u.torso.rotation.x=-0.16*snap; }
+  } else if(G.weapon==='pistol'||G.weapon==='rpg'){
     // twin-stick: Turbo faces wherever the camera aims, gun arm leveled —
     // left stick strafes, right thumb swings the reticule
     p.heading=footCamYaw;
@@ -6655,7 +6918,7 @@ function doEnterExit(){
     }
     refreshButtons();
   } else if(G.mode==='car'){
-    exitCar(); refreshButtons();
+    exitCar();
   } else if(G.mode==='heli'){
     const h=player.heli;
     if(!h) return;
@@ -6670,7 +6933,7 @@ function exitCar(){
   G.mode='foot'; c.driver=null;
   player.x=c.x+Math.cos(c.heading)*2.2; player.z=c.z-Math.sin(c.heading)*2.2;
   resolveFootCollision(player,0.5);
-  player.y=0; player.mesh.visible=true;
+  player.y=groundH(player.x,player.z); player.mesh.visible=true;
   player.car=null; footCamYaw=player.heading;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
@@ -6678,6 +6941,7 @@ function exitCar(){
   if(engineSubGain) engineSubGain.gain.value=0;
   if(engineGritGain) engineGritGain.gain.value=0;
   if(turboGain) turboGain.gain.value=0;
+  refreshButtons();
 }
 let btnBrakeReversing=false;
 function updateCarMode(dt){
@@ -6866,13 +7130,18 @@ function updateCarMode(dt){
   setTail(c,input.brake||input.drift||false);
   $('btnEnter').style.display='flex';
 }
-function doPunch(heavy){
-  if(!G.started||G.over||G.mode!=='foot'||player.punchT>0) return;
-  player.punchT=0.55;
+function doPunch(heavy,kicking){
+  if(!G.started||G.over||G.mode!=='foot'||player.punchT>0||player.kickT>0) return;
+  if(kicking&&G.weapon!=='fists') return;
+  if(kicking) player.kickT=0.9;
+  else player.punchT=0.55;
   (heavy?WEAPON_SFX.baton:WEAPON_SFX.fists).fire();
+  if(kicking) blip(125,48,0.12,0.24,'sine');
   turboSay('punch');
   const p=player;
-  const reach=heavy?2.9:2.3;   // the nightstick swings long
+  const reach=heavy?2.9:(kicking?2.75:2.3);   // kicks are slower, longer, and heavier
+  const damage=heavy?55:(kicking?44:30);
+  const push=heavy?0.9:(kicking?1.8:0.9);
   burst(p.x+Math.sin(p.heading)*0.8,1.2,p.z+Math.cos(p.heading)*0.8,4,COL_SPARK,2,0.25,4);
   // swinging near a dog = antagonizing the whole pack
   antagonizeDogs(p.x+Math.sin(p.heading)*1,p.z+Math.cos(p.heading)*1,2.4);
@@ -6881,8 +7150,8 @@ function doPunch(heavy){
     if(fc.state==='down') continue;
     const dx=fc.x-p.x, dz=fc.z-p.z, d=Math.hypot(dx,dz);
     if(d<reach&&Math.abs(angDiff(p.heading,Math.atan2(dx,dz)))<1.1){
-      fc.hp-=heavy?55:30;
-      fc.x+=Math.sin(p.heading)*0.9; fc.z+=Math.cos(p.heading)*0.9;
+      fc.hp-=damage;
+      fc.x+=Math.sin(p.heading)*push; fc.z+=Math.cos(p.heading)*push;
       burst(fc.x,1.2,fc.z,6,COL_SPARK,2,0.3,4);
       addHeat(heavy?20:16);
       if(fc.hp<=0) downFootCop(fc);
@@ -6894,8 +7163,8 @@ function doPunch(heavy){
     if(j.state==='down') continue;
     const dx=j.x-p.x, dz=j.z-p.z, d=Math.hypot(dx,dz);
     if(d<reach&&Math.abs(angDiff(p.heading,Math.atan2(dx,dz)))<1.1){
-      j.hp-=heavy?55:30;
-      j.x+=Math.sin(p.heading)*0.9; j.z+=Math.cos(p.heading)*0.9;
+      j.hp-=damage;
+      j.x+=Math.sin(p.heading)*push; j.z+=Math.cos(p.heading)*push;
       burst(j.x,1.2,j.z,6,COL_SPARK,2,0.3,4);
       addHeat(heavy?18:14);
       if(j.hp<=0) downJock(j,false);
@@ -6908,6 +7177,7 @@ function doPunch(heavy){
     if(d<reach){
       const ang=Math.atan2(dx,dz);
       if(Math.abs(angDiff(p.heading,ang))<1.1){
+        if(kicking){ ped.x+=Math.sin(p.heading)*1.4; ped.z+=Math.cos(p.heading)*1.4; }
         knockPed(ped,false);
         addHeat(16);
         if(_rng()<0.6) spawnPickup('cash',ped.x+rand(-1,1),ped.z+rand(-1,1));
@@ -6922,6 +7192,7 @@ function doPunch(heavy){
     }
   }
 }
+function doKick(){ doPunch(false,true); }
 function doHorn(){
   if(!G.started||G.over||G.mode!=='car') return;
   sfx.horn();
@@ -7191,7 +7462,7 @@ function makeCopPerson(x,z){
   const mesh=makePerson({gender:'guy',detail:'crowd',height:rand(0.98,1.06),build:rand(1.02,1.14),
     hair:{style:'cap',color:0x18243c,beard:false},
     outfit:{shirt:{color:0x2a4a8a},pants:{color:0x1b2745,shorts:false},shoes:{color:0x14141a},dress:false,tank:false}});
-  mesh.position.set(x,0,z); scene.add(mesh);
+  mesh.position.set(x,groundH(x,z),z); scene.add(mesh);
   const fc={mesh,x,z,heading:rand(0,TAU),phase:rand(0,TAU),hp:60,state:'chase',
     cool:rand(0.5,1.2),downT:0,swingT:0,walkT:0,car:null,armed:false};
   // nightstick on the belt-hand, pistol for when the stars go high
@@ -7583,11 +7854,7 @@ function updatePeds(dt){
     if(ped.state==='down'){
       ped.downT-=dt;
       if(ped.downT<=0){
-        scene.remove(ped.mesh); disposeMesh(ped.mesh);
-        if(ped.dog) makeStray(ped.dog);   // the dog outlives the owner
-        if(ped.bub) ped.bub.remove();
-        peds.splice(i,1);
-        if(ped.kind==='chat'&&ped.partner) ped.partner.kind='local';
+        retirePed(ped,true);   // its dog persists nearby, then joins the city count
         if(peds.length<PED_CAP) spawnPed(pick(blockInfo));
       }
       continue;
@@ -7727,12 +7994,15 @@ function exitCarSoft(){
   if(player.car){ player.car.driver=null; player.car=null; }
   if(player.heli){ player.heli.driver=null; player.heli=null; }
   G.mode='foot';
+  player.mesh.visible=true;
+  $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
   if(skidGain) skidGain.gain.value=0;
   if(heliChopGain){ heliChopGain.gain.value=0; heliChopDepth.gain.value=0; }
   if(engineSubGain) engineSubGain.gain.value=0;
   if(engineGritGain) engineGritGain.gain.value=0;
   if(turboGain) turboGain.gain.value=0;
+  refreshButtons();
 }
 function respawn(spot){
   G.over=true;
@@ -7740,7 +8010,10 @@ function respawn(spot){
   setTimeout(()=>{
     const custom=!!spot;
     spot=spot||intersections[Math.floor(intersections.length/2)];
-    player.x=spot.x+(custom?0:4); player.z=spot.z+(custom?0:4); player.y=groundH(player.x,player.z);
+    const intended={x:spot.x+(custom?0:4),z:spot.z+(custom?0:4)};
+    const p=custom?intended:safeGenericSpawnPoint(intended,
+      ()=>({x:spot.x+rand(2,6),z:spot.z+rand(2,6)}),0.5);
+    player.x=p.x; player.z=p.z; player.y=groundH(player.x,player.z); resetFootStuck(player);
     player.mesh.visible=true; player.mesh.rotation.x=0; footCamYaw=player.heading;
     makeCar('sedan',spot.x-4,spot.z-3,rand(0,TAU),{parked:true});
     G.mode='foot'; player.car=null;
@@ -7754,7 +8027,10 @@ function busted(){
   sfx.busted(); haptic(120);
   const fine=Math.floor(G.money*0.12);
   G.money-=fine; $('money').textContent='$'+G.money;
-  bigEvent('BUSTED','#4f7ad9','You lost $'+fine);
+  // Persist the consequence before the respawn lock. pagehide intentionally skips
+  // saves while G.over, so a queued write here could otherwise be lost on mobile.
+  saveGame();
+  bigEvent('BUSTED','#4f7ad9','Fine: $'+fine+' — respawning downtown');
   if(mission&&(mission.type==='heat'||mission.type==='courier'||mission.type==='getaway')) failMission();
   G.heat=0; G.stars=0; G.escapeT=0; G.bustT=0; G.hiddenT=0; updateStarsHUD();
   cops.forEach(c=>{ if(c.driver==='cop') c.driver='leaving'; });
@@ -7781,7 +8057,9 @@ function wasted(spot){
   }
   const fee=Math.floor(G.money*0.05);
   G.money-=fee; $('money').textContent='$'+G.money;
-  bigEvent('WASTED','#ff4444','Hospital bill: $'+fee);
+  // See busted(): this is an explicit, durable progress change, not a frame write.
+  saveGame();
+  bigEvent('WASTED','#ff4444','Hospital bill: $'+fee+' — respawning downtown');
   shake(1);
   // ...and only NOW does the camera chase the fireball — regular booms don't yank it
   if(G.lastBoom&&performance.now()-G.lastBoom.t<1200){
@@ -7789,7 +8067,7 @@ function wasted(spot){
     const ol=Math.hypot(ox,oz)||1;
     G.boomCam={x:G.lastBoom.x,z:G.lastBoom.z,t:5,ox:ox/ol*26,oz:oz/ol*26};
   }
-  G.heat=0; G.stars=0; updateStarsHUD();
+  G.heat=0; G.stars=0; G.escapeT=0; G.bustT=0; G.hiddenT=0; updateStarsHUD();
   cops.forEach(cc=>{ cc.driver='leaving'; });
   respawn(spot||player._shore); player._shore=null;
 }
@@ -7863,6 +8141,8 @@ function updateCamera(dt){
     camera.lookAt(h.x,h.y+1,h.z);
   } else {
     const p=player;
+    const aiming=isRangedWeapon(G.weapon)&&!p.bailing;
+    setTurboAimTransparency(aiming);
     // camera has its own yaw that eases toward the player's heading — pushing
     // back on the stick backpedals instead of whipping the view 180°.
     // (paused while you're manually aiming the view with your right thumb)
@@ -7870,15 +8150,22 @@ function updateCamera(dt){
       let dy=((p.heading-footCamYaw+Math.PI*3)%TAU)-Math.PI;
       footCamYaw+=dy*Math.min(1,2.4*dt);
     }
+    const fx=Math.sin(footCamYaw), fz=Math.cos(footCamYaw);
+    const rx=Math.cos(footCamYaw), rz=-Math.sin(footCamYaw);
+    // Firearms use a close left-shoulder camera. Moving roughly two-thirds of
+    // the old 6.5u gap toward Turbo makes targets readable; placing the camera
+    // to his left leaves his transparent silhouette on the reticule's right.
+    const back=aiming?2.5:6.5, side=aiming?-0.95:0;
     const tgt=cameraCollide(p.x,p.y+1.5,p.z,
-      p.x-Math.sin(footCamYaw)*6.5,p.y+2.9+camPitch*2.6,p.z-Math.cos(footCamYaw)*6.5);
+      p.x-fx*back+rx*side,p.y+(aiming?2.25:2.9)+camPitch*(aiming?1.7:2.6),p.z-fz*back+rz*side);
     camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-4*dt));
     const camFloor=groundH(camPos.x,camPos.z)+0.45;
     if(camPos.y<camFloor) camPos.y=camFloor;   // looking down from below ground is a bad time
-    camera.fov=lerp(camera.fov,62,0.1);
+    camera.fov=lerp(camera.fov,aiming?54:62,0.1);
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
-    camera.lookAt(p.x,p.y+1.4-camPitch*3.6,p.z);
+    if(aiming) camera.lookAt(p.x+fx*8,p.y+1.45-camPitch*2.5,p.z+fz*8);
+    else camera.lookAt(p.x,p.y+1.4-camPitch*3.6,p.z);
   }
   if(camShake>0.01){
     if(!SETTINGS.reduceMotion){
@@ -8184,7 +8471,8 @@ const INTRO_PATH=[
   {p:[-H*0.6,42,-H*0.7], l:[H*0.2,10,H*0.2]},            // swooping over the beach toward downtown
   {p:[roadLines[2]-30,16,roadLines[2]-30], l:[roadLines[3],5,roadLines[3]]}, // between buildings
   {p:[roadLines[4]-14,7,roadLines[4]-60], l:[roadLines[4],3,roadLines[4]]},  // street level chase-cam feel
-  {p:[roadLines[4]+20,26,roadLines[4]-40], l:[player.x,3,player.z]},         // crane up and over
+  {p:[roadLines[4]+20,26,roadLines[4]-40], l:[player.x,4.2,player.z]},      // crane up and acquire Turbo
+  {p:[player.x-Math.sin(player.heading)*11,7.5,player.z-Math.cos(player.heading)*11], l:[player.x,2.3,player.z]}, // pan down while moving in
   {p:[player.x-Math.sin(player.heading)*6.5,3.2,player.z-Math.cos(player.heading)*6.5], l:[player.x,1.4,player.z]}, // land behind the player
 ];
 let introT=0;
@@ -8194,10 +8482,56 @@ let introT=0;
 // shot always stays over the surface (cam ≥2.4u, look point ≥0.6u). max() of
 // continuous functions stays continuous, so the path keeps its smooth sweep.
 // Shared by updateIntroCam and cinema's updateCinemaIntro.
+function cinematicBuildingVolumes(){
+  const out=buildings.slice();
+  if(PIZZA.x!==undefined) out.push({minX:PIZZA.x-PIZZA.w/2,maxX:PIZZA.x+PIZZA.w/2,
+    minZ:PIZZA.z-PIZZA.d/2,maxZ:PIZZA.z+PIZZA.d/2,baseY:PIZZA.baseY||groundH(PIZZA.x,PIZZA.z),h:PIZZA.h||14});
+  if(CHAOS.x!==undefined) out.push({minX:CHAOS.x-CHAOS.w/2,maxX:CHAOS.x+CHAOS.w/2,
+    minZ:CHAOS.z-CHAOS.d/2,maxZ:CHAOS.z+CHAOS.d/2,baseY:CHAOS.baseY||groundH(CHAOS.x,CHAOS.z),h:CHAOS.h||14});
+  return out;
+}
+function cinematicCameraBlocked(x,y,z,pad){
+  pad=pad||1.8;
+  for(const b of cinematicBuildingVolumes()){
+    if(y>b.baseY-0.5&&y<b.baseY+b.h+pad&&
+       x>b.minX-pad&&x<b.maxX+pad&&z>b.minZ-pad&&z<b.maxZ+pad) return {kind:'building',b};
+  }
+  const gh=groundH(x,z);
+  let hit=null;
+  if(y<gh+6.5&&(hit=treeHit(x,z,pad*0.65))) return {kind:'tree',hit};
+  if(y<gh+4.5&&(hit=propHit(x,z,pad*0.55,false))) return {kind:'prop',hit};
+  if(y<gh+2.8&&(hit=vehicleHit(x,z,pad*0.55))) return {kind:'vehicle',hit};
+  if(y<gh+2.8&&(hit=rampHit(x,z,pad*0.55))) return {kind:'ramp',hit};
+  return null;
+}
+function routeCinematicCamera(x,y,z){
+  const pad=1.8;
+  for(let pass=0;pass<8;pass++){
+    const block=cinematicCameraBlocked(x,y,z,pad);
+    if(!block) break;
+    if(block.kind==='building'){
+      const b=block.b;
+      const faces=[
+        {x:b.minX-pad,z,d:Math.abs(x-(b.minX-pad))},
+        {x:b.maxX+pad,z,d:Math.abs(x-(b.maxX+pad))},
+        {x,z:b.minZ-pad,d:Math.abs(z-(b.minZ-pad))},
+        {x,z:b.maxZ+pad,d:Math.abs(z-(b.maxZ+pad))},
+      ];
+      const best=faces.reduce((a,c)=>c.d<a.d?c:a);
+      x=best.x; z=best.z; // slide around the nearest facade instead of tunnelling through it
+    } else {
+      x+=block.hit.nx*(block.hit.depth+0.08);
+      z+=block.hit.nz*(block.hit.depth+0.08);
+    }
+    y=Math.max(y,groundH(x,z)+2.4);
+  }
+  return {x,y,z};
+}
 function flySample(A,B,f){
   const px=lerp(A.p[0],B.p[0],f), py=lerp(A.p[1],B.p[1],f), pz=lerp(A.p[2],B.p[2],f);
   const lx=lerp(A.l[0],B.l[0],f), ly=lerp(A.l[1],B.l[1],f), lz=lerp(A.l[2],B.l[2],f);
-  return { px, py:Math.max(py,groundH(px,pz)+2.4), pz,
+  const routed=routeCinematicCamera(px,Math.max(py,groundH(px,pz)+2.4),pz);
+  return { px:routed.x, py:routed.y, pz:routed.z,
            lx, ly:Math.max(ly,groundH(lx,lz)+0.6), lz };
 }
 function startIntro(){
@@ -8864,43 +9198,12 @@ let introLinesSpoken=[];
 // one line at a time — no HTMLAudio unlock hacks, no overlapping speech
 const voBuffers=[null,null,null,null];
 let voCurrentSrc=null;
-function loadVOFiles(){
-  if(!AC) return;
+function loadVOFiles(preloadIntro){
+  if(!AC||!preloadIntro) return;
+  // Only the four time-critical intro lines are warmed at startup. Ambient,
+  // story, and cutscene recordings load on first use through loadVOBuffer().
   INTRO_LINES.forEach((l,i)=>{
-    fetch(l.src).then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab))
-      .then(buf=>{ voBuffers[i]=buf; }).catch(()=>{});
-  });
-  // preload Turbo's recorded catchphrases too
-  ['voice/turbo/ambient/run_over/run_over_01_look-both-ways.mp3',
-   'voice/turbo/ambient/run_over/run_over_02_leave-a-mark.mp3',
-   'voice/turbo/ambient/run_over/run_over_03_court-hearing.mp3',
-   'voice/turbo/ambient/firing/firing_01_say-goodnight.mp3'].forEach(src=>{
-    voExtra[src]=null;
-    fetch(src).then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab))
-      .then(buf=>{ voExtra[src]=buf; }).catch(()=>{});
-  });
-  // every recorded Turbo catchphrase up front, so turboSay never goes quiet
-  Object.keys(TURBO_LINES).forEach(cat=>{
-    TURBO_LINES[cat].forEach(l=>{
-      if(!l.src||voExtra[l.src]!==undefined) return;
-      voExtra[l.src]=null;
-      fetch(l.src).then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab))
-        .then(buf=>{ voExtra[l.src]=buf; }).catch(()=>{});
-    });
-  });
-  // recorded story-cutscene VO (Turbo's lines in the Chapter-1 cutscenes) —
-  // preload every shot's dialogue.voice so the real voice is ready the instant
-  // a cutscene fires, instead of falling back to the synth voice on first play
-  Object.values(CUTSCENES).forEach(cs=>{
-    (cs.shots||[]).forEach(s=>{
-      const v=s.dialogue&&s.dialogue.voice; if(!v) return;
-      (Array.isArray(v)?v:[v]).forEach(src=>{
-        if(voExtra[src]!==undefined) return;
-        voExtra[src]=null;
-        fetch(src).then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab))
-          .then(buf=>{ voExtra[src]=buf; }).catch(()=>{});
-      });
-    });
+    loadVOBuffer(l.src).then(buf=>{ if(buf) voBuffers[i]=buf; });
   });
 }
 function playVOLine(i){
@@ -8919,12 +9222,24 @@ function stopIntroVO(){
 
 // ---- one-shot VO lines (catchphrases + trailer reads), same pipeline as intro VO ----
 const voExtra={};   // filename -> AudioBuffer (loaded lazily, null = unavailable)
+const voLoads={};   // filename -> in-flight Promise; deduplicates concurrent requests
+function loadVOBuffer(src){
+  if(!AC||!src) return Promise.resolve(null);
+  if(voExtra[src]) return Promise.resolve(voExtra[src]);
+  if(voLoads[src]) return voLoads[src];
+  voExtra[src]=null;
+  voLoads[src]=fetch(src)
+    .then(r=>{ if(!r.ok) throw new Error('VO '+r.status); return r.arrayBuffer(); })
+    .then(ab=>AC.decodeAudioData(ab))
+    .then(buf=>{ voExtra[src]=buf; return buf; })
+    .catch(()=>{ delete voExtra[src]; return null; })
+    .finally(()=>{ delete voLoads[src]; });
+  return voLoads[src];
+}
 function playVOFile(src,rate,gain){
   if(!AC) return false;
   if(voExtra[src]===undefined){
-    voExtra[src]=null;
-    fetch(src).then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab))
-      .then(buf=>{ voExtra[src]=buf; }).catch(()=>{});
+    loadVOBuffer(src);
     return false;
   }
   if(!voExtra[src]) return false;
@@ -8939,7 +9254,7 @@ function playVOFile(src,rate,gain){
 }
 
 // ---- TURBO JONES CATCHPHRASES ----
-// Lines with an `src` play the recorded mp3; the rest use Turbo's text-to-speech.
+// Turbo only speaks from recorded mp3s. Unrecorded lines remain subtitled/silent.
 const TURBO_LINES={
   // walking up to a pedestrian (Talk button)
   approach:[
@@ -9114,12 +9429,16 @@ function turboSay(cat){
   if(!G.started||G.over||turboCool>0) return;
   const arr=TURBO_LINES[cat];
   if(!arr) return;
-  // recorded voice ONLY — if the mp3 hasn't landed yet, Turbo keeps quiet
-  // rather than letting the robot read his lines
-  const ready=arr.filter(l=>l.src&&voExtra[l.src]);
-  if(!ready.length) return;
+  const recorded=arr.filter(l=>l.src);
+  if(!recorded.length) return;
+  const line=pick(recorded), requestedAt=performance.now();
   turboCool=2.2;
-  playVOFile(pick(ready).src,1.0,0.95);
+  // Load only the selected bark. Play it when ready if it still belongs to the
+  // current moment; slow/stale requests are cached for the next trigger.
+  loadVOBuffer(line.src).then(buf=>{
+    if(!buf||!G.started||G.over||performance.now()-requestedAt>2500) return;
+    playVOFile(line.src,1.0,0.95);
+  });
 }
 
 function updateIntroNarration(dt){
@@ -9128,9 +9447,17 @@ function updateIntroNarration(dt){
     if(introLinesSpoken[i]) return;
     if(introT>=line.t){
       introLinesSpoken[i]=true;
-      if(!playVOLine(i)) speak(line.text,'male',{pitch:0.8,rate:0.9}); // fallback if mp3 not loaded
+      if(!playVOLine(i)){
+        // Decode delays must not turn Turbo into generated speech. Play only
+        // while this line is still current; otherwise its subtitle stands alone.
+        const nextT=(i+1<INTRO_LINES.length)?INTRO_LINES[i+1].t:INTRO_DUR;
+        loadVOBuffer(line.src).then(buf=>{
+          if(!buf||!G.intro||!G.started||introT>=nextT) return;
+          voBuffers[i]=buf; playVOLine(i);
+        });
+      }
       // Hold the subtitle until the next line starts (or the intro ends) so it
-      // never disappears mid-sentence — covers both the mp3 and slower TTS.
+      // never disappears mid-sentence, even when a recording is unavailable.
       const nextT=(i+1<INTRO_LINES.length)?INTRO_LINES[i+1].t:INTRO_DUR;
       const holdDur=Math.max(line.dur,nextT-line.t);
       _origShowDialogue('TURBO JONES',line.text,holdDur); // subtitles, no robot voice
@@ -9138,17 +9465,21 @@ function updateIntroNarration(dt){
   });
 }
 
-// Override showDialogue to also speak the line
+// Override showDialogue to play recorded dialogue where supplied. Turbo is
+// strictly MP3-only; Deb and NPC dialogue may continue to use generated speech.
 const _origShowDialogue=showDialogue;
 showDialogue=function(speaker,text,duration,voice){
   _origShowDialogue(speaker,text,duration);
-  // Story cutscenes can hang a recorded Turbo line (or a small pool of takes)
-  // on the shot's dialogue.voice — play the real mp3 when it's decoded, and only
-  // fall back to the synth voice if it hasn't loaded yet, so a line is never silent.
+  const isTurbo=speaker==='TURBO'||speaker==='TURBO JONES';
   if(voice){
     const src=Array.isArray(voice)?pick(voice):voice;
     if(playVOFile(src,1.0,0.95)) return;
+    if(isTurbo){
+      loadVOBuffer(src).then(buf=>{ if(buf) playVOFile(src,1.0,0.95); });
+      return;
+    }
   }
+  if(isTurbo) return;
   const gender=speaker==='DEB'?'female':'male';
   const opts=speaker==='DEB'?{pitch:1.18,rate:1.08,volume:0.95}:{pitch:0.82,rate:0.92,volume:0.9};
   speak(text,gender,opts);
@@ -9636,18 +9967,14 @@ function trimToCaps(){
     for(let i=0;i<traffic.length;i++){ const c=traffic[i]; const d=Math.hypot(c.x-px0(),c.z-pz0()); if(d>fd){fd=d;fi=i;} }
     if(fi<0) break;
     const c=traffic[fi];
-    scene.remove(c.mesh); disposeMesh(c.mesh);
-    const ci=cars.indexOf(c); if(ci>=0) cars.splice(ci,1);
-    traffic.splice(fi,1);
+    retireTraffic(c);
   }
   while(peds.length>PED_CAP){
     let fi=-1,fd=-1;
     for(let i=0;i<peds.length;i++){ const p=peds[i]; if(p.state==='down') continue; const d=Math.hypot(p.x-px0(),p.z-pz0()); if(d>fd){fd=d;fi=i;} }
     if(fi<0) break;
     const p=peds[fi];
-    scene.remove(p.mesh); disposeMesh(p.mesh);
-    if(p.bub) p.bub.remove();
-    peds.splice(fi,1);
+    retirePed(p,false);
   }
 }
 function applyQuality(tier){
@@ -9811,6 +10138,7 @@ let saveDirty=false, saveT=null;
 function saveGame(){
   const blob={ v:1, money:G.money, missionsDone:G.missionsDone, night:!!G.night,
     station:G.station, coachBeaten:!!G.coachBeaten, controlsCardSeen:!!G.controlsCardSeen,
+    strayDogCount:G.strayDogCount||0,
     story:{ metDeb:G.story.metDeb, debt:G.story.debt, paidOff:G.story.paidOff,
       pizzaHeat:G.story.pizzaHeat, pizzaWarned:G.story.pizzaWarned,
       pizzaRepeatWarned:G.story.pizzaRepeatWarned, firstScoreShown:G.story.firstScoreShown,
@@ -9833,6 +10161,8 @@ function restoreSave(s){
   G.missionsDone=s.missionsDone||0;
   G.coachBeaten=!!s.coachBeaten;
   G.controlsCardSeen=!!s.controlsCardSeen;
+  G.strayDogCount=Math.max(0,s.strayDogCount||0);
+  straySpawnT=0; // repopulate from the saved city count on the next dog update
   if(!!s.night!==!!G.night) toggleNight();
   G.station=s.station||0;
   const st=STATIONS[G.station];
@@ -9868,7 +10198,7 @@ function beginGame(){
       screen.orientation.lock('landscape').catch(()=>{});
   }catch(e){}
   initAudio();
-  loadVOFiles();
+  loadVOFiles(!QS.skipintro);
   if(QS.skipintro){ skipToGameplay(); applySceneJump(); }
   else startIntro();
 }
@@ -9884,7 +10214,7 @@ $('continueBtn').addEventListener('click',()=>{
       screen.orientation.lock('landscape').catch(()=>{});
   }catch(e){}
   initAudio();
-  loadVOFiles();
+  loadVOFiles(false);
   skipToGameplay();
   restoreSave(s);
   if(QS.skipintro) applySceneJump();

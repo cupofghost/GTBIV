@@ -5,20 +5,23 @@
 
 module.exports = [
   {
-    name: 'heli nose points +z and shadow stays on the ground while flying',
+    name: 'heli nose points +z and shadow stays on the surface while flying',
     run: async (page, { assert }) => {
       const r = await page.evaluate(() => {
         const h = helis[0];
         // nose child sits at +z after the flip
         const noseZ = h.mesh.children[1].position.z;
-        // simulate flight and check the shadow did not ride up
+        // simulate flight and check the shadow stays on the terrain or rooftop
         h.y = 40; updateHeliShadow(h);
-        const out = { noseZ, shadowY: h.shadow.position.y, vis: h.shadow.visible };
+        const roof = roofAt(h.x, h.z);
+        const surfaceY = roof > 0 && h.y > roof - 0.5 ? roof : groundH(h.x, h.z);
+        const out = { noseZ, shadowY: h.shadow.position.y, surfaceY, vis: h.shadow.visible };
         h.y = 0; updateHeliShadow(h);
         return out;
       });
       assert(r.noseZ > 0, 'heli nose should be at +z, got ' + r.noseZ);
-      assert(r.shadowY < 1, 'shadow should stay near ground, got y=' + r.shadowY);
+      assert(Math.abs(r.shadowY - (r.surfaceY + 0.03)) < 0.001,
+        'shadow should stay on the terrain/roof surface, got ' + JSON.stringify(r));
     },
   },
   {
@@ -94,20 +97,19 @@ module.exports = [
     name: 'dead owner\'s dog becomes a stray, strays band into a gang',
     run: async (page, { assert }) => {
       const r = await page.evaluate(() => {
-        const before = strayDogs.length;
         // fake two orphaned dogs side by side
+        const made = [];
         for (let k = 0; k < 2; k++) {
           const mesh = makeDog(); scene.add(mesh);
-          makeStray({ mesh, x: player.x + 4 + k, z: player.z + 4, phase: 0 });
+          made.push(makeStray({ mesh, x: player.x + 4 + k, z: player.z + 4, phase: 0 }));
         }
         // run the banding logic until they pack up
         let guard = 40;
-        while (guard-- > 0 && !strayDogs[strayDogs.length - 1].gang) updateStrayDogs(0.1);
-        const lastTwo = strayDogs.slice(-2);
-        return { before, after: strayDogs.length,
-          banded: !!(lastTwo[0].gang && lastTwo[0].gang === lastTwo[1].gang) };
+        while (guard-- > 0 && !made[1].gang) updateStrayDogs(0.1);
+        return { persisted: made.every(d => strayDogs.includes(d)),
+          banded: !!(made[0].gang && made[0].gang === made[1].gang) };
       });
-      assert(r.after === r.before + 2, 'both strays should persist');
+      assert(r.persisted, 'both newly created strays should persist within the bounded population');
       assert(r.banded, 'nearby lone strays should band into one gang');
     },
   },

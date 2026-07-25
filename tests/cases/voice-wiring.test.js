@@ -17,10 +17,9 @@ const WIRED = {
   idle_backstory: { min: 5, trigger: 'ambient backstory musing (shared idleBarkT timer)' },
 };
 
-// Story cutscenes that now carry recorded Turbo VO on a shot's `dialogue.voice`
-// (the synth voice is only a fallback until the mp3 decodes). Keeps the cutscene
-// hookup honest: the id must exist, expose the wired mp3(s), and every file must
-// resolve on disk.
+// Story cutscenes that now carry recorded Turbo VO on a shot's `dialogue.voice`.
+// Turbo stays silent/subtitled until the mp3 decodes; this keeps the hookup
+// honest: the id must exist, expose the wired mp3(s), and every file must resolve.
 const CUTSCENE_VO = {
   first_score: { min: 2, note: 'both Turbo lines at the $200 milestone' },
   deb_confrontation: { min: 1, note: "Turbo's nervous pre-beat (turbo_meets_deb)" },
@@ -28,6 +27,32 @@ const CUTSCENE_VO = {
 };
 
 module.exports = [
+  {
+    name: 'voice assets load lazily and concurrent requests are deduplicated',
+    query: '?dev=1&skipintro=1',
+    start: false,
+    run: async (page, { assert, assertEqual }) => {
+      const voiceRequests = [];
+      page.on('request', req => {
+        const path = new URL(req.url()).pathname;
+        if(path.startsWith('/voice/') && path.endsWith('.mp3')) voiceRequests.push(path);
+      });
+
+      await page.evaluate(() => document.getElementById('startBtn').click());
+      await page.waitForTimeout(200);
+      assertEqual(voiceRequests.length, 0, 'skip-intro startup should not preload voice assets');
+
+      const src = 'voice/turbo/ambient/approach/approach_01_oh-honey.mp3';
+      await page.evaluate((path) => {
+        loadVOBuffer(path);
+        loadVOBuffer(path);
+      }, src);
+      await page.waitForTimeout(500);
+      assertEqual(voiceRequests.length, 1, 'duplicate lazy loads should share one request');
+      assert(voiceRequests[0].endsWith('/voice/turbo/ambient/approach/approach_01_oh-honey.mp3'),
+        `unexpected lazy-loaded voice asset: ${voiceRequests[0]}`);
+    },
+  },
   {
     name: 'wired story barks exist and every mp3 resolves to a real file',
     run: async (page, { assert }) => {

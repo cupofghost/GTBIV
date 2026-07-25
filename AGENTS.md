@@ -1,6 +1,6 @@
 # Unified Agent Workflow (v1.1 — 2026-07-23)
 
-These rules apply to every AI agent (Claude, Kimi, Gemini, or other) working in this repo.
+These rules apply to every AI agent (Claude, Codex, Kimi, Gemini, or other) working in this repo.
 The owner is not a coder. Be efficient, be brief, and never assume another agent's work is broken.
 
 ## 1. Start of every session (do this first, cheaply)
@@ -45,7 +45,7 @@ Every commit message AND every `STATUS.md` entry ends with a signature:
 
     Signed: <program> | <model> | <effort>
 
-- program: e.g. Claude Code, Claude app, Kimi CLI, Gemini
+- program: e.g. Claude Code, Claude app, Codex, Kimi CLI, Gemini
 - model: e.g. Opus 4.8, Sonnet 4.6, K2, Gemini 2.5 Pro
 - effort: low / medium / high (how carefully this was done and tested)
 

@@ -3,8 +3,9 @@
 // CHARACTERS.md §3). randomPersonSpec() reproduces the old random NPC look.
 // Legacy shim: makePerson(shirtColor, gender) still works for old call sites.
 (function(){
-const R=(a,b)=>a+Math.random()*(b-a);
-const PK=arr=>arr[Math.floor(Math.random()*arr.length)];
+const RNG=()=>typeof window.GTB_RNG==='function'?window.GTB_RNG():Math.random();
+const R=(a,b)=>a+RNG()*(b-a);
+const PK=arr=>arr[Math.floor(RNG()*arr.length)];
 
 const SKINS=[0xf0c8a0,0xc89060,0x8a5c30,0xffd9b0];
 const PANTS=[0x2a3a5c,0x3a2a2a,0x2a2a2a,0x4a3a5c,0x50422a,0x5c2a3a];
@@ -14,9 +15,9 @@ const SHIRTS=[0xff6b9d,0x6bc8ff,0xffd23e,0x8aff6b,0xd98aff,0xff8a5c,0x5cffd4,0xf
 
 // Reproduces the pre-refactor random look: same distributions, same rolls.
 function randomPersonSpec(shirt,gender){
-  gender=gender||(Math.random()<0.5?'guy':'girl');
-  const dress=gender==='girl'&&Math.random()<0.4;
-  const style=Math.random();               // one roll drives hair, like before
+  gender=gender||(RNG()<0.5?'guy':'girl');
+  const dress=gender==='girl'&&RNG()<0.4;
+  const style=RNG();                       // one roll drives hair, like before
   let hstyle, beard=false;
   if(gender==='girl') hstyle=style<0.5?'long':'ponytail';
   else if(style<0.12) hstyle='bald';
@@ -28,9 +29,9 @@ function randomPersonSpec(shirt,gender){
     hair:{style:hstyle,color:PK(HAIRS),beard},
     outfit:{
       shirt:{color:(typeof shirt==='number')?shirt:PK(SHIRTS),tex:null},
-      pants:{color:PK(PANTS),tex:null,shorts:!dress&&Math.random()<0.3},
+      pants:{color:PK(PANTS),tex:null,shorts:!dress&&RNG()<0.3},
       shoes:{color:PK(SHOES)},
-      dress, tank:Math.random()<0.3,
+      dress, tank:RNG()<0.3,
     },
     face:{tex:null},
   };
@@ -152,6 +153,18 @@ function makePerson(spec,gender){
       c.scale.set(0.98,0.55,1); c.position.y=0.075; headG.add(c); },
     short(h){ const c=new THREE.Mesh(new THREE.SphereGeometry(0.162,16,12),h);
       c.scale.set(0.98,0.75,1); c.position.y=0.075; headG.add(c); },
+    spiky(h){
+      const c=new THREE.Mesh(new THREE.SphereGeometry(0.162,16,12),h);
+      c.scale.set(0.98,0.62,1); c.position.y=0.075; headG.add(c);
+      [[0,0.19,0],[0.09,0.15,0.04],[-0.09,0.15,0.04],
+       [0.07,0.14,-0.08],[-0.07,0.14,-0.08],[0,0.15,0.1]].forEach((p,i)=>{
+        const spike=new THREE.Mesh(new THREE.ConeGeometry(0.045,0.16+(i%2)*0.025,7),h);
+        spike.position.set(p[0],p[1],p[2]);
+        spike.rotation.z=p[0]*2.2;
+        spike.rotation.x=-p[2]*1.8;
+        headG.add(spike);
+      });
+    },
     fade(h){ const c=new THREE.Mesh(new THREE.SphereGeometry(0.162,16,12),h);
       c.scale.set(0.9,0.5,0.92); c.position.y=0.095; headG.add(c);
       const top=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.06,0.2),h);

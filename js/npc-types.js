@@ -115,8 +115,9 @@ const PALETTES = {
   },
 };
 
-function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-function rand(a, b) { return a + Math.random() * (b - a); }
+function rng() { return typeof window.GTB_RNG === 'function' ? window.GTB_RNG() : Math.random(); }
+function pick(arr) { return arr[Math.floor(rng() * arr.length)]; }
+function rand(a, b) { return a + rng() * (b - a); }
 
 // Base template builder
 function createNPCType(name, config) {
@@ -146,14 +147,14 @@ function buildPersonSpec(config, overrides = {}) {
     hair: Object.assign({
       style: config.hairStyles ? pick(config.hairStyles) : getDefaultHairStyle(gender),
       color: overrides.hairColor || pick(config.hairColors || [0x1a1a1a, 0x3a2a1a, 0x6b4a2f, 0x8a8a8a, 0xd9b44f, 0xb44f2a]),
-      beard: config.beard !== false && gender === 'guy' && Math.random() < 0.3,
+      beard: config.beard !== false && gender === 'guy' && rng() < 0.3,
     }, overrides.hair || {}),
     outfit: Object.assign({
       shirt: { color: pick(palette.shirts), tex: null },
-      pants: { color: pick(palette.pants), tex: null, shorts: config.shorts || Math.random() < 0.3 },
+      pants: { color: pick(palette.pants), tex: null, shorts: config.shorts || rng() < 0.3 },
       shoes: { color: pick(palette.shoes) },
-      dress: config.dress || (gender === 'girl' && Math.random() < 0.4),
-      tank: config.tank || Math.random() < 0.3,
+      dress: config.dress || (gender === 'girl' && rng() < 0.4),
+      tank: config.tank || rng() < 0.3,
     }, overrides.outfit || {}),
     face: { tex: null },
   }, overrides);
@@ -162,13 +163,13 @@ function buildPersonSpec(config, overrides = {}) {
 function getGenderForType(config) {
   if (config.genderBias === 'guy') return 'guy';
   if (config.genderBias === 'girl') return 'girl';
-  return Math.random() < 0.5 ? 'guy' : 'girl';
+  return rng() < 0.5 ? 'guy' : 'girl';
 }
 
 function getDefaultHairStyle(gender) {
-  if (gender === 'girl') return Math.random() < 0.5 ? 'long' : 'ponytail';
-  if (Math.random() < 0.12) return 'bald';
-  return Math.random() < 0.5 ? 'buzz' : 'short';
+  if (gender === 'girl') return rng() < 0.5 ? 'long' : 'ponytail';
+  if (rng() < 0.12) return 'bald';
+  return rng() < 0.5 ? 'buzz' : 'short';
 }
 
 // ============= NPC TYPES LIBRARY =============
@@ -2349,7 +2350,7 @@ window.NPC_TYPE_NAMES = Object.keys(window.NPC_TYPES);
 
 // Utility: spawn an NPC with a random type
 window.randomNPCType = function() {
-  const name = window.NPC_TYPE_NAMES[Math.floor(Math.random() * window.NPC_TYPE_NAMES.length)];
+  const name = window.NPC_TYPE_NAMES[Math.floor(rng() * window.NPC_TYPE_NAMES.length)];
   return window.NPC_TYPES[name];
 };
 
