@@ -8,6 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-25 | `index.html` (ANIMATED INTRO, CINEMA flythrough + free-fly floor), `tests/cases/intro-camera.test.js` | Intro camera under terrain — DONE. `flySample()` clamps flythrough cam + look target above `groundH`; free-fly floor now terrain-aware. New suite 3/3 + cinema 6/6 + boot 3/3 green. | Signed: Kimi \| K3 \| medium |
 | 2026-07-25 | `index.html` (controls card UI, pause menu, save blob), `tests/cases/controls-card.test.js` | U2 onboarding controls card — DONE. First-boot modal w/ TOUCH/DESKTOP tabs, `controlsCardSeen` in save blob, pause HOW TO PLAY recall (replaced old `pmHow` panel). CODE MAP regenerated. New suite 5/5 + save-restore + boot green. | Signed: Kimi \| K3 \| medium |
 
 ## Shared-file touches
@@ -19,6 +20,7 @@ possible change and add a line here.
 - `TERRAIN.md` — the terrain contract. Read the Tier 1 revision note before touching `groundH`.
 - `js/person.js` — shared rig; additions must stay backward-compatible (limbs are read by several animation paths).
 - 2026-07-25 (Kimi): `index.html` — added `CONTROLS CARD (U2 onboarding)` section + `#controlsCard` markup/styles, removed the `pmHow` pause panel (HOW TO PLAY now opens the card), touched the save blob (`controlsCardSeen`) and `lookSkip`'s selector. CODE MAP regenerated from banners after the insert.
+- 2026-07-25 (Kimi): `index.html` — added `flySample()` to ANIMATED INTRO (terrain clamp for the flythrough cam + look target) and used it in CINEMA's `updateCinemaIntro` too; changed Cinema Mode's free-fly floor in `cinemaCamStep` from absolute `0.5` to `groundH+0.5` (owner-reported bug class: cameras under the hills — Cinema is Opus's area, change is one line, flagged here). CODE MAP regenerated again.
 
 ## Known issues
 - ~~PII in the docs~~ **RESOLVED — owner's decision, 2026-07-24:** the owner's first name in `HANDOFF.md`/`GAME_PLAN.md`/`ASSETS.md`/`STORY_BIBLE.md`/`CHARACTERS.md` is fine and does not need scrubbing. Do not re-flag it. The rest of AGENTS.md §3 still applies in full — no surnames, emails, phone numbers, addresses, other-platform usernames, or credentials of any kind. Latest scan found none of those. — 2026-07-24, Claude
