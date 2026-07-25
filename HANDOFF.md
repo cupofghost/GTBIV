@@ -1453,7 +1453,7 @@ turning/aiming after firing does not bend them; impacts still resolve once and
 clean up mesh/audio; seeded runs stay deterministic.
 **Focused test:** `tests/cases/rpg-flight.test.js`.
 
-#### OD2 — Speech-bubble building occlusion `P0 · Risk: Low` `OPEN`
+#### OD2 — Speech-bubble building occlusion `P0 · Risk: Low` `DONE — Codex | GPT-5 | high (2026-07-25)`
 **Owner direction:** speech bubbles must not appear through buildings.
 **Where:** `positionBubble()`, `positionChatBubbles()`, and Deb's bubble
 projection in `updateStory()`.
@@ -1563,8 +1563,8 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: OD2 (Speech-bubble building occlusion)** — Continue the owner-directed
-immediate gameplay pass through OD3 → OD4 before returning to FB3.
+**NEXT: OD3 (Turbo sprint control and animation)** — Continue the owner-directed
+immediate gameplay pass through OD4 before returning to FB3.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -1596,8 +1596,8 @@ throughout:
 ✔ R2  Pooling traffic/peds       DONE
 ✔ R3  Anti-stuck & spawn-safety  DONE
 ✔ OD1 Straight-flight RPGs       DONE
-—  OD2 Bubble building occlusion ← NEXT
-—  OD3 Turbo sprint              OPEN
+✔ OD2 Bubble building occlusion  DONE
+—  OD3 Turbo sprint              ← NEXT
 —  OD4 Denser street life        OPEN
 —  FB3 Coach mission             OPEN
 —  FB4 Football minigame         OPEN
