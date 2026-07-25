@@ -634,6 +634,10 @@
       <button class="qBtn" data-d="normal">NORMAL</button>
       <button class="qBtn" data-d="hard">HARD</button>
     </div></div>
+    <div class="pmRow"><label>REDUCE MOTION</label><div class="qGroup" id="reduceMotionGroup">
+      <button class="qBtn" data-v="on">ON</button>
+      <button class="qBtn" data-v="off">OFF</button>
+    </div></div>
     <button class="pmBtn" id="pmSetBack">BACK</button>
   </div>
 </div>
@@ -804,6 +808,9 @@ const DEV_STATE={ open:false, god:false, inf:false, hud:false };
 let TIME_SCALE=1, STEP_FRAMES=0;
 function setTimeScale(v){ if(!DEV) return; TIME_SCALE=v; toast('TIME '+v+'×','gold'); }
 function stepOneFrame(){ if(!DEV) return; STEP_FRAMES++; }
+// J2 — hitstop: brief simulation freeze on big impacts/explosions
+let HIT_STOP=0;
+function triggerHitStop(ms){ if(SETTINGS.reduceMotion) return; HIT_STOP=Math.max(HIT_STOP, Math.min(0.08, ms)); }
 // D7 — deterministic seed: route all game RNG through a seedable PRNG when ?seed=<n>
 (function initSeededRng(){
   const seedStr=_PARAMS.get('seed');
@@ -5870,7 +5877,7 @@ function updateFireballs(dt){
   }
 }
 function explode(x,y,z){
-  sfx.rpgBoom(); shake(0.8); haptic([40,50,70]);
+  sfx.rpgBoom(); shake(0.8); triggerHitStop(0.06); haptic([40,50,70]);
   G.lastBoom={x,z,t:performance.now()};
   spawnFireball(x,Math.max(y,1),z,4.5);
   burst(x,y,z,42,COL_FIRE,8,1.1,4);
@@ -5881,7 +5888,7 @@ function explode(x,y,z){
 const boomFx=[];      // climbing cloud emitters {x,y,z,t}
 let shockwave=null;   // one reusable expanding ring
 function bigExplosion(x,y,z){
-  sfx.carBoom(); shake(1.2); haptic([60,40,90,40,120]);
+  sfx.carBoom(); shake(1.2); triggerHitStop(0.08); haptic([60,40,90,40,120]);
   spawnFireball(x,y+1,z,8.5);
   burst(x,y,z,70,COL_FIRE,12,1.6,4);
   burst(x,y,z,40,COL_FIRE,6,2.2,1);
@@ -6278,6 +6285,7 @@ function carPhysics(car,dt,ctl){
           if(mission&&mission.type==='style') mission.value+=car.airT*130;
         }
         shake(Math.min(0.5,impact*0.02));
+        triggerHitStop(Math.min(0.08,0.04+(impact-13)*0.003));
       }
       car.airT=0;
     } else {
@@ -6311,6 +6319,7 @@ function carPhysics(car,dt,ctl){
       if(impact>6){
         if(car===player.car){
           damageCar(car,impact*1.15,'crash'); shake(Math.min(0.6,impact*0.02));
+          triggerHitStop(Math.min(0.08,0.04+impact*0.004));
           sfx.crash(impact*0.02); hapticCrash(impact);
           if(mission&&mission.type==='rampage') mission.value+=impact*14;
           addStyle(impact*1.2);
@@ -6331,7 +6340,7 @@ function carPhysics(car,dt,ctl){
         car.vel.x-=1.5*vn*th.nx; car.vel.z-=1.5*vn*th.nz;
         const impact=-vn;
         if(impact>5){
-          if(car===player.car){ damageCar(car,impact*0.8,'crash'); shake(Math.min(0.4,impact*0.016)); sfx.crash(impact*0.016); hapticCrash(impact); }
+          if(car===player.car){ damageCar(car,impact*0.8,'crash'); shake(Math.min(0.4,impact*0.016)); triggerHitStop(Math.min(0.08,0.04+impact*0.004)); sfx.crash(impact*0.016); hapticCrash(impact); }
           else car.hp-=impact;
           burst(car.x-th.nx,1.1,car.z-th.nz,7,[[0.18,0.48,0.24],[0.29,0.6,0.29]],2.5,0.5,5);
         }
@@ -6348,7 +6357,7 @@ function carPhysics(car,dt,ctl){
         car.vel.x-=1.5*vn*ph.nx; car.vel.z-=1.5*vn*ph.nz;
         const impact=-vn;
         if(impact>6){
-          if(car===player.car){ damageCar(car,impact*0.7,'crash'); shake(Math.min(0.35,impact*0.014)); sfx.crash(impact*0.014); hapticCrash(impact); }
+          if(car===player.car){ damageCar(car,impact*0.7,'crash'); shake(Math.min(0.35,impact*0.014)); triggerHitStop(Math.min(0.08,0.04+impact*0.004)); sfx.crash(impact*0.014); hapticCrash(impact); }
           else car.hp-=impact*0.8;
           burst(car.x-ph.nx,1,car.z-ph.nz,6,COL_SPARK,2.5,0.35,5);
         }
@@ -7788,7 +7797,7 @@ function wasted(spot){
 // ================= CAMERA =================
 let camShake=0, footCamYaw=player.heading;
 const camPos=new THREE.Vector3(player.x,8,player.z+14);
-function shake(n){ camShake=Math.min(1,camShake+n); }
+function shake(n){ if(SETTINGS.reduceMotion) return; camShake=Math.min(1,camShake+n); }
 // pull the camera in front of any building between it and the player —
 // no more walls eating the screen
 const _camFrom=new THREE.Vector3(), _camTmp=new THREE.Vector3();
@@ -7837,7 +7846,8 @@ function updateCamera(dt){
     const followRate=5+3*(1-clamp(Math.abs(c.speed)/8,0,1));
     camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-followRate*dt));
     const sr=Math.abs(c.speed)/CARTYPES[c.type].top;
-    camera.fov=lerp(camera.fov,62+sr*13+(input.boost&&G.boost>0?5:0),0.1);
+    const fovKick=SETTINGS.reduceMotion?0:(input.boost&&G.boost>0?5:0);
+    camera.fov=lerp(camera.fov,62+sr*13+fovKick,0.1);
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
     camera.lookAt(c.x+Math.sin(c.heading)*6,c.y+1.5-camPitch*2,c.z+Math.cos(c.heading)*6);
@@ -7871,9 +7881,13 @@ function updateCamera(dt){
     camera.lookAt(p.x,p.y+1.4-camPitch*3.6,p.z);
   }
   if(camShake>0.01){
-    camera.position.x+=rand(-1,1)*camShake*0.5;
-    camera.position.y+=rand(-1,1)*camShake*0.4;
-    camShake*=Math.exp(-6*dt);
+    if(!SETTINGS.reduceMotion){
+      const intensity=Math.pow(camShake,1.6);
+      camera.position.x+=rand(-1,1)*intensity*0.6;
+      camera.position.y+=rand(-1,1)*intensity*0.5;
+    }
+    // big shakes linger; tiny taps decay fast
+    camShake*=Math.exp(-(camShake>0.35?4:7)*dt);
   }
 }
 
@@ -7935,6 +7949,12 @@ function loop(){
   let simDt=dt*TIME_SCALE;
   let forceStep=false;
   if(DEV&&STEP_FRAMES>0){ STEP_FRAMES--; forceStep=true; simDt=0.017; }
+  // J2 — hitstop: scale sim dt near-zero for a few frames on big impacts
+  if(HIT_STOP>0){
+    const freeze=Math.min(1,HIT_STOP/0.08);
+    simDt*=(1-freeze*0.95);
+    HIT_STOP-=dt;
+  }
 
   // Cutscene mode: cinematic camera, frozen gameplay, ambient world still alive
   if(activeCutscene){
@@ -9544,7 +9564,7 @@ function cinemaPlayScene(id){
 // so each sets its own flag and syncPause() is the only writer of G.paused.
 const SET_KEY='gtb4.settings';
 const SETTINGS=(function(){
-  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true, lookSens:100, invertY:false, difficulty:'normal' };
+  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true, lookSens:100, invertY:false, difficulty:'normal', reduceMotion:false };
   try{ const s=JSON.parse(localStorage.getItem(SET_KEY)); if(s&&s.v===1) Object.assign(d,s); }catch(e){}
   return d;
 })();
@@ -9686,6 +9706,21 @@ function setDifficulty(mode){ SETTINGS.difficulty=mode; saveSettings(); refreshD
   g.querySelectorAll('.qBtn').forEach(b=>{
     b.addEventListener('click',()=>setDifficulty(b.dataset.d));
     b.addEventListener('touchend',e=>{ e.preventDefault(); setDifficulty(b.dataset.d); });
+  });
+})();
+
+// J2 — Reduce Motion: disables hitstop and camera shake/FOV kick
+function refreshReduceMotionButtons(){
+  const g=$('reduceMotionGroup'); if(!g) return;
+  g.querySelectorAll('.qBtn').forEach(b=>b.classList.toggle('on',(b.dataset.v==='on')===!!SETTINGS.reduceMotion));
+}
+function setReduceMotion(on){ SETTINGS.reduceMotion=on; saveSettings(); refreshReduceMotionButtons(); }
+(function initReduceMotionUI(){
+  const g=$('reduceMotionGroup'); if(!g) return;
+  refreshReduceMotionButtons();
+  g.querySelectorAll('.qBtn').forEach(b=>{
+    b.addEventListener('click',()=>setReduceMotion(b.dataset.v==='on'));
+    b.addEventListener('touchend',e=>{ e.preventDefault(); setReduceMotion(b.dataset.v==='on'); });
   });
 })();
 

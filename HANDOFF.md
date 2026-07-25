@@ -790,7 +790,8 @@ silenced when the setting is off, never throws when `navigator.vibrate` is
 absent, and the setting round-trips a reload) plus the full headless suite
 green (43/43, up from 39 with the four new haptics cases).
 
-#### J2 — Hitstop + refined screen shake `P2 · Risk: Med` `OPEN`
+#### J2 — Hitstop + refined screen shake `P2 · Risk: Med` `DONE`
+**Status: implemented & verified** (OpenCode | Kimi K2). Added `HIT_STOP` global and `triggerHitStop(ms)`; the `MAIN LOOP` scales `simDt` near-zero while `HIT_STOP` is active (capped at 80ms, decays by real dt). Triggered on player building/tree/prop crashes and hard landings in `carPhysics`, plus `explode` and `bigExplosion`. `shake()` now early-returns if `SETTINGS.reduceMotion` is on, and `updateCamera` uses `Math.pow(camShake,1.6)` displacement with speed-sensitive decay (slower decay for big shakes, faster for tiny taps). The car camera's boost FOV kick is also disabled when Reduce Motion is on. A **REDUCE MOTION** ON/OFF row was added to the pause-menu Settings panel, persisted in the `SETTINGS` blob. Verified: `tests/cases/hitstop.test.js` 5/5 green; boot, smoke, economy, camera-polish, controls-card, and haptics suites green.
 **Why:** Big impacts read as "meh". A few frames of freeze + a tuned shake curve
 makes collisions and explosions land.
 **Where:** `CAMERA` (`shake`, already exists), `MAIN LOOP`, `carPhysics`/`explode`.
@@ -1472,8 +1473,8 @@ throughout:
 ✔ U2  Onboarding                 DONE (controls card #35)
 ✔ D5  Time controls             DONE
 ✔ D7  Deterministic seed        DONE
-—  J2  Hitstop + shake           ← NEXT
-—  U3  Death/respawn flow        OPEN
+—  J2  Hitstop + shake           DONE
+—  U3  Death/respawn flow        ← NEXT
 —  R2  Pooling traffic/peds      OPEN
 —  R3  Anti-stuck & spawn-safety OPEN
 —  A2  Accessibility             OPEN
