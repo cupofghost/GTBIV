@@ -8,6 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-26 | `index.html` traffic steering/spawn/recovery, carjacking, car→Turbo impacts; `tests/cases/vehicle-sanity.test.js`; `STATUS.md` | **DONE — OP2-B**: seed `424242`/60s improved 185.6→45.4 full-lock frames/car, 19,402→0 embed frames, 0/30→30/30 explicitly jackable, while traveling 574.7u avg with no mass pileup. Impacts at 2/8/16/30u/s deal 0/5.4/16.2/44.1 HP once/contact; syntax + focused suites 14/14 and downtown jack/drive check passed. | Signed: Codex \| GPT-5.6 \| high |
 | 2026-07-26 | `CODEX/OP2_CONCURRENT/`, `HANDOFF.md`, `STATUS.md` | **DONE** — added the tracked four-agent launch packet with required GPT-5.6 models/efforts, branches, ownership, tests, and integration order. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-26 | `HANDOFF.md`, `STATUS.md` | **DONE** — integrated the owner's Mama Rat, playtest-correction, character-shadow/footstep, and Turbo Mode requirements as future owner-triggered projects; `NEXT` unchanged. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `HANDOFF.md`, `STATUS.md` | **DONE** — added the owner-triggered optional Codex audit follow-up project; no gameplay or asset changes. | Signed: Codex \| GPT-5 \| high |

@@ -3233,7 +3233,8 @@ function makeCar(type,x,z,heading,opts){
   const t=CARTYPES[type];
   const car={ type, mesh, x, z, y:groundY, vy:0, heading, vel:new THREE.Vector3(),
     hp:t.hp, maxhp:t.hp, parked:!!opts.parked, crashed:0, stuckT:0, cool:0, airT:0,
-    target:null, speed:0, airborne:false, driver:opts.driver||null, dead:false };
+    target:null, speed:0, airborne:false, driver:opts.driver||null, dead:false,
+    jackable:opts.jackable!==false&&type!=='cop', turboImpactT:0, turboContact:false };
   const frontH=groundH(x+Math.sin(heading)*2,z+Math.cos(heading)*2);
   const rearH=groundH(x-Math.sin(heading)*2,z-Math.cos(heading)*2);
   mesh.rotation.x=clamp(Math.atan2(rearH-frontH,4),-0.4,0.4);
@@ -3268,14 +3269,62 @@ for(let k=0;k<8;k++){
 const traffic=[];
 const trafficPool=[];
 const TRAFFIC_POOL_CAP=30;
-function resetTrafficCar(car,it,target){
-  const heading=Math.atan2(target.x-it.x,target.z-it.z), t=CARTYPES[car.type];
-  const offset=()=>({x:it.x+rand(-2,2),z:it.z+rand(-2,2)});
-  const p=safeGenericSpawnPoint(offset(),offset,Math.max(t.w,t.l)*0.5);
+const TRAFFIC_LANE_OFFSET=2.8;
+function trafficCarRadius(car){ const t=CARTYPES[car.type]; return Math.max(t.w,t.l)*0.5; }
+function trafficNeighbors(node){
+  return intersections.filter(p=>(Math.abs(p.i-node.i)+Math.abs(p.j-node.j))===1);
+}
+function trafficLanePoint(node,from,to){
+  const dx=to.x-from.x, dz=to.z-from.z, d=Math.hypot(dx,dz)||1;
+  // Right-hand lane for the direction of travel.
+  return {x:node.x+dz/d*TRAFFIC_LANE_OFFSET,z:node.z-dx/d*TRAFFIC_LANE_OFFSET};
+}
+function trafficSpawnClear(p,r,ignore){
+  if(!genericSpawnClear(p,r)) return false;
+  for(const other of cars){
+    if(other===ignore||other.dead||!other.mesh.visible) continue;
+    const t=CARTYPES[other.type];
+    if(orientedBoxHit(p.x,p.z,r,other.x,other.z,other.heading,t.w/2,t.l/2)) return false;
+  }
+  return true;
+}
+function trafficRoute(from,to,type,ignore){
+  if(!from||!to) return null;
+  const start=trafficLanePoint(from,from,to), radius=Math.max(CARTYPES[type].w,CARTYPES[type].l)*0.5;
+  if(!trafficSpawnClear(start,radius,ignore)) return null;
+  return {from,to,start,heading:Math.atan2(to.x-from.x,to.z-from.z)};
+}
+function findTrafficSpawnRoute(type,preferredFrom,preferredTo,ignore,tries=18){
+  for(let k=0;k<tries;k++){
+    const from=k===0&&preferredFrom?preferredFrom:pick(intersections);
+    const opts=trafficNeighbors(from);
+    const to=k===0&&preferredTo?preferredTo:(opts.length?pick(opts):null);
+    const route=trafficRoute(from,to,type,ignore);
+    if(route) return route;
+  }
+  return null;
+}
+function findTrafficRecoveryRoute(car){
+  const near=intersections.slice().sort((a,b)=>
+    Math.hypot(a.x-car.x,a.z-car.z)-Math.hypot(b.x-car.x,b.z-car.z));
+  for(let i=0;i<Math.min(near.length,20);i++){
+    for(const to of trafficNeighbors(near[i])){
+      const route=trafficRoute(near[i],to,car.type,car);
+      if(route) return route;
+    }
+  }
+  return null;
+}
+function resetTrafficCar(car,route,renew=true){
+  const heading=route.heading, t=CARTYPES[car.type], p=route.start;
   car.x=p.x; car.z=p.z; car.y=groundH(car.x,car.z);
-  car.vy=0; car.heading=heading; car.vel.set(0,0,0); car.hp=t.hp; car.maxhp=t.hp;
+  car.vy=0; car.heading=heading; car.vel.set(0,0,0);
+  if(renew){ car.hp=t.hp; car.maxhp=t.hp; car.recoveryCount=0; car.recoveryReasons=null; car.lastRecoveryReason=null; }
   car.parked=false; car.crashed=0; car.stuckT=0; car.cool=0; car.airT=0;
-  car.target=target; car.speed=0; car.airborne=false; car.driver='civ'; car.dead=false;
+  car.routeFrom=route.from; car.target=route.to; car.laneTarget=trafficLanePoint(route.to,route.from,route.to);
+  car.trafficPhase='drive'; car.turnNode=null; car.turnNext=null; car.turnT=0;
+  car.trafficStuckT=0; car.embedT=0; car.speed=0; car.airborne=false; car.driver='civ'; car.dead=false;
+  car.jackable=true; car.turboImpactT=0; car.turboContact=false;
   car.burning=false; car.burnT=0; car._tailOn=true;
   car.mesh.visible=true; car.mesh.position.set(car.x,car.y,car.z);
   car.mesh.rotation.set(0,heading,0);
@@ -3287,6 +3336,9 @@ function resetTrafficCar(car,it,target){
   setTail(car,false);
 }
 function canPoolTraffic(car){
+  // Protected classes are never recovered/recycled here: player/police cars
+  // are not civilian traffic, and mission/Cinema references must stay stable.
+  // Special parked cars never enter traffic[] and therefore also fail this.
   return car.driver==='civ'&&traffic.includes(car)&&!(mission&&mission.car===car)&&
     !(replay&&replay.staged&&replay.staged.some(s=>s.ref===car));
 }
@@ -3301,18 +3353,15 @@ function retireTraffic(car){
 }
 function spawnTraffic(n){
   for(let k=0;k<n;k++){
-    const it=pick(intersections);
-    const opts=intersections.filter(p=>(Math.abs(p.i-it.i)+Math.abs(p.j-it.j))===1);
-    const target=opts.length?pick(opts):pick(intersections);
-    // Face the chosen road before applying throttle. The old random heading
-    // sent fresh traffic diagonally into a block while steering caught up.
+    const pooled=trafficPool[trafficPool.length-1];
+    const type=pooled?pooled.type:pick(['sedan','sedan','sedan','taxi','pickup','van','compact','muscle']);
+    const route=findTrafficSpawnRoute(type);
+    if(!route) break;
     let car=trafficPool.pop();
-    if(car){ resetTrafficCar(car,it,target); scene.add(car.mesh); cars.push(car); }
+    if(car){ resetTrafficCar(car,route); scene.add(car.mesh); cars.push(car); }
     else {
-      const type=pick(['sedan','sedan','sedan','taxi','pickup','van','compact','muscle']);
-      const heading=Math.atan2(target.x-it.x,target.z-it.z);
-      car=makeCar(type,it.x,it.z,heading,{driver:'civ'});
-      resetTrafficCar(car,it,target);
+      car=makeCar(type,route.start.x,route.start.z,route.heading,{driver:'civ'});
+      resetTrafficCar(car,route);
     }
     traffic.push(car);
   }
@@ -3499,8 +3548,12 @@ function maintainStreetDensity(dt){
     }
     const it=densityCandidate(55,140); if(!it) break;
     const opts=intersections.filter(q=>(Math.abs(q.i-it.i)+Math.abs(q.j-it.j))===1);
-    const target=opts.length?pick(opts):pick(intersections); let c=trafficPool.pop();
-    if(c){ resetTrafficCar(c,it,target); scene.add(c.mesh); cars.push(c); } else { c=makeCar('sedan',it.x,it.z,Math.atan2(target.x-it.x,target.z-it.z),{driver:'civ'}); resetTrafficCar(c,it,target); }
+    const target=opts.length?pick(opts):null, pooled=trafficPool[trafficPool.length-1];
+    const type=pooled?pooled.type:'sedan', route=findTrafficSpawnRoute(type,it,target);
+    if(!route) break;
+    let c=trafficPool.pop();
+    if(c){ resetTrafficCar(c,route); scene.add(c.mesh); cars.push(c); }
+    else { c=makeCar(type,route.start.x,route.start.z,route.heading,{driver:'civ'}); resetTrafficCar(c,route); }
     traffic.push(c); carsAdded++;
   }
   while(pedNear+pedsAdded<cfg.localPeds&&pedsAdded<4){
@@ -5640,10 +5693,32 @@ function updateCopHeli(dt){
   h.spot.position.set(h.x,0.06,h.z);
   updateHeliShadow(h);
 }
+function intentionalNonJackableCar(car){
+  // Police, the active mission target, and Cinema-staged vehicles are scripted
+  // classes. Player-operated cars are already occupied. Pizza's dedicated
+  // JACK PIZZA path remains ahead of this generic interaction.
+  return !car||car.type==='cop'||car.driver==='cop'||car.driver==='player'||
+    (mission&&mission.car===car)||
+    (replay&&replay.staged&&replay.staged.some(s=>s.ref===car));
+}
+function isCarJackable(car){
+  if(!car||car.dead||car.jackable===false||intentionalNonJackableCar(car)) return false;
+  return car.driver===null||car.driver===undefined||car.driver==='civ';
+}
+function claimJackableCar(car){
+  if(!isCarJackable(car)) return false;
+  // A moving civilian becomes player-owned, not pooled. Removing it from the
+  // traffic update prevents stale lane-following state from fighting controls.
+  const ti=traffic.indexOf(car); if(ti>=0) traffic.splice(ti,1);
+  car.driver='player'; car.parked=false; car.trafficPhase=null;
+  car.turboContact=false; car.turboImpactT=0;
+  return true;
+}
+function carNeedsStealLabel(car){ return isCarJackable(car)&&(car.parked||car.driver==='civ'); }
 function nearestVehicle(x,z,r){
   let best=null,bd=r;
   for(const c of cars){
-    if(c.dead||c.driver) continue;
+    if(!isCarJackable(c)) continue;
     const d=Math.hypot(c.x-x,c.z-z);
     if(d<bd){ bd=d; best={kind:'car',v:c}; }
   }
@@ -6796,6 +6871,39 @@ function carPhysics(car,dt,ctl){
     });
   }
   if(car.cool>0) car.cool-=dt;
+  if(car.turboImpactT>0) car.turboImpactT=Math.max(0,car.turboImpactT-dt);
+  applyCarTurboImpact(car);
+}
+function turboFootVelocity(){
+  if(player.stunT>0||!player.moveMag) return {x:0,z:0};
+  const speed=player.sprinting?12:(player.moveMag>0.85?8.2:4.6);
+  return {x:Math.sin(player.heading)*speed*player.moveMag,z:Math.cos(player.heading)*speed*player.moveMag};
+}
+function applyCarTurboImpact(car){
+  if(G.mode!=='foot'||G.over||car.dead||car===player.car||car.airborne){
+    car.turboContact=false; return 0;
+  }
+  const t=CARTYPES[car.type];
+  const hit=orientedBoxHit(player.x,player.z,0.46,car.x,car.z,car.heading,t.w/2,t.l/2);
+  if(!hit){ car.turboContact=false; return 0; }
+  if(car.turboContact||car.turboImpactT>0) return 0;
+  car.turboContact=true;
+  const pv=turboFootVelocity(), rvx=car.vel.x-pv.x, rvz=car.vel.z-pv.z;
+  const relativeSpeed=Math.hypot(rvx,rvz);
+  if(relativeSpeed<=4) return 0;
+  let damage=(relativeSpeed-4)*1.35+Math.max(0,relativeSpeed-24)*1.5;
+  if(relativeSpeed>=58) damage=Math.max(110,damage);
+  car.turboImpactT=0.65;
+  const rd=relativeSpeed||1, knock=clamp((relativeSpeed-4)*0.075,0.35,2.6);
+  player.x+=rvx/rd*knock; player.z+=rvz/rd*knock;
+  resolveFootCollision(player,0.5);
+  player.y=groundH(player.x,player.z);
+  player.stunT=Math.max(player.stunT||0,clamp(0.25+(relativeSpeed-4)*0.025,0.25,1.15));
+  damagePlayer(damage);
+  burst(player.x,1,player.z,Math.round(clamp(relativeSpeed*0.45,5,18)),COL_SPARK,2.5,0.35,5);
+  sfx.crash(clamp(relativeSpeed*0.018,0.12,0.7));
+  hapticCrash(relativeSpeed); shake(clamp(relativeSpeed*0.018,0.16,0.65));
+  return damage;
 }
 function damageCar(car,amt,why){
   if(car.dead) return;
@@ -7004,7 +7112,8 @@ function updateFoot(dt){
   if(!G.interior){
     const pd=Math.hypot(p.x-PIZZA.doorX,p.z-PIZZA.doorZ);
     if(pd<2.5){ btn.style.display='flex'; btn.textContent='ENTER PIZZA'; }
-    else if(near){ btn.style.display='flex'; btn.textContent=near.kind==='heli'?'FLY HELI':(near.v.parked?'STEAL '+near.v.type.toUpperCase():'ENTER '+near.v.type.toUpperCase()); btn.classList.toggle('steal',!!near.v.parked); }
+    else if(near){ const steal=near.kind==='car'&&carNeedsStealLabel(near.v);
+      btn.style.display='flex'; btn.textContent=near.kind==='heli'?'FLY HELI':((steal?'STEAL ':'ENTER ')+near.v.type.toUpperCase()); btn.classList.toggle('steal',steal); }
     else{ btn.style.display='none'; }
   } else {
     const id=Math.hypot(p.x-PIZZA.iDoorX,p.z-PIZZA.iDoorZ);
@@ -7016,8 +7125,9 @@ function updateFoot(dt){
       btn.textContent='FLY HELI';
       btn.classList.remove('steal');
     } else {
-      btn.textContent=near.v.parked?'STEAL '+near.v.type.toUpperCase():'ENTER '+near.v.type.toUpperCase();
-      btn.classList.toggle('steal',!!near.v.parked);
+      const steal=carNeedsStealLabel(near.v);
+      btn.textContent=(steal?'STEAL ':'ENTER ')+near.v.type.toUpperCase();
+      btn.classList.toggle('steal',steal);
     }
   }
   $('btnTalk').style.display=nearestPed(3.5)?'flex':'none';
@@ -7076,7 +7186,8 @@ function doEnterExit(){
     if(!n) return;
     if(n.kind==='car'){
       const c=n.v;
-      G.mode='car'; player.car=c; c.parked=false; c.driver='player';
+      if(!claimJackableCar(c)) return;
+      G.mode='car'; player.car=c;
       turboSay('car');
       player.mesh.visible=false;
       G.carHP=c.hp/c.maxhp*100;
@@ -7685,28 +7796,126 @@ function updateMission(dt){
 }
 
 // ================= AI =================
+function trafficBuildingEmbedded(car){
+  const t=CARTYPES[car.type], hw=t.w*0.48, hd=t.l*0.48;
+  const sx=Math.cos(car.heading), sz=-Math.sin(car.heading);
+  const fx=Math.sin(car.heading), fz=Math.cos(car.heading);
+  const points=[
+    {x:car.x,z:car.z},
+    {x:car.x+sx*hw+fx*hd,z:car.z+sz*hw+fz*hd},
+    {x:car.x-sx*hw+fx*hd,z:car.z-sz*hw+fz*hd},
+    {x:car.x+sx*hw-fx*hd,z:car.z+sz*hw-fz*hd},
+    {x:car.x-sx*hw-fx*hd,z:car.z-sz*hw-fz*hd},
+  ];
+  return buildings.some(b=>points.some(p=>p.x>b.minX&&p.x<b.maxX&&p.z>b.minZ&&p.z<b.maxZ));
+}
+function trafficStaticEmbedded(car){
+  if(car.airborne) return false;
+  const r=CARTYPES[car.type].w*0.42;
+  return overWater(car.x,car.z)||trafficBuildingEmbedded(car)||
+    !!treeHit(car.x,car.z,r)||!!propHit(car.x,car.z,r,false);
+}
+function trafficLaneDeviation(car){
+  if(car.trafficPhase!=='drive'||!car.routeFrom||!car.target||!car.laneTarget) return 0;
+  return car.routeFrom.i===car.target.i?
+    Math.abs(car.x-car.laneTarget.x):Math.abs(car.z-car.laneTarget.z);
+}
+function correctTrafficLane(car,dt){
+  if(car.trafficPhase!=='drive'||!car.routeFrom||!car.target||!car.laneTarget) return;
+  const maxStep=4.2*dt;
+  if(car.routeFrom.i===car.target.i) car.x+=clamp(car.laneTarget.x-car.x,-maxStep,maxStep);
+  else car.z+=clamp(car.laneTarget.z-car.z,-maxStep,maxStep);
+  car.y=groundH(car.x,car.z); car.mesh.position.set(car.x,car.y,car.z);
+}
+function recoverEmbeddedTraffic(car,reason='embedded'){
+  if(!canPoolTraffic(car)) return 'protected';
+  const route=findTrafficRecoveryRoute(car);
+  if(!route){ retireTraffic(car); return 'retired'; }
+  resetTrafficCar(car,route,false);
+  car.recoveryCount=(car.recoveryCount||0)+1;
+  car.lastRecoveryReason=reason;
+  car.recoveryReasons=car.recoveryReasons||{};
+  car.recoveryReasons[reason]=(car.recoveryReasons[reason]||0)+1;
+  return 'recovered';
+}
+function chooseTrafficNext(car){
+  const cur=car.target, prev=car.routeFrom;
+  let opts=trafficNeighbors(cur).filter(p=>p!==prev);
+  if(!opts.length) opts=trafficNeighbors(cur);
+  const di=cur.i-prev.i, dj=cur.j-prev.j;
+  const straight=opts.find(p=>p.i-cur.i===di&&p.j-cur.j===dj);
+  return straight&&_rng()<0.7?straight:pick(opts);
+}
+function beginTrafficTurn(car){
+  const next=chooseTrafficNext(car);
+  if(!next) return false;
+  car.trafficPhase='turn'; car.turnNode=car.target; car.turnNext=next; car.turnT=0;
+  car.laneTarget=trafficLanePoint(car.turnNode,car.turnNode,next);
+  return true;
+}
+function finishTrafficTurn(car){
+  car.routeFrom=car.turnNode; car.target=car.turnNext;
+  car.laneTarget=trafficLanePoint(car.target,car.routeFrom,car.target);
+  car.trafficPhase='drive'; car.turnNode=null; car.turnNext=null; car.turnT=0;
+}
+function trafficForwardGap(car){
+  const fx=Math.sin(car.heading), fz=Math.cos(car.heading);
+  const sx=Math.cos(car.heading), sz=-Math.sin(car.heading);
+  let gap=1e9;
+  for(const other of cars){
+    if(other===car||other.dead||!other.mesh.visible) continue;
+    const dx=other.x-car.x, dz=other.z-car.z;
+    const ahead=dx*fx+dz*fz, side=Math.abs(dx*sx+dz*sz);
+    if(ahead>0&&ahead<18&&side<(CARTYPES[car.type].w+CARTYPES[other.type].w)*0.65) gap=Math.min(gap,ahead);
+  }
+  return gap;
+}
 function updateTraffic(dt){
   for(let i=traffic.length-1;i>=0;i--){
     const c=traffic[i];
     if(c.dead){ traffic.splice(i,1); continue; }
-    if(c.crashed>0){ c.crashed-=dt; carPhysics(c,dt,{steer:0,throttle:0,drift:false,boost:false}); continue; }
-    if(!c.target) c.target=pick(intersections);
-    const dx=c.target.x-c.x, dz=c.target.z-c.z, d=Math.hypot(dx,dz);
-    if(d<7){
-      const cur=c.target;
-      const opts=intersections.filter(p=>(Math.abs(p.i-cur.i)+Math.abs(p.j-cur.j))===1);
-      c.target=opts.length?pick(opts):pick(intersections);
+    if(c.driver!=='civ') continue;
+    if(trafficStaticEmbedded(c)||trafficLaneDeviation(c)>6){
+      recoverEmbeddedTraffic(c,trafficStaticEmbedded(c)?'static':'lane'); continue;
     }
-    const wantAng=Math.atan2(dx,dz);
-    const steer=clamp(angDiff(c.heading,wantAng)*1.4,-1,1);
-    let throttle=0.55;
-    // red means stop — civilians obey the lights (the player is a menace either way)
-    const movingNS=Math.abs(dz)>Math.abs(dx);
-    const green=(movingNS?LIGHTS.ns:!LIGHTS.ns)&&!LIGHTS.yel;
-    if(d<17&&d>7&&!green){ throttle=0; setTail(c,true); }
-    else setTail(c,false);
-    if(Math.hypot(px0()-c.x,pz0()-c.z)<9){ throttle=0; setTail(c,true); }
+    if(c.crashed>0){ c.crashed-=dt; carPhysics(c,dt,{steer:0,throttle:0,drift:false,boost:false}); continue; }
+    if(!c.routeFrom||!c.target||!c.laneTarget){
+      const route=findTrafficRecoveryRoute(c);
+      if(!route){ recoverEmbeddedTraffic(c,'route'); continue; }
+      resetTrafficCar(c,route,false);
+    }
+    let dx=c.laneTarget.x-c.x, dz=c.laneTarget.z-c.z, d=Math.hypot(dx,dz);
+    if(c.trafficPhase==='turn'){
+      c.turnT+=dt;
+      if(d<4){ finishTrafficTurn(c); dx=c.laneTarget.x-c.x; dz=c.laneTarget.z-c.z; d=Math.hypot(dx,dz); }
+      else if(c.turnT>5){ recoverEmbeddedTraffic(c,'turn'); continue; }
+    }
+    const movingNS=c.trafficPhase==='drive'&&Math.abs(c.target.j-c.routeFrom.j)>0;
+    const green=c.trafficPhase!=='drive'||((movingNS?LIGHTS.ns:!LIGHTS.ns)&&!LIGHTS.yel);
+    const stoppingForLight=c.trafficPhase==='drive'&&d<15&&!green;
+    if(c.trafficPhase==='drive'&&d<14&&green){
+      beginTrafficTurn(c); dx=c.laneTarget.x-c.x; dz=c.laneTarget.z-c.z; d=Math.hypot(dx,dz);
+    }
+    const wantAng=Math.atan2(dx,dz), error=angDiff(c.heading,wantAng);
+    const steer=clamp(error*1.15,-0.68,0.68);
+    const cruise=Math.min(18,CARTYPES[c.type].top*0.58);
+    let desired=c.trafficPhase==='turn'?5.5:cruise;
+    desired*=1-clamp(Math.abs(error)/1.5,0,1)*0.48;
+    const gap=trafficForwardGap(c);
+    if(gap<15) desired=Math.min(desired,cruise*clamp((gap-3)/12,0,1));
+    if(stoppingForLight||Math.hypot(px0()-c.x,pz0()-c.z)<9) desired=0;
+    const speed=Math.abs(c.speed);
+    let throttle=speed<desired-1?0.65:(speed>desired+1?-0.3:0.08);
+    if(desired<0.5) throttle=speed>0.8?-0.55:0;
+    setTail(c,desired<speed-0.4);
     carPhysics(c,dt,{steer,throttle,drift:false,boost:false});
+    correctTrafficLane(c,dt);
+    if(trafficStaticEmbedded(c)||trafficLaneDeviation(c)>6){
+      recoverEmbeddedTraffic(c,trafficStaticEmbedded(c)?'static':'lane'); continue;
+    }
+    if(desired>5&&speed<1.2&&gap>7&&!stoppingForLight) c.trafficStuckT=(c.trafficStuckT||0)+dt;
+    else c.trafficStuckT=0;
+    if(c.trafficStuckT>3.2) recoverEmbeddedTraffic(c,'stuck');
   }
 }
 // ================= FOOT COPS =================
