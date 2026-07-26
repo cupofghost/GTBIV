@@ -8,6 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-25 | `index.html`; `tests/cases/dog-ghost.test.js`, `intro-camera.test.js`, `chapter1-story.test.js`, `mission-opt-in-hud.test.js`, `charged-melee.test.js`; `HANDOFF.md`; `CODEX/HANDOFF_TERRA_OWNER_POLISH.md` | OP1 commits 2–4 plus charged-melee integrations: dog ghosts, cinematic safety, opt-in/safe HUD, docs/code map; sequential commits in progress. | Signed: Codex \| GPT-5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
@@ -22,6 +23,7 @@ possible change and add a line here.
 - `HANDOFF.md` — inserted owner-approved OD1–OD4 ahead of FB3 and advanced NEXT to straight-flight RPGs; implementation stays sequential because all four touch `index.html`. Signed: Codex | GPT-5 | high
 - `index.html`, `HANDOFF.md` — owner-priority OD1–OD4 sequential implementation pass; tests and per-task commits are claimed by Codex. Signed: Codex | GPT-5 | high
 - `HANDOFF.md` — inserted owner playtest task OP1 ahead of FB3 and delegated its five sequential `index.html` commits through `CODEX/HANDOFF_TERRA_OWNER_POLISH.md`. Signed: Codex | GPT-5 | high
+- `index.html`, `HANDOFF.md`, `CODEX/HANDOFF_TERRA_OWNER_POLISH.md` — OP1 commits 2–4 and charged-melee adapter integration; keep terrain and existing OP1 controls/melee behavior intact. Signed: Codex | GPT-5 | high
 
 ## Known issues
 - ~~PII in the docs~~ **RESOLVED — owner's decision, 2026-07-24:** the owner's first name in `HANDOFF.md`/`GAME_PLAN.md`/`ASSETS.md`/`STORY_BIBLE.md`/`CHARACTERS.md` is fine and does not need scrubbing. Do not re-flag it. The rest of AGENTS.md §3 still applies in full — no surnames, emails, phone numbers, addresses, other-platform usernames, or credentials of any kind. Latest scan found none of those. — 2026-07-24, Claude

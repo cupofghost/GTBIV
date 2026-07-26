@@ -3340,11 +3340,11 @@ function makeDog(){
 }
 function attachDog(ped){
   const m=makeDog(); scene.add(m);
-  ped.dog={mesh:m,x:ped.x,z:ped.z,phase:0};
+  ped.dog={mesh:m,x:ped.x,z:ped.z,phase:0,hp:70,dead:false,owner:ped};
   m.position.set(ped.x,groundH(ped.x,ped.z),ped.z);
 }
 function updateDog(ped,dt){
-  const d=ped.dog; if(!d) return;
+  const d=ped.dog; if(!d||d.dead) return;
   const tx2=ped.x-Math.sin(ped.heading)*0.85+Math.cos(ped.heading)*0.45;
   const tz2=ped.z-Math.cos(ped.heading)*0.85-Math.sin(ped.heading)*0.45;
   const dx=tx2-d.x, dz=tz2-d.z, dist=Math.hypot(dx,dz);
@@ -3980,6 +3980,8 @@ function updateJocks(dt){
 // Feed a pack 3 chunks and it heels; throw meat on a mark and they dinner.
 const strayDogs=[];
 const dogGangs=[];
+const dogGhosts=[];
+const DOG_GHOST_CAP=8;
 const meatDrops=[];
 const STRAY_ARCHIVE_DIST=WORLD.block+WORLD.road; // one full city block, road to road
 let dogBandT=1, straySpawnT=8, gangSeq=0;
@@ -3995,12 +3997,44 @@ function removeStrayDog(d,archive){
     queueSave();
   }
 }
+function removeDogGhost(g){ const i=dogGhosts.indexOf(g); if(i>=0) dogGhosts.splice(i,1); scene.remove(g.mesh); disposeMesh(g.mesh); }
+function spawnDogGhost(d){
+  while(dogGhosts.length>=DOG_GHOST_CAP) removeDogGhost(dogGhosts[0]);
+  const mesh=d.mesh.clone(true);
+  mesh.traverse(o=>{ if(o.material){ o.material=o.material.clone(); o.material.transparent=true; o.material.opacity=.38; o.material.depthWrite=false; } });
+  mesh.position.set(d.x,groundH(d.x,d.z)+.12,d.z); scene.add(mesh);
+  dogGhosts.push({mesh,x:d.x,z:d.z,t:30,phase:rand(0,TAU)});
+}
+function killDog(d){
+  if(!d||d.dead) return false;
+  d.dead=true; spawnDogGhost(d); const owner=d.owner;
+  if(owner&&owner.dog===d) owner.dog=null;
+  if(strayDogs.includes(d)) removeStrayDog(d,false);
+  else { scene.remove(d.mesh); disposeMesh(d.mesh); }
+  return true;
+}
+function damageDog(d,amount,hostile){
+  if(!d||d.dead) return false;
+  if(hostile&&strayDogs.includes(d)) antagonizeDogs(d.x,d.z,6);
+  d.hp=(d.hp===undefined?70:d.hp)-amount;
+  if(d.hp<=0) killDog(d);
+  return true;
+}
+function updateDogGhosts(dt){
+  for(let i=dogGhosts.length-1;i>=0;i--){ const g=dogGhosts[i]; g.t-=dt;
+    if(g.t<=0){ removeDogGhost(g); continue; }
+    const a=g.phase+(30-g.t)*1.7, tx=player.x+Math.sin(a)*1.5, tz=player.z+Math.cos(a)*1.5;
+    g.x+= (tx-g.x)*Math.min(1,dt*1.7); g.z+=(tz-g.z)*Math.min(1,dt*1.7);
+    g.mesh.position.set(g.x,groundH(g.x,g.z)+.45+Math.sin(a*2)*.18,g.z);
+    g.mesh.traverse(o=>{ if(o.material) o.material.opacity=.38*Math.min(1,g.t/4); });
+  }
+}
 function makeStray(dog,opts){
   opts=opts||{};
   if(strayDogs.length>=16){   // animal control: the oldest stray moves on
     removeStrayDog(strayDogs[0],false);
   }
-  const d={mesh:dog.mesh,x:dog.x,z:dog.z,phase:rand(0,TAU),gang:null,
+  const d={mesh:dog.mesh,x:dog.x,z:dog.z,phase:rand(0,TAU),gang:null,hp:dog.hp===undefined?70:dog.hp,dead:false,
     hx:dog.x,hz:dog.z,wa:rand(0,TAU),offX:0,offZ:0,biteT:0,
     orphaned:!!opts.orphaned,counted:!!opts.counted};
   d.mesh.position.set(d.x,groundH(d.x,d.z),d.z);
@@ -6023,6 +6057,7 @@ function doAttack(){
     jocks.forEach(j=>{ if(j.state!=='down') consider(j.x,j.z,j,'jock'); });
     cars.forEach(c=>{ if(!c.dead) consider(c.x,c.z,c,'car'); });
     strayDogs.forEach(d=>consider(d.x,d.z,d,'dog'));
+    peds.forEach(pd=>{ if(pd.dog) consider(pd.dog.x,pd.dog.z,pd.dog,'dog'); });
     if(copHeli&&!copHeli.dead) consider(copHeli.x,copHeli.z,copHeli,'heli');
     RAT_POOL.forEach(rt=>{ if(rt.state==='go'||rt.state==='eat') consider(rt.x,rt.z,rt,'rat'); });
     if(mamaRat&&mamaRat.state!=='dying') consider(mamaRat.x,mamaRat.z,mamaRat,'mamarat');
@@ -6030,6 +6065,7 @@ function doAttack(){
       if(best.kind==='dog'){
         burst(best.ref.x,0.4,best.ref.z,6,[[1,0.4,0.4]],2,0.4,4);
         antagonizeDogs(best.ref.x,best.ref.z,6);
+        damageDog(best.ref,50,true);
         toast('YOU SHOT A DOG. THE PACK SAW.','bad');
       } else if(best.kind==='ped'){
         knockPed(best.ref,false); addHeat(18);
@@ -6241,6 +6277,8 @@ function damageArea(x,z,rad,dmg){
   peds.forEach(pd=>{ if(pd.state!=='down'&&Math.hypot(pd.x-x,pd.z-z)<rad) knockPed(pd,false); });
   footCops.forEach(fc=>{ if(fc.state!=='down'&&Math.hypot(fc.x-x,fc.z-z)<rad) downFootCop(fc); });
   jocks.forEach(j=>{ if(j.state!=='down'&&Math.hypot(j.x-x,j.z-z)<rad) downJock(j,false); });
+  strayDogs.slice().forEach(d=>{ const q=Math.hypot(d.x-x,d.z-z); if(q<rad) damageDog(d,dmg*(1-q/rad),true); });
+  peds.forEach(pd=>{ if(pd.dog){ const q=Math.hypot(pd.dog.x-x,pd.dog.z-z); if(q<rad) damageDog(pd.dog,dmg*(1-q/rad)); } });
   for(const c of cars){
     if(c.dead) continue;
     const d=Math.hypot(c.x-x,c.z-z);
@@ -7302,6 +7340,12 @@ function chargedMeleeHit(s){
     if(kind==='c'&&a.hp<=0) downFootCop(a); if(kind==='j'&&a.hp<=0) downJock(a,false);
   };
   footCops.forEach((a,i)=>hit(a,'c',i)); jocks.forEach((a,i)=>hit(a,'j',i));
+  const dogHit=d=>{
+    if(d.dead||s.hits.has(d)) return; const dx=d.x-p.x,dz=d.z-p.z,dist=Math.hypot(dx,dz);
+    if(dist>3.1||dist<.15||(s.type==='punch'&&Math.abs((dx*forward.x+dz*forward.z)/dist)<Math.cos(.96))) return;
+    s.hits.add(d); damageDog(d,s.type==='kick'?28:22,true);
+  };
+  strayDogs.slice().forEach(dogHit);
 }
 function finishChargedMelee(s){
   const p=player,u=p.mesh.userData;
@@ -7343,6 +7387,8 @@ function doPunch(heavy,kicking){
   burst(p.x+Math.sin(p.heading)*0.8,1.2,p.z+Math.cos(p.heading)*0.8,4,COL_SPARK,2,0.25,4);
   // swinging near a dog = antagonizing the whole pack
   antagonizeDogs(p.x+Math.sin(p.heading)*1,p.z+Math.cos(p.heading)*1,2.4);
+  for(const d of strayDogs.slice()) if(Math.hypot(d.x-p.x,d.z-p.z)<reach&&Math.abs(angDiff(p.heading,Math.atan2(d.x-p.x,d.z-p.z)))<1.1) damageDog(d,damage,true);
+  for(const ped of peds) if(ped.dog&&Math.hypot(ped.dog.x-p.x,ped.dog.z-p.z)<reach&&Math.abs(angDiff(p.heading,Math.atan2(ped.dog.x-p.x,ped.dog.z-p.z)))<1.1) damageDog(ped.dog,damage);
   // cops on foot catch hands (or the stick) too
   for(const fc of footCops){
     if(fc.state==='down') continue;
@@ -8498,6 +8544,7 @@ function loop(){
           updateFootCops(sdt);
           updateRats(sdt);
           updateMamaRat(sdt);
+          updateDogGhosts(sdt);
           updateRail(sdt);
           updatePeds(sdt);
           updateWanted(sdt);
