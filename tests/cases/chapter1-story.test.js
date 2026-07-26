@@ -134,6 +134,17 @@ module.exports = {
       },
     },
     {
+      name: 'Deb outdoor shots keep camera and look target above hill terrain',
+      query: '?dev=1&skipintro=1',
+      run: async (page, { assert }) => {
+        const r=await page.evaluate(()=>{
+          let hill={x:0,z:0,h:-Infinity}; for(let x=-H;x<=H;x+=4)for(let z=-H;z<=H;z+=4){const h=groundH(x,z);if(h>hill.h)hill={x,z,h};}
+          let min=Infinity; for(const id of ['deb_confrontation','deb_payoff']){ playCutscene(id,hill.x,hill.z); for(let n=0;activeCutscene&&n<2000;n++){updateCutscene(.05);const d=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).add(camera.position);min=Math.min(min,camera.position.y-groundH(camera.position.x,camera.position.z),d.y-groundH(d.x,d.z));} }
+          return {min};
+        }); assert(r.min>=.34,'Deb shots must remain terrain safe: '+JSON.stringify(r));
+      },
+    },
+    {
       name: 'the $800 payoff still fires once earnings/heat milestones are already past',
       query: '?dev=1&skipintro=1',
       run: async (page, { assert }) => {

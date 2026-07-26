@@ -8762,14 +8762,9 @@ function routeCinematicCamera(x,y,z){
     if(!block) break;
     if(block.kind==='building'){
       const b=block.b;
-      const faces=[
-        {x:b.minX-pad,z,d:Math.abs(x-(b.minX-pad))},
-        {x:b.maxX+pad,z,d:Math.abs(x-(b.maxX+pad))},
-        {x,z:b.minZ-pad,d:Math.abs(z-(b.minZ-pad))},
-        {x,z:b.maxZ+pad,d:Math.abs(z-(b.maxZ+pad))},
-      ];
-      const best=faces.reduce((a,c)=>c.d<a.d?c:a);
-      x=best.x; z=best.z; // slide around the nearest facade instead of tunnelling through it
+      // An elevated route keeps the authored XZ sweep intact; unlike the old
+      // nearest-facade push it never visibly sticks and side-slides on a wall.
+      y=Math.max(y,b.baseY+b.h+pad);
     } else {
       x+=block.hit.nx*(block.hit.depth+0.08);
       z+=block.hit.nz*(block.hit.depth+0.08);
@@ -9113,18 +9108,18 @@ const CUTSCENES={
     shots:[
       // Turbo's nervous pre-beat (turbo_meets_deb) — his jokes visibly don't land
       // on Deb, so it's one quick line before her locked confrontation lines.
-      { duration:3.3, pos:[9,7,9], lookAt:[0,1.2,0], fov:68,
+      { duration:3.3, pos:[9,7,9], lookAt:[0,1.2,0], fov:68, outdoor:true,
         dialogue:{speaker:'TURBO', text:"Hey Deb. You're looking... like you want to kill me. Cool, cool.",
           voice:['voice/turbo/story/approach_deb/approach_deb_01_looking-like-you-want-to-kill-me.mp3',
                  'voice/turbo/story/approach_deb/approach_deb_02_furious-but-great.mp3',
                  'voice/turbo/story/approach_deb/approach_deb_03_funny-story.mp3']}, transition:'smooth' },
-      { duration:4.2, pos:[1.4,1.5,1.8], lookAt:[0,1.55,0], fov:32,
+      { duration:4.2, pos:[1.4,1.5,1.8], lookAt:[0,1.55,0], fov:32, outdoor:true,
         dialogue:{speaker:'DEB',text:'Turbo. We need to talk.'}, transition:'cut', shake:0.15 },
-      { duration:4.0, pos:[-1.6,1.5,1.6], lookAt:[0,1.55,0], fov:32,
+      { duration:4.0, pos:[-1.6,1.5,1.6], lookAt:[0,1.55,0], fov:32, outdoor:true,
         dialogue:{speaker:'DEB',text:'You owe me $800 in child support.'}, transition:'smooth' },
-      { duration:4.8, pos:[0,2.2,7], lookAt:[0,1.1,0], fov:52,
+      { duration:4.8, pos:[0,2.2,7], lookAt:[0,1.1,0], fov:52, outdoor:true,
         dialogue:{speaker:'DEB',text:'Pay me, or you go BACK to jail. Have fun, Turbo.'}, transition:'cut', shake:0.35 },
-      { duration:2.0, pos:[0,3.5,10], lookAt:[0,1,0], fov:60, dialogue:null, transition:'fade' }
+      { duration:2.0, pos:[0,3.5,10], lookAt:[0,1,0], fov:60, outdoor:true, dialogue:null, transition:'fade' }
     ]
   },
   deb_payoff:{
@@ -9132,16 +9127,16 @@ const CUTSCENES={
     shots:[
       // Turbo's pay-off pre-beat (turbo_pays_deb) — proud of himself, a touch too
       // proud; the chapter's first sincere beat, one line before Deb's locked lines.
-      { duration:3.0, pos:[2.4,1.5,2.6], lookAt:[0,1.35,0], fov:40,
+      { duration:3.0, pos:[2.4,1.5,2.6], lookAt:[0,1.35,0], fov:40, outdoor:true,
         dialogue:{speaker:'TURBO', text:"There. Eight hundred, exact change, no confetti.",
           voice:['voice/turbo/story/paying_deb/paying_deb_01_exact-change.mp3',
                  'voice/turbo/story/paying_deb/paying_deb_02_functioning-adult.mp3',
                  'voice/turbo/story/paying_deb/paying_deb_03_spend-it-on-the-kid.mp3']}, transition:'smooth' },
-      { duration:3.2, pos:[0,0.7,2.8], lookAt:[0,1.45,0], fov:38,
+      { duration:3.2, pos:[0,0.7,2.8], lookAt:[0,1.45,0], fov:38, outdoor:true,
         dialogue:{speaker:'DEB',text:'...wow. You actually paid.'}, transition:'cut' },
-      { duration:3.8, pos:[5,2.2,5], lookAt:[0,1,0], fov:56,
+      { duration:3.8, pos:[5,2.2,5], lookAt:[0,1,0], fov:56, outdoor:true,
         dialogue:{speaker:'DEB',text:'Later, Turbo.'}, transition:'smooth' },
-      { duration:2.5, pos:[0,3,12], lookAt:[0,0.8,0], fov:62, dialogue:null, transition:'fade' }
+      { duration:2.5, pos:[0,3,12], lookAt:[0,0.8,0], fov:62, outdoor:true, dialogue:null, transition:'fade' }
     ]
   },
   // CHAPTER1.md §6 — fires once cumulative Chapter-1 earnings cross ~$200
@@ -9204,12 +9199,12 @@ function initShot(idx){
   // Calculate world-space targets
   if(shot.pos){
     activeCutscene.targetPos=new THREE.Vector3(
-      shot.pos[0]+activeCutscene.anchorX, shot.pos[1], shot.pos[2]+activeCutscene.anchorZ
+      shot.pos[0]+activeCutscene.anchorX, shot.pos[1]+(shot.outdoor?groundH(shot.pos[0]+activeCutscene.anchorX,shot.pos[2]+activeCutscene.anchorZ):0), shot.pos[2]+activeCutscene.anchorZ
     );
   }
   if(shot.lookAt){
     activeCutscene.targetLookAt=new THREE.Vector3(
-      shot.lookAt[0]+activeCutscene.anchorX, shot.lookAt[1], shot.lookAt[2]+activeCutscene.anchorZ
+      shot.lookAt[0]+activeCutscene.anchorX, shot.lookAt[1]+(shot.outdoor?groundH(shot.lookAt[0]+activeCutscene.anchorX,shot.lookAt[2]+activeCutscene.anchorZ):0), shot.lookAt[2]+activeCutscene.anchorZ
     );
   }
   // Store start positions for interpolation
@@ -9250,10 +9245,12 @@ function updateCutscene(dt){
   // Camera position
   if(shot.pos){
     camera.position.lerpVectors(cs.startPos, cs.targetPos, eased);
+    if(shot.outdoor) camera.position.y=Math.max(camera.position.y,groundH(camera.position.x,camera.position.z)+.6);
   }
   // Camera lookAt
   if(shot.lookAt){
     const currentLook=new THREE.Vector3().lerpVectors(cs.startLookAt, cs.targetLookAt, eased);
+    if(shot.outdoor) currentLook.y=Math.max(currentLook.y,groundH(currentLook.x,currentLook.z)+.35);
     camera.lookAt(currentLook);
   }
   // FOV

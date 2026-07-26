@@ -6,6 +6,21 @@
 module.exports = {
   cases: [
     {
+      name: 'intro and cinema share elevated blocker-safe routing without facade side-sliding',
+      query: '?dev=1&skipintro=1',
+      run: async (page, { assert }) => {
+        const r=await page.evaluate(()=>{
+          let blocked=0,minClear=Infinity,same=true;
+          for(let i=0;i<INTRO_PATH.length-1;i++) for(let f=0;f<=1;f+=.05){
+            const a=flySample(INTRO_PATH[i],INTRO_PATH[i+1],f), b=flySample(INTRO_PATH[i],INTRO_PATH[i+1],f);
+            same&&=a.px===b.px&&a.py===b.py&&a.pz===b.pz;
+            blocked+=!!cinematicCameraBlocked(a.px,a.py,a.pz); minClear=Math.min(minClear,a.py-groundH(a.px,a.pz));
+          } return {blocked,minClear,same};
+        });
+        assert(r.same&&r.blocked===0&&r.minClear>=2.39,'shared route must clear blockers continuously: '+JSON.stringify(r));
+      },
+    },
+    {
       name: 'intro cinematic camera stays above the terrain for the whole flythrough',
       query: '?dev=1&skipintro=1',
       run: async (page, { assert }) => {
