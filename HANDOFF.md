@@ -1555,6 +1555,100 @@ dog/ghost death path, elevated shared intro routing plus terrain-safe Deb shots,
 and opt-in mission/HUD behavior. Focused syntax, dog-ghost, charged melee,
 intro camera, and mission/HUD checks passed. Signed: Codex | GPT-5 | high
 
+### Phase 10 — Codex audit follow-up `OPTIONAL · OWNER-TRIGGERED`
+
+**Authored by:** Codex | GPT-5 | high (2026-07-25), from a three-part audit of
+Git history, runtime/tests, and assets/docs/security.
+
+**Activation phrase:** the owner must explicitly say **"run the Codex audit
+follow-up"** (or name one of AF1–AF4). This project is not the authoritative
+`NEXT` task, does not replace **FB3**, and must not be started merely because an
+agent notices it in the backlog.
+
+**Audit baseline:** no valuable implementation was found missing from `main`;
+no tracked asset was confirmed junk; all literal runtime asset paths resolved.
+Preserve all voice/audio, art, `three.min.js`, `viewer.html`, terrain/spawn
+safety, pooling exclusions, respawn save flushes, and Cinema replay restoration
+unless the owner separately changes scope.
+
+#### AF1 — Cinema staged-actor lifecycle `P2 · Risk: Med` `OPTIONAL`
+
+**Finding:** `cinemaClearStaged()` removes staged jock/ped meshes without the
+same disposal discipline used for staged cars, including attached dog meshes.
+`stageShootPed()` also leaves a delayed callback able to act on a pedestrian
+after a different Cinema scene has cleared it.
+
+**Approach:** give delayed Cinema actions a scene-generation token or explicit
+cancellation guard, and retire/dispose every staged actor exactly once without
+touching pooled or live-world entities. Preserve replay restoration and current
+mission/Cinema exclusions.
+
+**Acceptance:** rapidly select **Shoot Pedestrian**, switch scenes within one
+second, and repeat staging at least ten times: no orphaned hit/effect fires, no
+removed actor is mutated, and staged meshes/dogs are disposed once. Add focused
+regression coverage, then run the Cinema-focused tests plus syntax once.
+
+#### AF2 — Save-field normalization `P2 · Risk: Low` `OPTIONAL`
+
+**Finding:** a version-valid but malformed local save can restore `G.station`
+outside the `STATIONS` range.
+
+**Approach:** normalize restored enum/index values at the load boundary while
+preserving every valid existing save and the current corrupt/absent-save
+fallback. Audit only adjacent bounded fields needed to implement this safely;
+do not redesign the save schema.
+
+**Acceptance:** valid saves round-trip unchanged; negative, oversized,
+non-numeric, and missing station values fall back to a valid station without a
+boot or radio error. Extend `save-restore.test.js` with focused cases.
+
+#### AF3 — Documentation truth pass `P3 · Risk: Low` `OPTIONAL`
+
+**Scope:** documentation only. Reconcile it with the shipped code:
+
+- Correct `README.md` and `GAME_PLAN.md`: 39/47 story clips and 2/12 cutscene
+  clips are wired; eight football story clips, ten cutscene clips, all 13
+  backstory-intro clips, promo, and raw auditions remain staged/unwired.
+- Replace the unsupported dependable-offline claim: the project has installable
+  manifest metadata but no service worker/cache implementation.
+- Correct the old root `panel1-3.jpg` path to `art/legacy/panel1-3.jpg`.
+- Refresh `tests/README.md` so its inventory does not imply only seven case
+  files exist; describe `op1-touch-smoke` as viewport smoke, not real touch
+  dispatch.
+- Rename the obsolete Mama Rat `PLACEHOLDER` section label without changing
+  the still-placeholder creature-art status.
+- Record Three.js r128 vendoring provenance and a checksum without replacing or
+  upgrading the runtime.
+
+**Acceptance:** claims and counts match code/assets at the commit being edited;
+links resolve with exact case; no gameplay file changes except a comment/banner
+rename if included.
+
+#### AF4 — Provenance and junk cleanup `P3 · Risk: Low` `OPTIONAL · ASK FIRST`
+
+**Guardrail:** this is destructive/organizational work. Obtain a fresh,
+item-specific owner approval before deleting or moving anything. Do not combine
+it with AF1–AF3.
+
+**Candidates after a fresh remote/PR check:** archive completed
+`CODEX/HANDOFF_*` records; optionally remove ignored/reproducible local
+`tests/node_modules/`; and consider retiring branches whose implementation is
+already on `main` (`codex/audit-fixes-1-3-5`,
+`codex/consolidate-od1-od4-20260725`,
+`codex/terra-owner-polish-handoff`, `terra/owner-playtest-polish`, and remote
+`terra/owner-playtest-polish`). Preserve desired PR #40 granular provenance
+before removing its last ref.
+
+**Do not delete as junk:** staged football/backstory/cutscene VO, promo/raw
+voice source material, `art/legacy/panel1-3.jpg`, `CLAUDE.md`, `GEMINI.md`,
+`CODEX/README.md`, or working source-order wrappers in `index.html`. The
+wrappers are architectural risk, not dead code; replacing them is a separate
+high-risk refactor.
+
+**Acceptance:** every removed item has written evidence that it is duplicated,
+superseded, reproducible, or owner-abandoned; recovery/provenance is preserved;
+runtime behavior and the authoritative `NEXT` marker are unchanged.
+
 ---
 
 ## 9. Verification & Definition of Done
