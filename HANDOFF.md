@@ -1670,6 +1670,12 @@ exclusions, save compatibility, phone safe areas, and zero-build deployment.
 Reproduce each reported defect before changing it; a vague visual complaint is
 not permission for a broad rewrite.
 
+**Four-agent launch packet:** when the owner requests the concurrent first
+batch, dispatch the tracked briefs in `CODEX/OP2_CONCURRENT/README.md`. They
+pin each agent's model, effort, base commit, branch, code ownership, tests, and
+integration order. Agents work on isolated branches/worktrees and never merge
+`main` themselves.
+
 #### OP2-A — Road and sidewalk visual integrity `P1 · Risk: Med` `OPEN`
 
 **Owner report:** manhole covers and center-road stripes look like
