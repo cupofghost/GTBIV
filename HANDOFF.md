@@ -1395,17 +1395,23 @@ blob-rat is not the intended final look.
 **Where:** `makeRatMesh` (shared by the swarm and mama rat) — build the real
 model here, or fork a `makeMamaRatMesh` if mama rat ends up needing rig
 features the tiny swarm rat doesn't (visible bite/lunge joints, etc.).
-**Approach:** Design a real low-poly rat that holds up both tiny (swarm,
-~0.3u) and huge (mama rat, 3×Turbo) — proper body/leg/tail proportions
-instead of a uniformly-scaled sphere-and-cylinder blob, a idle/walk
-animation cycle (today she just slides with a bob), and a lunge/bite
-animation for the contact state instead of the current stationary
-flash-and-shake. If it's a real rig (not a fixed mesh), reuse the
-`mesh.userData` joint-exposure pattern from `js/person.js` so `updateMamaRat`
-can drive it the way `updateFoot`/`updateFootCops` drive their `legL/legR/
-armL/armR` joints.
+**Approach:** Design a readable low-poly rat that holds up both tiny (swarm,
+~0.3u) and huge (mama rat, 3×Turbo). She needs visible ears, eyes, an opening
+mouth/jaw, four feet, proper body/leg/tail proportions instead of a uniformly
+scaled sphere-and-cylinder blob, an idle/walk cycle, and a distinct lunge/bite
+animation instead of the current slide/bob and stationary flash. Her face and
+body must point toward Turbo while she follows him; calibrate the mesh's forward
+axis once, then drive yaw from the horizontal Mama→Turbo direction without
+pitching her into the terrain. Turn smoothly enough to read as a pursuing
+animal, but quickly enough that she never walks backward or sideways at Turbo.
+If it is a real rig (not a fixed mesh), reuse the `mesh.userData`
+joint-exposure pattern from `js/person.js` so `updateMamaRat` can drive feet,
+jaw, head, and tail the way `updateFoot`/`updateFootCops` drive exposed joints.
 **Acceptance:** swarm rats and mama rat both use the new model; mama rat
-still measures out to 3× `turboHeight()`; no regression in
+still measures out to 3× `turboHeight()`; from every approach direction her
+eyes/mouth face Turbo and her feet animate in the direction of travel; idle,
+walk, turn, lunge, bite, damage, and death remain visually coherent; no
+regression in
 `tests/cases/rat-vengeance.test.js` or the rest of the suite; holds framerate
 with a swarm on screen (the pool is 16 rats, cheap instancing/geometry
 matters more there than for the single mama rat).
@@ -1649,6 +1655,298 @@ high-risk refactor.
 superseded, reproducible, or owner-abandoned; recovery/provenance is preserved;
 runtime behavior and the authoritative `NEXT` marker are unchanged.
 
+### Phase 11 — Owner playtest correction pass 2 `OP2 · OWNER-TRIGGERED`
+
+**Source:** owner playtest notes, 2026-07-26. These are approved requirements
+but are not automatically the authoritative `NEXT` task. Start the full pass
+only when the owner says **"run OP2"**, or start one named card when the owner
+names it. Do not silently fold these changes into FB3 or unrelated work.
+
+**Coordination:** nearly every card touches the hot `index.html`. One agent
+should claim and deliver OP2-A through OP2-G sequentially, one focused commit
+per card. RV2 may run separately only if its agent stays inside the rat
+model/update section. Preserve deterministic `_rng`, `groundH`, pool
+exclusions, save compatibility, phone safe areas, and zero-build deployment.
+Reproduce each reported defect before changing it; a vague visual complaint is
+not permission for a broad rewrite.
+
+#### OP2-A — Road and sidewalk visual integrity `P1 · Risk: Med` `OPEN`
+
+**Owner report:** manhole covers and center-road stripes look like
+trash-quality zoomed-in assets; some sidewalks do not follow terrain and hang
+in the air.
+
+**Where:** road/marking/manhole construction, sidewalk geometry, and the
+`groundH` terrain contract. Read `TERRAIN.md` before editing any terrain-seated
+mesh.
+
+**Approach:** make road markings world-scale geometry/materials with consistent
+lane width, dash length, spacing, edge softness, and orientation instead of
+stretched or camera-scale-looking marks. Rebuild manhole covers at believable
+street scale with a clean circular rim, inset lid, restrained surface pattern,
+and no oversized/blurry texture treatment. Seat every sidewalk vertex/segment
+from `groundH` at its own world position rather than sampling one height for a
+long slab. Preserve the present non-colliding sidewalk behavior; this card is a
+visual terrain-conformance fix, not permission to add curb collision.
+
+**Acceptance:** at walking and driving camera distances, stripes and covers
+look correctly scaled and stable; no sidewalk edge visibly floats above or
+dives under slopes/knolls; road and sidewalk seams remain closed; Turbo, cars,
+NPCs, and spawns behave exactly as before. Add a seeded terrain/geometry check
+and manually inspect representative flat, graded, and knoll-adjacent streets.
+
+#### OP2-B — Civilian vehicle sanity, jackability, and impact damage
+`P0 · Risk: High` `OPEN`
+
+**Owner report:** traffic often drives erratically; many cars cannot be
+carjacked, especially after clipping into buildings; being hit by a fast car
+does not reliably hurt Turbo.
+
+**Where:** generic traffic steering/lane following, spawn/anti-stuck,
+building/vehicle collision, generic-car pooling, `doEnterExit()` wrappers,
+carjack eligibility, and car→Turbo collision.
+
+**Approach:** diagnose before tuning. Keep ordinary traffic lane-aligned with
+bounded steering, speed, avoidance, and recovery; do not fix craziness by
+making all cars slow or sparse. Prevent/recover generic cars embedded in
+building AABBs, and retire/recycle an unrecoverable generic car without
+touching player, police, mission, parked-special, or Cinema cars. Make every
+ordinary reachable civilian car explicitly jackable; special non-jackable
+classes must be deliberate and documented, not an accidental consequence of a
+bad state or clipping.
+
+Car impacts use relative horizontal speed and one short per-car/per-player
+cooldown. Low-speed nudges do little or nothing; a meaningful hit damages and
+knocks Turbo consistently; very fast impacts may be lethal through the normal
+WASTED path. Do not allow one overlapping car to damage him every frame.
+
+**Acceptance:** seeded traffic drives several blocks without chronic weaving,
+spinning, building embeds, or mass pileups; every sampled ordinary civilian
+car can be stolen from a valid approach; an embedded-car recovery test leaves
+no stranded unjackable car; impact damage is monotonic with relative speed and
+fires once per contact window. Preserve wanted logic, pooling bounds,
+determinism, car audio, missions, and the existing large STEAL CAR button.
+
+#### OP2-C — Reliable melee and the planted horizontal kick pose
+`P0 · Risk: Med–High` `OPEN`
+
+**Owner report:** punch and kick stop working after extended play, and Turbo's
+kick drives his body into the ground instead of showing the intended pose.
+
+**Approach:** reproduce the lockout across repeated attacks, holds, mode
+changes, car enter/exit, pause, hit reactions, respawn, and Cinema transitions.
+Fix the owning timer/state/input-reset invariant; do not add a watchdog that
+merely hides a stuck attack. Every attack must return to a neutral state even
+when interrupted, and its hit window must stay synchronized with its pose.
+
+At the signature kick's peak, pose Turbo like a standing, planted horizontal
+figure: one support leg is straight and vertical with its foot planted on
+`groundH`; pelvis/torso stay roughly at waist height; torso is straight and
+face-down, parallel to the ground; both arms extend straight forward; the
+other leg extends straight backward. It should read like he is lying flat on
+his stomach in midair while held up by the single vertical leg. Nothing except
+the planted foot enters the ground. Blend into and out of this silhouette
+without teleporting the root or changing collision height.
+
+**Acceptance:** punch, normal kick, charged windmill punch, and charged planted
+kick still work after at least 100 mixed attacks and every listed interruption;
+no stuck input/state; the planted foot follows slopes while hips, torso, arms,
+and rear leg stay above terrain; hit geometry matches the visible attack.
+Extend focused melee tests and perform a side/front screenshot review.
+
+#### OP2-D — Grounded character shadows and better Turbo footsteps
+`P1 · Risk: Med` `OPEN`
+
+**Owner report:** person blob shadows stay attached to the feet and rotate
+vertical when a character falls. Turbo's current footstep sound is poor.
+
+**Where:** `makeShadow`, the person builder's child shadow, player/ped/jock/
+foot-cop knockdown poses and lifecycle updates, `updateFoot()` gait phases, and
+the SFX bus. This card follows OP2-C so it can use the corrected melee/
+knockdown states.
+
+**Shadow approach:** a person shadow must remain a ground-plane projection, not
+inherit the character mesh's fall rotation. Give each live person a cheap
+ground-anchored shadow update that follows world X/Z and `groundH + 0.03`.
+While upright, use the current compact foot/torso ellipse. As knockdown or death
+tips the body over, ease over roughly 0.15–0.25 seconds into a longer,
+body-shaped horizontal shadow aligned under the fallen torso/legs. Reverse the
+transition on recovery. Share geometry/materials, preserve pooling, and dispose
+or hide the shadow exactly with its actor; do not introduce real-time shadow
+maps.
+
+**Footstep approach:** replace the current footstep with a small Turbo-only
+footstep system driven by actual left/right gait-phase crossings, not a
+per-frame timer. Provide restrained alternating variants for asphalt/concrete,
+grass, sand, roof/interior, plus a separate landing thump. Cadence follows
+walk/run/sprint animation; volume, low-end, and pitch respond subtly to speed
+and Turbo's scale without becoming cartoony or machine-gun-like. Silence steps
+while airborne, stationary, stunned, attacking without foot motion, in
+vehicles, paused, replaying, or in cutscenes. Use the existing SFX mix/unlock
+path and cap overlap so missed frames cannot emit several steps at once.
+
+**Acceptance:** upright shadows remain flat at the feet; falling characters
+visibly transition to a horizontal body shadow; no shadow becomes vertical,
+floats, survives pooling/removal, or stays body-shaped after recovery. Turbo
+produces one alternating step per planted stride at walk/run/sprint speeds,
+surface changes are audible but coherent, landings have weight, and no
+airborne/idle spam occurs. Add state/cadence/lifecycle coverage, then perform an
+owner listening pass—the final sound quality cannot be approved by assertions
+alone.
+
+#### OP2-E — Quieter mission UI and head-anchored speech bubbles
+`P1 · Risk: Low–Med` `OPEN`
+
+**Owner direction:** mission buttons and notifications should be smaller, more
+translucent, and out of the way. The context-sensitive STEAL CAR control is the
+only current large action button to preserve. Speech-bubble tails should appear
+to come from the speaking NPC's head from the current camera view.
+
+**Approach:** convert mission offers/status notices into compact translucent
+edge/corner chips that avoid the reticule, wanted stars, Turbo Mode slot, touch
+controls, and phone cutouts. Keep critical text readable and tappable; do not
+hide mission state. Preserve the large STEAL CAR control when a valid car is in
+range.
+
+For bubbles, project the speaker's head and position each bubble normally, then
+place/rotate/clamp its tail along the bubble edge toward that projected head.
+Share the calculation for generic speech, chats, jocks, and Deb. Preserve the
+existing building occlusion, range, expiry, and no-per-frame-DOM-allocation
+rules.
+
+**Acceptance:** mission UI never dominates the center of a desktop or 800×390
+phone screen; buttons remain usable; STEAL CAR stays prominent; every visible
+bubble tail points back to its speaker's projected head as the camera moves,
+including edge-clamped bubbles, and remains hidden when the speaker is
+occluded.
+
+#### OP2-F — Planned cinematic camera routes `P0 · Risk: High` `OPEN`
+
+**Owner report:** some Cinema scenes still send the camera through terrain.
+The intro route avoids more collisions but looks reactive and janky instead of
+moving like a movie camera.
+
+**Approach:** replace last-moment collision shoves with a small deterministic
+route planner used by the intro and applicable live Cinema shots. Build a few
+candidate elevated waypoints around intervening building AABBs, reject segments
+that violate building or `groundH` clearance (including interpolated curve
+samples), choose a short clear route, and travel it with a smooth spline/eased
+speed profile. Smooth look-at targets separately so framing does not snap when
+the path bends. Prefer intentional arcs, cranes, and reveals; if no cinematic
+route is valid, cut to a known-safe shot rather than scraping along geometry.
+Keep Deb shots terrain-safe and preserve replay/free-fly behavior.
+
+**Acceptance:** across representative deterministic seeds and every staged
+scene, dense path sampling stays above terrain and outside buildings; speed,
+acceleration, and look direction have no abrupt collision-correction spikes;
+the intro reads as one planned movie move. Add route-clearance regression
+coverage and conduct a full visual review—numeric safety alone is insufficient.
+
+#### OP2-G — Faster car failure, one better explosion, and lethal falls
+`P1 · Risk: Med` `OPEN`
+
+**Owner direction:** once the player's car reaches its damaged/critical state,
+it should explode in roughly half the current time. Remove the redundant
+mushroom-cloud layer; keep the better quick explosion, slow that visual
+slightly, and increase its damaging blast radius modestly. A fall of about four
+Turbo body heights onto solid ground should splat and trigger WASTED.
+
+**Approach:** keep one authoritative vehicle-explosion event and one visual
+effect. Halve the critical fuse rather than doubling damage updates, so timing
+is deterministic and the explosion cannot fire twice. Remove only the
+mushroom-cloud presentation, not cleanup, sound, heat, shake, or damage hooks
+shared by the retained effect. Lengthen the retained animation enough to read
+without making gameplay wait for it, and define one slightly larger radius
+used consistently by damage and tests.
+
+Track real unsupported fall distance from the airborne high point relative to
+`groundH`/landing surface and `turboHeight()`. On a solid-ground impact at
+roughly `4 × turboHeight()`, play a short splat/impact beat and use the existing
+WASTED flow. Ordinary jumps, stairs, moving terrain samples, scripted camera
+moves, teleports/recovery, vehicle state, and a successfully deployed parachute
+must not create false falls; preserve existing water/bail behavior.
+
+**Acceptance:** the player car's measured critical-to-explosion time is about
+half the baseline; exactly one slowed retained explosion renders and damages
+inside its documented radius; no mushroom cloud is created. Drops below the
+threshold survive as before, drops at/above it onto solid ground reliably
+WASTE Turbo once, and parachute/respawn/terrain transitions do not false-fire.
+
+### Phase 12 — Turbo Mode `TM · OWNER-TRIGGERED FEATURE`
+
+**Activation:** start only when the owner says **"build Turbo Mode"** or names
+TM1–TM3. This is a feature track, not a bug fix and not part of OP2. Deliver it
+after the melee, vehicle, save, HUD, and Cinema systems it extends are stable.
+One agent should carry the three commits because they share player state,
+rendering, controls, combat, audio, saves, and `index.html`.
+
+**Playtest economy contract:** reaching `$800` reveals the small Turbo button
+and offers the choice to invest in Turbo instead of immediately paying Deb.
+For the first implementation, active time is unlimited/free so it can be
+playtested: define the future rate as `$500 per active minute`, but keep billing
+disabled behind one obvious playtest constant. Do not invent a one-time charge,
+deduct the `$800`, or alter Deb/debt progression until the owner separately
+approves the final economy behavior.
+
+#### TM1 — Unlock, toggle, state, and HUD `P1 · Risk: Med` `OPEN`
+
+Add explicit saved `turboModeUnlocked` state and transient
+`turboModeActive` state. At `$800`, show one small translucent **TURBO** button
+in the top-right safe area without overlapping wanted stars, notifications, or
+phone cutouts. First activation unlocks the mode and plays TM2; later taps
+toggle it on/off. Active state defaults off after reload/new game unless the
+owner later requests persistence. Centralize `enterTurboMode()` and
+`exitTurboMode()` so death, bust, Cinema, vehicle entry, and New Game cannot
+leave half-applied modifiers.
+
+**Acceptance:** threshold/button/save behavior is deterministic; toggling never
+charges money in the playtest build; every exit path restores normal Turbo
+exactly; disabling free play later has one explicit `$500/minute` billing hook.
+
+#### TM2 — Golden transformation and presentation `P1 · Risk: Med` `OPEN`
+
+On every off→on activation, play a short skippable close-up cutscene: frame
+Turbo's face safely above terrain, place his sunglasses on, and play the exact
+line **"Screw Deb, it's Turbo time."** Then reveal a golden shirt with a clear
+star on the back, visible biceps added to both arms, sunglasses, and a
+`1.5 ×` larger Turbo. Use reversible appearance layers; do not permanently
+scale the shared person rig or leak meshes/materials after repeated toggles.
+Frame the transformation through the planned-camera rules from OP2-E if that
+work has landed; otherwise use a fixed validated safe shot.
+
+**Acceptance:** ten on/off transformations preserve the original shirt, scale,
+rig, weapons, collision/terrain seating, and camera state on exit; the gold
+shirt/star, glasses, biceps, and 50% size increase read clearly from front and
+back; cutscene skip and interruption clean up safely.
+
+#### TM3 — Powers, combat, and Turbo-only voice `P1 · Risk: High` `OPEN`
+
+While active, Turbo runs and jumps dramatically higher/faster; held pistol and
+other guns fire automatically; ammunition never decreases; and punches/kicks
+launch affected enemies far into the distance. Scale movement, jump, weapon
+cadence, melee reach/impulse, camera framing, and terrain clearance through
+central Turbo modifiers—not scattered permanent mutations. Turning the mode
+off restores the exact prior ammo, rates, damage, size, camera, and melee
+behavior. Do not make enemies/mission targets disappear before their normal
+downed/mission-resolution logic records the hit.
+
+Create a separate Turbo Mode voice registry that plays only while active,
+including:
+
+- "This shirt was totally worth it."
+- "What does child support even mean?"
+- "I'm investing in myself."
+
+Use text/subtitles immediately; audio files may be added later through the
+existing lazy VO registry. Keep cooldown/deduplication so automatic fire and
+rapid hits do not create overlapping bark spam.
+
+**Acceptance:** measurable active-vs-normal tests cover run speed, jump height,
+automatic fire, unchanged ammo, scale, and launch impulse; toggling off restores
+baseline values exactly; repeated toggles, WASTED/BUSTED, car/heli entry, saves,
+missions, and Cinema leave no stale modifier; busy-scene performance remains
+bounded.
+
 ---
 
 ## 9. Verification & Definition of Done
@@ -1723,8 +2021,11 @@ throughout:
 —  FB3 Coach mission             ← NEXT
 —  FB4 Football minigame         OPEN
 —  FB5 Cheerleaders cutscene     OPEN
-—  RV2 Mama rat model            OPEN
+—  RV2 Mama rat model/animation  OPEN (owner-expanded)
 —  RV3 Rat vengeance polish      OPEN (unscoped)
+—  OP2 Owner playtest corrections OPEN (owner-triggered; A–G)
+—  TM  Turbo Mode                 OPEN (owner-triggered, after OP2)
+—  AF  Codex audit follow-up      OPEN (owner-triggered)
 —  X1  Modular split (if approved) OPEN
 —  A2  Accessibility             DEFERRED — LOWEST PRIORITY (owner direction)
 ```
@@ -1745,8 +2046,24 @@ narrative beat this track needs.
 **Rat Vengeance track** (Phase 8, above) is a small ongoing side-track — `RV1`
 (shoot the swarm → mama rat spawns, hunts, bites, and can be killed) is done
 with a throwaway placeholder model. Next up is `RV2`: give her (and the regular
-swarm) a real model/animation in `makeRatMesh`. `RV3` is unscoped follow-on
-polish — don't start it without checking in first.
+swarm) a real model/animation with ears, eyes, mouth, feet, and correct
+face-Turbo pursuit orientation in `makeRatMesh`/`makeMamaRatMesh`. `RV3` is
+unscoped follow-on polish — don't start it without checking in first.
+
+**Owner playtest correction track** (Phase 11) is independent of the Football
+Saga and begins only on owner instruction: `OP2-A` road/sidewalk visuals →
+`OP2-B` vehicle sanity/jackability/impact damage → `OP2-C` melee reliability
+and planted kick pose → `OP2-D` grounded body shadows/Turbo footsteps →
+`OP2-E` quieter HUD/head-anchored bubbles → `OP2-F` planned cinematic routes →
+`OP2-G` explosion/fall lethality. Because all seven
+touch `index.html`, run them sequentially rather than assigning concurrent
+agents to the same hot file.
+
+**Turbo Mode track** (Phase 12) begins only on owner instruction and should
+follow the OP2 systems it extends: `TM1` unlock/toggle/state → `TM2` golden
+transformation/cutscene → `TM3` powers/combat/voice. The first playtest build is
+free and infinite; `$500/minute` is recorded but billing remains disabled until
+the owner approves the final economy behavior.
 
 Pick the top unclaimed task, read its card, check the acceptance criteria, build
 it small, verify (§9), commit. When in doubt about a design decision, ask.
