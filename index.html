@@ -6389,6 +6389,12 @@ let meleePointer=null;
   el.addEventListener('pointercancel',e=>{
     if(meleePointer&&meleePointer.id===e.pointerId){ cancelMeleeCharge(); meleePointer=null; }
   });
+  // Browsers may revoke capture without pointerup/pointercancel when focus or
+  // control visibility changes. A stale shared id used to reject every later
+  // punch and kick for the rest of the session.
+  el.addEventListener('lostpointercapture',e=>{
+    if(meleePointer&&meleePointer.id===e.pointerId){ cancelMeleeCharge(); meleePointer=null; }
+  });
 });
 $('btnGun').addEventListener('touchstart',e=>{e.preventDefault();cycleWeapon();},{passive:false});
 $('btnGun').addEventListener('mousedown',cycleWeapon);
@@ -6453,7 +6459,13 @@ const joyReset=e=>{ for(const t of e.changedTouches){
 } };
 document.addEventListener('touchend',joyReset);
 document.addEventListener('touchcancel',joyReset);
-function clearSprint(){ input.sprint=false; btnHold.sprint=false; player.sprinting=false; const b=$('btnSprint'); if(b) b.classList.remove('on'); }
+function clearSprint(){
+  input.sprint=false; btnHold.sprint=false; player.sprinting=false;
+  const b=$('btnSprint'); if(b) b.classList.remove('on');
+  // Vehicle/replay/pause/respawn transitions already clear sprint. Let their
+  // state writes finish, then use the same boundary to neutralize melee.
+  queueMicrotask(syncMeleeInterruption);
+}
 function disarmSprint(){ clearSprint(); sprintArmed=false; sprintShiftWasDown=!!(keys['ShiftLeft']||keys['ShiftRight']); }
 document.addEventListener('mousedown',e=>{
   const p=remapXY(e.clientX,e.clientY);
@@ -6509,6 +6521,12 @@ document.addEventListener('keydown',e=>{
   }
 });
 document.addEventListener('keyup',e=>{ keys[e.code]=false; if(e.code==='KeyF') meleeRelease('punch'); if(e.code==='KeyK') meleeRelease('kick'); });
+function releaseHeldMeleeInputs(){
+  keys.KeyF=false;keys.KeyK=false;meleePointer=null;
+  if(hasMeleeAction(player)) interruptMelee();
+}
+window.addEventListener('blur',releaseHeldMeleeInputs);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) releaseHeldMeleeInputs(); });
 function pollKeys(){
   if(keys['KeyA']||keys['ArrowLeft']) input.jx=-1;
   else if(keys['KeyD']||keys['ArrowRight']) input.jx=1;
@@ -6842,6 +6860,12 @@ function canSprint(p,mag){
 }
 function updateFoot(dt){
   const p=player;
+  if(hasMeleeAction(p)){
+    // Story/Cinema state may change later in this same simulation turn.
+    // Recheck after that turn rather than carrying an attack across the mode.
+    queueMicrotask(syncMeleeInterruption);
+    if(p.stunT>0||p.climb||p.bailing) interruptMelee();
+  }
   let meleeDt=dt;
   if(meleeCharge){
     if(!canChargeMelee()){ cancelMeleeCharge(); }
@@ -6973,9 +6997,9 @@ function updateFoot(dt){
     }
   }
   if(p.kickT>0){
-    // Slower than the punch: chamber, extend, then recover. The right leg
-    // supplies the hit while both arms stay up to keep Turbo balanced.
-    const kr=1-p.kickT/0.9, snap=Math.sin(Math.PI*clamp(kr/0.82,0,1));
+    // Contact is established by doPunch() before damage is resolved; this is
+    // the visible recovery from that synchronized strike.
+    const kr=clamp((1-p.kickT/0.9)/0.82,0,1), ease=kr*kr*(3-2*kr), snap=1-ease;
     u.legR.rotation.x=-1.35*snap;
     if(u.kneeR) u.kneeR.rotation.x=0.55*(1-snap);
     u.armL.rotation.x=-0.85; u.armR.rotation.x=-0.75;
@@ -6992,11 +7016,12 @@ function updateFoot(dt){
       u.armR.rotation.x=-1.5-rp*0.35;
     }
   } else if(p.punchT>0){
-    // the haymaker: snap the right arm out, then reel it back in
-    const pr=1-p.punchT/0.55;
-    u.armR.rotation.x=pr<0.28?lerp(0,-1.75,pr/0.28):lerp(-1.75,0,(pr-0.28)/0.72);
+    // Damage begins with the fist already extended; ease the visible limb
+    // back over the same timer instead of hitting from a neutral arm.
+    const pr=clamp((1-p.punchT/0.55)/0.82,0,1), ease=pr*pr*(3-2*pr);
+    u.armR.rotation.x=lerp(-1.75,0,ease);
     u.armL.rotation.x=lerp(u.armL.rotation.x,-0.7,0.4);   // guard hand up
-    if(u.torso) u.torso.rotation.y=-0.45*Math.sin(pr*Math.PI);
+    if(u.torso) u.torso.rotation.y=lerp(-0.45,0,ease);
   }
   const near=nearestVehicle(p.x,p.z,3.6);
   const btn=$('btnEnter');
@@ -7309,6 +7334,30 @@ function updateCarMode(dt){
   $('btnEnter').style.display='flex';
 }
 let meleeCharge=null;
+function hasMeleeAction(p){
+  p=p||player;
+  return !!(meleeCharge||p.meleeSpecial||p.punchT>0||p.kickT>0);
+}
+function meleeContextActive(p){
+  return G.started&&!G.over&&G.mode==='foot'&&!G.menuPaused&&!G.replay&&
+    !activeCutscene&&!p.climb&&!p.bailing&&!p.stunT;
+}
+function neutralizeOrdinaryMeleePose(p){
+  const u=p.mesh.userData;
+  u.armL.rotation.x=0; u.armR.rotation.x=0;
+  u.legR.rotation.x=0; if(u.kneeR) u.kneeR.rotation.x=0;
+  if(u.torso){ u.torso.rotation.x=0; u.torso.rotation.y=0; }
+}
+function syncMeleeInterruption(){
+  if(hasMeleeAction(player)&&!meleeContextActive(player)) interruptMelee();
+}
+function interruptMelee(){
+  const p=player, special=p.meleeSpecial;
+  meleeCharge=null;
+  if(special) finishChargedMelee(special);
+  p.punchT=0; p.kickT=0;
+  neutralizeOrdinaryMeleePose(p);
+}
 function canChargeMelee(){
   const p=player, g=footGround(p);
   return G.started&&!G.over&&G.mode==='foot'&&G.weapon==='fists'&&!G.crouching&&!p.climb&&!p.bailing&&!p.stunT&&!p.punchT&&!p.kickT&&!p.meleeSpecial&&!G.menuPaused&&!G.replay&&!activeCutscene&&!G.interior&&p.y<=g+0.08;
@@ -7325,20 +7374,49 @@ function meleeRelease(type){
   if(!c.started) doPunch(false,type==='kick');
 }
 function cancelMeleeCharge(){ meleeCharge=null; }
+function captureChargedMeleePose(p){
+  const u=p.mesh.userData, elbowL=u.armL.children[1], elbowR=u.armR.children[1];
+  return {
+    meshRX:p.mesh.rotation.x,
+    legLX:u.legL.position.x, legLRX:u.legL.rotation.x, legRRX:u.legR.rotation.x,
+    kneeLX:u.kneeL?u.kneeL.rotation.x:0, kneeRX:u.kneeR?u.kneeR.rotation.x:0,
+    armLP:u.armL.position.clone(), armRP:u.armR.position.clone(),
+    armLRX:u.armL.rotation.x, armRRX:u.armR.rotation.x,
+    elbowLRX:elbowL?elbowL.rotation.x:0, elbowRRX:elbowR?elbowR.rotation.x:0,
+    headP:u.head.position.clone(), headRX:u.head.rotation.x,
+    torsoRX:u.torso?u.torso.rotation.x:0, torsoRY:u.torso?u.torso.rotation.y:0,
+  };
+}
 function startChargedMelee(type){
   const p=player, dur=type==='kick'?1.05:.84;
-  p.meleeSpecial={type,t:0,dur,x:p.x,z:p.z,y:footGround(p),heading:p.heading,lastRev:-1,hits:new Set()};
+  p.meleeSpecial={type,t:0,dur,x:p.x,z:p.z,y:footGround(p),heading:p.heading,
+    lastRev:-1,hits:new Set(),pose:captureChargedMeleePose(p),strikeTurns:0};
   p.punchT=0; p.kickT=0;
   clearSprint();
   WEAPON_SFX.fists.fire(); haptic(20); toast(type==='kick'?'SPIN KICK!':'WINDMILL!','gold');
 }
+function kickSpecialTurns(s,t){
+  const settle=0.14, span=Math.max(0.01,s.dur-settle*2);
+  return clamp((t-settle)/span,0,1)*3;
+}
+function kickBearingInSweep(s,bearing){
+  let from=s.sweepFrom, to=s.sweepTo;
+  if(from===undefined||to===undefined){
+    const at=s.heading+(s.strikeTurns||0)*TAU+Math.PI;
+    from=at-0.22; to=at+0.22;
+  }
+  while(bearing<from-0.28) bearing+=TAU;
+  return bearing<=to+0.28;
+}
 function chargedMeleeHit(s){
-  const p=player, rev=Math.min(2,Math.floor(s.t/(s.dur/3))), forward={x:Math.sin(s.heading),z:Math.cos(s.heading)};
+  const p=player, turns=s.type==='kick'?(s.strikeTurns===undefined?s.t/s.dur*3:s.strikeTurns):s.t/s.dur*3;
+  const rev=Math.min(2,Math.floor(Math.min(2.999999,turns))), forward={x:Math.sin(s.heading),z:Math.cos(s.heading)};
   if(rev!==s.lastRev){ s.lastRev=rev; s.hits.clear(); }
   const hit=(a,kind,i)=>{
     if(a.state==='down'||s.hits.has(a)) return;
-    const dx=a.x-p.x,dz=a.z-p.z,d=Math.hypot(dx,dz); if(d>3.1||d<0.15) return;
+    const dx=a.x-p.x,dz=a.z-p.z,d=Math.hypot(dx,dz); if(d>2.4||d<0.15) return;
     if(s.type==='punch'&&Math.abs((dx*forward.x+dz*forward.z)/d)<Math.cos(.96)) return;
+    if(s.type==='kick'&&!kickBearingInSweep(s,Math.atan2(dx,dz))) return;
     s.hits.add(a); const push=s.type==='kick'?3:2.1, damage=s.type==='kick'?28:22;
     a.hp-=damage; a.x+=dx/d*push; a.z+=dz/d*push; const np={x:a.x,z:a.z}; resolveFootCollision(np,.42); a.x=np.x;a.z=np.z;
     burst(a.x,1.1,a.z,5,COL_SPARK,2,.25,4); addHeat(kind==='c'?20:16);
@@ -7347,41 +7425,89 @@ function chargedMeleeHit(s){
   footCops.forEach((a,i)=>hit(a,'c',i)); jocks.forEach((a,i)=>hit(a,'j',i));
   const dogHit=d=>{
     if(d.dead||s.hits.has(d)) return; const dx=d.x-p.x,dz=d.z-p.z,dist=Math.hypot(dx,dz);
-    if(dist>3.1||dist<.15||(s.type==='punch'&&Math.abs((dx*forward.x+dz*forward.z)/dist)<Math.cos(.96))) return;
+    if(dist>2.4||dist<.15||(s.type==='punch'&&Math.abs((dx*forward.x+dz*forward.z)/dist)<Math.cos(.96))||
+      (s.type==='kick'&&!kickBearingInSweep(s,Math.atan2(dx,dz)))) return;
     s.hits.add(d); damageDog(d,s.type==='kick'?28:22,true);
   };
   strayDogs.slice().forEach(dogHit);
 }
 function finishChargedMelee(s){
-  const p=player,u=p.mesh.userData;
-  p.heading=s.heading; p.mesh.rotation.set(0,s.heading,0);
-  u.armL.rotation.x=0;u.armR.rotation.x=0;u.legL.rotation.x=0;u.legR.rotation.x=0;
-  if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;
-  if(u.torso){u.torso.rotation.x=0;u.torso.rotation.y=0;}
+  const p=player,u=p.mesh.userData,b=s.pose;
+  p.heading=s.heading;
+  p.mesh.rotation.x=b?b.meshRX:0; p.mesh.rotation.y=s.heading;
+  if(b){
+    u.legL.position.x=b.legLX; u.legL.rotation.x=b.legLRX; u.legR.rotation.x=b.legRRX;
+    if(u.kneeL)u.kneeL.rotation.x=b.kneeLX;if(u.kneeR)u.kneeR.rotation.x=b.kneeRX;
+    u.armL.position.copy(b.armLP);u.armR.position.copy(b.armRP);
+    u.armL.rotation.x=b.armLRX;u.armR.rotation.x=b.armRRX;
+    if(u.armL.children[1])u.armL.children[1].rotation.x=b.elbowLRX;
+    if(u.armR.children[1])u.armR.children[1].rotation.x=b.elbowRRX;
+    u.head.position.copy(b.headP);u.head.rotation.x=b.headRX;
+    if(u.torso){u.torso.rotation.x=b.torsoRX;u.torso.rotation.y=b.torsoRY;}
+  } else neutralizeOrdinaryMeleePose(p);
   p.mesh.position.set(p.x,p.y,p.z); p.meleeSpecial=null;
+}
+function applyPlantedKickPose(p,s,blend,turns){
+  const u=p.mesh.userData,b=s.pose, elbowL=u.armL.children[1], elbowR=u.armR.children[1];
+  p.mesh.rotation.x=lerp(b.meshRX,0,blend);
+  p.mesh.rotation.y=s.heading+turns*TAU;
+  // The left foot moves under the collision root and stays vertical. Everything
+  // else articulates around the waist; neither p.y nor collision height moves.
+  u.legL.position.x=lerp(b.legLX,0,blend);
+  u.legL.rotation.x=lerp(b.legLRX,0,blend);
+  u.legR.rotation.x=lerp(b.legRRX,Math.PI/2,blend);
+  if(u.kneeL)u.kneeL.rotation.x=lerp(b.kneeLX,0,blend);
+  if(u.kneeR)u.kneeR.rotation.x=lerp(b.kneeRX,0,blend);
+  u.armL.position.y=lerp(b.armLP.y,1.12,blend);u.armL.position.z=lerp(b.armLP.z,0.38,blend);
+  u.armR.position.y=lerp(b.armRP.y,1.12,blend);u.armR.position.z=lerp(b.armRP.z,0.38,blend);
+  u.armL.rotation.x=lerp(b.armLRX,-Math.PI/2,blend);
+  u.armR.rotation.x=lerp(b.armRRX,-Math.PI/2,blend);
+  if(elbowL)elbowL.rotation.x=lerp(b.elbowLRX,0,blend);
+  if(elbowR)elbowR.rotation.x=lerp(b.elbowRRX,0,blend);
+  u.head.position.y=lerp(b.headP.y,1.08,blend);u.head.position.z=lerp(b.headP.z,0.76,blend);
+  u.head.rotation.x=lerp(b.headRX,Math.PI/2,blend);
+  if(u.torso){u.torso.rotation.x=lerp(b.torsoRX,Math.PI/2,blend);u.torso.rotation.y=lerp(b.torsoRY,0,blend);}
+  p.mesh.position.set(p.x,p.y+0.045*blend,p.z);
 }
 function updateChargedMelee(dt){
   const p=player,s=p.meleeSpecial; if(!s) return false;
+  const prevT=s.t;
   s.t=Math.min(s.dur,s.t+dt); p.x=s.x;p.z=s.z;p.y=s.y;p.vy=0;
-  const turns=s.t/s.dur*3, u=p.mesh.userData;
+  const turns=s.type==='kick'?kickSpecialTurns(s,s.t):s.t/s.dur*3, u=p.mesh.userData;
   if(s.type==='kick'){
-    p.mesh.rotation.y=s.heading+turns*TAU; p.mesh.rotation.x=-Math.PI/2;
-    u.legL.rotation.x=0; u.legR.rotation.x=Math.PI/2; u.armL.rotation.x=-1.35;u.armR.rotation.x=-1.35;
-    if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;if(u.torso)u.torso.rotation.x=1.2;
+    const edge=0.16, raw=Math.min(clamp(s.t/edge,0,1),clamp((s.dur-s.t)/edge,0,1));
+    const blend=raw*raw*(3-2*raw), prevTurns=kickSpecialTurns(s,prevT);
+    s.strikeTurns=turns;
+    s.sweepFrom=s.heading+prevTurns*TAU+Math.PI;
+    s.sweepTo=s.heading+turns*TAU+Math.PI;
+    applyPlantedKickPose(p,s,blend,turns);
+    if(blend>0.72&&s.sweepTo>s.sweepFrom) chargedMeleeHit(s);
   }else{
     p.mesh.rotation.y=s.heading; p.mesh.rotation.x=0; const a=turns*TAU;
     u.armL.rotation.x=a;u.armR.rotation.x=-a;if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;
     if(u.torso){u.torso.rotation.x=0;u.torso.rotation.y=0;}
+    p.mesh.position.set(p.x,p.y,p.z); chargedMeleeHit(s);
   }
-  p.mesh.position.set(p.x,p.y,p.z); chargedMeleeHit(s);
   if(s.t>=s.dur) finishChargedMelee(s);
   return true;
 }
+function applyOrdinaryMeleeContactPose(p,kicking){
+  const u=p.mesh.userData;
+  if(kicking){
+    u.legR.rotation.x=-1.35;if(u.kneeR)u.kneeR.rotation.x=0;
+    u.armL.rotation.x=-0.85;u.armR.rotation.x=-0.75;
+    if(u.torso){u.torso.rotation.y=0.32;u.torso.rotation.x=-0.16;}
+  } else {
+    u.armR.rotation.x=-1.75;u.armL.rotation.x=-0.7;
+    if(u.torso)u.torso.rotation.y=-0.45;
+  }
+}
 function doPunch(heavy,kicking){
-  if(!G.started||G.over||G.mode!=='foot'||player.punchT>0||player.kickT>0) return;
+  if(!G.started||G.over||G.mode!=='foot'||player.punchT>0||player.kickT>0||player.meleeSpecial||meleeCharge) return;
   if(kicking&&G.weapon!=='fists') return;
   if(kicking) player.kickT=0.9;
   else player.punchT=0.55;
+  applyOrdinaryMeleeContactPose(player,!!kicking);
   (heavy?WEAPON_SFX.baton:WEAPON_SFX.fists).fire();
   if(kicking) blip(125,48,0.12,0.24,'sine');
   turboSay('punch');

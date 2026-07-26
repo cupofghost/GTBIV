@@ -8,6 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-26 | `index.html` melee/`updateFoot`, person shadows, Turbo footsteps/audio, focused tests | **IN PROGRESS** — OP2-C melee reliability/planted-horizontal kick, then OP2-D grounded body shadows/improved footsteps; isolated branch `codex/op2-melee-grounding`. | Signed: Codex \| GPT-5.6 \| high |
 | 2026-07-26 | `CODEX/OP2_CONCURRENT/`, `HANDOFF.md`, `STATUS.md` | **DONE** — added the tracked four-agent launch packet with required GPT-5.6 models/efforts, branches, ownership, tests, and integration order. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-26 | `HANDOFF.md`, `STATUS.md` | **DONE** — integrated the owner's Mama Rat, playtest-correction, character-shadow/footstep, and Turbo Mode requirements as future owner-triggered projects; `NEXT` unchanged. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `HANDOFF.md`, `STATUS.md` | **DONE** — added the owner-triggered optional Codex audit follow-up project; no gameplay or asset changes. | Signed: Codex \| GPT-5 \| high |
