@@ -1813,33 +1813,13 @@ groundCanvas.width=groundCanvas.height=1024;
   });
   g.fillStyle='#17141f';
   roadLines.forEach(l=>{ g.fillRect(px(l-ROAD/2),0,ROAD*S,1024); g.fillRect(0,px(l-ROAD/2),1024,ROAD*S); });
-  // white road edge lines
-  g.strokeStyle='rgba(255,255,255,0.4)'; g.lineWidth=1.5;
-  roadLines.forEach(l=>{
-    [-ROAD/2+1,ROAD/2-1].forEach(o=>{
-      g.beginPath(); g.moveTo(px(l+o),0); g.lineTo(px(l+o),1024); g.stroke();
-      g.beginPath(); g.moveTo(0,px(l+o)); g.lineTo(1024,px(l+o)); g.stroke();
-    });
-  });
-  g.strokeStyle='#e8c14a'; g.lineWidth=2; g.setLineDash([10,12]);
-  roadLines.forEach(l=>{
-    g.beginPath(); g.moveTo(px(l),0); g.lineTo(px(l),1024); g.stroke();
-    g.beginPath(); g.moveTo(0,px(l)); g.lineTo(1024,px(l)); g.stroke();
-  });
-  g.setLineDash([]);
   // the Coast Highway: one big curvy ring around the whole city
   g.fillStyle='#2c2839';
   g.beginPath(); g.arc(512,512,px(H+7)-512+(ROAD*0.85*S)/2,0,TAU);
   g.arc(512,512,px(H+7)-512-(ROAD*0.85*S)/2,0,TAU,true); g.fill();
-  g.strokeStyle='#e8c14a'; g.lineWidth=2; g.setLineDash([10,12]);
-  g.beginPath(); g.arc(512,512,px(H+7)-512,0,TAU); g.stroke();
-  g.setLineDash([]);
-  // sewer manholes dot the streets
-  MANHOLE_SPOTS.forEach(mh=>{
-    g.fillStyle='#14121c'; g.beginPath(); g.arc(px(mh.x),px(mh.z),1.1*S,0,TAU); g.fill();
-    g.strokeStyle='#3a3450'; g.lineWidth=2;
-    g.beginPath(); g.arc(px(mh.x),px(mh.z),1.1*S,0,TAU); g.stroke();
-  });
+  // Lane lines and manholes are world-scale terrain-seated meshes below.
+  // Keeping them out of this low-resolution map texture prevents camera-scale
+  // blur and removes the oversized painted-disc treatment.
   // the football field: Wildcats green, yard lines, end zones
   const fbB=blockInfo.find(b=>b.football);
   if(fbB){
@@ -1935,6 +1915,150 @@ const groundGeo=terrainGeo(GROUND_LINES,WORLD.size/2);
 const ground=new THREE.Mesh(groundGeo,
   new THREE.MeshLambertMaterial({map:groundTex}));
 scene.add(ground);
+// ---- world-scale road markings + manholes ----
+// Combined terrain ribbons keep a fixed physical width/dash cadence and put
+// every rendered vertex back onto groundH. They are visual meshes only: none
+// are registered with the building/prop/spawn collision paths.
+const ROAD_MARKINGS={
+  dashLength:3.2, dashGap:5.8, centerWidth:0.16, edgeWidth:0.11,
+  intersectionClear:ROAD/2+3.0, lift:0.032,
+  straightDashes:[], coastDashes:[], edgeRibbons:[],
+  coreMesh:null, softMesh:null, edgeMesh:null,
+};
+function terrainRibbonGeo(ribbons,width,lift){
+  const pos=[], off=[], idx=[];
+  ribbons.forEach(points=>{
+    if(points.length<2) return;
+    const base=pos.length/3;
+    points.forEach((p,i)=>{
+      const a=points[Math.max(0,i-1)], b=points[Math.min(points.length-1,i+1)];
+      const dx=b.x-a.x, dz=b.z-a.z, inv=1/Math.max(1e-6,Math.hypot(dx,dz));
+      const ox=-dz*inv*width/2, oz=dx*inv*width/2;
+      [[p.x+ox,p.z+oz],[p.x-ox,p.z-oz]].forEach(([x,z])=>{
+        pos.push(x,groundH(x,z)+lift,z); off.push(lift);
+      });
+    });
+    for(let i=0;i<points.length-1;i++){
+      const a=base+i*2, b=a+1, c=a+2, d=a+3;
+      idx.push(a,c,b, b,c,d);
+    }
+  });
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  geo.setAttribute('terrainOffset',new THREE.Float32BufferAttribute(off,1));
+  geo.setIndex(idx); geo.computeVertexNormals();
+  return geo;
+}
+function sampledRibbon(x0,z0,x1,z1,step=4){
+  const n=Math.max(1,Math.ceil(Math.hypot(x1-x0,z1-z0)/step)), out=[];
+  for(let i=0;i<=n;i++){
+    const t=i/n; out.push({x:lerp(x0,x1,t),z:lerp(z0,z1,t)});
+  }
+  return out;
+}
+(function(){
+  const edge=WORLD.size/2, intervals=[];
+  let start=-edge;
+  roadLines.forEach(l=>{
+    const stop=l-ROAD_MARKINGS.intersectionClear;
+    if(stop-start>ROAD_MARKINGS.dashLength) intervals.push([start,stop]);
+    start=l+ROAD_MARKINGS.intersectionClear;
+  });
+  if(edge-start>ROAD_MARKINGS.dashLength) intervals.push([start,edge]);
+
+  const centerRibbons=[], edgeRibbons=[];
+  roadLines.forEach(l=>{
+    intervals.forEach(([a,b])=>{
+      for(let s=a;s+ROAD_MARKINGS.dashLength<=b;s+=ROAD_MARKINGS.dashLength+ROAD_MARKINGS.dashGap){
+        const e=s+ROAD_MARKINGS.dashLength;
+        ROAD_MARKINGS.straightDashes.push({axis:'ns',line:l,start:s,end:e});
+        ROAD_MARKINGS.straightDashes.push({axis:'ew',line:l,start:s,end:e});
+        centerRibbons.push([{x:l,z:s},{x:l,z:e}],[{x:s,z:l},{x:e,z:l}]);
+      }
+      [-ROAD/2+1,ROAD/2-1].forEach(o=>{
+        const ns=sampledRibbon(l+o,a,l+o,b), ew=sampledRibbon(a,l+o,b,l+o);
+        ROAD_MARKINGS.edgeRibbons.push({axis:'ns',line:l+o,start:a,end:b});
+        ROAD_MARKINGS.edgeRibbons.push({axis:'ew',line:l+o,start:a,end:b});
+        edgeRibbons.push(ns,ew);
+      });
+    });
+  });
+
+  // The coast loop uses the same physical dash/gap measurements as downtown.
+  // Distributing the tiny circumference remainder keeps every gap consistent.
+  const coastR=H+7, coastCirc=TAU*coastR;
+  const coastCount=Math.floor(coastCirc/(ROAD_MARKINGS.dashLength+ROAD_MARKINGS.dashGap));
+  const coastStep=coastCirc/coastCount;
+  for(let i=0;i<coastCount;i++){
+    const a0=i*coastStep/coastR, a1=(i*coastStep+ROAD_MARKINGS.dashLength)/coastR;
+    const points=[];
+    for(let k=0;k<=2;k++){
+      const a=lerp(a0,a1,k/2);
+      points.push({x:Math.cos(a)*coastR,z:Math.sin(a)*coastR});
+    }
+    ROAD_MARKINGS.coastDashes.push({start:a0,end:a1});
+    centerRibbons.push(points);
+  }
+
+  const softGeo=terrainRibbonGeo(centerRibbons,ROAD_MARKINGS.centerWidth+0.07,ROAD_MARKINGS.lift-0.006);
+  const coreGeo=terrainRibbonGeo(centerRibbons,ROAD_MARKINGS.centerWidth,ROAD_MARKINGS.lift);
+  const edgeGeo=terrainRibbonGeo(edgeRibbons,ROAD_MARKINGS.edgeWidth,ROAD_MARKINGS.lift);
+  const poly={polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2};
+  ROAD_MARKINGS.softMesh=new THREE.Mesh(softGeo,
+    new THREE.MeshBasicMaterial({color:0xe8c14a,transparent:true,opacity:0.16,depthWrite:false,...poly}));
+  ROAD_MARKINGS.coreMesh=new THREE.Mesh(coreGeo,
+    new THREE.MeshBasicMaterial({color:0xe2b83f,...poly}));
+  ROAD_MARKINGS.edgeMesh=new THREE.Mesh(edgeGeo,
+    new THREE.MeshBasicMaterial({color:0xd8d8df,transparent:true,opacity:0.58,depthWrite:false,...poly}));
+  ROAD_MARKINGS.softMesh.name='road-marking-soft-edge';
+  ROAD_MARKINGS.coreMesh.name='road-marking-centers';
+  ROAD_MARKINGS.edgeMesh.name='road-marking-edges';
+  [ROAD_MARKINGS.softMesh,ROAD_MARKINGS.coreMesh,ROAD_MARKINGS.edgeMesh].forEach(mesh=>{
+    mesh.userData.nonColliding=true; scene.add(mesh);
+  });
+})();
+
+const MANHOLE_VISUALS={
+  outerRadius:0.485, lidRadius:0.38, rim:null, lid:null, pattern:null, grooves:null,
+};
+function groundNormalAt(x,z){
+  const e=0.25;
+  return new THREE.Vector3(
+    groundH(x-e,z)-groundH(x+e,z),2*e,
+    groundH(x,z-e)-groundH(x,z+e)
+  ).normalize();
+}
+(function(){
+  const n=MANHOLE_SPOTS.length, up=new THREE.Vector3(0,1,0);
+  const rimGeo=new THREE.TorusGeometry(0.43,0.055,6,24); rimGeo.rotateX(-Math.PI/2);
+  const lidGeo=new THREE.CircleGeometry(MANHOLE_VISUALS.lidRadius,24); lidGeo.rotateX(-Math.PI/2);
+  const patternGeo=new THREE.RingGeometry(0.11,0.14,16); patternGeo.rotateX(-Math.PI/2);
+  const grooveGeo=new THREE.PlaneGeometry(0.46,0.026); grooveGeo.rotateX(-Math.PI/2);
+  const rim=new THREE.InstancedMesh(rimGeo,new THREE.MeshLambertMaterial({color:0x555963}),n);
+  const lid=new THREE.InstancedMesh(lidGeo,new THREE.MeshLambertMaterial({color:0x25272d}),n);
+  const pattern=new THREE.InstancedMesh(patternGeo,new THREE.MeshBasicMaterial({color:0x111218}),n);
+  const grooves=new THREE.InstancedMesh(grooveGeo,new THREE.MeshBasicMaterial({color:0x111218}),n*2);
+  const m=new THREE.Matrix4(), pos=new THREE.Vector3(), normal=new THREE.Vector3(),
+        tilt=new THREE.Quaternion(), yaw=new THREE.Quaternion(), scale=new THREE.Vector3(1,1,1);
+  MANHOLE_SPOTS.forEach((mh,i)=>{
+    normal.copy(groundNormalAt(mh.x,mh.z));
+    tilt.setFromUnitVectors(up,normal);
+    const set=(mesh,index,height,turn=0)=>{
+      pos.set(mh.x,groundH(mh.x,mh.z),mh.z).addScaledVector(normal,height);
+      yaw.setFromAxisAngle(up,turn);
+      m.compose(pos,tilt.clone().multiply(yaw),scale); mesh.setMatrixAt(index,m);
+    };
+    set(rim,i,0.045); set(lid,i,0.024); set(pattern,i,0.031);
+    set(grooves,i*2,0.032,0); set(grooves,i*2+1,0.032,Math.PI/2);
+  });
+  [rim,lid,pattern,grooves].forEach((mesh,i)=>{
+    mesh.instanceMatrix.needsUpdate=true;
+    mesh.name=['manhole-rims','manhole-lids','manhole-pattern-rings','manhole-grooves'][i];
+    mesh.userData.nonColliding=true; scene.add(mesh);
+  });
+  MANHOLE_VISUALS.rim=rim; MANHOLE_VISUALS.lid=lid;
+  MANHOLE_VISUALS.pattern=pattern; MANHOLE_VISUALS.grooves=grooves;
+})();
 // beach ring, then ocean out to the horizon. The sand shares the city's vertex
 // lines and adds a skirt outside them, riding just proud of the ground out past
 // the coast highway and sinking well under it inland — so sand shows up on the
@@ -4573,6 +4697,10 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
 // as a real density gradient instead of a hard city-limits line. Curbs
 // are thin (0.16u) so they stay cosmetic, not a collision hazard, and
 // everything is seated via groundH per TERRAIN.md's invariant.
+const SIDEWALK_VISUALS={
+  length:BLOCK-1, width:1.1, height:0.16, maxSegment:4,
+  spots:[], mesh:null,
+};
 (function(){
   const DOWNTOWN_R=170;
   // unit wedge: x -.5..5 (width), y 0..1 (thickness, bottom=0), z -.5..5
@@ -4598,14 +4726,43 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
   const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
         pos=new THREE.Vector3(), scl=new THREE.Vector3(1,1,1), col=new THREE.Color();
   if(curbSpots.length){
-    const curbGeo=new THREE.BoxGeometry(BLOCK-1,0.16,1.1); curbGeo.translate(0,0.08,0);
-    const curbInst=new THREE.InstancedMesh(curbGeo,new THREE.MeshLambertMaterial({color:0x3d3d42}),curbSpots.length);
-    curbSpots.forEach((s,i)=>{
-      e.set(0,s.axis?Math.PI/2:0,0); q.setFromEuler(e);
-      pos.set(s.x,groundH(s.x,s.z),s.z);
-      m.compose(pos,q,scl); curbInst.setMatrixAt(i,m);
+    const positions=[], offsets=[], indices=[];
+    curbSpots.forEach(s=>{
+      const base=positions.length/3;
+      const count=Math.ceil(SIDEWALK_VISUALS.length/SIDEWALK_VISUALS.maxSegment);
+      for(let k=0;k<=count;k++){
+        const along=-SIDEWALK_VISUALS.length/2+SIDEWALK_VISUALS.length*k/count;
+        const cx=s.axis?s.x:s.x+along, cz=s.axis?s.z+along:s.z;
+        const sides=s.axis
+          ? [[cx-SIDEWALK_VISUALS.width/2,cz],[cx+SIDEWALK_VISUALS.width/2,cz]]
+          : [[cx,cz-SIDEWALK_VISUALS.width/2],[cx,cz+SIDEWALK_VISUALS.width/2]];
+        sides.forEach(([x,z])=>{
+          const gh=groundH(x,z);
+          positions.push(x,gh,z, x,gh+SIDEWALK_VISUALS.height,z);
+          offsets.push(0,SIDEWALK_VISUALS.height);
+        });
+      }
+      for(let k=0;k<count;k++){
+        const a=base+k*4, at=a+1, b=a+2, bt=a+3;
+        const c=a+4, ct=a+5, d=a+6, dt=a+7;
+        // top, street face, and block face; adjacent stations share the exact
+        // sampled endpoint so graded seams cannot open between segments.
+        indices.push(at,ct,bt, bt,ct,dt,
+                     a,c,at, at,c,ct,
+                     b,bt,d, bt,dt,d);
+      }
+      const a=base, at=a+1, b=a+2, bt=a+3;
+      const c=base+count*4, ct=c+1, d=c+2, dt=c+3;
+      indices.push(a,at,b, b,at,bt, c,d,ct, d,dt,ct);
     });
-    curbInst.instanceMatrix.needsUpdate=true; scene.add(curbInst);
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+    geo.setAttribute('terrainOffset',new THREE.Float32BufferAttribute(offsets,1));
+    geo.setIndex(indices); geo.computeVertexNormals();
+    const mesh=new THREE.Mesh(geo,
+      new THREE.MeshLambertMaterial({color:0x4b4b53,flatShading:true,side:THREE.DoubleSide}));
+    mesh.name='terrain-seated-sidewalks'; mesh.userData.nonColliding=true;
+    SIDEWALK_VISUALS.spots=curbSpots; SIDEWALK_VISUALS.mesh=mesh; scene.add(mesh);
   }
 
   // curbside planters — small boxes + a bush, tucked onto the sidewalk
