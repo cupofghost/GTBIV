@@ -7,7 +7,7 @@ Suggested implementation branch: create `terra/owner-playtest-polish` from the
 handoff branch so this plan remains in the implementation history.
 
 Status: all OP1 commits are implemented on `terra/owner-playtest-polish`.
-Commits 2–4 landed as `bee4f7a`, `3c89352`, and `62f5ce4`; hostile dogs now
+Commits 2–4 landed as `bee4f7a`, `3c89352`, and `a2ad228`; hostile dogs now
 use the charged-melee shared adapter. Syntax, dog-ghost (1/1), charged-melee
 (2/2), intro-camera (4/4), and mission-opt-in-hud (1/1) passed. The longer
 Chapter 1 local browser run stopped reporting after four pre-existing cases.
@@ -70,7 +70,7 @@ add dependencies, change recorded-VO paths, or reopen terrain generation.
 
 Extend `tests/cases/sprint.test.js` and `tests/cases/camera-polish.test.js`.
 
-## Commit 2 — Make dogs mortal and add 30-second ghosts
+## Commit 2 — Make dogs mortal and add 30-second ghosts `DONE`
 
 ### Observed problem
 
@@ -124,7 +124,7 @@ mortal; each dead dog should release a translucent ghost that haunts Turbo for
 
 Add `tests/cases/dog-ghost.test.js`.
 
-## Commit 3 — Route cinematic cameras gracefully and keep Deb above ground
+## Commit 3 — Route cinematic cameras gracefully and keep Deb above ground `DONE`
 
 ### Observed problems
 
@@ -177,7 +177,7 @@ Add `tests/cases/dog-ghost.test.js`.
 Extend `tests/cases/intro-camera.test.js` and add focused Deb terrain assertions
 to `tests/cases/chapter1-story.test.js`.
 
-## Commit 4 — Make missions opt-in and reflow the phone HUD
+## Commit 4 — Make missions opt-in and reflow the phone HUD `DONE`
 
 ### Observed problems
 
@@ -239,7 +239,7 @@ to `tests/cases/chapter1-story.test.js`.
 Add `tests/cases/mission-opt-in-hud.test.js` and keep the test seam small enough
 to simulate logical safe insets without device-specific user-agent hacks.
 
-## Commit 5 — Smooth melee camera and add charged punch/kick specials `CORE DONE`
+## Commit 5 — Smooth melee camera and add charged punch/kick specials `DONE`
 
 ### Owner direction
 

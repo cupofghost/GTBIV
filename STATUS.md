@@ -1,6 +1,6 @@
 # STATUS
 
-Last consolidation: 2026-07-25 (ninth pass — consolidated OP1 controls/aim plus charged melee; dog, cinematic-camera, and mission/HUD commits remain open) — Signed: Codex | GPT-5 | high
+Last consolidation: 2026-07-25 (tenth pass — reconciled the completed OP1 branch, corrected final commit references, and advanced NEXT to FB3) — Signed: Codex | GPT-5 | high
 
 ## Active work
 _Nothing claimed right now._ Add your row below per AGENTS.md §1.3 — and escape
@@ -31,6 +31,7 @@ possible change and add a line here.
 - `tests/cases/save-restore.test.js` (and later files in a long run) time out loading the page in the local Playwright Chromium headless shell, with GPU stall warnings in the browser log. The same suite runs fine in other contexts; appears environmental. Syntax check, economy suite, regression, and mission-variety all pass. — 2026-07-25, OpenCode
 
 ## Archive
+- Consolidation (Codex | GPT-5 | high, 2026-07-25): reconciled all five OP1 commits, corrected the amended mission/HUD hash, regenerated the code map, advanced NEXT to FB3, and passed the final 800×390 OP1 touch smoke 1/1. Signed: Codex | GPT-5 | high
 - OP1 completion (Codex | GPT-5 | high, 2026-07-25): dog mortality/30s capped ghosts, shared elevated intro camera and terrain-safe Deb shots, mission opt-in with safe HUD/wanted stars; focused checks passed. Signed: Codex | GPT-5 | high
 - OP1 controls and charged melee (Codex | GPT-5 | high, 2026-07-25): fresh sprint input survives vehicle exits; aim and melee cameras ease smoothly; one-second punch/kick holds launch bounded three-round specials. Syntax, sprint 3/3, charged melee 2/2, and camera polish 7/7 green. Signed: Codex | GPT-5 | high
 - OP1 planning (Codex | GPT-5 | high, 2026-07-25): made the owner playtest batch authoritative before FB3 and specified five sequential implementation commits; dog, cinematic-camera, and mission/HUD commits remain open and unclaimed. Signed: Codex | GPT-5 | high

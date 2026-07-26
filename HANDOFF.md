@@ -1550,7 +1550,7 @@ fix and covered afterward; no random mission begins without an explicit tap;
 phone HUD elements clear simulated landscape and auto-rotated cutouts; existing
 mission progression, dog-pack behavior, terrain, VO, and zero-build startup
 remain intact.
-**Delivered 2026-07-25:** commits `bee4f7a`, `3c89352`, and `62f5ce4` add the
+**Delivered 2026-07-25:** commits `bee4f7a`, `3c89352`, and `a2ad228` add the
 dog/ghost death path, elevated shared intro routing plus terrain-safe Deb shots,
 and opt-in mission/HUD behavior. Focused syntax, dog-ghost, charged melee,
 intro camera, and mission/HUD checks passed. Signed: Codex | GPT-5 | high
@@ -1589,9 +1589,8 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: OP1 (Owner playtest polish)** — Stabilize controls, dogs, cameras,
-mission opt-in, wanted stars, and the phone-safe HUD before adding FB3. Follow
-`CODEX/HANDOFF_TERRA_OWNER_POLISH.md`.
+**NEXT: FB3 (Coach mission)** — OP1 is complete; return to the Football Saga
+and build the one-shot Coach encounter from `FOOTBALL_STRAND.md`.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -1627,7 +1626,7 @@ throughout:
 ✔ OD3 Turbo sprint               DONE
 ✔ OD4 Denser street life         DONE
 ✔ OP1 Owner playtest polish     DONE
-—  FB3 Coach mission             OPEN
+—  FB3 Coach mission             ← NEXT
 —  FB4 Football minigame         OPEN
 —  FB5 Cheerleaders cutscene     OPEN
 —  RV2 Mama rat model            OPEN
