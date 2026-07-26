@@ -235,7 +235,7 @@ to `tests/cases/chapter1-story.test.js`.
 Add `tests/cases/mission-opt-in-hud.test.js` and keep the test seam small enough
 to simulate logical safe insets without device-specific user-agent hacks.
 
-## Commit 5 — Smooth melee camera and add the three-spin hold kick
+## Commit 5 — Smooth melee camera and add charged punch/kick specials
 
 ### Owner direction
 
@@ -245,11 +245,16 @@ to simulate logical safe insets without device-specific user-agent hacks.
   one foot, holds the rest of his body horizontally with both arms stretched
   ahead and the free leg behind, then rotates three full turns around the
   planted foot. Every enemy touched is hurt and knocked back.
+- Holding PUNCH for one second should launch a related but slightly quicker
+  special: Turbo remains upright while both arms windmill through a vertical
+  plane in opposite directions for three full rounds. It hurts and knocks back
+  enemies in front of or behind him, never enemies beside him.
 
 ### Relevant code
 
-- Input: the standalone `btnKick` touch/mouse listeners, keyboard `KeyK`,
-  `keys`, and mode/reset paths. KICK is not currently part of `btnHold`.
+- Input: the standalone `btnPunch`/`btnKick` touch/mouse listeners, keyboard
+  `KeyF`/`KeyK`, `keys`, and mode/reset paths. Neither melee action is currently
+  part of `btnHold`.
 - Combat: `doPunch`, `doKick`, `knockPed`, `downJock`, `downFootCop`, the dog
   damage/death helper added by commit 2, and any existing mission-combat actor
   damage functions.
@@ -263,10 +268,12 @@ to simulate logical safe insets without device-specific user-agent hacks.
 
 ### Required behavior
 
-- Change KICK to press/hold/release semantics on touch, mouse, and desktop K:
-  releasing before one second performs the existing ordinary kick once;
-  reaching one continuous second starts the special and suppresses the tap
-  kick. Ignore keyboard auto-repeat and touch/mouse duplicate events.
+- Give fist PUNCH and KICK shared press/hold/release semantics on touch, mouse,
+  and desktop F/K. Releasing before one second performs the corresponding
+  ordinary move once; reaching one continuous second starts that button’s
+  special and suppresses its tap move. Armed pistol/RPG and baton attacks keep
+  their existing immediate press behavior. Ignore keyboard auto-repeat and
+  touch/mouse duplicate events.
 - Charging is valid only on foot, grounded, unarmed/fists, alive, and outside
   crouch, climb, bail, stun, pause, replay, cutscene, interior transition, or
   another attack. Invalidating the state cancels the charge safely.
@@ -280,17 +287,28 @@ to simulate logical safe insets without device-specific user-agent hacks.
   and the non-planted leg straight behind. Rotate the visible body exactly
   `3 * TAU` around the planted foot’s vertical axis, then restore every altered
   limb/root transform and the prior heading without a pop.
+- The charged punch keeps Turbo upright and facing his stored heading. Rotate
+  both shoulder/arm chains through exactly `3 * TAU` in the sagittal/vertical
+  plane, one forward and the other backward, so the arms repeatedly pass
+  straight ahead and straight behind. Target about `0.28s` per arm revolution
+  (`~0.84s` total), making it visibly quicker than the kick special. Restore
+  both shoulders, elbows, torso, and heading cleanly at the end.
 - Use a swept radial contact check so a fast spin cannot tunnel through a
-  target between frames. Each valid enemy may be hit at most once per
-  revolution, for up to three hits across the move.
+  target between frames. For the kick, use the full swept radius. For the punch,
+  require the target to be inside either a forward or rear cone throughout the
+  contact check (suggested half-angle: `50–55°`); targets in the side sectors
+  are ineligible even if they are close. Each valid enemy may be hit at most
+  once per revolution, for up to three hits across either move.
 - Valid enemies are active hostile combatants: jocks, foot cops, hostile
   mission actors, Mama Rat if in range, and angry/attacking dogs through commit
   2’s shared dog-damage path. Do not hit Deb, ordinary civilians, downed/dead
   actors, tamed/passive dogs, the player, or vehicles.
 - Starting damage target: about `28` per revolution with a strong outward
-  knockback (`2.5–3.5u`), resolved against static collision so targets are not
-  shoved through buildings. Reuse each actor type’s existing damage/down path
-  and heat rules; do not invent parallel death bookkeeping.
+  knockback (`2.5–3.5u`) for the kick. The quicker punch should start around
+  `22` damage with moderate radial knockback (`1.8–2.5u`) per revolution.
+  Resolve both against static collision so targets are not shoved through
+  buildings. Reuse each actor type’s existing damage/down path and heat rules;
+  do not invent parallel death bookkeeping.
 - Keep restrained impact feedback—sound, sparks, a tiny hitstop/haptic per
   contact are fine—but do not add a camera shake per target. Cap feedback when
   several enemies are struck in one frame.
@@ -302,23 +320,28 @@ to simulate logical safe insets without device-specific user-agent hacks.
 
 ### Focused acceptance
 
-1. A quick KICK press produces exactly one ordinary kick; a `0.99s` hold still
-   produces the ordinary kick on release; a `1.0s+` hold produces no ordinary
-   kick and starts one special.
-2. Touch, mouse, and keyboard K behave identically without duplicate attacks.
-3. The special keeps one foot planted, completes exactly three fast rotations,
-   shows the specified horizontal pose, blocks conflicting states, and restores
-   a normal pose cleanly.
-4. A swept test target touched during a large timestep is hit; eligible enemies
+1. Quick PUNCH/KICK presses produce exactly one ordinary move; a `0.99s` hold
+   still produces the ordinary move on release; a `1.0s+` hold produces no
+   ordinary move and starts exactly one corresponding special.
+2. Touch, mouse, and keyboard F/K behave identically without duplicate attacks;
+   armed/baton attacks remain immediate.
+3. The kick special keeps one foot planted, completes exactly three fast
+   rotations, shows the specified horizontal pose, blocks conflicting states,
+   and restores a normal pose cleanly.
+4. The punch special stays upright, completes exactly three opposite-direction
+   vertical arm revolutions in less time than the kick, and restores the arm,
+   elbow, torso, and heading transforms cleanly.
+5. A swept test target touched during a large timestep is hit; eligible enemies
    are damaged/knocked back at most once per revolution while civilians,
-   passive dogs, dead actors, and vehicles are untouched.
-5. Multi-target contact does not stack unbounded shake/hitstop. Normal melee
+   passive dogs, dead actors, and vehicles are untouched. Front/rear targets
+   can be hit by the punch special; equally near side targets cannot.
+6. Multi-target contact does not stack unbounded shake/hitstop. Normal melee
    and special attacks keep camera position/look changes smooth, while incoming
    damage and explosions retain their existing impact feedback.
-6. Cancel paths—vehicle/mode change, stun, pause, replay, cutscene, death, and
+7. Cancel paths—vehicle/mode change, stun, pause, replay, cutscene, death, and
    touch-cancel during charge—leave no latched button, pose, or movement lock.
 
-Add `tests/cases/spin-kick.test.js` and extend the melee camera case in
+Add `tests/cases/charged-melee.test.js` and extend the melee camera case in
 `tests/cases/camera-polish.test.js`.
 
 ## Delivery and validation
@@ -335,9 +358,9 @@ each commit. Run only:
 
 1. `node tests/syntax-check.js`
 2. the focused test files changed or added for that commit
-3. one final 800×390 touch smoke covering car exit → sprint, quick kick versus
-   one-second hold spin kick, dog death/ghost, mission offer, wanted stars, and
-   HUD cutout layout
+3. one final 800×390 touch smoke covering car exit → sprint, quick versus
+   one-second hold behavior for both charged punch and spin kick, dog
+   death/ghost, mission offer, wanted stars, and HUD cutout layout
 4. one final intro + Deb confrontation camera pass
 
 Do not run the full suite unless a changed shared primitive makes it necessary.

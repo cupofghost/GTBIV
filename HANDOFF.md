@@ -1540,11 +1540,12 @@ START MISSION button; and reflow the phone HUD around Dynamic Island/cutout safe
 areas.
 **Plan:** deliver five sequential commits because each touches `index.html`:
 controls/aim camera, dog mortality/ghosts, cinematic camera safety, then
-mission/HUD/mobile layout, followed by smooth melee camera and the one-second
-hold three-spin kick. The implementation contract, exact code paths, guardrails,
-acceptance criteria, and focused tests are in
+mission/HUD/mobile layout, followed by smooth melee camera plus one-second hold
+specials: a three-spin planted kick and a quicker three-round opposing-arm
+windmill punch that hits only front/rear targets. The implementation contract,
+exact code paths, guardrails, acceptance criteria, and focused tests are in
 `CODEX/HANDOFF_TERRA_OWNER_POLISH.md`.
-**Acceptance:** all eight owner-reported issues are reproducible before their
+**Acceptance:** all eleven owner-reported issues are reproducible before their
 fix and covered afterward; no random mission begins without an explicit tap;
 phone HUD elements clear simulated landscape and auto-rotated cutouts; existing
 mission progression, dog-pack behavior, terrain, VO, and zero-build startup
