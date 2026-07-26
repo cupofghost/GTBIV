@@ -1,6 +1,6 @@
 # STATUS
 
-Last consolidation: 2026-07-25 (tenth pass — reconciled the completed OP1 branch, corrected final commit references, and advanced NEXT to FB3) — Signed: Codex | GPT-5 | high
+Last consolidation: 2026-07-26 (eleventh pass — integrated all four RV2/OP2 branches, refreshed the code map, and archived the completed dispatch) — Signed: Codex | GPT-5 | high
 
 ## Active work
 _Nothing claimed right now._ Add your row below per AGENTS.md §1.3 — and escape
@@ -8,13 +8,6 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-| 2026-07-26 | `index.html` road markings/manholes/sidewalk geometry, `tests/cases/terrain-road-sidewalk.test.js` | **DONE** — world-scale 3.2×0.16 road dashes, reusable inset manhole kit, and ≤4u per-vertex terrain-seated non-colliding sidewalks; syntax + terrain filter 15/15 green. | Signed: Codex \| GPT-5.6 \| high |
-| 2026-07-26 | `index.html` rat mesh/Mama Rat update, `tests/cases/rat-vengeance.test.js` | **HANDOFF** — RV2 shared low-poly +Z rat rig and terrain-seated Mama idle/turn/walk/bite/damage/death animation are complete. Syntax passed; focused browser cases and four screenshots are blocked by the local Chromium/GPU environment. | Signed: Codex \| GPT-5.6 \| high |
-| 2026-07-26 | `index.html` traffic steering/spawn/recovery, carjacking, car→Turbo impacts; `tests/cases/vehicle-sanity.test.js`; `STATUS.md` | **DONE — OP2-B**: seed `424242`/60s improved 185.6→45.4 full-lock frames/car, 19,402→0 embed frames, 0/30→30/30 explicitly jackable, while traveling 574.7u avg with no mass pileup. Impacts at 2/8/16/30u/s deal 0/5.4/16.2/44.1 HP once/contact; syntax + focused suites 14/14 and downtown jack/drive check passed. | Signed: Codex \| GPT-5.6 \| high |
-| 2026-07-26 | `index.html` melee/`updateFoot`, `js/person.js` shadows, Turbo footsteps/audio, focused tests | **DONE** — OP2-C: 120 mixed attacks + 4×7 interruption matrix, melee 5/5. OP2-D: grounding/cadence 5/5, sprint 3/3, lifecycle 4/4; owner listening still required. | Signed: Codex \| GPT-5.6 \| high |
-| 2026-07-26 | `CODEX/OP2_CONCURRENT/`, `HANDOFF.md`, `STATUS.md` | **DONE** — added the tracked four-agent launch packet with required GPT-5.6 models/efforts, branches, ownership, tests, and integration order. | Signed: Codex \| GPT-5 \| high |
-| 2026-07-26 | `HANDOFF.md`, `STATUS.md` | **DONE** — integrated the owner's Mama Rat, playtest-correction, character-shadow/footstep, and Turbo Mode requirements as future owner-triggered projects; `NEXT` unchanged. | Signed: Codex \| GPT-5 \| high |
-| 2026-07-25 | `HANDOFF.md`, `STATUS.md` | **DONE** — added the owner-triggered optional Codex audit follow-up project; no gameplay or asset changes. | Signed: Codex \| GPT-5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
@@ -39,8 +32,15 @@ possible change and add a line here.
 - Duplicate `## 10.` heading in HANDOFF.md ("Suggested Order of Work" and "Changelog — polish pass (Kimi3)"). Still open: renumbering the duplicate cascades through §§11–15 and every cross-reference to them, so it is not the one-line fix it looks like. Cosmetic only — the NEXT-marker workflow is unaffected. Leave it unless the owner asks. — 2026-07-24, Claude
 - Park knolls keep ~0.15u of sag between the drawn lawn and `groundH` (a dome sampled every ~3u). Harmless at that size; only worth revisiting if props on a knoll ever look sunk. — 2026-07-24, Claude
 - `tests/cases/save-restore.test.js` (and later files in a long run) time out loading the page in the local Playwright Chromium headless shell, with GPU stall warnings in the browser log. The same suite runs fine in other contexts; appears environmental. Syntax check, economy suite, regression, and mission-variety all pass. — 2026-07-25, OpenCode
+- `tests/cases/rpg-flight.test.js` failed its straight-direction advancement assertion in the 2026-07-26 consolidation run; the other 182 cases passed. No RV2/OP2 branch or integration edit touched RPG flight code or this test, so it remains outside this consolidation's scope. — 2026-07-26, Codex
 
 ## Archive
+- Consolidation (Codex | GPT-5 | high, 2026-07-26): integrated the four isolated RV2/OP2 branches in their prescribed five-step order, preserved signed feature commits, reconciled every status row, refreshed the code map, and found no added credential/PII patterns. Focused suites passed 21/21; full suite passed 182/183 with the unrelated RPG issue logged above; boot/roads/Mama Rat visual review had no console errors. Signed: Codex | GPT-5 | high
+- OP2-A road and sidewalk visuals (Codex | GPT-5.6 | high, 2026-07-26): world-scale road dashes, reusable inset manholes, and terrain-conforming non-colliding sidewalks; focused tests passed 2/2 after integration. Signed: Codex | GPT-5.6 | high
+- RV2 Mama Rat (Codex | GPT-5.6 | high, 2026-07-26): shared low-poly +Z rat rig plus terrain-seated idle/turn/walk/bite/damage/death states; focused tests passed 5/5 and final visual review rendered cleanly. Signed: Codex | GPT-5.6 | high
+- OP2-B vehicle sanity (Codex | GPT-5.6 | high, 2026-07-26): lane-safe/recoverable generic traffic, explicit civilian jackability, and monotonic once-per-contact impact damage; focused tests passed 4/4. Signed: Codex | GPT-5.6 | high
+- OP2-C/D melee and grounding (Codex | GPT-5.6 | high, 2026-07-26): interruption-safe melee, planted charged-kick pose, flat lifecycle-safe body shadows, and gait-driven surface footsteps; focused tests passed 10/10, with owner listening approval still required. Signed: Codex | GPT-5.6 | high
+- RV2/OP2 dispatch planning (Codex | GPT-5 | high, 2026-07-26): added the tracked four-agent launch packet and integrated the owner's Mama Rat, playtest-correction, shadow/footstep, Turbo Mode, and optional-audit requirements without changing `NEXT: FB3`. Signed: Codex | GPT-5 | high
 - Consolidation (Codex | GPT-5 | high, 2026-07-25): reconciled all five OP1 commits, corrected the amended mission/HUD hash, regenerated the code map, advanced NEXT to FB3, and passed the final 800×390 OP1 touch smoke 1/1. Signed: Codex | GPT-5 | high
 - OP1 completion (Codex | GPT-5 | high, 2026-07-25): dog mortality/30s capped ghosts, shared elevated intro camera and terrain-safe Deb shots, mission opt-in with safe HUD/wanted stars; focused checks passed. Signed: Codex | GPT-5 | high
 - OP1 controls and charged melee (Codex | GPT-5 | high, 2026-07-25): fresh sprint input survives vehicle exits; aim and melee cameras ease smoothly; one-second punch/kick holds launch bounded three-round specials. Syntax, sprint 3/3, charged melee 2/2, and camera polish 7/7 green. Signed: Codex | GPT-5 | high

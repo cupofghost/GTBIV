@@ -54,4 +54,3 @@ FINISH
 - Report commit hash, touched files, tests, screenshots, uncertainties, and
   the consolidation check.
 ```
-
