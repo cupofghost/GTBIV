@@ -1,6 +1,6 @@
 # STATUS
 
-Last consolidation: 2026-07-25 (eighth pass — rebased the post-PR #40 OD1–OD4 work onto current `main` and archived the completed branch records) — Signed: Codex | GPT-5 | high
+Last consolidation: 2026-07-25 (ninth pass — consolidated OP1 controls/aim plus charged melee; dog, cinematic-camera, and mission/HUD commits remain open) — Signed: Codex | GPT-5 | high
 
 ## Active work
 _Nothing claimed right now._ Add your row below per AGENTS.md §1.3 — and escape
@@ -8,7 +8,6 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-| 2026-07-25 | `HANDOFF.md`, `CODEX/HANDOFF_TERRA_OWNER_POLISH.md`, `STATUS.md` | Done: made OP1 the authoritative NEXT task and prepared a four-commit Terra plan for controls, dogs/ghosts, cameras, mission opt-in, and phone HUD. | Signed: Codex \| GPT-5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
@@ -22,7 +21,7 @@ possible change and add a line here.
 - `HANDOFF.md` — owner-deferred A2, advanced NEXT to FB3, and made `FOOTBALL_STRAND.md` the detailed FB3 implementation contract where older docs differ. Signed: Codex | GPT-5 | medium
 - `HANDOFF.md` — inserted owner-approved OD1–OD4 ahead of FB3 and advanced NEXT to straight-flight RPGs; implementation stays sequential because all four touch `index.html`. Signed: Codex | GPT-5 | high
 - `index.html`, `HANDOFF.md` — owner-priority OD1–OD4 sequential implementation pass; tests and per-task commits are claimed by Codex. Signed: Codex | GPT-5 | high
-- `HANDOFF.md` — inserted owner playtest task OP1 ahead of FB3 and delegated its four sequential `index.html` commits through `CODEX/HANDOFF_TERRA_OWNER_POLISH.md`. Signed: Codex | GPT-5 | high
+- `HANDOFF.md` — inserted owner playtest task OP1 ahead of FB3 and delegated its five sequential `index.html` commits through `CODEX/HANDOFF_TERRA_OWNER_POLISH.md`. Signed: Codex | GPT-5 | high
 
 ## Known issues
 - ~~PII in the docs~~ **RESOLVED — owner's decision, 2026-07-24:** the owner's first name in `HANDOFF.md`/`GAME_PLAN.md`/`ASSETS.md`/`STORY_BIBLE.md`/`CHARACTERS.md` is fine and does not need scrubbing. Do not re-flag it. The rest of AGENTS.md §3 still applies in full — no surnames, emails, phone numbers, addresses, other-platform usernames, or credentials of any kind. Latest scan found none of those. — 2026-07-24, Claude
@@ -31,6 +30,8 @@ possible change and add a line here.
 - `tests/cases/save-restore.test.js` (and later files in a long run) time out loading the page in the local Playwright Chromium headless shell, with GPU stall warnings in the browser log. The same suite runs fine in other contexts; appears environmental. Syntax check, economy suite, regression, and mission-variety all pass. — 2026-07-25, OpenCode
 
 ## Archive
+- OP1 controls and charged melee (Codex | GPT-5 | high, 2026-07-25): fresh sprint input survives vehicle exits; aim and melee cameras ease smoothly; one-second punch/kick holds launch bounded three-round specials. Syntax, sprint 3/3, charged melee 2/2, and camera polish 7/7 green. Signed: Codex | GPT-5 | high
+- OP1 planning (Codex | GPT-5 | high, 2026-07-25): made the owner playtest batch authoritative before FB3 and specified five sequential implementation commits; dog, cinematic-camera, and mission/HUD commits remain open and unclaimed. Signed: Codex | GPT-5 | high
 - Consolidation (Codex | GPT-5 | high, 2026-07-25): replayed the six post-PR #40 planning/OD commits onto current `main`, resolved bookkeeping-only conflicts, and archived the open branch records. Signed: Codex | GPT-5 | high
 - OD1–OD4 gameplay pass (Codex | GPT-5 | high, 2026-07-25): straight swept RPGs, building-occluded world bubbles, hold sprint with a distinct pose, and bounded local street-density refills; focused checks green. Signed: Codex | GPT-5 | high
 - Backlog planning (Codex | GPT-5 | high, 2026-07-25): specified and delivered OD1–OD4, deferred A2 by owner direction, and restored FB3 as the next canonical task. Signed: Codex | GPT-5 | high

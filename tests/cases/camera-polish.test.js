@@ -112,5 +112,45 @@ module.exports = {
         assert(r.factorLow > r.factorHigh, 'expected the low-speed camera to use a higher follow-rate lerp factor than the high-speed camera, got ' + JSON.stringify(r));
       },
     },
+    {
+      name: 'foot aim camera blends through intermediate position and FOV values',
+      query: '?dev=1&skipintro=1',
+      run: async (page, { assert }) => {
+        const r = await page.evaluate(() => {
+          G.mode='foot'; G.started=true; G.weapon='fists'; player.bailing=false; player.moveMag=0;
+          player.x=intersections[0].x; player.z=intersections[0].z; player.y=groundH(player.x,player.z);
+          footCamYaw=0; camPitch=0; aimBlend=0; camPos.set(player.x,player.y+3,player.z+7); updateCamera(.016);
+          const before={x:camera.position.x,z:camera.position.z,fov:camera.fov};
+          G.weapon='pistol'; updateCamera(.016); const first={x:camera.position.x,z:camera.position.z,fov:camera.fov,blend:aimBlend};
+          updateCamera(.12); const middle={x:camera.position.x,z:camera.position.z,fov:camera.fov,blend:aimBlend};
+          return {before,first,middle};
+        });
+        assert(r.first.blend>0&&r.first.blend<1&&r.middle.blend>r.first.blend&&r.middle.blend<1, 'aim blend should progress over multiple frames: '+JSON.stringify(r));
+        assert(r.first.fov<r.before.fov&&r.middle.fov<r.first.fov, 'FOV should ease toward aim rather than jump: '+JSON.stringify(r));
+      },
+    },
+    {
+      name: 'normal and charged melee poses do not jostle the foot camera',
+      query: '?dev=1&skipintro=1',
+      run: async (page, { assert }) => {
+        const r = await page.evaluate(() => {
+          const p=player,spot=intersections[0],dir=new THREE.Vector3();
+          G.mode='foot';G.started=true;G.over=false;G.weapon='fists';G.crouching=false;
+          p.x=spot.x;p.z=spot.z;p.y=groundH(p.x,p.z);p.heading=0;p.moveMag=0;p.punchT=0;p.kickT=0;p.meleeSpecial=null;
+          footCamYaw=0;camPitch=0;aimBlend=0;camPos.set(p.x,p.y+2.9,p.z-6.5);
+          for(let i=0;i<60;i++)updateCamera(1/60);
+          const before=camera.position.clone();camera.getWorldDirection(dir);const beforeDir=dir.clone();
+          doPunch(false,false);updateFoot(1/60);updateCamera(1/60);
+          const punchMove=camera.position.distanceTo(before);camera.getWorldDirection(dir);const punchAngle=dir.angleTo(beforeDir);
+          p.punchT=0;startChargedMelee('punch');updateChargedMelee(.14);const specialBefore=camera.position.clone();camera.getWorldDirection(dir);const specialDir=dir.clone();
+          updateCamera(1/60);
+          const specialMove=camera.position.distanceTo(specialBefore);camera.getWorldDirection(dir);const specialAngle=dir.angleTo(specialDir);
+          finishChargedMelee(p.meleeSpecial);
+          return {punchMove,punchAngle,specialMove,specialAngle};
+        });
+        assert(r.punchMove<0.2&&r.punchAngle<0.03,'ordinary melee should not jostle the settled foot camera: '+JSON.stringify(r));
+        assert(r.specialMove<0.2&&r.specialAngle<0.03,'charged melee pose rotation should not jostle the foot camera: '+JSON.stringify(r));
+      },
+    },
   ],
 };

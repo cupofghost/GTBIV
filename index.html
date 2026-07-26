@@ -725,62 +725,62 @@ let TRAFFIC_CAP=30, PED_CAP=60, PARTICLE_SCALE=1, GFX_TIER='high';
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS & GLOBAL STATE                           (706–720, ~15 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                              (785–842, ~58 lines)
-// AUDIO                                             (843–1066, ~224 lines)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK               (1067–1569, ~503 lines)
-// THREE SETUP                                       (1570–1620, ~51 lines)
-// CITY                                              (1621–2462, ~842 lines)
-//   └ RADIO TOWERS                                 (2066–2171, ~106 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                    (2463–2513, ~51 lines)
-// ELEVATED LIGHT RAIL                               (2514–2638, ~125 lines)
-// STAIRS & FIRE ESCAPES                             (2639–2713, ~75 lines)
-// WALL LADDERS                                      (2714–2991, ~278 lines)
-// PARTICLES                                         (2992–3046, ~55 lines)
-// BLOB SHADOWS                                      (3047–3051, ~5 lines)
-// GPU RESOURCE CLEANUP                              (3052–3073, ~22 lines)
-// CARS                                              (3074–3316, ~243 lines)
-// PEDESTRIANS                                       (3317–3470, ~154 lines)
-// PIZZA DELIVERY SYSTEM                             (3471–3623, ~153 lines)
-// RIVAL PIZZA GANG: CHAOS PIZZA                     (3627–3754, ~128 lines)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                 (3755–3934, ~180 lines)
-// STRAY DOGS & DOG GANGS                            (3935–4206, ~272 lines)
-// PIZZA WARS MISSION                                (4207–4281, ~75 lines)
-// PLAYER                                            (4282–4325, ~44 lines)
-// PIZZA PLACE & INTERIOR                            (4326–4486, ~161 lines)
-// SIDEWALKS & STOREFRONT AWNINGS                    (4487–4595, ~109 lines)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS   (4596–4795, ~200 lines)
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS        (4796–4911, ~116 lines)
-// DAY/NIGHT & HEIST SYSTEM                          (4912–5104, ~193 lines)
-// PICKUPS                                           (5105–5147, ~43 lines)
-// HELICOPTERS                                       (5148–5626, ~479 lines)
-// TALKING PEDS                                      (5627–5715, ~89 lines)
-// WEAPONS                                           (5716–6377, ~662 lines)
-// WANTED                                            (6378–6483, ~106 lines)
-// CAR PHYSICS                                       (6484–6677, ~194 lines)
-// PLAYER: FOOT & CAR                                (6678–7219, ~542 lines)
-// HUD / TOASTS                                      (7220–7264, ~45 lines)
-// MISSIONS                                          (7265–7431, ~167 lines)
-// AI                                                (7432–7456, ~25 lines)
-// FOOT COPS                                         (7457–7500, ~44 lines)
-// SEWER RATS                                        (7501–7617, ~117 lines)
-// MAMA RAT (rat vengeance) — PLACEHOLDER            (7618–7984, ~367 lines)
-// BUSTED / WASTED                                   (7985–8074, ~90 lines)
-// CAMERA                                            (8075–8180, ~106 lines)
-// MINIMAP                                           (8181–8228, ~48 lines)
-// MAIN LOOP                                         (8229–8407, ~179 lines)
-// ORIENTATION                                       (8408–8465, ~58 lines)
-// ANIMATED INTRO                                    (8466–8594, ~129 lines)
-// STORY: TURBO JONES, CHAPTER 1                     (8595–8860, ~266 lines)
-// CUTSCENE SYSTEM                                   (8861–9105, ~245 lines)
-// VOICEOVER SYSTEM                                  (9106–9187, ~82 lines)
-// INTRO NARRATION                                   (9188–9489, ~302 lines)
-// DEV TOOLS                                         (9490–9567, ~78 lines)
-// CINEMA MODE (was REPLAY)                          (9568–9699, ~132 lines)
-// CINEMA: SCENES & STAGING                          (9700–9892, ~193 lines)
-// PAUSE MENU & SETTINGS                             (9893–10100, ~208 lines)
-// CONTROLS CARD (U2 onboarding)                    (10101–10133, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (10134–10189, ~56 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                   (10190–end, ~40 lines: boot, init, resize handlers, quality apply)
+// DEVICE / ORIENTATION                              (786–843, ~58 lines)
+// AUDIO                                             (844–1067, ~224 lines)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK               (1068–1570, ~503 lines)
+// THREE SETUP                                       (1571–1621, ~51 lines)
+// CITY                                              (1622–2463, ~842 lines)
+//   └ RADIO TOWERS                                 (2067–2172, ~106 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
+// FOOTBALL FIELD                                    (2464–2514, ~51 lines)
+// ELEVATED LIGHT RAIL                               (2515–2639, ~125 lines)
+// STAIRS & FIRE ESCAPES                             (2640–2714, ~75 lines)
+// WALL LADDERS                                      (2715–2992, ~278 lines)
+// PARTICLES                                         (2993–3047, ~55 lines)
+// BLOB SHADOWS                                      (3048–3052, ~5 lines)
+// GPU RESOURCE CLEANUP                              (3053–3074, ~22 lines)
+// CARS                                              (3075–3317, ~243 lines)
+// PEDESTRIANS                                       (3318–3512, ~195 lines)
+// PIZZA DELIVERY SYSTEM                             (3513–3668, ~156 lines)
+// RIVAL PIZZA GANG: CHAOS PIZZA                     (3669–3796, ~128 lines)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                 (3797–3976, ~180 lines)
+// STRAY DOGS & DOG GANGS                            (3977–4248, ~272 lines)
+// PIZZA WARS MISSION                                (4249–4323, ~75 lines)
+// PLAYER                                            (4324–4367, ~44 lines)
+// PIZZA PLACE & INTERIOR                            (4368–4528, ~161 lines)
+// SIDEWALKS & STOREFRONT AWNINGS                    (4529–4637, ~109 lines)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS   (4638–4837, ~200 lines)
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS        (4838–4953, ~116 lines)
+// DAY/NIGHT & HEIST SYSTEM                          (4954–5146, ~193 lines)
+// PICKUPS                                           (5147–5189, ~43 lines)
+// HELICOPTERS                                       (5190–5670, ~481 lines)
+// TALKING PEDS                                      (5671–5787, ~117 lines)
+// WEAPONS                                           (5788–6486, ~699 lines)
+// WANTED                                            (6487–6592, ~106 lines)
+// CAR PHYSICS                                       (6593–6786, ~194 lines)
+// PLAYER: FOOT & CAR                                (6787–7417, ~631 lines)
+// HUD / TOASTS                                      (7418–7462, ~45 lines)
+// MISSIONS                                          (7463–7629, ~167 lines)
+// AI                                                (7630–7654, ~25 lines)
+// FOOT COPS                                         (7655–7698, ~44 lines)
+// SEWER RATS                                        (7699–7815, ~117 lines)
+// MAMA RAT (rat vengeance) — PLACEHOLDER            (7816–8182, ~367 lines)
+// BUSTED / WASTED                                   (8183–8273, ~91 lines)
+// CAMERA                                            (8274–8383, ~110 lines)
+// MINIMAP                                           (8384–8431, ~48 lines)
+// MAIN LOOP                                         (8432–8611, ~180 lines)
+// ORIENTATION                                       (8612–8669, ~58 lines)
+// ANIMATED INTRO                                    (8670–8798, ~129 lines)
+// STORY: TURBO JONES, CHAPTER 1                     (8799–9059, ~261 lines)
+// CUTSCENE SYSTEM                                   (9060–9304, ~245 lines)
+// VOICEOVER SYSTEM                                  (9305–9386, ~82 lines)
+// INTRO NARRATION                                   (9387–9688, ~302 lines)
+// DEV TOOLS                                         (9689–9766, ~78 lines)
+// CINEMA MODE (was REPLAY)                          (9767–9899, ~133 lines)
+// CINEMA: SCENES & STAGING                          (9900–10092, ~193 lines)
+// PAUSE MENU & SETTINGS                             (10093–10301, ~209 lines)
+// CONTROLS CARD (U2 onboarding)                    (10302–10334, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (10335–10390, ~56 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                   (10391–end, ~40 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -4332,7 +4332,7 @@ const TURBO_SPEC={
 const player={
   mesh:makePerson(TURBO_SPEC), x:roadLines[4]+6, z:roadLines[4]+6,
   heading:0, phase:0, punchT:0, kickT:0, car:null, vy:0, y:0,
-  climb:null, climbPhase:0,   // set to {L} while hand-over-handing a wall ladder
+  climb:null, climbPhase:0, meleeSpecial:null,   // set to {L} while hand-over-handing a wall ladder
 };
 scene.add(player.mesh);
 // Turbo's shirt mark: simple geometry stays crisp from any distance and avoids
@@ -5834,11 +5834,12 @@ function updateWeaponVisual(){
   setTurboAimTransparency(aiming);
 }
 function isRangedWeapon(w){ return w==='pistol'||w==='rpg'; }
-let turboAimTransparent=false;
+let turboAimTransparent=-1;
 const turboAimMats=new Map();
 function setTurboAimTransparency(on){
-  if(on===turboAimTransparent) return;
-  turboAimTransparent=on;
+  const amount=typeof on==='number'?clamp(on,0,1):(on?1:0);
+  if(Math.abs(amount-turboAimTransparent)<0.01) return;
+  turboAimTransparent=amount;
   const u=player.mesh.userData, weaponRoots=[u.gun,u.rpg,u.baton].filter(Boolean);
   player.mesh.traverse(o=>{
     if(!o.material) return;
@@ -5849,9 +5850,9 @@ function setTurboAimTransparency(on){
     mats.forEach(m=>{
       if(!turboAimMats.has(m)) turboAimMats.set(m,{transparent:m.transparent,opacity:m.opacity,depthWrite:m.depthWrite});
       const base=turboAimMats.get(m);
-      m.transparent=on?true:base.transparent;
-      m.opacity=on?0.38:base.opacity;
-      m.depthWrite=on?false:base.depthWrite;
+      m.transparent=amount>0.01?true:base.transparent;
+      m.opacity=lerp(base.opacity,0.38,amount);
+      m.depthWrite=amount>0.01?false:base.depthWrite;
       m.needsUpdate=true;
     });
   });
@@ -6281,10 +6282,13 @@ function joyEnd(){
   joyEl.style.left='22px'; joyEl.style.top='auto'; joyEl.style.bottom='calc(26px + env(safe-area-inset-bottom))';
 }
 const btnHold={boost:false,sprint:false,drift:false,gas:false,brake:false};
+// A vehicle boost must never become a sprint just because the player steps
+// out while still holding Shift.  Foot sprint is armed by a fresh press.
+let sprintArmed=true, sprintShiftWasDown=false;
 const btnMap={btnBoost:'boost',btnSprint:'sprint',btnDrift:'drift',btnHorn:'horn',btnGas:'gas',btnBrake:'brake'};
 Object.keys(btnMap).forEach(id=>{
   const el=$(id), key=btnMap[id];
-  const on=e=>{ e.preventDefault(); input[key]=true; btnHold[key]=true; el.classList.add('on'); if(key==='horn')doHorn(); };
+  const on=e=>{ e.preventDefault(); if(key==='sprint'&&G.mode==='foot') sprintArmed=true; input[key]=true; btnHold[key]=true; el.classList.add('on'); if(key==='horn')doHorn(); };
   const off=e=>{ e.preventDefault(); input[key]=false; btnHold[key]=false; el.classList.remove('on'); };
   el.addEventListener('touchstart',on,{passive:false});
   el.addEventListener('touchend',off,{passive:false});
@@ -6327,10 +6331,22 @@ function doJump(){
 }
 $('btnJump').addEventListener('touchstart',e=>{e.preventDefault();doJump();},{passive:false});
 $('btnJump').addEventListener('mousedown',doJump);
-$('btnPunch').addEventListener('touchstart',e=>{e.preventDefault();doAttack();},{passive:false});
-$('btnPunch').addEventListener('mousedown',doAttack);
-$('btnKick').addEventListener('touchstart',e=>{e.preventDefault();doKick();},{passive:false});
-$('btnKick').addEventListener('mousedown',doKick);
+let meleePointer=null;
+[['btnPunch','punch'],['btnKick','kick']].forEach(([id,type])=>{
+  const el=$(id);
+  el.addEventListener('pointerdown',e=>{
+    e.preventDefault(); if(meleePointer) return;
+    meleePointer={id:e.pointerId,type}; if(el.setPointerCapture) el.setPointerCapture(e.pointerId);
+    meleePress(type);
+  });
+  el.addEventListener('pointerup',e=>{
+    e.preventDefault(); if(!meleePointer||meleePointer.id!==e.pointerId||meleePointer.type!==type) return;
+    meleeRelease(type); meleePointer=null;
+  });
+  el.addEventListener('pointercancel',e=>{
+    if(meleePointer&&meleePointer.id===e.pointerId){ cancelMeleeCharge(); meleePointer=null; }
+  });
+});
 $('btnGun').addEventListener('touchstart',e=>{e.preventDefault();cycleWeapon();},{passive:false});
 $('btnGun').addEventListener('mousedown',cycleWeapon);
 $('btnTalk').addEventListener('touchstart',e=>{e.preventDefault();doTalk();},{passive:false});
@@ -6395,6 +6411,7 @@ const joyReset=e=>{ for(const t of e.changedTouches){
 document.addEventListener('touchend',joyReset);
 document.addEventListener('touchcancel',joyReset);
 function clearSprint(){ input.sprint=false; btnHold.sprint=false; player.sprinting=false; const b=$('btnSprint'); if(b) b.classList.remove('on'); }
+function disarmSprint(){ clearSprint(); sprintArmed=false; sprintShiftWasDown=!!(keys['ShiftLeft']||keys['ShiftRight']); }
 document.addEventListener('mousedown',e=>{
   const p=remapXY(e.clientX,e.clientY);
   if(p.x>vw()*0.55&&lookTouch===null&&G.started&&!G.over&&!lookSkip(e.target)){
@@ -6428,8 +6445,8 @@ document.addEventListener('keydown',e=>{
     else if(G.heist&&G.heist.phase===2) tapSafeCrack();
     else doJump();
   }
-  if(e.code==='KeyF') doAttack();
-  if(e.code==='KeyK') doKick();
+  if(e.code==='KeyF'&&!e.repeat) meleePress('punch');
+  if(e.code==='KeyK'&&!e.repeat) meleePress('kick');
   if(e.code==='KeyT') doTalk();
   if(e.code==='KeyH') doHorn();
   if(e.code==='KeyG') cycleWeapon();
@@ -6448,7 +6465,7 @@ document.addEventListener('keydown',e=>{
     if(e.code==='Digit0'){ e.preventDefault(); stepOneFrame(); }
   }
 });
-document.addEventListener('keyup',e=>{ keys[e.code]=false; });
+document.addEventListener('keyup',e=>{ keys[e.code]=false; if(e.code==='KeyF') meleeRelease('punch'); if(e.code==='KeyK') meleeRelease('kick'); });
 function pollKeys(){
   if(keys['KeyA']||keys['ArrowLeft']) input.jx=-1;
   else if(keys['KeyD']||keys['ArrowRight']) input.jx=1;
@@ -6457,8 +6474,11 @@ function pollKeys(){
   else if(keys['KeyS']||keys['ArrowDown']) input.jy=1;
   else if(joyTouch===null) input.jy=0;
   const shift=!!(keys['ShiftLeft']||keys['ShiftRight']);
+  if(shift&&!sprintShiftWasDown&&G.mode==='foot') sprintArmed=true;
+  if(!shift) sprintArmed=true;
+  sprintShiftWasDown=shift;
   input.boost=btnHold.boost||shift;
-  input.sprint=G.mode==='foot'&&(btnHold.sprint||shift);
+  input.sprint=G.mode==='foot'&&sprintArmed&&(btnHold.sprint||shift);
   input.drift=btnHold.drift||!!keys['Space'];
   input.gas=btnHold.gas||!!(keys['KeyW']||keys['ArrowUp']);
   input.brake=btnHold.brake||!!(keys['KeyS']||keys['ArrowDown']);
@@ -6779,6 +6799,18 @@ function canSprint(p,mag){
 }
 function updateFoot(dt){
   const p=player;
+  let meleeDt=dt;
+  if(meleeCharge){
+    if(!canChargeMelee()){ cancelMeleeCharge(); }
+    else if(!meleeCharge.started){
+      meleeCharge.t+=dt;
+      if(meleeCharge.t>=1-1e-6){
+        meleeDt=Math.max(0,meleeCharge.t-1);
+        meleeCharge.started=true; startChargedMelee(meleeCharge.type);
+      }
+    }
+  }
+  if(updateChargedMelee(meleeDt)) return;
   p.punchT=Math.max(0,p.punchT-dt);
   p.kickT=Math.max(0,p.kickT-dt);
   if(p.bailing){ clearSprint(); updateBail(dt); return; }
@@ -7019,7 +7051,7 @@ function doEnterExit(){
       blip(200,400,0.15,0.15,'triangle');
       toast('BOOST = UP · DRIFT = DOWN','gold');
     }
-    refreshButtons();
+    disarmSprint(); refreshButtons();
   } else if(G.mode==='car'){
     exitCar();
   } else if(G.mode==='heli'){
@@ -7044,7 +7076,7 @@ function exitCar(){
   if(engineSubGain) engineSubGain.gain.value=0;
   if(engineGritGain) engineGritGain.gain.value=0;
   if(turboGain) turboGain.gain.value=0;
-  refreshButtons();
+  disarmSprint(); refreshButtons();
 }
 let btnBrakeReversing=false;
 function updateCarMode(dt){
@@ -7232,6 +7264,69 @@ function updateCarMode(dt){
   }
   setTail(c,input.brake||input.drift||false);
   $('btnEnter').style.display='flex';
+}
+let meleeCharge=null;
+function canChargeMelee(){
+  const p=player, g=footGround(p);
+  return G.started&&!G.over&&G.mode==='foot'&&G.weapon==='fists'&&!G.crouching&&!p.climb&&!p.bailing&&!p.stunT&&!p.punchT&&!p.kickT&&!p.meleeSpecial&&!G.menuPaused&&!G.replay&&!activeCutscene&&!G.interior&&p.y<=g+0.08;
+}
+function meleePress(type){
+  if(type==='punch'&&G.weapon!=='fists'){ doAttack(); return; }
+  if(type==='kick'&&G.weapon!=='fists') return;
+  if(!canChargeMelee()||meleeCharge) return;
+  meleeCharge={type,t:0,started:false}; clearSprint();
+}
+function meleeRelease(type){
+  if(!meleeCharge||meleeCharge.type!==type) return;
+  const c=meleeCharge; meleeCharge=null;
+  if(!c.started) doPunch(false,type==='kick');
+}
+function cancelMeleeCharge(){ meleeCharge=null; }
+function startChargedMelee(type){
+  const p=player, dur=type==='kick'?1.05:.84;
+  p.meleeSpecial={type,t:0,dur,x:p.x,z:p.z,y:footGround(p),heading:p.heading,lastRev:-1,hits:new Set()};
+  p.punchT=0; p.kickT=0;
+  clearSprint();
+  WEAPON_SFX.fists.fire(); haptic(20); toast(type==='kick'?'SPIN KICK!':'WINDMILL!','gold');
+}
+function chargedMeleeHit(s){
+  const p=player, rev=Math.min(2,Math.floor(s.t/(s.dur/3))), forward={x:Math.sin(s.heading),z:Math.cos(s.heading)};
+  if(rev!==s.lastRev){ s.lastRev=rev; s.hits.clear(); }
+  const hit=(a,kind,i)=>{
+    if(a.state==='down'||s.hits.has(a)) return;
+    const dx=a.x-p.x,dz=a.z-p.z,d=Math.hypot(dx,dz); if(d>3.1||d<0.15) return;
+    if(s.type==='punch'&&Math.abs((dx*forward.x+dz*forward.z)/d)<Math.cos(.96)) return;
+    s.hits.add(a); const push=s.type==='kick'?3:2.1, damage=s.type==='kick'?28:22;
+    a.hp-=damage; a.x+=dx/d*push; a.z+=dz/d*push; const np={x:a.x,z:a.z}; resolveFootCollision(np,.42); a.x=np.x;a.z=np.z;
+    burst(a.x,1.1,a.z,5,COL_SPARK,2,.25,4); addHeat(kind==='c'?20:16);
+    if(kind==='c'&&a.hp<=0) downFootCop(a); if(kind==='j'&&a.hp<=0) downJock(a,false);
+  };
+  footCops.forEach((a,i)=>hit(a,'c',i)); jocks.forEach((a,i)=>hit(a,'j',i));
+}
+function finishChargedMelee(s){
+  const p=player,u=p.mesh.userData;
+  p.heading=s.heading; p.mesh.rotation.set(0,s.heading,0);
+  u.armL.rotation.x=0;u.armR.rotation.x=0;u.legL.rotation.x=0;u.legR.rotation.x=0;
+  if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;
+  if(u.torso){u.torso.rotation.x=0;u.torso.rotation.y=0;}
+  p.mesh.position.set(p.x,p.y,p.z); p.meleeSpecial=null;
+}
+function updateChargedMelee(dt){
+  const p=player,s=p.meleeSpecial; if(!s) return false;
+  s.t=Math.min(s.dur,s.t+dt); p.x=s.x;p.z=s.z;p.y=s.y;p.vy=0;
+  const turns=s.t/s.dur*3, u=p.mesh.userData;
+  if(s.type==='kick'){
+    p.mesh.rotation.y=s.heading+turns*TAU; p.mesh.rotation.x=-Math.PI/2;
+    u.legL.rotation.x=0; u.legR.rotation.x=Math.PI/2; u.armL.rotation.x=-1.35;u.armR.rotation.x=-1.35;
+    if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;if(u.torso)u.torso.rotation.x=1.2;
+  }else{
+    p.mesh.rotation.y=s.heading; p.mesh.rotation.x=0; const a=turns*TAU;
+    u.armL.rotation.x=a;u.armR.rotation.x=-a;if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;
+    if(u.torso){u.torso.rotation.x=0;u.torso.rotation.y=0;}
+  }
+  p.mesh.position.set(p.x,p.y,p.z); chargedMeleeHit(s);
+  if(s.t>=s.dur) finishChargedMelee(s);
+  return true;
 }
 function doPunch(heavy,kicking){
   if(!G.started||G.over||G.mode!=='foot'||player.punchT>0||player.kickT>0) return;
@@ -8097,6 +8192,7 @@ function exitCarSoft(){
   if(player.car){ player.car.driver=null; player.car=null; }
   if(player.heli){ player.heli.driver=null; player.heli=null; }
   G.mode='foot';
+  disarmSprint();
   player.mesh.visible=true;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
@@ -8176,7 +8272,7 @@ function wasted(spot){
 }
 
 // ================= CAMERA =================
-let camShake=0, footCamYaw=player.heading;
+let camShake=0, footCamYaw=player.heading, aimBlend=0;
 const camPos=new THREE.Vector3(player.x,8,player.z+14);
 function shake(n){ if(SETTINGS.reduceMotion) return; camShake=Math.min(1,camShake+n); }
 // pull the camera in front of any building between it and the player —
@@ -8245,7 +8341,11 @@ function updateCamera(dt){
   } else {
     const p=player;
     const aiming=isRangedWeapon(G.weapon)&&!p.bailing;
-    setTurboAimTransparency(aiming);
+    // Aim uses a time-based blend so switching weapons cannot teleport the
+    // shoulder camera or FOV on a low- or high-refresh display.
+    aimBlend+=((aiming?1:0)-aimBlend)*(1-Math.exp(-12*dt));
+    const aim=aimBlend;
+    setTurboAimTransparency(aim);
     // camera has its own yaw that eases toward the player's heading — pushing
     // back on the stick backpedals instead of whipping the view 180°.
     // (paused while you're manually aiming the view with your right thumb)
@@ -8258,17 +8358,17 @@ function updateCamera(dt){
     // Firearms use a close left-shoulder camera. Moving roughly two-thirds of
     // the old 6.5u gap toward Turbo makes targets readable; placing the camera
     // to his left leaves his transparent silhouette on the reticule's right.
-    const back=aiming?2.5:6.5, side=aiming?-0.95:0;
+    const back=lerp(6.5,2.5,aim), side=lerp(0,-0.95,aim);
     const tgt=cameraCollide(p.x,p.y+1.5,p.z,
-      p.x-fx*back+rx*side,p.y+(aiming?2.25:2.9)+camPitch*(aiming?1.7:2.6),p.z-fz*back+rz*side);
+      p.x-fx*back+rx*side,p.y+lerp(2.9,2.25,aim)+camPitch*lerp(2.6,1.7,aim),p.z-fz*back+rz*side);
     camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-4*dt));
     const camFloor=groundH(camPos.x,camPos.z)+0.45;
     if(camPos.y<camFloor) camPos.y=camFloor;   // looking down from below ground is a bad time
-    camera.fov=lerp(camera.fov,aiming?54:62,0.1);
+    camera.fov=lerp(camera.fov,lerp(62,54,aim),1-Math.exp(-10*dt));
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
-    if(aiming) camera.lookAt(p.x+fx*8,p.y+1.45-camPitch*2.5,p.z+fz*8);
-    else camera.lookAt(p.x,p.y+1.4-camPitch*3.6,p.z);
+    const lookX=lerp(p.x,p.x+fx*8,aim), lookZ=lerp(p.z,p.z+fz*8,aim);
+    camera.lookAt(lookX,lerp(p.y+1.4-camPitch*3.6,p.y+1.45-camPitch*2.5,aim),lookZ);
   }
   if(camShake>0.01){
     if(!SETTINGS.reduceMotion){

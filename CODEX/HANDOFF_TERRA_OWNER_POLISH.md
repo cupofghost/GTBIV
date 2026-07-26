@@ -6,7 +6,11 @@ on current `main` after consolidation commit `ebde46c`
 Suggested implementation branch: create `terra/owner-playtest-polish` from the
 handoff branch so this plan remains in the implementation history.
 
-Status: plan only. No gameplay changes from this planning pass.
+Status: commits 1 and 5 are implemented on `terra/owner-playtest-polish`.
+Focused syntax, sprint (3/3), charged-melee (2/2), and camera-polish (7/7)
+checks pass. Commits 2–4 remain open. Commit 5 currently covers the active
+jock/foot-cop adapters; wire hostile dogs and other combat actors through the
+same helper as their corresponding OP1 systems land.
 
 ## Owner intent
 
@@ -19,7 +23,7 @@ Deliver the work as five ordered, independently playable commits. All five
 touch `index.html`, so keep them sequential. Do not refactor unrelated systems,
 add dependencies, change recorded-VO paths, or reopen terrain generation.
 
-## Commit 1 — Restore sprint and blend the aim camera
+## Commit 1 — Restore sprint and blend the aim camera `DONE`
 
 ### Observed problems
 
@@ -235,7 +239,7 @@ to `tests/cases/chapter1-story.test.js`.
 Add `tests/cases/mission-opt-in-hud.test.js` and keep the test seam small enough
 to simulate logical safe insets without device-specific user-agent hacks.
 
-## Commit 5 — Smooth melee camera and add charged punch/kick specials
+## Commit 5 — Smooth melee camera and add charged punch/kick specials `CORE DONE`
 
 ### Owner direction
 
