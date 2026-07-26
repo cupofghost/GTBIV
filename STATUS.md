@@ -8,6 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-25 | `HANDOFF.md`, `CODEX/HANDOFF_TERRA_OWNER_POLISH.md`, `STATUS.md` | Done: made OP1 the authoritative NEXT task and prepared a four-commit Terra plan for controls, dogs/ghosts, cameras, mission opt-in, and phone HUD. | Signed: Codex \| GPT-5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
@@ -21,6 +22,7 @@ possible change and add a line here.
 - `HANDOFF.md` — owner-deferred A2, advanced NEXT to FB3, and made `FOOTBALL_STRAND.md` the detailed FB3 implementation contract where older docs differ. Signed: Codex | GPT-5 | medium
 - `HANDOFF.md` — inserted owner-approved OD1–OD4 ahead of FB3 and advanced NEXT to straight-flight RPGs; implementation stays sequential because all four touch `index.html`. Signed: Codex | GPT-5 | high
 - `index.html`, `HANDOFF.md` — owner-priority OD1–OD4 sequential implementation pass; tests and per-task commits are claimed by Codex. Signed: Codex | GPT-5 | high
+- `HANDOFF.md` — inserted owner playtest task OP1 ahead of FB3 and delegated its four sequential `index.html` commits through `CODEX/HANDOFF_TERRA_OWNER_POLISH.md`. Signed: Codex | GPT-5 | high
 
 ## Known issues
 - ~~PII in the docs~~ **RESOLVED — owner's decision, 2026-07-24:** the owner's first name in `HANDOFF.md`/`GAME_PLAN.md`/`ASSETS.md`/`STORY_BIBLE.md`/`CHARACTERS.md` is fine and does not need scrubbing. Do not re-flag it. The rest of AGENTS.md §3 still applies in full — no surnames, emails, phone numbers, addresses, other-platform usernames, or credentials of any kind. Latest scan found none of those. — 2026-07-24, Claude

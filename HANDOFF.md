@@ -1529,6 +1529,26 @@ bounded by the active tier; Auto can still downshift; no meaningful busy-scene
 fps regression or unbounded mesh/DOM growth.
 **Focused test:** `tests/cases/street-density.test.js`.
 
+#### OP1 — Owner playtest polish `P0 · Risk: Med–High` `OPEN`
+**Owner direction:** stabilize the current free-roam experience before adding
+FB3. Fix sprint after vehicle exit; make aim-camera transitions smooth; make
+dogs mortal and release a translucent, non-damaging 30-second ghost on death;
+route the intro camera gracefully around buildings; keep the Deb cutscene above
+terrain; hide empty wanted stars and render only the earned count as smaller
+translucent pink stars; make random missions opt-in through a temporary centered
+START MISSION button; and reflow the phone HUD around Dynamic Island/cutout safe
+areas.
+**Plan:** deliver four sequential commits because each touches `index.html`:
+controls/aim camera, dog mortality/ghosts, cinematic camera safety, then
+mission/HUD/mobile layout. The implementation contract, exact code paths,
+guardrails, acceptance criteria, and focused tests are in
+`CODEX/HANDOFF_TERRA_OWNER_POLISH.md`.
+**Acceptance:** all eight owner-reported issues are reproducible before their
+fix and covered afterward; no random mission begins without an explicit tap;
+phone HUD elements clear simulated landscape and auto-rotated cutouts; existing
+mission progression, dog-pack behavior, terrain, VO, and zero-build startup
+remain intact.
+
 ---
 
 ## 9. Verification & Definition of Done
@@ -1563,8 +1583,9 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: FB3 (Coach mission)** — The owner-directed immediate gameplay pass is
-complete; return to the Football Saga in its established order.
+**NEXT: OP1 (Owner playtest polish)** — Stabilize controls, dogs, cameras,
+mission opt-in, wanted stars, and the phone-safe HUD before adding FB3. Follow
+`CODEX/HANDOFF_TERRA_OWNER_POLISH.md`.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -1599,7 +1620,8 @@ throughout:
 ✔ OD2 Bubble building occlusion  DONE
 ✔ OD3 Turbo sprint               DONE
 ✔ OD4 Denser street life         DONE
-—  FB3 Coach mission             ← NEXT
+—  OP1 Owner playtest polish     ← NEXT
+—  FB3 Coach mission             OPEN
 —  FB4 Football minigame         OPEN
 —  FB5 Cheerleaders cutscene     OPEN
 —  RV2 Mama rat model            OPEN
