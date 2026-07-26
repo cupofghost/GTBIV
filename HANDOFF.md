@@ -1538,10 +1538,11 @@ terrain; hide empty wanted stars and render only the earned count as smaller
 translucent pink stars; make random missions opt-in through a temporary centered
 START MISSION button; and reflow the phone HUD around Dynamic Island/cutout safe
 areas.
-**Plan:** deliver four sequential commits because each touches `index.html`:
+**Plan:** deliver five sequential commits because each touches `index.html`:
 controls/aim camera, dog mortality/ghosts, cinematic camera safety, then
-mission/HUD/mobile layout. The implementation contract, exact code paths,
-guardrails, acceptance criteria, and focused tests are in
+mission/HUD/mobile layout, followed by smooth melee camera and the one-second
+hold three-spin kick. The implementation contract, exact code paths, guardrails,
+acceptance criteria, and focused tests are in
 `CODEX/HANDOFF_TERRA_OWNER_POLISH.md`.
 **Acceptance:** all eight owner-reported issues are reproducible before their
 fix and covered afterward; no random mission begins without an explicit tap;

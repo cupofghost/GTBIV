@@ -15,7 +15,7 @@ and HUD issues. Treat this batch as the authoritative `NEXT` work before FB3.
 The goal is to make free-roam readable and pleasant before adding another story
 mission.
 
-Deliver the work as four ordered, independently playable commits. All four
+Deliver the work as five ordered, independently playable commits. All five
 touch `index.html`, so keep them sequential. Do not refactor unrelated systems,
 add dependencies, change recorded-VO paths, or reopen terrain generation.
 
@@ -235,6 +235,92 @@ to `tests/cases/chapter1-story.test.js`.
 Add `tests/cases/mission-opt-in-hud.test.js` and keep the test seam small enough
 to simulate logical safe insets without device-specific user-agent hacks.
 
+## Commit 5 — Smooth melee camera and add the three-spin hold kick
+
+### Owner direction
+
+- Punching and kicking currently jostle the camera too much. Keep the action
+  readable, but make the camera smooth.
+- Holding KICK for one second should launch a fast special attack: Turbo plants
+  one foot, holds the rest of his body horizontally with both arms stretched
+  ahead and the free leg behind, then rotates three full turns around the
+  planted foot. Every enemy touched is hurt and knocked back.
+
+### Relevant code
+
+- Input: the standalone `btnKick` touch/mouse listeners, keyboard `KeyK`,
+  `keys`, and mode/reset paths. KICK is not currently part of `btnHold`.
+- Combat: `doPunch`, `doKick`, `knockPed`, `downJock`, `downFootCop`, the dog
+  damage/death helper added by commit 2, and any existing mission-combat actor
+  damage functions.
+- Animation/state: `player.kickT`, the kick pose in `updateFoot`, exposed
+  `player.mesh.userData` limbs, sprint/crouch/climb/bail/stun guards, and
+  `footGround`.
+- Camera/impact: `updateCamera`, `camPos`, `camShake`, `shake`,
+  `triggerHitStop`, and haptics.
+- Existing coverage: `tests/cases/regression.test.js`,
+  `tests/cases/hitstop.test.js`, and `tests/cases/camera-polish.test.js`.
+
+### Required behavior
+
+- Change KICK to press/hold/release semantics on touch, mouse, and desktop K:
+  releasing before one second performs the existing ordinary kick once;
+  reaching one continuous second starts the special and suppresses the tap
+  kick. Ignore keyboard auto-repeat and touch/mouse duplicate events.
+- Charging is valid only on foot, grounded, unarmed/fists, alive, and outside
+  crouch, climb, bail, stun, pause, replay, cutscene, interior transition, or
+  another attack. Invalidating the state cancels the charge safely.
+- Once the special starts, it completes three fast revolutions even if the
+  button is released. Target about `0.35s` per revolution (`~1.05s` total).
+  Store the planted position/ground height and prevent ordinary locomotion,
+  sprint, jumping, attacks, entering a vehicle, or anti-stuck drift until the
+  move finishes.
+- The planted leg stays vertical with its foot at the stored ground point. Pose
+  Turbo’s torso/head approximately horizontal, arms straight together ahead,
+  and the non-planted leg straight behind. Rotate the visible body exactly
+  `3 * TAU` around the planted foot’s vertical axis, then restore every altered
+  limb/root transform and the prior heading without a pop.
+- Use a swept radial contact check so a fast spin cannot tunnel through a
+  target between frames. Each valid enemy may be hit at most once per
+  revolution, for up to three hits across the move.
+- Valid enemies are active hostile combatants: jocks, foot cops, hostile
+  mission actors, Mama Rat if in range, and angry/attacking dogs through commit
+  2’s shared dog-damage path. Do not hit Deb, ordinary civilians, downed/dead
+  actors, tamed/passive dogs, the player, or vehicles.
+- Starting damage target: about `28` per revolution with a strong outward
+  knockback (`2.5–3.5u`), resolved against static collision so targets are not
+  shoved through buildings. Reuse each actor type’s existing damage/down path
+  and heat rules; do not invent parallel death bookkeeping.
+- Keep restrained impact feedback—sound, sparks, a tiny hitstop/haptic per
+  contact are fine—but do not add a camera shake per target. Cap feedback when
+  several enemies are struck in one frame.
+- For normal punches, normal kicks, and the special, keep the foot camera target
+  on a smoothed world-space player anchor rather than letting pose/root
+  articulation jerk the view. In a clear scene, attacking should not create a
+  hard camera-position or look-direction jump. Preserve stronger camera shake
+  when Turbo is hit, crashes, or is near an explosion.
+
+### Focused acceptance
+
+1. A quick KICK press produces exactly one ordinary kick; a `0.99s` hold still
+   produces the ordinary kick on release; a `1.0s+` hold produces no ordinary
+   kick and starts one special.
+2. Touch, mouse, and keyboard K behave identically without duplicate attacks.
+3. The special keeps one foot planted, completes exactly three fast rotations,
+   shows the specified horizontal pose, blocks conflicting states, and restores
+   a normal pose cleanly.
+4. A swept test target touched during a large timestep is hit; eligible enemies
+   are damaged/knocked back at most once per revolution while civilians,
+   passive dogs, dead actors, and vehicles are untouched.
+5. Multi-target contact does not stack unbounded shake/hitstop. Normal melee
+   and special attacks keep camera position/look changes smooth, while incoming
+   damage and explosions retain their existing impact feedback.
+6. Cancel paths—vehicle/mode change, stun, pause, replay, cutscene, death, and
+   touch-cancel during charge—leave no latched button, pose, or movement lock.
+
+Add `tests/cases/spin-kick.test.js` and extend the melee camera case in
+`tests/cases/camera-polish.test.js`.
+
 ## Delivery and validation
 
 Before editing, check out `codex/terra-owner-polish-handoff`, read root
@@ -249,8 +335,9 @@ each commit. Run only:
 
 1. `node tests/syntax-check.js`
 2. the focused test files changed or added for that commit
-3. one final 800×390 touch smoke covering car exit → sprint, dog death/ghost,
-   mission offer, wanted stars, and HUD cutout layout
+3. one final 800×390 touch smoke covering car exit → sprint, quick kick versus
+   one-second hold spin kick, dog death/ghost, mission offer, wanted stars, and
+   HUD cutout layout
 4. one final intro + Deb confrontation camera pass
 
 Do not run the full suite unless a changed shared primitive makes it necessary.
@@ -259,7 +346,7 @@ Do not push directly to `main`; push the Terra branch and open one draft PR.
 ## Copy/paste prompt for Terra
 
 Read `AGENTS.md`, `STATUS.md`, and
-`CODEX/HANDOFF_TERRA_OWNER_POLISH.md` completely. Implement the four ordered
+`CODEX/HANDOFF_TERRA_OWNER_POLISH.md` completely. Implement the five ordered
 owner-playtest commits by checking out `codex/terra-owner-polish-handoff` and
 creating `terra/owner-playtest-polish` from it. Claim the work first, keep
 `index.html` changes focused, add the specified focused tests, use your required
