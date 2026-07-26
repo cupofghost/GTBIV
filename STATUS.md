@@ -8,7 +8,6 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-| 2026-07-25 | `index.html`; `tests/cases/dog-ghost.test.js`, `intro-camera.test.js`, `chapter1-story.test.js`, `mission-opt-in-hud.test.js`, `charged-melee.test.js`; `HANDOFF.md`; `CODEX/HANDOFF_TERRA_OWNER_POLISH.md` | OP1 commits 2–4 plus charged-melee integrations: dog ghosts, cinematic safety, opt-in/safe HUD, docs/code map; sequential commits in progress. | Signed: Codex \| GPT-5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
@@ -32,6 +31,7 @@ possible change and add a line here.
 - `tests/cases/save-restore.test.js` (and later files in a long run) time out loading the page in the local Playwright Chromium headless shell, with GPU stall warnings in the browser log. The same suite runs fine in other contexts; appears environmental. Syntax check, economy suite, regression, and mission-variety all pass. — 2026-07-25, OpenCode
 
 ## Archive
+- OP1 completion (Codex | GPT-5 | high, 2026-07-25): dog mortality/30s capped ghosts, shared elevated intro camera and terrain-safe Deb shots, mission opt-in with safe HUD/wanted stars; focused checks passed. Signed: Codex | GPT-5 | high
 - OP1 controls and charged melee (Codex | GPT-5 | high, 2026-07-25): fresh sprint input survives vehicle exits; aim and melee cameras ease smoothly; one-second punch/kick holds launch bounded three-round specials. Syntax, sprint 3/3, charged melee 2/2, and camera polish 7/7 green. Signed: Codex | GPT-5 | high
 - OP1 planning (Codex | GPT-5 | high, 2026-07-25): made the owner playtest batch authoritative before FB3 and specified five sequential implementation commits; dog, cinematic-camera, and mission/HUD commits remain open and unclaimed. Signed: Codex | GPT-5 | high
 - Consolidation (Codex | GPT-5 | high, 2026-07-25): replayed the six post-PR #40 planning/OD commits onto current `main`, resolved bookkeeping-only conflicts, and archived the open branch records. Signed: Codex | GPT-5 | high

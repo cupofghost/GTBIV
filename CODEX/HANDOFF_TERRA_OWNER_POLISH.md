@@ -6,11 +6,11 @@ on current `main` after consolidation commit `ebde46c`
 Suggested implementation branch: create `terra/owner-playtest-polish` from the
 handoff branch so this plan remains in the implementation history.
 
-Status: commits 1 and 5 are implemented on `terra/owner-playtest-polish`.
-Focused syntax, sprint (3/3), charged-melee (2/2), and camera-polish (7/7)
-checks pass. Commits 2–4 remain open. Commit 5 currently covers the active
-jock/foot-cop adapters; wire hostile dogs and other combat actors through the
-same helper as their corresponding OP1 systems land.
+Status: all OP1 commits are implemented on `terra/owner-playtest-polish`.
+Commits 2–4 landed as `bee4f7a`, `3c89352`, and `62f5ce4`; hostile dogs now
+use the charged-melee shared adapter. Syntax, dog-ghost (1/1), charged-melee
+(2/2), intro-camera (4/4), and mission-opt-in-hud (1/1) passed. The longer
+Chapter 1 local browser run stopped reporting after four pre-existing cases.
 
 ## Owner intent
 

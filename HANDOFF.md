@@ -1529,7 +1529,7 @@ bounded by the active tier; Auto can still downshift; no meaningful busy-scene
 fps regression or unbounded mesh/DOM growth.
 **Focused test:** `tests/cases/street-density.test.js`.
 
-#### OP1 — Owner playtest polish `P0 · Risk: Med–High` `OPEN`
+#### OP1 — Owner playtest polish `P0 · Risk: Med–High` `DONE`
 **Owner direction:** stabilize the current free-roam experience before adding
 FB3. Fix sprint after vehicle exit; make aim-camera transitions smooth; make
 dogs mortal and release a translucent, non-damaging 30-second ghost on death;
@@ -1550,6 +1550,10 @@ fix and covered afterward; no random mission begins without an explicit tap;
 phone HUD elements clear simulated landscape and auto-rotated cutouts; existing
 mission progression, dog-pack behavior, terrain, VO, and zero-build startup
 remain intact.
+**Delivered 2026-07-25:** commits `bee4f7a`, `3c89352`, and `62f5ce4` add the
+dog/ghost death path, elevated shared intro routing plus terrain-safe Deb shots,
+and opt-in mission/HUD behavior. Focused syntax, dog-ghost, charged melee,
+intro camera, and mission/HUD checks passed. Signed: Codex | GPT-5 | high
 
 ---
 
@@ -1622,7 +1626,7 @@ throughout:
 ✔ OD2 Bubble building occlusion  DONE
 ✔ OD3 Turbo sprint               DONE
 ✔ OD4 Denser street life         DONE
-—  OP1 Owner playtest polish     ← NEXT
+✔ OP1 Owner playtest polish     DONE
 —  FB3 Coach mission             OPEN
 —  FB4 Football minigame         OPEN
 —  FB5 Cheerleaders cutscene     OPEN
