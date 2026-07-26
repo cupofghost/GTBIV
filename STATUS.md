@@ -9,6 +9,7 @@ the pipes in your signature as `\|`, or the table breaks.
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
 | 2026-07-26 | `index.html` road markings/manholes/sidewalk geometry, `tests/cases/terrain-road-sidewalk.test.js` | **DONE** — world-scale 3.2×0.16 road dashes, reusable inset manhole kit, and ≤4u per-vertex terrain-seated non-colliding sidewalks; syntax + terrain filter 15/15 green. | Signed: Codex \| GPT-5.6 \| high |
+| 2026-07-26 | `index.html` rat mesh/Mama Rat update, `tests/cases/rat-vengeance.test.js` | **HANDOFF** — RV2 shared low-poly +Z rat rig and terrain-seated Mama idle/turn/walk/bite/damage/death animation are complete. Syntax passed; focused browser cases and four screenshots are blocked by the local Chromium/GPU environment. | Signed: Codex \| GPT-5.6 \| high |
 | 2026-07-26 | `CODEX/OP2_CONCURRENT/`, `HANDOFF.md`, `STATUS.md` | **DONE** — added the tracked four-agent launch packet with required GPT-5.6 models/efforts, branches, ownership, tests, and integration order. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-26 | `HANDOFF.md`, `STATUS.md` | **DONE** — integrated the owner's Mama Rat, playtest-correction, character-shadow/footstep, and Turbo Mode requirements as future owner-triggered projects; `NEXT` unchanged. | Signed: Codex \| GPT-5 \| high |
 | 2026-07-25 | `HANDOFF.md`, `STATUS.md` | **DONE** — added the owner-triggered optional Codex audit follow-up project; no gameplay or asset changes. | Signed: Codex \| GPT-5 \| high |
