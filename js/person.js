@@ -195,7 +195,9 @@ function makePerson(spec,gender){
   }
   g.scale.y=spec.height;
   g.userData={legL,legR,kneeL:legL.userData.knee,kneeR:legR.userData.knee,armL,armR,body,torso:torsoG,head:headG,jaw,mouth,gender,spec};
-  if(typeof makeShadow==='function') g.add(makeShadow(0.5));
+  if(typeof makePersonShadow==='function'){
+    const shadow=makePersonShadow(g,0.5); g.userData.personShadow=shadow; g.add(shadow);
+  } else if(typeof makeShadow==='function') g.add(makeShadow(0.5));
   return g;
 }
 

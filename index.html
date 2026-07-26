@@ -1037,6 +1037,14 @@ function turboBlowOff(amt){
   noiseBurst(0.18,0.08+amt*0.12,3200,1.4);
   blip(1500,350,0.15,0.05+amt*0.07,'sine');
 }
+let turboStepVoiceUntil=0, turboLandVoiceUntil=0;
+const TURBO_FOOT_VOICE={
+  asphalt:{noise:620,tone:118,dur:.045},
+  concrete:{noise:980,tone:132,dur:.04},
+  grass:{noise:310,tone:92,dur:.06},
+  sand:{noise:440,tone:78,dur:.075},
+  roof:{noise:1250,tone:142,dur:.035},
+};
 const sfx={
   coin(){ blip(880,1320,0.09,0.18); setTimeout(()=>blip(1320,1760,0.12,0.15),70); },
   crash(v){ noiseBurst(0.28,clamp(v,0.08,0.6),700); },
@@ -1069,6 +1077,24 @@ const sfx={
   // a bigger animal than a sewer rat
   dogGrowl(){ noiseBurst(0.22,0.3,380,1.4,'bandpass'); blip(180,90,0.16,0.16,'sawtooth'); },
   dogBite(){ noiseBurst(0.07,0.35,450,1.3,'bandpass'); blip(140,60,0.1,0.22,'sawtooth'); },
+  turboStep(surface,side,speed,scale){
+    if(!AC||!sfxGain||AC.currentTime<turboStepVoiceUntil) return;
+    turboStepVoiceUntil=AC.currentTime+0.055;
+    const v=TURBO_FOOT_VOICE[surface]||TURBO_FOOT_VOICE.concrete;
+    const alt=side==='left'?0.975:1.025;
+    const pitch=clamp((0.92+speed*0.014)/Math.sqrt(scale||1),0.82,1.13)*alt;
+    const weight=clamp(0.035+speed*0.0045,0.05,0.09)*(scale||1);
+    noiseBurst(v.dur,weight,v.noise*pitch,1.1,surface==='roof'?'bandpass':'lowpass');
+    blip(v.tone*pitch,v.tone*0.52*pitch,v.dur+0.025,weight*0.72,'sine');
+  },
+  turboLand(surface,impact,scale){
+    if(!AC||!sfxGain||AC.currentTime<turboLandVoiceUntil) return;
+    turboLandVoiceUntil=AC.currentTime+0.09;
+    const soft=surface==='grass'||surface==='sand';
+    const weight=clamp(0.07+impact*0.012,0.1,0.24)*(scale||1);
+    noiseBurst(soft?.13:.1,weight,soft?260:420,0.8,'lowpass');
+    blip((soft?86:102)/Math.sqrt(scale||1),38,0.12,weight*0.85,'sine');
+  },
 };
 // ================= PROCEDURAL 80s SYNTHWAVE SOUNDTRACK =================
 // Each radio station is a *playlist* of through-composed songs. A song is a
@@ -3054,6 +3080,43 @@ function setTail(car,on){
 const shGeo=new THREE.CircleGeometry(1,10);
 const shMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.32,depthWrite:false});
 function makeShadow(rx){ const m=new THREE.Mesh(shGeo,shMat); m.rotation.x=-Math.PI/2; m.scale.set(rx,rx*0.7,1); m.position.y=0.03; return m; }
+function personShadowFloor(owner,x,z){
+  if(owner===player.mesh){
+    if(G.interior) return 0;
+    return footGround(player);
+  }
+  return groundH(x,z);
+}
+function makePersonShadow(owner,rx){
+  const m=makeShadow(rx), st={owner,rx,fallen:0,last:performance.now(),
+    pos:new THREE.Vector3(),quat:new THREE.Quaternion(),scale:new THREE.Vector3(),euler:new THREE.Euler()};
+  m.matrixAutoUpdate=false;
+  m.frustumCulled=false;
+  m.renderOrder=-1;
+  m.userData.personOwner=owner;
+  m.userData.shadowState=st;
+  const step=dt=>{
+    const oe=owner.matrixWorld.elements, x=oe[12], z=oe[14], target=Math.abs(owner.rotation.x)>0.38?1:0;
+    st.fallen=clamp(st.fallen+(target>st.fallen?1:-1)*Math.min(Math.abs(target-st.fallen),dt/0.2),0,1);
+    const ease=st.fallen*st.fallen*(3-2*st.fallen);
+    const width=lerp(rx,rx*0.82,ease), length=lerp(rx*0.7,rx*2.7,ease);
+    st.pos.set(x,personShadowFloor(owner,x,z)+0.03,z);
+    st.euler.set(-Math.PI/2,0,owner.rotation.y);
+    st.quat.setFromEuler(st.euler);
+    st.scale.set(width,length,1);
+    // matrixWorld is deliberately absolute: the shadow remains a lifecycle
+    // child of the actor but never inherits its knockdown rotation or bob.
+    m.matrixWorld.compose(st.pos,st.quat,st.scale);
+    m.position.copy(st.pos);m.rotation.copy(st.euler);m.scale.copy(st.scale);
+    m.matrixWorldNeedsUpdate=false;
+  };
+  m.userData.step=step;
+  m.updateMatrixWorld=function(){
+    const now=performance.now(),dt=Math.min(0.05,Math.max(0,(now-st.last)/1000));
+    st.last=now;step(dt);
+  };
+  return m;
+}
 
 // ================= GPU RESOURCE CLEANUP =================
 // Every make*Mesh() builds fresh geometries/materials per instance except a
@@ -5572,8 +5635,8 @@ function updateBail(dt){
     p.y=ground; p.vy=0;
     p.mesh.position.set(p.x,p.y,p.z);
     if(impact>20){ wasted(); return; }         // no chute, no future
+    sfx.turboLand(turboFootSurface(p,roofHere,sh>0),impact,p.mesh.scale.y||1);
     if(impact>10){ shake(0.5); sfx.crash(0.4); burst(p.x,0.5,p.z,10,COL_SMOKE,2,0.6,2); }
-    else blip(120,60,0.08,0.12,'sine');
   }
 }
 // --- police chopper (5 stars) ---
@@ -6855,6 +6918,37 @@ function nearestCar(x,z,r){
   }
   return best;
 }
+function turboFootSurface(p,roofHere,onStairs){
+  if(G.interior||(roofHere>0&&p.y>roofHere-1)||onStairs) return 'roof';
+  if(Math.max(Math.abs(p.x),Math.abs(p.z))>=SAND_EDGE-1) return 'sand';
+  for(const b of blockInfo){
+    if(Math.abs(p.x-b.cx)<=BLOCK/2&&Math.abs(p.z-b.cz)<=BLOCK/2)
+      return (b.type==='park'&&!b.helipad)||b.football?'grass':'concrete';
+  }
+  return 'asphalt';
+}
+function updateTurboFootsteps(p,state){
+  const idx=Math.floor((p.phase+Math.PI/2)/Math.PI);
+  const context=G.started&&!G.over&&G.mode==='foot'&&!G.paused&&!G.menuPaused&&
+    !G.replay&&!activeCutscene&&!p.stunT&&!p.bailing&&!p.climb;
+  const surface=turboFootSurface(p,state.roofHere,state.onStairs);
+  if(state.landed){
+    if(context) sfx.turboLand(surface,state.impact,p.mesh.scale.y||1);
+    p.footstepPhaseIndex=idx;
+    return;
+  }
+  if(!context||state.airborne||state.mag<=0.12){
+    p.footstepPhaseIndex=idx;
+    return;
+  }
+  if(p.footstepPhaseIndex===undefined){ p.footstepPhaseIndex=idx; return; }
+  if(idx!==p.footstepPhaseIndex){
+    // A skipped frame can cross more than one boundary; advance to the newest
+    // planted foot but emit only once so catch-up never becomes a burst.
+    p.footstepPhaseIndex=idx;
+    sfx.turboStep(surface,(idx&1)?'left':'right',state.speed,p.mesh.scale.y||1);
+  }
+}
 function canSprint(p,mag){
   return G.mode==='foot'&&input.sprint&&mag>0.85&&!G.crouching&&!p.climb&&!p.bailing&&!p.stunT&&p.punchT<=0&&p.kickT<=0;
 }
@@ -6893,6 +6987,7 @@ function updateFoot(dt){
   const mx=input.jx, mz=input.jy;
   const mag=Math.min(1,Math.hypot(mx,mz));
   const sprinting=canSprint(p,mag);
+  let moveSpeed=0;
   p.sprinting=sprinting;
   p.moveMag=mag;
   if(mag>0.12){
@@ -6901,7 +6996,7 @@ function updateFoot(dt){
     // walk into the foot of a ladder (or step off the roof edge onto one) to grab on
     const grab=ladderGrab(p.x,p.z,p.y,moveAng);
     if(grab){ mountLadder(grab); return; }
-    const sp=sprinting?12:(mag>0.85?8.2:4.6);
+    const sp=sprinting?12:(mag>0.85?8.2:4.6); moveSpeed=sp*mag;
     let nx=p.x+Math.sin(moveAng)*sp*mag*dt, nz=p.z+Math.cos(moveAng)*sp*mag*dt;
     // on a sloped staircase your feet find the steps: movement follows the climb
     const stM=stairHitRun(p.x,p.z);
@@ -6935,11 +7030,19 @@ function updateFoot(dt){
   const ground=(roofHere>0&&p.y>roofHere-1.0)?roofHere:
     Math.max(groundH(p.x,p.z),onStairs?sh:0);
   // jump & gravity physics
+  let landed=false,landingImpact=0;
   if(p.y>ground+0.001||p.vy>0){
+    if(p.vy>0||p.y>ground+0.08) p.wasAirborne=true;
     p.vy-=24*dt; p.y+=p.vy*dt;
-    if(p.y<=ground){ p.y=ground; p.vy=0; blip(120,60,0.08,0.12,'sine'); }
+    if(p.y<=ground){
+      landingImpact=Math.max(0,-p.vy);landed=!!p.wasAirborne;
+      p.y=ground;p.vy=0;
+    }
   }
-  else if(p.y<ground){ p.y=ground; p.vy=0; }   // stairs & slopes lift you as you climb
+  else if(p.y<ground){
+    landingImpact=Math.max(0,-p.vy);landed=!!p.wasAirborne;
+    p.y=ground;p.vy=0;
+  }   // stairs & slopes lift you as you climb
   updateFootStuckRecovery(p,dt);
   p.mesh.position.set(p.x,p.y+Math.abs(Math.sin(p.phase))*(sprinting?0.04:0.06),p.z);
   p.mesh.rotation.y=p.heading;
@@ -6963,6 +7066,8 @@ function updateFoot(dt){
   // under his feet — so standing on elevated stairs or a roof no longer reads as
   // a jump (that bug froze Turbo mid-leap while climbing).
   const airborne=p.y>ground+0.08&&!climbing;
+  updateTurboFootsteps(p,{mag,airborne,speed:moveSpeed,roofHere,onStairs,landed,impact:landingImpact});
+  p.wasAirborne=airborne;
   if(climbing){
     // stair climb: legs alternate a high-knee step, arms pump opposite, and he
     // leans into the slope with his eyes up the run.
