@@ -1070,6 +1070,81 @@ const sfx={
   dogGrowl(){ noiseBurst(0.22,0.3,380,1.4,'bandpass'); blip(180,90,0.16,0.16,'sawtooth'); },
   dogBite(){ noiseBurst(0.07,0.35,450,1.3,'bandpass'); blip(140,60,0.1,0.22,'sawtooth'); },
 };
+
+// ---- OP2-D: Turbo's footsteps -------------------------------------------
+// Driven by real left/right gait-phase crossings in updateFoot(), not a timer,
+// so a step lands when a foot lands. Deliberately built out of one cached noise
+// buffer plus per-step nodes: no new module-level audio state (the `let AC=…`
+// line and exitCarSoft()'s reset block are the two most-conflicted lines in the
+// repo) and no draw from _rng(), so the deterministic world stream is untouched
+// by how much the player walks.
+let _stepNoise=null, _stepLastT=-1;
+const STEP_MIN_GAP=0.085;   // a dropped frame must not fire a burst of steps
+const STEP_SURFACES={
+  //            filter        cut     Q     dur    scuff  thump  thumpHz
+  street : {type:'bandpass', f:1500, q:0.9, d:0.050, n:0.30, t:0.11, tf:96 },
+  grass  : {type:'lowpass',  f: 760, q:0.7, d:0.075, n:0.26, t:0.05, tf:78 },
+  sand   : {type:'lowpass',  f: 430, q:0.5, d:0.095, n:0.30, t:0.02, tf:64 },
+  roof   : {type:'bandpass', f: 900, q:2.6, d:0.085, n:0.24, t:0.09, tf:120},
+};
+function stepNoiseBuffer(){
+  if(_stepNoise&&_stepNoise.sampleRate===AC.sampleRate) return _stepNoise;
+  // its own tiny LCG — deliberately not _rng(), see above
+  const len=Math.floor(AC.sampleRate*0.14), b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
+  let s=0x9e3779b9>>>0;
+  for(let i=0;i<len;i++){ s=(s*1664525+1013904223)>>>0; d[i]=s/2147483648-1; }
+  return (_stepNoise=b);
+}
+// one shaped scuff off the cached buffer
+function stepScuff(S,vol,dur,rate,tone){
+  const now=AC.currentTime;
+  const src=AC.createBufferSource(); src.buffer=stepNoiseBuffer();
+  src.playbackRate.value=clamp(rate,0.5,1.8);
+  const flt=AC.createBiquadFilter(); flt.type=S.type;
+  flt.frequency.value=clamp(S.f*tone,60,12000); flt.Q.value=S.q;
+  const g=AC.createGain();
+  g.gain.setValueAtTime(0.0001,now);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002,vol),now+0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001,now+dur);
+  src.connect(flt); flt.connect(g); g.connect(sfxGain);
+  src.start(now); src.stop(now+dur+0.02);
+}
+// the weight of a plant: a short low body under the scuff
+function stepThump(f0,vol,dur){
+  const now=AC.currentTime, o=AC.createOscillator(), g=AC.createGain();
+  o.type='sine'; o.frequency.setValueAtTime(f0,now);
+  o.frequency.exponentialRampToValueAtTime(Math.max(22,f0*0.55),now+dur);
+  g.gain.setValueAtTime(Math.max(0.0002,vol),now);
+  g.gain.exponentialRampToValueAtTime(0.0001,now+dur);
+  o.connect(g); g.connect(sfxGain); o.start(now); o.stop(now+dur+0.02);
+}
+// foot: 0 left / 1 right. speed: 0 stroll .. 1 flat sprint. scale: Turbo's height.
+function footstep(surface,foot,speed,scale){
+  if(!AC||SETTINGS.sfx<=0) return false;
+  const now=AC.currentTime;
+  if(_stepLastT>=0&&now-_stepLastT<STEP_MIN_GAP) return false;
+  _stepLastT=now;
+  const S=STEP_SURFACES[surface]||STEP_SURFACES.street, sc=scale||1;
+  // the two feet are not the same foot: a little pitch and level between them
+  const side=foot?1:-1, tone=(1+side*0.045)/sc;
+  // heavier and lower the faster and bigger he is, but never cartoony, and the
+  // faster he goes the shorter each contact gets — that is what stops a sprint
+  // turning into a machine gun
+  const heavy=0.72+speed*0.42, vol=clamp(0.15*heavy*(1+side*0.10),0,0.30);
+  const dur=S.d*(1.22-speed*0.30);
+  stepScuff(S,vol*S.n*3.2,dur,tone*(1-speed*0.10),tone*(1-speed*0.12));
+  if(S.t>0.02) stepThump(S.tf*sc*(1+speed*0.10)*(1+side*0.03),vol*S.t*2.4,dur*0.9);
+  return true;
+}
+// Coming down off a jump, a roof or a fire escape: the same surface, with the
+// weight moved into the low end and none of the alternating-gait shaping.
+function footLand(surface,drop,scale){
+  if(!AC||SETTINGS.sfx<=0) return;
+  const S=STEP_SURFACES[surface]||STEP_SURFACES.street, sc=scale||1, w=clamp(drop,0.25,1.6);
+  _stepLastT=AC.currentTime;   // no gait step on the same frame as the landing
+  stepScuff(S,clamp(0.30*w,0.04,0.5),S.d*1.8,0.8/sc,0.75/sc);
+  stepThump(S.tf*1.35*sc,clamp(0.26*w,0.04,0.42),0.17+0.06*w);
+}
 // ================= PROCEDURAL 80s SYNTHWAVE SOUNDTRACK =================
 // Each radio station is a *playlist* of through-composed songs. A song is a
 // chord progression + a bassline + a lead melody + an arrangement of sections
@@ -3120,7 +3195,64 @@ function setTail(car,on){
 // ================= BLOB SHADOWS =================
 const shGeo=new THREE.CircleGeometry(1,10);
 const shMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.32,depthWrite:false});
-function makeShadow(rx){ const m=new THREE.Mesh(shGeo,shMat); m.rotation.x=-Math.PI/2; m.scale.set(rx,rx*0.7,1); m.position.y=0.03; return m; }
+function makeShadow(rx){ const m=new THREE.Mesh(shGeo,shMat); m.rotation.x=-Math.PI/2; m.scale.set(rx,rx*0.7,1); m.position.y=0.03; m.userData.rx=rx; return m; }
+
+// OP2-D. A person's shadow is a projection onto the ground, so it must not
+// inherit the body's rotation — when a ped was knocked flat, his shadow stood up
+// on its edge and hung in the air with him. The disc stays a CHILD of the person
+// (which is what makes it pool, hide and dispose exactly with its actor, for
+// free) and this pass overwrites its local matrix each frame with whatever
+// cancels the body: flat on the terrain under him, yawed with him, and easing
+// from a compact ellipse at the feet into a long body-shaped smear as he goes
+// down — and back again if he gets up. Shared shGeo/shMat throughout, no shadow
+// maps: this runs on a phone.
+const RIG_TORSO_Y=1.02;          // js/person.js: the torso pivot, in rig units
+const SHADOW_FALL_EASE=0.2;      // seconds to cross between the two shapes
+const _shUp=new THREE.Vector3(), _shPos=new THREE.Vector3(), _shScl=new THREE.Vector3(),
+      _shQ=new THREE.Quaternion(), _shE=new THREE.Euler(),
+      _shParent=new THREE.Matrix4(), _shWorld=new THREE.Matrix4(),
+      _shYawQ=new THREE.Quaternion(), _shAxisY=new THREE.Vector3(0,1,0);
+function updatePersonShadow(g,dt){
+  if(!g||!g.visible) return;
+  const s=g.userData&&g.userData.shadow;
+  if(!s||s.parent!==g) return;   // person meshes are scene children: local == world
+  const sy=g.scale.y||1;
+  _shUp.set(0,1,0).applyQuaternion(g.quaternion);        // where "up the spine" points
+  const tip=clamp(1-Math.abs(_shUp.y),0,1);              // 0 upright, 1 horizontal
+  const ground=groundH(g.position.x,g.position.z);
+  // horizontal alone isn't down: mid-kick Turbo is horizontal at waist height and
+  // should keep his feet-shadow. Only a body lying LOW earns the long one.
+  const torsoY=g.position.y+RIG_TORSO_Y*sy*_shUp.y;
+  const low=clamp((0.75-(torsoY-ground))/0.35,0,1);
+  const want=tip*low;
+  const fall=s.userData.fall=lerp(s.userData.fall||0,want,Math.min(1,dt/SHADOW_FALL_EASE));
+  // the body extends from its own origin along the spine; flatten that to the map
+  let dx=_shUp.x, dz=_shUp.z, len=Math.hypot(dx,dz);
+  if(len<1e-4){ dx=Math.sin(g.rotation.y); dz=Math.cos(g.rotation.y); len=1; }
+  dx/=len; dz/=len;
+  const half=0.86*sy*fall;                               // slide under the fallen torso
+  _shPos.set(g.position.x+dx*half,ground+0.03,g.position.z+dz*half);
+  // lay the disc flat, then yaw it so its long axis runs down the body
+  _shE.set(-Math.PI/2,0,0); _shQ.setFromEuler(_shE);
+  _shQ.premultiply(_shYawQ.setFromAxisAngle(_shAxisY,Math.atan2(-dx,-dz)));
+  const rx=s.userData.rx||0.5;
+  _shScl.set(rx*(1+fall*0.18),rx*(0.7+fall*1.55),1);
+  _shParent.compose(g.position,g.quaternion,g.scale).invert();
+  _shWorld.compose(_shPos,_shQ,_shScl);
+  s.matrixAutoUpdate=false;
+  s.matrix.multiplyMatrices(_shParent,_shWorld);
+}
+// Every array that holds a makePerson() rig. A type that isn't listed simply
+// keeps the old child-of-the-body behaviour, so missing one is never a crash.
+function updatePersonShadows(dt){
+  updatePersonShadow(player.mesh,dt);
+  for(const a of peds) if(a.mesh) updatePersonShadow(a.mesh,dt);
+  for(const a of footCops) if(a.mesh) updatePersonShadow(a.mesh,dt);
+  for(const a of jocks) if(a.mesh) updatePersonShadow(a.mesh,dt);
+  for(const a of gangMembers) if(a.mesh) updatePersonShadow(a.mesh,dt);
+  for(const a of guards) if(a.mesh) updatePersonShadow(a.mesh,dt);
+  if(deb&&deb.mesh) updatePersonShadow(deb.mesh,dt);
+}
 
 // ================= GPU RESOURCE CLEANUP =================
 // Every make*Mesh() builds fresh geometries/materials per instance except a
@@ -5573,7 +5705,7 @@ function bailOut(){
   player.x=h.x; player.z=h.z; player.y=h.y;
   player.vy=Math.min(h.vy,0);               // keep whatever sink we had
   player.fallVX=h.vel.x*0.7; player.fallVZ=h.vel.z*0.7;  // and its momentum
-  player.chute=false; player.bailing=true;
+  player.chute=false; player.bailing=true; endMelee();   // OP2-C
   player.heli=null; footCamYaw=player.heading=h.heading;
   player.mesh.visible=true;
   $('speedo').style.display='none';
@@ -6480,6 +6612,21 @@ function footGround(p){
   return (roofHere>0&&p.y>roofHere-1.0)?roofHere:
     Math.max(groundH(p.x,p.z),onStairs?sh:0);
 }
+// OP2-D: what is under Turbo's shoe right now, for the footstep voice. Read-only
+// against the city lattice and the terrain contract — it decides nothing but
+// which sound to play.
+function stepSurface(x,z,onRoofOrStairs){
+  if(G.interior||onRoofOrStairs) return 'roof';
+  const edge=roadLines[roadLines.length-1]+ROAD/2;
+  if(Math.max(Math.abs(x),Math.abs(z))>edge) return 'sand';   // off the grid: the beach ring
+  // inside a block (rather than out on the carriageway), and that block is a park
+  const bx=x+H-ROAD, bz=z+H-ROAD;
+  const i=Math.floor(bx/PITCH), j=Math.floor(bz/PITCH);
+  if(i<0||j<0||i>=WORLD.blocks||j>=WORLD.blocks) return 'street';
+  if(bx-i*PITCH>BLOCK||bz-j*PITCH>BLOCK) return 'street';     // on a road strip
+  const b=blockInfo[i*WORLD.blocks+j];
+  return (b&&b.type==='park')?'grass':'street';
+}
 function resetFootStuck(p){ p.stuckT=0; p.stuckNudged=false; }
 // Analytic resolution normally clears an overlap in one frame. Only if a
 // static blocker persists do we make one short, terrain-seated nudge; dynamic
@@ -6509,21 +6656,31 @@ function doJump(){
 }
 $('btnJump').addEventListener('touchstart',e=>{e.preventDefault();doJump();},{passive:false});
 $('btnJump').addEventListener('mousedown',doJump);
-let meleePointer=null;
+let meleePointer=null, meleeKeyHeld=null;
+// OP2-C input reset. meleePointer is a one-slot lock and every later press is
+// dropped while it is held, so it must never outlive the touch that took it.
+// It used to be assigned BEFORE setPointerCapture(), which throws if the pointer
+// is already gone by the time the event is handled — the throw skipped
+// meleePress() and left the lock set for the rest of the session. Capture first,
+// claim second, and release on every way a pointer can end, capture loss (a
+// hidden or swapped button) included.
+function releaseMeleeButtons(){ meleePointer=null; meleeKeyHeld=null; }
 [['btnPunch','punch'],['btnKick','kick']].forEach(([id,type])=>{
   const el=$(id);
+  const release=()=>{ if(meleePointer&&meleePointer.type===type){ meleePointer=null; cancelMeleeCharge(); } };
   el.addEventListener('pointerdown',e=>{
     e.preventDefault(); if(meleePointer) return;
-    meleePointer={id:e.pointerId,type}; if(el.setPointerCapture) el.setPointerCapture(e.pointerId);
+    try{ if(el.setPointerCapture) el.setPointerCapture(e.pointerId); }catch(err){}
+    meleePointer={id:e.pointerId,type};
     meleePress(type);
   });
   el.addEventListener('pointerup',e=>{
     e.preventDefault(); if(!meleePointer||meleePointer.id!==e.pointerId||meleePointer.type!==type) return;
-    meleeRelease(type); meleePointer=null;
+    meleePointer=null; meleeRelease(type);
   });
-  el.addEventListener('pointercancel',e=>{
-    if(meleePointer&&meleePointer.id===e.pointerId){ cancelMeleeCharge(); meleePointer=null; }
-  });
+  el.addEventListener('pointercancel',e=>{ if(meleePointer&&meleePointer.id===e.pointerId) release(); });
+  // fires after a normal pointerup too, by which point the lock is already clear
+  el.addEventListener('lostpointercapture',e=>{ if(meleePointer&&meleePointer.id===e.pointerId) release(); });
 });
 $('btnGun').addEventListener('touchstart',e=>{e.preventDefault();cycleWeapon();},{passive:false});
 $('btnGun').addEventListener('mousedown',cycleWeapon);
@@ -6623,8 +6780,8 @@ document.addEventListener('keydown',e=>{
     else if(G.heist&&G.heist.phase===2) tapSafeCrack();
     else doJump();
   }
-  if(e.code==='KeyF'&&!e.repeat) meleePress('punch');
-  if(e.code==='KeyK'&&!e.repeat) meleePress('kick');
+  if(e.code==='KeyF'&&!e.repeat){ meleeKeyHeld='punch'; meleePress('punch'); }
+  if(e.code==='KeyK'&&!e.repeat){ meleeKeyHeld='kick'; meleePress('kick'); }
   if(e.code==='KeyT') doTalk();
   if(e.code==='KeyH') doHorn();
   if(e.code==='KeyG') cycleWeapon();
@@ -6643,7 +6800,15 @@ document.addEventListener('keydown',e=>{
     if(e.code==='Digit0'){ e.preventDefault(); stepOneFrame(); }
   }
 });
-document.addEventListener('keyup',e=>{ keys[e.code]=false; if(e.code==='KeyF') meleeRelease('punch'); if(e.code==='KeyK') meleeRelease('kick'); });
+document.addEventListener('keyup',e=>{ keys[e.code]=false;
+  if(e.code==='KeyF'){ if(meleeKeyHeld==='punch') meleeKeyHeld=null; meleeRelease('punch'); }
+  if(e.code==='KeyK'){ if(meleeKeyHeld==='kick') meleeKeyHeld=null; meleeRelease('kick'); } });
+// Alt-tab away mid-hold and the keyup never arrives, so the held attack would
+// sit there forever with its key stuck down. Losing the window releases it.
+window.addEventListener('blur',()=>{
+  if(meleeKeyHeld){ keys[meleeKeyHeld==='punch'?'KeyF':'KeyK']=false; meleeKeyHeld=null; }
+  cancelMeleeCharge(); meleePointer=null;
+});
 function pollKeys(){
   if(keys['KeyA']||keys['ArrowLeft']) input.jx=-1;
   else if(keys['KeyD']||keys['ArrowRight']) input.jx=1;
@@ -7024,9 +7189,13 @@ function applyFallImpact(fallDist,th){
 function updateFoot(dt){
   const p=player;
   let meleeDt=dt;
-  if(meleeCharge){
-    if(!canChargeMelee()){ cancelMeleeCharge(); }
-    else if(!meleeCharge.started){
+  if(meleeCharge&&!meleeCharge.started){
+    // Losing the wind-up mid-hold (he jumped, crouched, stepped indoors) demotes
+    // the press to an ordinary strike on release. Only losing the ability to
+    // fight at all drops it.
+    if(!canMelee()) cancelMeleeCharge();
+    else if(!meleeCharge.charge||!canChargeMelee()) meleeCharge.charge=false;
+    else {
       meleeCharge.t+=dt;
       if(meleeCharge.t>=1-1e-6){
         meleeDt=Math.max(0,meleeCharge.t-1);
@@ -7098,8 +7267,11 @@ function updateFoot(dt){
     if(p.fallPeakY==null){ p.fallPeakY=p.y; p.fallTh=turboHeight(); }
     p.vy-=24*dt; p.y+=p.vy*dt;
     if(p.y<=ground){
-      p.y=ground; p.vy=0; blip(120,60,0.08,0.12,'sine');
-      applyFallImpact(p.fallPeakY-ground,p.fallTh);
+      // OP2-D: the landing has weight, and it names the surface it lands on
+      const fell=Math.max(0,-p.vy)/9;
+      p.y=ground; p.vy=0; p.stepK=null;   // gait restarts from the plant
+      footLand(stepSurface(p.x,p.z,(roofHere>0&&p.y>roofHere-1.0)||onStairs),fell,p.mesh.scale.y||1);
+      applyFallImpact(p.fallPeakY-ground,p.fallTh);   // OP2-G: a real drop is lethal
       p.fallPeakY=null;
     } else if(p.y>p.fallPeakY){ p.fallPeakY=p.y; }
   }
@@ -7163,6 +7335,21 @@ function updateFoot(dt){
       u.torso.rotation.x=airborne?0.12:mag*0.07;
     }
   }
+  // OP2-D: one step per planted stride, driven by the very phase the legs are
+  // swinging on — the sound IS the animation, not a timer running alongside it.
+  // Silent whenever there is no stride to hear: airborne, standing still, mid
+  // punch (arms only) or planted on a kick. Vehicles, pause, Cinema and
+  // cutscenes never reach here at all, because updateFoot() does not run.
+  const striding=mag>0.12&&!airborne&&p.punchT<=0&&p.kickT<=0;
+  if(striding){
+    const k=Math.floor((p.phase-Math.PI/2)/Math.PI);
+    if(p.stepK==null||k<p.stepK) p.stepK=k;          // (re)sync, don't fire
+    else if(k>p.stepK){
+      p.stepK=k;   // exactly one, however many strides a long frame swallowed
+      const speed=p.sprinting?1:(mag>0.85?0.55:0.15);
+      footstep(stepSurface(p.x,p.z,(roofHere>0&&p.y>roofHere-1.0)||onStairs),k&1,speed,p.mesh.scale.y||1);
+    }
+  } else p.stepK=null;
   if(p.kickT>0){
     // Slower than the punch: chamber, extend, then recover. The right leg
     // supplies the hit while both arms stay up to keep Turbo balanced.
@@ -7222,6 +7409,7 @@ function updateFoot(dt){
 // ---- wall-ladder climbing ----
 function mountLadder(grab){
   const p=player, L=grab.L, nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
+  endMelee();   // OP2-C
   p.climb={L}; p.vy=0; p.fallPeakY=null;   // grabbing on arrests any fall in progress
   p.x=L.x+nX*0.45; p.z=L.z+nZ*0.45;
   p.y=clamp(p.y,L.baseH,L.topH);
@@ -7267,6 +7455,7 @@ function doEnterExit(){
   if(G.mode==='foot'){
     const n=nearestVehicle(player.x,player.z,3.6);
     if(!n) return;
+    endMelee();   // OP2-C: never step into a vehicle mid-swing
     if(n.kind==='car'){
       const c=n.v;
       if(!claimJackableCar(c)) return;
@@ -7503,15 +7692,34 @@ function updateCarMode(dt){
   $('btnEnter').style.display='flex';
 }
 let meleeCharge=null;
+// OP2-C. Two different questions, and the charged-melee pass answered both with
+// the second one: "can Turbo throw hands at all" is not "can he wind up a
+// charged special". meleePress() gated every attack on canChargeMelee(), so an
+// ordinary punch or kick was swallowed outright whenever the charge was
+// ineligible — crouched, indoors, mid-jump, mid-stride down a graded street, or
+// simply standing on a kerb. Nothing timed out and nothing recovered, which is
+// what "punch and kick stop working" looks like from the couch.
+function canMelee(){
+  const p=player;
+  return G.started&&!G.over&&G.mode==='foot'&&G.weapon==='fists'
+    &&!p.climb&&!p.bailing&&!p.stunT&&!p.meleeSpecial&&p.punchT<=0&&p.kickT<=0
+    &&!G.menuPaused&&!G.replay&&!activeCutscene;
+}
+// The extra conditions belong to the wind-up alone: you plant both feet to load
+// a windmill or a spin kick, and you can't do it crouched or in a doorway.
 function canChargeMelee(){
-  const p=player, g=footGround(p);
-  return G.started&&!G.over&&G.mode==='foot'&&G.weapon==='fists'&&!G.crouching&&!p.climb&&!p.bailing&&!p.stunT&&!p.punchT&&!p.kickT&&!p.meleeSpecial&&!G.menuPaused&&!G.replay&&!activeCutscene&&!G.interior&&p.y<=g+0.08;
+  const p=player;
+  return canMelee()&&!G.crouching&&!G.interior&&p.y<=footGround(p)+0.08;
 }
 function meleePress(type){
   if(type==='punch'&&G.weapon!=='fists'){ doAttack(); return; }
   if(type==='kick'&&G.weapon!=='fists') return;
-  if(!canChargeMelee()||meleeCharge) return;
-  meleeCharge={type,t:0,started:false}; clearSprint();
+  if(meleeCharge||!canMelee()) return;
+  // Every press becomes a live attack. `charge` only decides whether holding it
+  // can escalate into the special; losing eligibility mid-hold demotes the press
+  // to an ordinary strike instead of eating it.
+  meleeCharge={type,t:0,started:false,charge:canChargeMelee()};
+  if(meleeCharge.charge) clearSprint();
 }
 function meleeRelease(type){
   if(!meleeCharge||meleeCharge.type!==type) return;
@@ -7519,6 +7727,17 @@ function meleeRelease(type){
   if(!c.started) doPunch(false,type==='kick');
 }
 function cancelMeleeCharge(){ meleeCharge=null; }
+// Melee state is owned by the on-foot simulation. Every path that stops that
+// simulation — stepping into a car or a heli, a cutscene, Cinema, the pause
+// menu, BUSTED/WASTED, grabbing a ladder, bailing out — ends the attack right
+// there and hands the rig back neutral, instead of leaving a half-thrown strike
+// waiting on a frame of updateFoot() that is never going to arrive.
+function endMelee(){
+  const p=player;
+  if(p.meleeSpecial) finishChargedMelee(p.meleeSpecial);
+  p.punchT=0; p.kickT=0;
+  meleeCharge=null; releaseMeleeButtons();
+}
 function startChargedMelee(type){
   const p=player, dur=type==='kick'?1.05:.84;
   p.meleeSpecial={type,t:0,dur,x:p.x,z:p.z,y:footGround(p),heading:p.heading,lastRev:-1,hits:new Set()};
@@ -7548,25 +7767,57 @@ function chargedMeleeHit(s){
 }
 function finishChargedMelee(s){
   const p=player,u=p.mesh.userData;
-  p.heading=s.heading; p.mesh.rotation.set(0,s.heading,0);
+  p.heading=s.heading; p.mesh.rotation.order='XYZ'; p.mesh.rotation.set(0,s.heading,0);
   u.armL.rotation.x=0;u.armR.rotation.x=0;u.legL.rotation.x=0;u.legR.rotation.x=0;
   if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;
   if(u.torso){u.torso.rotation.x=0;u.torso.rotation.y=0;}
+  if(u.head)u.head.rotation.x=0;
   p.mesh.position.set(p.x,p.y,p.z); p.meleeSpecial=null;
+}
+// js/person.js builds the leg's hip pivot at y=0.86 in rig units, and the rig's
+// origin sits on the floor between the feet. That distance is the whole trick
+// below, so it is named rather than sprinkled through the arithmetic.
+const RIG_HIP_Y=0.86;
+// Hold the silhouette through the middle of the move and ease it in and out at
+// the ends, so the pose blends rather than snapping on.
+function meleeEase(u){
+  const s=x=>x*x*(3-2*x), r=0.22;
+  return Math.min(s(clamp(u/r,0,1)),s(clamp((1-u)/r,0,1)));
 }
 function updateChargedMelee(dt){
   const p=player,s=p.meleeSpecial; if(!s) return false;
+  // The attack's own preconditions, checked by the attack: if the run stopped
+  // being an on-foot run, the strike is over and the rig goes back to neutral.
+  if(!G.started||G.over||G.mode!=='foot'){ finishChargedMelee(s); return false; }
   s.t=Math.min(s.dur,s.t+dt); p.x=s.x;p.z=s.z;p.y=s.y;p.vy=0;
   const turns=s.t/s.dur*3, u=p.mesh.userData;
   if(s.type==='kick'){
-    p.mesh.rotation.y=s.heading+turns*TAU; p.mesh.rotation.x=-Math.PI/2;
-    u.legL.rotation.x=0; u.legR.rotation.x=Math.PI/2; u.armL.rotation.x=-1.35;u.armR.rotation.x=-1.35;
-    if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;if(u.torso)u.torso.rotation.x=1.2;
-  }else{
-    p.mesh.rotation.y=s.heading; p.mesh.rotation.x=0; const a=turns*TAU;
-    u.armL.rotation.x=a;u.armR.rotation.x=-a;if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;
+    // The planted spin kick. Turning the whole rig on its side about its own
+    // origin is what buried him in the asphalt — that origin is on the floor,
+    // so a 90 degree pitch laid his head, chest and arms flat along the street.
+    // Instead the body pivots about the HIP: the root climbs and slides back by
+    // exactly the arc the hip would otherwise have travelled, which parks the
+    // hip a leg's length directly above the planted foot and leaves the torso,
+    // arms and trailing leg horizontal at waist height.
+    const yaw=s.heading+turns*TAU;
+    const th=meleeEase(s.t/s.dur)*Math.PI/2, c=Math.cos(th), sn=Math.sin(th);
+    const hip=RIG_HIP_Y*(p.mesh.scale.y||1);
+    p.mesh.rotation.order='YXZ';   // yaw first, then pitch about his own lateral
+    p.mesh.rotation.y=yaw; p.mesh.rotation.x=th;
+    p.mesh.position.set(p.x-hip*sn*Math.sin(yaw),p.y+hip*(1-c),p.z-hip*sn*Math.cos(yaw));
+    u.legL.rotation.x=-th;                  // support leg counter-rotates: straight down
+    u.legR.rotation.x=0;                    // trailing leg follows the body: straight back
+    u.armL.rotation.x=u.armR.rotation.x=-Math.PI/2-th;   // both arms straight out front
+    if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;
     if(u.torso){u.torso.rotation.x=0;u.torso.rotation.y=0;}
+    if(u.head)u.head.rotation.x=-th*0.55;   // chin up so he looks down the kick
+    chargedMeleeHit(s);
+    if(s.t>=s.dur) finishChargedMelee(s);
+    return true;
   }
+  p.mesh.rotation.y=s.heading; p.mesh.rotation.x=0; const a=turns*TAU;
+  u.armL.rotation.x=a;u.armR.rotation.x=-a;if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;
+  if(u.torso){u.torso.rotation.x=0;u.torso.rotation.y=0;}
   p.mesh.position.set(p.x,p.y,p.z); chargedMeleeHit(s);
   if(s.t>=s.dur) finishChargedMelee(s);
   return true;
@@ -8541,7 +8792,7 @@ function exitCarSoft(){
   if(player.car){ player.car.driver=null; player.car=null; }
   if(player.heli){ player.heli.driver=null; player.heli=null; }
   G.mode='foot'; player.fallPeakY=null;
-  disarmSprint();
+  disarmSprint(); endMelee();   // OP2-C
   player.mesh.visible=true;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
@@ -8875,6 +9126,7 @@ function loop(){
       recTick(dt);
     }
     updateParticles(simDt);
+    updatePersonShadows(simDt);   // OP2-D: ground-anchored person shadows
     updatePickupVisuals(now/1000);
     if(cine) updateCinemaCam(simDt);
     else if(G.intro) updateIntroCam(simDt);
@@ -9478,6 +9730,7 @@ function playCutscene(id, anchorX, anchorZ, onDone){
   if(activeCutscene) return;
   const data=CUTSCENES[id]; if(!data) return;
   activeCutscene={id, data, anchorX, anchorZ, time:0, idx:0, done:false};
+  endMelee();   // OP2-C
   cutsceneCallback=onDone||null;
   G.cutscene=true;
   // Hide gameplay UI
@@ -10147,7 +10400,7 @@ function hideStale(frameId){ // anything replay moved but not in this frame gets
 // out); the frozen ring-buffer scrub is now just one item on the scene menu.
 function enterReplay(){
   if(G.replay||!G.started||G.over||G.intro||activeCutscene) return;
-  clearSprint();
+  clearSprint(); endMelee();   // OP2-C
   G.replay=true;
   const d=new THREE.Vector3(); camera.getWorldDirection(d);
   replay={ pos:recBuf.length-1, playing:false, frame:0, talk:false, talkT:0, shadesAnim:null,
@@ -10603,6 +10856,7 @@ function pauseGame(){
   if(G.menuPaused||!G.started||G.over||G.intro||activeCutscene||G.replay) return;
   clearSprint();
   if($('storyCard').style.display==='flex') return;
+  endMelee();   // OP2-C
   G.menuPaused=true; syncPause();
   showPausePanel('pmMain');
   $('pauseMenu').style.display='flex';
