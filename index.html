@@ -40,8 +40,8 @@
   #boostbar { width:130px; height:6px; background:rgba(0,0,0,.55); border:1px solid #fff2; border-radius:4px; margin-top:2px; overflow:hidden; }
   #boostfill { height:100%; width:100%; background:#37c8ff; }
   #mission, #storyObj { top:calc(46px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
-    max-width:min(calc(var(--lvw)*0.86),560px); text-align:center; font-size:14px; line-height:1.35;
-    background:rgba(6,2,16,.85); border:1px solid #ff3ea088; border-radius:10px; padding:7px 14px; color:#fff; }
+    max-width:min(calc(var(--lvw)*0.7),420px); text-align:center; font-size:12px; line-height:1.3;
+    background:rgba(6,2,16,.55); border:1px solid #ff3ea066; border-radius:16px; padding:4px 12px; color:#fff; }
   #mission b, #storyObj b { color:#ff9ecb; }
   #minimap { position:absolute; top:calc(44px + env(safe-area-inset-top)); right:12px;
     width:118px; height:118px; border-radius:50%; border:2px solid rgba(255,255,255,.35); background:#111; opacity:.92; }
@@ -50,7 +50,13 @@
     background:rgba(6,2,16,.68); border:1px solid rgba(255,255,255,.2); border-radius:8px;
     padding:3px 6px; opacity:.92; }
   #minimapLegend span { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:4px; }
-  #missionOffer { display:none; position:fixed; z-index:24; left:50%; top:50%; transform:translate(-50%,-50%); pointer-events:auto; padding:12px 22px; border-radius:14px; border:1px solid #ff9ecb88; background:rgba(34,8,50,.7); color:#fff; font:900 14px 'Arial Black',Arial,sans-serif; letter-spacing:2px; }
+  /* A quiet edge chip, not a screen-center modal: sits in the same out-of-the-way
+     strip as #mission/#storyObj (the three never show at once) so it never sits
+     over the reticule or dominates the view. */
+  #missionOffer { display:none; position:absolute; z-index:24; top:calc(46px + env(safe-area-inset-top)); left:50%;
+    transform:translateX(-50%); pointer-events:auto; padding:6px 16px; border-radius:16px;
+    border:1px solid #ff9ecb66; background:rgba(34,8,50,.55); color:#fff;
+    font:900 12px 'Arial Black',Arial,sans-serif; letter-spacing:1.5px; }
   #toasts { position:absolute; bottom:34%; left:50%; transform:translateX(-50%);
     display:flex; flex-direction:column; align-items:center; gap:5px; }
   .toast { font-size:17px; color:#fff; text-shadow:0 2px 3px #000, 0 0 8px #000;
@@ -83,14 +89,17 @@
     display:none; align-items:center; justify-content:center; text-shadow:0 1px 3px #000; }
   #bubble { position:fixed; z-index:16; display:none; background:#fff; color:#141414;
     font-family:Arial, sans-serif; font-weight:700; font-size:14px; padding:8px 12px;
-    border-radius:14px; max-width:230px; pointer-events:none; transform:translate(-50%,-115%);
+    border-radius:14px; max-width:230px; pointer-events:none;
     box-shadow:0 4px 14px rgba(0,0,0,.4); }
-  #bubble:after { content:''; position:absolute; left:32px; bottom:-9px;
-    border:10px solid transparent; border-top-color:#fff; border-bottom:0; }
   .chatBubble { position:fixed; z-index:15; display:none; background:#fff; color:#141414;
     font-family:Arial, sans-serif; font-weight:700; font-size:11px; padding:5px 9px;
-    border-radius:11px; max-width:170px; pointer-events:none; transform:translate(-50%,-120%);
+    border-radius:11px; max-width:170px; pointer-events:none;
     box-shadow:0 3px 10px rgba(0,0,0,.4); }
+  /* head-anchored tail: base triangle points straight down (0deg); JS rotates
+     it around its apex (transform-origin) to face the speaker's projected head */
+  .bubbleTail { position:absolute; width:0; height:0; pointer-events:none;
+    border-left:9px solid transparent; border-right:9px solid transparent; border-top:11px solid #fff;
+    transform-origin:9px 11px; }
   .tbtn { width:74px; height:64px; border-radius:16px; border:2px solid rgba(255,255,255,.35);
     background:rgba(30,14,60,.5); color:#fff; font-size:12px; font-weight:900;
     display:flex; align-items:center; justify-content:center; text-align:center; text-shadow:0 1px 3px #000; }
@@ -210,6 +219,8 @@
     #speedo { top:calc(84px + env(safe-area-inset-top)) !important; font-size:11px; transform:scale(0.62); transform-origin:top left; }
     #btnHorn { bottom:calc(146px + env(safe-area-inset-bottom)); left:40px; width:62px; height:44px; }
     .hudBox { font-size:12px; padding:4px 8px; }
+    #mission, #storyObj { top:calc(38px + env(safe-area-inset-top)) !important; font-size:11px !important; padding:3px 10px !important; }
+    #missionOffer { top:calc(38px + env(safe-area-inset-top)) !important; padding:5px 13px !important; font-size:11px !important; }
     /* --- compact title screen so it fits a phone --- */
     #startInner { gap:6px; padding:8px 12px; }
     #title { font-size:min(calc(var(--lvw)*0.065),26px); }
@@ -528,7 +539,7 @@
     </div>
   </div>
 </div>
-<div id="bubble"></div>
+<div id="bubble"><span id="bubbleTxt"></span><div class="bubbleTail" id="bubbleTail"></div></div>
 <div id="bigEvent" class="overlay">
   <div id="bigEventText"></div>
   <div id="bigEventSub"></div>
@@ -3481,15 +3492,25 @@ const CHAT_PLAYER=['Is that... TURBO JONES?','Hey! You\'re that guy from the new
   'Oh no. OH NO. Everybody act normal.','Nice jacket, menace!','I\'m not staring. YOU\'re staring.',
   'Five bucks says he punches a mailbox.','That\'s the guy who jumped the pier!','Don\'t make eye contact...',
   'Turbo Jones! Sign my cast!','The insurance people KNOW about you.','Careful, that\'s HIM.'];
+// Shared chatBubble construction (ambient chat + Deb) — one text node plus one
+// tail node, reused every frame; text/size are only touched when the line changes.
+function makeChatBubble(){
+  const el=document.createElement('div'); el.className='chatBubble';
+  const txt=document.createElement('span'); el.appendChild(txt);
+  const tail=document.createElement('div'); tail.className='bubbleTail'; el.appendChild(tail);
+  document.body.appendChild(el);
+  el._txt=txt; el._tail=tail;
+  return el;
+}
+function setChatBubbleText(el,text){
+  el.style.display='block';
+  el._txt.textContent=text;
+  el._bw=el.offsetWidth; el._bh=el.offsetHeight;
+}
 function chatSay(ped){
-  if(!ped.bub){
-    ped.bub=document.createElement('div');
-    ped.bub.className='chatBubble';
-    document.body.appendChild(ped.bub);
-  }
+  if(!ped.bub) ped.bub=makeChatBubble();
   const nearPlayer=Math.hypot(player.x-ped.x,player.z-ped.z)<8;
-  ped.bub.textContent=(nearPlayer&&_rng()<0.45)?pick(CHAT_PLAYER):pick(CHAT_LINES);
-  ped.bub.style.display='block';
+  setChatBubbleText(ped.bub,(nearPlayer&&_rng()<0.45)?pick(CHAT_PLAYER):pick(CHAT_LINES));
   ped.bubT=2.2;
   wahVoice(ped.mesh.userData.gender==='girl'?rand(175,235):rand(95,140),ped.x,ped.z);
 }
@@ -5815,7 +5836,29 @@ function segmentHitsBuilding(x0,y0,z0,x1,y1,z1){
   }
   return false;
 }
-function placeWorldBubble(el,x,y,z,maxDist,expired){
+// Shared tail math for every speech bubble (generic TALK/jocks via #bubble,
+// ambient chat, and Deb): the box is clamped to stay fully on-screen, then the
+// tail is placed/rotated at whichever box edge faces the speaker's actual
+// (unclamped) projected head, so it still points at them once clamped.
+function orientBubbleTail(el,tailEl,rawX,rawY){
+  const bw=el._bw||el.offsetWidth||1, bh=el._bh||el.offsetHeight||1;
+  const gap=12, margin=6;
+  const left=clamp(rawX-bw/2,margin,Math.max(margin,vw()-bw-margin));
+  const top=clamp(rawY-gap-bh,margin,Math.max(margin,vh()-bh-margin));
+  el.style.left=left+'px'; el.style.top=top+'px'; el.style.transform='none';
+  const cx=left+bw/2, cy=top+bh/2;
+  let dx=rawX-cx, dy=rawY-cy;
+  if(!dx&&!dy) dy=1;
+  const tX=dx?Math.abs((bw/2)/dx):Infinity, tY=dy?Math.abs((bh/2)/dy):Infinity;
+  const t=Math.min(tX,tY,1);
+  const em=Math.min(bw,bh)*0.18;
+  const ex=clamp(cx+dx*t,left+em,left+bw-em);
+  const ey=clamp(cy+dy*t,top+em,top+bh-em);
+  const angleDeg=Math.atan2(dy,dx)*180/Math.PI;
+  tailEl.style.left=(ex-left)+'px'; tailEl.style.top=(ey-top)+'px';
+  tailEl.style.transform='rotate('+(angleDeg-90).toFixed(1)+'deg)';
+}
+function placeWorldBubble(el,x,y,z,maxDist,expired,tailEl){
   if(expired||(maxDist!==undefined&&Math.hypot(x-camera.position.x,z-camera.position.z)>maxDist)){
     el.style.display='none'; return false;
   }
@@ -5824,21 +5867,24 @@ function placeWorldBubble(el,x,y,z,maxDist,expired){
      segmentHitsBuilding(camera.position.x,camera.position.y,camera.position.z,x,y,z)){
     el.style.display='none'; return false;
   }
-  el.style.left=((v.x*0.5+0.5)*vw())+'px';
-  el.style.top=((-v.y*0.5+0.5)*vh())+'px';
+  const rawX=(v.x*0.5+0.5)*vw(), rawY=(-v.y*0.5+0.5)*vh();
   el.style.display='block';
+  if(tailEl) orientBubbleTail(el,tailEl,rawX,rawY);
+  else{ el.style.left=rawX+'px'; el.style.top=rawY+'px'; }
   return true;
 }
 function showBubble(ped,text,dur){
-  $('bubble').textContent=text;
-  $('bubble').style.display='block';
+  const el=$('bubble');
+  el.style.display='block';
+  $('bubbleTxt').textContent=text;
+  el._bw=el.offsetWidth; el._bh=el.offsetHeight;
   bubblePed=ped;
   clearTimeout(bubbleT);
-  bubbleT=setTimeout(()=>{ $('bubble').style.display='none'; bubblePed=null; },dur||3000);
+  bubbleT=setTimeout(()=>{ el.style.display='none'; bubblePed=null; },dur||3000);
 }
 function positionBubble(){
   if(!bubblePed) return;
-  placeWorldBubble($('bubble'),bubblePed.x,2.4,bubblePed.z);
+  placeWorldBubble($('bubble'),bubblePed.x,2.4,bubblePed.z,undefined,undefined,$('bubbleTail'));
 }
 // ambient chat bubbles over gossiping pairs
 function positionChatBubbles(dt){
@@ -5851,7 +5897,7 @@ function positionChatBubbles(dt){
         ped.bub.style.display='none'; ped.bubT=0; continue;
       }
       if(ped.bubT<=0){ ped.bub.style.display='none'; continue; }
-      placeWorldBubble(ped.bub,ped.x,2.4,ped.z,42);
+      placeWorldBubble(ped.bub,ped.x,2.4,ped.z,42,undefined,ped.bub._tail);
     }
   }
 }
@@ -9109,13 +9155,8 @@ function makePillar(color,r,h){
   m.position.y=h/2; return m;
 }
 function debSay(txt){
-  if(!deb.bub){
-    deb.bub=document.createElement('div');
-    deb.bub.className='chatBubble';
-    document.body.appendChild(deb.bub);
-  }
-  deb.bub.textContent=txt;
-  deb.bub.style.display='block';
+  if(!deb.bub) deb.bub=makeChatBubble();
+  setChatBubbleText(deb.bub,txt);
   deb.bubT=2.4;
   wahVoice(rand(175,235),deb.x,deb.z);
 }
@@ -9158,7 +9199,7 @@ function updateStory(dt){
   // project her speech bubble
   if(deb.bub&&deb.bubT>0){
     deb.bubT-=dt;
-    placeWorldBubble(deb.bub,deb.x,2.5,deb.z,undefined,deb.bubT<=0);
+    placeWorldBubble(deb.bub,deb.x,2.5,deb.z,undefined,deb.bubT<=0,deb.bub._tail);
   }
   if(!G.story.metDeb){
     if(d<3&&G.mode==='foot'&&!activeCutscene){ 
