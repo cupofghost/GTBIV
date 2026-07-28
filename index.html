@@ -1821,12 +1821,11 @@ groundCanvas.width=groundCanvas.height=1024;
       g.beginPath(); g.moveTo(0,px(l+o)); g.lineTo(1024,px(l+o)); g.stroke();
     });
   });
-  g.strokeStyle='#e8c14a'; g.lineWidth=2; g.setLineDash([10,12]);
-  roadLines.forEach(l=>{
-    g.beginPath(); g.moveTo(px(l),0); g.lineTo(px(l),1024); g.stroke();
-    g.beginPath(); g.moveTo(0,px(l)); g.lineTo(1024,px(l)); g.stroke();
-  });
-  g.setLineDash([]);
+  // grid-street centre dashes used to be painted here too, but a canvas this
+  // size (~1.4px/world-unit) makes a lane stripe read as a blurry, stretched
+  // smear at walking/driving distance — see the world-scale dash geometry
+  // built after groundTex below (OP2-A). Left off the texture entirely so
+  // nothing shows through around the new geometry.
   // the Coast Highway: one big curvy ring around the whole city
   g.fillStyle='#2c2839';
   g.beginPath(); g.arc(512,512,px(H+7)-512+(ROAD*0.85*S)/2,0,TAU);
@@ -1834,12 +1833,10 @@ groundCanvas.width=groundCanvas.height=1024;
   g.strokeStyle='#e8c14a'; g.lineWidth=2; g.setLineDash([10,12]);
   g.beginPath(); g.arc(512,512,px(H+7)-512,0,TAU); g.stroke();
   g.setLineDash([]);
-  // sewer manholes dot the streets
-  MANHOLE_SPOTS.forEach(mh=>{
-    g.fillStyle='#14121c'; g.beginPath(); g.arc(px(mh.x),px(mh.z),1.1*S,0,TAU); g.fill();
-    g.strokeStyle='#3a3450'; g.lineWidth=2;
-    g.beginPath(); g.arc(px(mh.x),px(mh.z),1.1*S,0,TAU); g.stroke();
-  });
+  // sewer manholes used to get a painted dot here too — same low-res problem
+  // as the centre dashes above, and this texture-space dot was also drawn
+  // oversized (1.1u radius). Real geometry replaces it below (OP2-A); the
+  // canvas is left blank at these spots so nothing shows through.
   // the football field: Wildcats green, yard lines, end zones
   const fbB=blockInfo.find(b=>b.football);
   if(fbB){
@@ -1953,6 +1950,76 @@ const sandGeo=terrainGeo(SAND_LINES,WORLD.size/2+13,sandOffset,SAND_EDGE-10);
 const sand=new THREE.Mesh(sandGeo,
   new THREE.MeshLambertMaterial({color:0xb89a66}));
 scene.add(sand);
+
+// ---- OP2-A: road centre-line dashes, world-scale geometry ----
+// Real-world lane paint: ~3u painted dash, ~9u gap, ~0.15u wide — the old
+// canvas dashes above were 2 canvas px wide, which at ~1.4px/world-unit
+// meant a ~1.4u-wide stripe, nearly 10x too fat, and blurred badly on
+// magnification. Actual geometry reads correctly at any camera distance.
+// Grid streets only (roadLines, both travel directions); the decorative
+// Coast Highway ring keeps its painted dash — it's a texture-space arc, not
+// part of this card's "grid street" scope.
+(function(){
+  const DASH_LEN=3, DASH_GAP=9, DASH_W=0.15, DASH_H=0.02;
+  const dashGeo=new THREE.BoxGeometry(DASH_LEN,DASH_H,DASH_W); dashGeo.translate(0,DASH_H/2,0);
+  const spots=[];
+  roadLines.forEach(l=>{
+    for(let z=-H;z<H;z+=DASH_LEN+DASH_GAP) spots.push({x:l,z:z+DASH_LEN/2,axis:1});
+    for(let x=-H;x<H;x+=DASH_LEN+DASH_GAP) spots.push({x:x+DASH_LEN/2,z:l,axis:0});
+  });
+  const dashInst=new THREE.InstancedMesh(dashGeo,new THREE.MeshLambertMaterial({color:0xe8c14a}),spots.length);
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
+        pos=new THREE.Vector3(), scl=new THREE.Vector3(1,1,1);
+  spots.forEach((s,i)=>{
+    e.set(0,s.axis?Math.PI/2:0,0); q.setFromEuler(e);
+    pos.set(s.x,groundH(s.x,s.z)+0.015,s.z);
+    m.compose(pos,q,scl); dashInst.setMatrixAt(i,m);
+  });
+  dashInst.instanceMatrix.needsUpdate=true; scene.add(dashInst);
+})();
+
+// ---- OP2-A: manhole covers, world-scale geometry ----
+// Rebuilt at believable street scale (~0.8u cover, real manholes run
+// 0.6-0.9u/60-90cm) with a rim + a slightly recessed lid carrying a
+// restrained tread pattern, replacing the blurry oversized painted dot.
+// MANHOLE_SPOTS itself is untouched — same positions, same count, same
+// array the sewer-rat system (§SEWER RATS) reads by reference.
+(function(){
+  // The rim is a torus (open centre), not a solid disc — a solid disc's top
+  // cap would cover its full radius and hide the lower, smaller lid
+  // entirely, which is exactly what happened during this card's first pass.
+  const RIM_R=0.42, TUBE_R=0.05, LID_R=0.33, LID_H=0.03, LID_Y=0.02;
+  const rimGeo=new THREE.TorusGeometry(RIM_R,TUBE_R,8,20); rimGeo.rotateX(Math.PI/2); rimGeo.translate(0,TUBE_R,0);
+  const lidGeo=new THREE.CylinderGeometry(LID_R,LID_R,LID_H,20); lidGeo.translate(0,LID_H/2,0);
+  function makeLidTex(){
+    const c=document.createElement('canvas'); c.width=c.height=64;
+    const g=c.getContext('2d');
+    g.fillStyle='#302d34'; g.fillRect(0,0,64,64);
+    g.strokeStyle='#1c1a20'; g.lineWidth=1.4;
+    for(let r=6;r<30;r+=6){ g.beginPath(); g.arc(32,32,r,0,TAU); g.stroke(); }
+    g.fillStyle='#413d46';
+    for(let a=0;a<8;a++){
+      const ang=a/8*TAU;
+      g.beginPath(); g.arc(32+Math.cos(ang)*20,32+Math.sin(ang)*20,3,0,TAU); g.fill();
+    }
+    return new THREE.CanvasTexture(c);
+  }
+  const rimInst=new THREE.InstancedMesh(rimGeo,new THREE.MeshLambertMaterial({color:0x232126}),MANHOLE_SPOTS.length);
+  const lidInst=new THREE.InstancedMesh(lidGeo,new THREE.MeshLambertMaterial({map:makeLidTex()}),MANHOLE_SPOTS.length);
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
+        pos=new THREE.Vector3(), scl=new THREE.Vector3(1,1,1);
+  MANHOLE_SPOTS.forEach((mh,i)=>{
+    const gy=groundH(mh.x,mh.z);
+    e.set(0,rand(0,TAU),0); q.setFromEuler(e);
+    pos.set(mh.x,gy,mh.z);
+    m.compose(pos,q,scl); rimInst.setMatrixAt(i,m);
+    pos.set(mh.x,gy+LID_Y,mh.z);
+    m.compose(pos,q,scl); lidInst.setMatrixAt(i,m);
+  });
+  rimInst.instanceMatrix.needsUpdate=true; lidInst.instanceMatrix.needsUpdate=true;
+  scene.add(rimInst); scene.add(lidInst);
+})();
+
 const waterCanvas=document.createElement('canvas');
 waterCanvas.width=waterCanvas.height=128;
 (function(){
@@ -4618,6 +4685,9 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
   PIZZA.iDoorX=0; PIZZA.iDoorZ=PIZZA.interiorY+id/2-2;
 })();
 
+// terrain-conformance samples for the curb/sidewalk segments below — read by
+// tests/cases/road-sidewalk.test.js, not used by any gameplay system.
+const SIDEWALK_SEG_SAMPLES=[];
 // ================= SIDEWALKS & STOREFRONT AWNINGS =================
 // Cosmetic street dressing: curb strips along block edges, storefront
 // awnings (flat canopy or sloped wedge/prism), and curbside planters.
@@ -4651,12 +4721,30 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
   const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
         pos=new THREE.Vector3(), scl=new THREE.Vector3(1,1,1), col=new THREE.Color();
   if(curbSpots.length){
-    const curbGeo=new THREE.BoxGeometry(BLOCK-1,0.16,1.1); curbGeo.translate(0,0.08,0);
-    const curbInst=new THREE.InstancedMesh(curbGeo,new THREE.MeshLambertMaterial({color:0x3d3d42}),curbSpots.length);
-    curbSpots.forEach((s,i)=>{
-      e.set(0,s.axis?Math.PI/2:0,0); q.setFromEuler(e);
-      pos.set(s.x,groundH(s.x,s.z),s.z);
-      m.compose(pos,q,scl); curbInst.setMatrixAt(i,m);
+    // A single BLOCK-1-long rigid box sampling groundH once at its centre
+    // used to hang in the air at its ends on any graded block (TERRAIN.md
+    // Tier 1) — the reported "sidewalks float" defect. Segment each edge so
+    // every piece is seated between two of its own groundH samples instead.
+    const SEG_N=8, halfLen=(BLOCK-1)/2, segLen=(BLOCK-1)/SEG_N;
+    const SEG_AXIS=new THREE.Vector3(1,0,0);
+    const curbGeo=new THREE.BoxGeometry(1,0.16,1.1); curbGeo.translate(0,0.08,0);
+    const curbInst=new THREE.InstancedMesh(curbGeo,new THREE.MeshLambertMaterial({color:0x3d3d42}),curbSpots.length*SEG_N);
+    const pA=new THREE.Vector3(), pB=new THREE.Vector3(), dir=new THREE.Vector3();
+    let idx=0;
+    curbSpots.forEach(s=>{
+      for(let i=0;i<SEG_N;i++){
+        const u0=-halfLen+i*segLen, u1=u0+segLen;
+        if(s.axis){ pA.set(s.x,0,s.z+u0); pB.set(s.x,0,s.z+u1); }
+        else { pA.set(s.x+u0,0,s.z); pB.set(s.x+u1,0,s.z); }
+        pA.y=groundH(pA.x,pA.z); pB.y=groundH(pB.x,pB.z);
+        dir.copy(pB).sub(pA);
+        const len=dir.length(); dir.normalize();
+        q.setFromUnitVectors(SEG_AXIS,dir);
+        pos.copy(pA).add(pB).multiplyScalar(0.5);
+        scl.set(len,1,1);
+        m.compose(pos,q,scl); curbInst.setMatrixAt(idx++,m);
+        SIDEWALK_SEG_SAMPLES.push({x:pos.x,y:pos.y,z:pos.z});
+      }
     });
     curbInst.instanceMatrix.needsUpdate=true; scene.add(curbInst);
   }
