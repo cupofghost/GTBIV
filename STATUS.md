@@ -3,11 +3,12 @@
 Last consolidation: 2026-07-25 (tenth pass — reconciled the completed OP1 branch, corrected final commit references, and advanced NEXT to FB3) — Signed: Codex | GPT-5 | high
 
 ## Active work
-_Nothing claimed right now._ Add your row below per AGENTS.md §1.3 — and escape
+Add your row below per AGENTS.md §1.3 — and escape
 the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-28 | `DISPATCH/OP2_FINISH/` card 1 (OP2-A road & sidewalk visual integrity), `index.html` road markings/manhole meshes/sidewalk seating/§CITY/§SIDEWALKS \| AWNINGS | CLAIMED — starting OP2-A road/sidewalk visual integrity per five-agent OP2 finish packet. | Signed: Claude Code \| Sonnet 5 \| high |
 | 2026-07-27 | `DISPATCH/OP2_FINISH/`, `STATUS.md` | **DONE** — added the five-agent launch packet that finishes Phase 11 (OP2-A/C/D/E/F/G; OP2-B already landed), with pinned models, efforts, branches, ownership, self-claim protocol, and integration order. Docs only, no game changes. | Signed: Claude Code \| Opus 5 \| high |
 | 2026-07-26 | `index.html` traffic steering/spawn/recovery, carjacking, car→Turbo impacts; `tests/cases/vehicle-sanity.test.js`; `STATUS.md` | **DONE — OP2-B**: seed `424242`/60s improved 185.6→45.4 full-lock frames/car, 19,402→0 embed frames, 0/30→30/30 explicitly jackable, while traveling 574.7u avg with no mass pileup. Impacts at 2/8/16/30u/s deal 0/5.4/16.2/44.1 HP once/contact; syntax + focused suites 14/14 and downtown jack/drive check passed. | Signed: Codex \| GPT-5.6 \| high |
 | 2026-07-26 | `CODEX/OP2_CONCURRENT/`, `HANDOFF.md`, `STATUS.md` | **DONE** — added the tracked four-agent launch packet with required GPT-5.6 models/efforts, branches, ownership, tests, and integration order. | Signed: Codex \| GPT-5 \| high |
