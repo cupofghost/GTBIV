@@ -6408,7 +6408,7 @@ function updateFootStuckRecovery(p,dt){
   const step=clamp(hit.depth+0.06,0.18,0.8);
   p.x=clamp(p.x+hit.nx*step,-(WATER_R-2),WATER_R-2);
   p.z=clamp(p.z+hit.nz*step,-(WATER_R-2),WATER_R-2);
-  p.y=footGround(p); p.vy=0; p.stuckNudged=true;
+  p.y=footGround(p); p.vy=0; p.fallPeakY=null; p.stuckNudged=true;
 }
 function doJump(){
   if(!G.started||G.over||G.mode!=='foot') return;
@@ -6921,6 +6921,18 @@ function nearestCar(x,z,r){
 function canSprint(p,mag){
   return G.mode==='foot'&&input.sprint&&mag>0.85&&!G.crouching&&!p.climb&&!p.bailing&&!p.stunT&&p.punchT<=0&&p.kickT<=0;
 }
+const FALL_LETHAL_MULT=4;   // OP2-G: ~4x Turbo's own height is a lethal unsupported drop
+// called once, right as an unsupported drop lands on solid ground (ladders,
+// stairs, parachute and vehicle exits never reach this — they clear or reset
+// player.fallPeakY before landing does). th is turboHeight() captured at the
+// moment the fall began — the airborne pose changes the mesh's bounding box,
+// so re-measuring at landing would make the threshold flicker frame to frame.
+function applyFallImpact(fallDist,th){
+  if(DEV_STATE.god||fallDist<FALL_LETHAL_MULT*th) return;
+  sfx.crash(0.6); shake(0.7); triggerHitStop(0.08); haptic([70,50,110]);
+  burst(player.x,player.y+0.3,player.z,16,COL_SMOKE,3,0.7,2);
+  wasted();
+}
 function updateFoot(dt){
   const p=player;
   let meleeDt=dt;
@@ -6993,10 +7005,20 @@ function updateFoot(dt){
     Math.max(groundH(p.x,p.z),onStairs?sh:0);
   // jump & gravity physics
   if(p.y>ground+0.001||p.vy>0){
+    // track the highest point of this unsupported drop so a real fall (off a
+    // roof, a ledge) can be told from a hop the instant it lands
+    if(p.fallPeakY==null){ p.fallPeakY=p.y; p.fallTh=turboHeight(); }
     p.vy-=24*dt; p.y+=p.vy*dt;
-    if(p.y<=ground){ p.y=ground; p.vy=0; blip(120,60,0.08,0.12,'sine'); }
+    if(p.y<=ground){
+      p.y=ground; p.vy=0; blip(120,60,0.08,0.12,'sine');
+      applyFallImpact(p.fallPeakY-ground,p.fallTh);
+      p.fallPeakY=null;
+    } else if(p.y>p.fallPeakY){ p.fallPeakY=p.y; }
   }
-  else if(p.y<ground){ p.y=ground; p.vy=0; }   // stairs & slopes lift you as you climb
+  else {
+    if(p.y<ground){ p.y=ground; p.vy=0; }   // stairs & slopes lift you as you climb
+    p.fallPeakY=null;
+  }
   updateFootStuckRecovery(p,dt);
   p.mesh.position.set(p.x,p.y+Math.abs(Math.sin(p.phase))*(sprinting?0.04:0.06),p.z);
   p.mesh.rotation.y=p.heading;
@@ -7112,7 +7134,7 @@ function updateFoot(dt){
 // ---- wall-ladder climbing ----
 function mountLadder(grab){
   const p=player, L=grab.L, nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
-  p.climb={L}; p.vy=0;
+  p.climb={L}; p.vy=0; p.fallPeakY=null;   // grabbing on arrests any fall in progress
   p.x=L.x+nX*0.45; p.z=L.z+nZ*0.45;
   p.y=clamp(p.y,L.baseH,L.topH);
   p.heading=L.ang+Math.PI;   // chest to the wall
@@ -7196,7 +7218,7 @@ function exitCar(){
   player.x=c.x+Math.cos(c.heading)*2.2; player.z=c.z-Math.sin(c.heading)*2.2;
   resolveFootCollision(player,0.5);
   player.y=groundH(player.x,player.z); player.mesh.visible=true;
-  player.car=null; footCamYaw=player.heading;
+  player.car=null; footCamYaw=player.heading; player.fallPeakY=null;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
   if(skidGain) skidGain.gain.value=0;
@@ -8430,7 +8452,7 @@ function bigEvent(text,color,sub){
 function exitCarSoft(){
   if(player.car){ player.car.driver=null; player.car=null; }
   if(player.heli){ player.heli.driver=null; player.heli=null; }
-  G.mode='foot';
+  G.mode='foot'; player.fallPeakY=null;
   disarmSprint();
   player.mesh.visible=true;
   $('speedo').style.display='none';
@@ -8452,7 +8474,7 @@ function respawn(spot){
     const p=custom?intended:safeGenericSpawnPoint(intended,
       ()=>({x:spot.x+rand(2,6),z:spot.z+rand(2,6)}),0.5);
     player.x=p.x; player.z=p.z; player.y=groundH(player.x,player.z); resetFootStuck(player);
-    player.mesh.visible=true; player.mesh.rotation.x=0; footCamYaw=player.heading;
+    player.mesh.visible=true; player.mesh.rotation.x=0; footCamYaw=player.heading; player.fallPeakY=null;
     makeCar('sedan',spot.x-4,spot.z-3,rand(0,TAU),{parked:true});
     G.mode='foot'; player.car=null;
     G.boost=100; G.carHP=100; G.hp=100; G.hpT=0; G.over=false;
