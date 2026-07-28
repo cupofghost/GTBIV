@@ -185,5 +185,42 @@ module.exports = {
         assert(r.extreme.damage >= 100 && r.wasted, 'an extreme hit must use the normal WASTED flow: ' + JSON.stringify(r));
       },
     },
+    {
+      name: 'OP2-G: critical car damage halves the detonation fuse into one retained explosion with no mushroom cloud',
+      query: '?dev=1&skipintro=1&seed=424242',
+      run: async (page, { assert }) => {
+        const r = await page.evaluate(() => {
+          const node = intersections[6];
+          const car = makeCar('sedan', node.x, node.z, 0, { parked: true });
+          player.car = car; car.burning = false; car.burnT = 0;
+          damageCar(car, car.maxhp - 20); // hp -> 20, crossing the <=22 critical threshold without reaching 0
+          const fuseAtCritical = car.burnT;
+          const noMushroomGlobals = typeof boomFx === 'undefined' && typeof makeMushroomCloud === 'undefined';
+          const fireballsBefore = fireballs.length;
+          const nearCar = makeCar('sedan', car.x + CAR_BOOM_RADIUS - 1, car.z, 0, { parked: true });
+          const farCar = makeCar('sedan', car.x + CAR_BOOM_RADIUS + 3, car.z, 0, { parked: true });
+          killCar(car, true);
+          const fireballsAfter = fireballs.length;
+          const nearDamaged = nearCar.hp < nearCar.maxhp;
+          const farUntouched = farCar.hp === farCar.maxhp;
+          const stillDead = car.dead;
+          killCar(car, true); // a dead car must never detonate twice
+          const fireballsAfterRepeat = fireballs.length;
+          return {
+            fuseAtCritical, noMushroomGlobals, fireballsBefore, fireballsAfter, fireballsAfterRepeat,
+            nearDamaged, farUntouched, stillDead, radius: CAR_BOOM_RADIUS, fuseConst: CAR_CRITICAL_FUSE,
+          };
+        });
+        assert(r.fuseConst === 15 && r.fuseAtCritical === 15,
+          'critical fuse must be halved from the 30s baseline to 15s: ' + JSON.stringify(r));
+        assert(r.noMushroomGlobals, 'the mushroom-cloud presentation must be fully removed: ' + JSON.stringify(r));
+        assert(r.fireballsAfter === r.fireballsBefore + 1,
+          'exactly one retained explosion effect must spawn per detonation: ' + JSON.stringify(r));
+        assert(r.nearDamaged && r.farUntouched,
+          'blast damage must match the single documented CAR_BOOM_RADIUS constant: ' + JSON.stringify(r));
+        assert(r.stillDead && r.fireballsAfterRepeat === r.fireballsAfter,
+          'a dead car must not detonate a second time: ' + JSON.stringify(r));
+      },
+    },
   ],
 };

@@ -6257,7 +6257,7 @@ function rocketBuildingHit(x,y,z,r){
 // expanding fireball: a red-orange sphere that blooms hard, then cools to embers
 const fireballs=[];
 const fbGeo=new THREE.SphereGeometry(1,18,12);
-function spawnFireball(x,y,z,maxR){
+function spawnFireball(x,y,z,maxR,dur){
   const outer=new THREE.Mesh(fbGeo,new THREE.MeshBasicMaterial({
     color:0xff7a1a,transparent:true,opacity:0.95,blending:THREE.AdditiveBlending,depthWrite:false}));
   const inner=new THREE.Mesh(fbGeo,new THREE.MeshBasicMaterial({
@@ -6265,7 +6265,7 @@ function spawnFireball(x,y,z,maxR){
   outer.position.set(x,y,z); inner.position.set(x,y,z);
   outer.scale.set(0.2,0.2,0.2); inner.scale.set(0.15,0.15,0.15);
   scene.add(outer); scene.add(inner);
-  fireballs.push({outer,inner,t:0,dur:0.55,maxR});
+  fireballs.push({outer,inner,t:0,dur:dur||0.55,maxR});
 }
 function updateFireballs(dt){
   for(let i=fireballs.length-1;i>=0;i--){
@@ -6293,30 +6293,18 @@ function explode(x,y,z){
   burst(x,y,z,20,COL_SMOKE,4,1.6,1);
   damageArea(x,z,7,130);
 }
-// --- the BIG one: fireball, mushroom cloud, shockwave, and a camera moment ---
-const boomFx=[];      // solid, animated mushroom clouds
+// --- the BIG one: fireball, shockwave, and a camera moment ---
+// one authoritative vehicle-explosion event, one visual (the mushroom-cloud
+// layer that used to render alongside this fireball is gone — OP2-G)
 let shockwave=null;   // one reusable expanding ring
-function makeMushroomCloud(x,y,z){
-  const group=new THREE.Group();
-  const stem=new THREE.Mesh(
-    new THREE.CylinderGeometry(0.72,1.05,1,18),
-    new THREE.MeshBasicMaterial({color:0x8e171d})
-  );
-  const cap=new THREE.Mesh(
-    new THREE.SphereGeometry(1,20,16),
-    new THREE.MeshBasicMaterial({color:0xd3292f})
-  );
-  group.position.set(x,y,z); group.visible=false;
-  group.add(stem); group.add(cap); scene.add(group);
-  return {group,stem,cap,t:0,bloom:0.55,dur:6.2};
-}
+const CAR_BOOM_DUR=0.9;      // slowed from the shared 0.55s fireball default, enough to read
+const CAR_BOOM_RADIUS=10;    // the one blast radius, used by both damage and tests
 function bigExplosion(x,y,z){
   sfx.carBoom(); shake(1.2); triggerHitStop(0.08); haptic([60,40,90,40,120]);
-  spawnFireball(x,y+1,z,8.5);
+  spawnFireball(x,y+1,z,8.5,CAR_BOOM_DUR);
   burst(x,y,z,70,COL_FIRE,12,1.6,4);
   burst(x,y,z,40,COL_FIRE,6,2.2,1);
   burst(x,y,z,30,COL_SMOKE,5,2.5,1);
-  boomFx.push(makeMushroomCloud(x,y+1,z));
   if(!shockwave){
     shockwave=new THREE.Mesh(new THREE.RingGeometry(0.8,1,40),
       new THREE.MeshBasicMaterial({color:0xffd9a0,transparent:true,opacity:0.8,side:THREE.DoubleSide,depthWrite:false}));
@@ -6326,26 +6314,10 @@ function bigExplosion(x,y,z){
   shockwave.scale.set(1,1,1); shockwave.material.opacity=0.85; shockwave.userData.t=0.9;
   // remember where she blew — the camera only swings around if this wastes Turbo
   G.lastBoom={x,z,t:performance.now()};
-  damageArea(x,z,9,150);
+  damageArea(x,z,CAR_BOOM_RADIUS,150);
 }
 function updateBoomFx(dt){
   updateFireballs(dt);
-  for(let i=boomFx.length-1;i>=0;i--){
-    const b=boomFx[i]; b.t+=dt;
-    if(b.t>=b.bloom){
-      // Let the fireball bloom first, then grow a solid stem into a red cap.
-      // No rising particles: this stays readable as one persistent cloud.
-      const age=b.t-b.bloom, grow=clamp(age/1.4,0,1);
-      const capY=1.0+age*3.7, capR=lerp(1.1,4.4,grow);
-      const stemH=Math.max(0.12,capY-capR*0.3);
-      b.group.visible=true;
-      b.cap.position.y=capY;
-      b.cap.scale.set(capR,capR*0.82,capR);
-      b.stem.position.y=stemH*0.5;
-      b.stem.scale.set(lerp(0.35,1.05,grow),stemH,lerp(0.35,1.05,grow));
-    }
-    if(b.t>=b.dur){ scene.remove(b.group); disposeMesh(b.group); boomFx.splice(i,1); }
-  }
   if(shockwave&&shockwave.userData.t>0){
     shockwave.userData.t-=dt;
     const s=1+(0.9-shockwave.userData.t)*40;
@@ -6905,6 +6877,7 @@ function applyCarTurboImpact(car){
   hapticCrash(relativeSpeed); shake(clamp(relativeSpeed*0.018,0.16,0.65));
   return damage;
 }
+const CAR_CRITICAL_FUSE=15;   // OP2-G: halved from the original 30s critical-to-detonation fuse
 function damageCar(car,amt,why){
   if(car.dead) return;
   if(DEV_STATE.god&&car===player.car) return;
@@ -6913,7 +6886,7 @@ function damageCar(car,amt,why){
     G.carHP=Math.max(0,car.hp/car.maxhp*100);
     // wounded past the point of no return: she burns, then she blows
     if(car.hp<=22&&!car.burning){
-      car.burning=true; car.burnT=car.hp<=0?2.5:30;
+      car.burning=true; car.burnT=car.hp<=0?2.5:CAR_CRITICAL_FUSE;
       toast('ENGINE\'S ON FIRE — GET CLEAR!','bad');
       sfx.fail();
     }
