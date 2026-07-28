@@ -8946,21 +8946,13 @@ const INTRO_PATH=[
   {p:[player.x-Math.sin(player.heading)*11,7.5,player.z-Math.cos(player.heading)*11], l:[player.x,2.3,player.z]}, // pan down while moving in
   {p:[player.x-Math.sin(player.heading)*6.5,3.2,player.z-Math.cos(player.heading)*6.5], l:[player.x,1.4,player.z]}, // land behind the player
 ];
-let introT=0;
+let introT=0, introRoute=null;
 // Terrain-safe flythrough sampling. INTRO_PATH's heights were authored when the
 // world was flat — hills can rise above them now and the camera tunnels under
 // the street. Clamp both the camera and its look target above groundH so the
 // shot always stays over the surface (cam ≥2.4u, look point ≥0.6u). max() of
 // continuous functions stays continuous, so the path keeps its smooth sweep.
 // Shared by updateIntroCam and cinema's updateCinemaIntro.
-function cinematicBuildingVolumes(){
-  const out=buildings.slice();
-  if(PIZZA.x!==undefined) out.push({minX:PIZZA.x-PIZZA.w/2,maxX:PIZZA.x+PIZZA.w/2,
-    minZ:PIZZA.z-PIZZA.d/2,maxZ:PIZZA.z+PIZZA.d/2,baseY:PIZZA.baseY||groundH(PIZZA.x,PIZZA.z),h:PIZZA.h||14});
-  if(CHAOS.x!==undefined) out.push({minX:CHAOS.x-CHAOS.w/2,maxX:CHAOS.x+CHAOS.w/2,
-    minZ:CHAOS.z-CHAOS.d/2,maxZ:CHAOS.z+CHAOS.d/2,baseY:CHAOS.baseY||groundH(CHAOS.x,CHAOS.z),h:CHAOS.h||14});
-  return out;
-}
 function cinematicCameraBlocked(x,y,z,pad){
   pad=pad||1.8;
   for(const b of cinematicBuildingVolumes()){
@@ -9000,8 +8992,250 @@ function flySample(A,B,f){
   return { px:routed.x, py:routed.y, pz:routed.z,
            lx, ly:Math.max(ly,groundH(lx,lz)+0.6), lz };
 }
+
+// ---- OP2-F: deterministic cinematic route planner -------------------------
+// flySample() above makes one authored beat safe, and that is all it can do.
+// Asking it for a sample every frame is what made the intro look reactive: the
+// building set under the path changes discretely, so the height popped to a
+// roofline the moment the curve crossed a pad. Measured on seed 424242 before
+// this: 1262 u/s peak speed against a 27 u/s mean, 75k u/s^2 acceleration
+// spikes, and staged Cinema shots cut straight into hillsides (28 of 36 test
+// placements below terrain or inside a facade).
+//
+// The planner decides the whole shot up front instead — clear waypoints, one
+// arc-length spline, one eased speed profile — and the per-frame code only
+// reads it. Nothing here draws a random number, so a route depends solely on
+// the world state, and any `?seed=` replays it exactly.
+const CINE_CAM_CLEAR=3.0;   // camera floor over terrain (also clears traffic)
+const CINE_LOOK_CLEAR=0.6;  // look-target floor over terrain
+const CINE_PAD=1.8;         // horizontal/vertical padding around solids
+const CINE_LEG_N=20;        // samples per authored leg while choosing detours
+const CINE_CHECK_N=420;     // samples across the whole spline while repairing
+const CINE_REPAIRS=6;
+const CINE_ARC_N=6000;
+const CINE_LOOK_TAU=0.32;   // seconds — critically damped follow on the framing
+
+// buildings/PIZZA/CHAOS are fixed once the world is built; the planner samples
+// them thousands of times per shot, so hand back the same array.
+let _cineVols=null, _cineVolKey='';
+function cinematicBuildingVolumes(){
+  const key=buildings.length+'/'+(PIZZA.x!==undefined)+'/'+(CHAOS.x!==undefined);
+  if(_cineVols&&_cineVolKey===key) return _cineVols;
+  const out=buildings.slice();
+  if(PIZZA.x!==undefined) out.push({minX:PIZZA.x-PIZZA.w/2,maxX:PIZZA.x+PIZZA.w/2,
+    minZ:PIZZA.z-PIZZA.d/2,maxZ:PIZZA.z+PIZZA.d/2,baseY:PIZZA.baseY||groundH(PIZZA.x,PIZZA.z),h:PIZZA.h||14});
+  if(CHAOS.x!==undefined) out.push({minX:CHAOS.x-CHAOS.w/2,maxX:CHAOS.x+CHAOS.w/2,
+    minZ:CHAOS.z-CHAOS.d/2,maxZ:CHAOS.z+CHAOS.d/2,baseY:CHAOS.baseY||groundH(CHAOS.x,CHAOS.z),h:CHAOS.h||14});
+  _cineVolKey=key; _cineVols=out;
+  return out;
+}
+// Lowest camera height at this column that clears everything static under it.
+// Only static solids: planning around live traffic is the reactive behaviour
+// this card exists to remove, and CINE_CAM_CLEAR already flies over a car.
+function cineFloorAt(x,z){
+  let y=groundH(x,z)+CINE_CAM_CLEAR;
+  for(const b of cinematicBuildingVolumes()){
+    if(x>b.minX-CINE_PAD&&x<b.maxX+CINE_PAD&&z>b.minZ-CINE_PAD&&z<b.maxZ+CINE_PAD)
+      y=Math.max(y,b.baseY+b.h+CINE_PAD);
+  }
+  if(treeHit(x,z,CINE_PAD*0.65)) y=Math.max(y,groundH(x,z)+6.5);
+  else if(propHit(x,z,CINE_PAD*0.55,false)) y=Math.max(y,groundH(x,z)+4.5);
+  return y;
+}
+// Centripetal Catmull-Rom (alpha = 1/2). The uniform form cusps when control
+// points are unevenly spaced, which a planned detour guarantees — and a cusp is
+// exactly the whip-round the owner is complaining about. Endpoints are mirrored
+// rather than doubled so the knot spacing never degenerates.
+function cineKnots(pts){
+  const k=[0];
+  for(let i=1;i<pts.length;i++){
+    const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1],pts[i][2]-pts[i-1][2]);
+    k.push(k[i-1]+Math.max(1e-3,Math.sqrt(d)));
+  }
+  return k;
+}
+function cineCurveAt(pts,u,kn){
+  const n=pts.length;
+  if(n<2) return (pts[0]||[0,0,0]).slice();
+  kn=kn||cineKnots(pts);
+  const s=clamp(u,0,1)*(n-1), i=Math.min(n-2,Math.floor(s)), f=s-i;
+  const p1=pts[i], p2=pts[i+1];
+  const p0=i>0?pts[i-1]:[2*p1[0]-p2[0],2*p1[1]-p2[1],2*p1[2]-p2[2]];
+  const p3=i+2<n?pts[i+2]:[2*p2[0]-p1[0],2*p2[1]-p1[1],2*p2[2]-p1[2]];
+  const t1=kn[i], t2=kn[i+1];
+  const t0=i>0?kn[i-1]:t1-(t2-t1), t3=i+2<n?kn[i+2]:t2+(t2-t1);
+  const t=lerp(t1,t2,f), out=[0,0,0];
+  for(let c=0;c<3;c++){
+    const a1=((t1-t)*p0[c]+(t-t0)*p1[c])/(t1-t0);
+    const a2=((t2-t)*p1[c]+(t-t1)*p2[c])/(t2-t1);
+    const a3=((t3-t)*p2[c]+(t-t2)*p3[c])/(t3-t2);
+    const b1=((t2-t)*a1+(t-t0)*a2)/(t2-t0);
+    const b2=((t3-t)*a2+(t-t1)*a3)/(t3-t1);
+    out[c]=((t2-t)*b1+(t-t1)*b2)/(t2-t1);
+  }
+  return out;
+}
+// Cumulative arc length so the shot travels at a chosen speed rather than
+// racing the long legs and crawling the short ones.
+function cineArcTable(pts,kn){
+  const d=[0]; let prev=cineCurveAt(pts,0,kn);
+  for(let k=1;k<=CINE_ARC_N;k++){
+    const p=cineCurveAt(pts,k/CINE_ARC_N,kn);
+    d.push(d[k-1]+Math.hypot(p[0]-prev[0],p[1]-prev[1],p[2]-prev[2])); prev=p;
+  }
+  return d;
+}
+function cineUAtDist(tab,frac){
+  const total=tab[tab.length-1];
+  if(!(total>0)) return 0;
+  const want=clamp(frac,0,1)*total;
+  let lo=0, hi=tab.length-1;
+  while(lo<hi-1){ const m=(lo+hi)>>1; if(tab[m]<=want) lo=m; else hi=m; }
+  const span=tab[hi]-tab[lo];
+  return (lo+(span>1e-9?(want-tab[lo])/span:0))/CINE_ARC_N;
+}
+// Speed profile: move off, hold, settle. Both ramps are smoothstep, whose
+// derivative vanishes at each end, so speed is C1 and distance is C2 — there
+// is no step in acceleration anywhere in a planned shot.
+const CINE_IN=0.14, CINE_OUT=0.22, CINE_V0=0.35, CINE_V1=0.16;
+function cineSpeed(t){
+  if(t<CINE_IN){ const u=t/CINE_IN; return CINE_V0+(1-CINE_V0)*u*u*(3-2*u); }
+  if(t>1-CINE_OUT){ const u=(1-t)/CINE_OUT; return CINE_V1+(1-CINE_V1)*u*u*(3-2*u); }
+  return 1;
+}
+// Distance travelled by time t, integrated in closed form rather than from a
+// table: a sampled profile is only piecewise linear, so speed would step at
+// every bucket edge and put a visible ripple back into the move. The integral
+// of smoothstep is u^3 - u^4/2, so this stays exact and C1.
+const CINE_RAMP=u=>u*u*u-u*u*u*u/2;
+const CINE_DIST_IN=CINE_IN*(CINE_V0+(1-CINE_V0)*0.5);
+const CINE_DIST_OUT=CINE_OUT*(CINE_V1+(1-CINE_V1)*0.5);
+const CINE_DIST_TOTAL=CINE_DIST_IN+(1-CINE_IN-CINE_OUT)+CINE_DIST_OUT;
+function cineDistFrac(t){
+  t=clamp(t,0,1);
+  let d;
+  if(t<CINE_IN){ const u=t/CINE_IN; d=CINE_IN*(CINE_V0*u+(1-CINE_V0)*CINE_RAMP(u)); }
+  else if(t>1-CINE_OUT){ const u=(1-t)/CINE_OUT;
+    d=CINE_DIST_TOTAL-CINE_OUT*(CINE_V1*u+(1-CINE_V1)*CINE_RAMP(u)); }
+  else d=CINE_DIST_IN+(t-CINE_IN);
+  return d/CINE_DIST_TOTAL;
+}
+// How high a straight leg has to fly, and where its worst column is.
+function cineLegPeak(a,b,n){
+  let peak=-Infinity, pf=0;
+  for(let k=0;k<=n;k++){
+    const f=k/n, y=cineFloorAt(lerp(a[0],b[0],f),lerp(a[2],b[2],f));
+    if(y>peak){ peak=y; pf=f; }
+  }
+  return {peak,f:pf};
+}
+// Candidate mid-waypoints for a leg that can't fly straight: crane over the
+// obstruction, or swing wide of it on either side. Scored by how much altitude
+// the shot is forced to gain plus what the detour costs in length, so a swing
+// around a tower beats popping over its roof but a low wall is simply cleared.
+function cineDetour(a,b,hit){
+  const legLen=Math.hypot(b[0]-a[0],b[2]-a[2])||1;
+  const endMax=Math.max(a[1],b[1]);
+  const dx=(b[0]-a[0])/legLen, dz=(b[2]-a[2])/legLen;
+  const px=-dz, pz=dx;                      // perpendicular in the ground plane
+  const mx=lerp(a[0],b[0],0.5), mz=lerp(a[2],b[2],0.5);
+  const cands=[[lerp(a[0],b[0],hit.f),lerp(a[2],b[2],hit.f)]];   // crane over
+  for(const o of [14,-14,24,-24,36,-36]) cands.push([mx+px*o,mz+pz*o]);
+  let best=null;
+  for(const [cx,cz] of cands){
+    const p=[cx,0,cz];   // y is irrelevant here — only the column is scored
+    const need=Math.max(cineFloorAt(cx,cz),cineLegPeak(a,p,10).peak,cineLegPeak(p,b,10).peak);
+    const len=Math.hypot(cx-a[0],cz-a[2])+Math.hypot(b[0]-cx,b[2]-cz);
+    const cost=Math.max(0,need-endMax)+0.35*Math.max(0,len-legLen);
+    if(!best||cost<best.cost) best={cost,p:[cx,Math.max(endMax,need)+0.6,cz]};
+  }
+  return best?best.p:null;
+}
+function cineLookFloorAt(x,z){ return groundH(x,z)+CINE_LOOK_CLEAR; }
+// Lift the two control points bracketing any sample that sits below its floor,
+// then re-check — a spline sags between its control points, and moving control
+// points keeps the curve smooth where shoving samples would not. Lifting always
+// converges (in the limit the whole route clears the tallest roof), which is
+// why the caller's bail-out is a genuine last resort, not the normal path.
+function cineRepair(pts,floorFn){
+  for(let pass=0;pass<CINE_REPAIRS;pass++){
+    const lift=new Array(pts.length).fill(0), kn=cineKnots(pts);
+    let bad=0;
+    for(let k=0;k<=CINE_CHECK_N;k++){
+      const u=k/CINE_CHECK_N, p=cineCurveAt(pts,u,kn), need=floorFn(p[0],p[2]);
+      if(p[1]<need-1e-3){
+        bad++;
+        const s=u*(pts.length-1), i=Math.min(pts.length-2,Math.floor(s)), d=need-p[1]+0.3;
+        lift[i]=Math.max(lift[i],d); lift[i+1]=Math.max(lift[i+1],d);
+      }
+    }
+    if(!bad) return true;
+    for(let i=0;i<pts.length;i++) pts[i][1]+=lift[i];
+  }
+  return false;
+}
+// A known-safe shot: straight up and back from the subject, above everything.
+function cineSafeShot(look){
+  const bx=look[0], bz=look[2]+18;
+  const y=Math.max(cineFloorAt(look[0],look[2]),cineFloorAt(bx,bz))+6;
+  return {px:bx,py:y,pz:bz,lx:look[0],ly:look[1],lz:look[2]};
+}
+// Plan a whole shot from an authored path of {p,l} beats.
+function planCinematicRoute(path){
+  const pts=[], looks=[];
+  for(const w of path){
+    const s=flySample(w,w,0);   // the authored beat, made safe on its own
+    pts.push([s.px,Math.max(s.py,cineFloorAt(s.px,s.pz)),s.pz]);
+    looks.push([s.lx,s.ly,s.lz]);
+  }
+  // Choose a clear route leg by leg before anything moves.
+  const out=[pts[0]];
+  for(let i=0;i<pts.length-1;i++){
+    const a=pts[i], b=pts[i+1], hit=cineLegPeak(a,b,CINE_LEG_N);
+    if(hit.peak>Math.max(a[1],b[1])+0.05){
+      const mid=cineDetour(a,b,hit);
+      if(mid) out.push(mid);
+    }
+    out.push(b);
+  }
+  // Both curves get repaired the same way, and the framing curve is repaired
+  // here rather than clamped per frame: a max() applied every frame kinks the
+  // pan every time the look target crosses a rise.
+  const ok=cineRepair(out,cineFloorAt);
+  cineRepair(looks,cineLookFloorAt);
+  const kn=cineKnots(out), lkn=cineKnots(looks);
+  return {ok, pts:out, looks, kn, lkn, arc:cineArcTable(out,kn), look:null,
+          safe:cineSafeShot(looks[looks.length-1])};
+}
+// Read the planned shot at normalised time t. Position follows arc length under
+// the speed profile; the look target runs on its own clock and is then chased
+// by a critically damped follow, so framing eases through a bend instead of
+// snapping with the path.
+function cineRouteSample(route,t,dt){
+  if(!route||!route.ok) return route?route.safe:null;
+  const p=cineCurveAt(route.pts,cineUAtDist(route.arc,cineDistFrac(t)),route.kn);
+  const raw=cineCurveAt(route.looks,cineDistFrac(t),route.lkn);
+  if(!route.look) route.look=raw.slice();
+  const k=1-Math.exp(-Math.max(dt,0)/CINE_LOOK_TAU);
+  route.look[0]+=(raw[0]-route.look[0])*k;
+  route.look[1]+=(raw[1]-route.look[1])*k;
+  route.look[2]+=(raw[2]-route.look[2])*k;
+  return {px:p[0],py:p[1],pz:p[2],lx:route.look[0],ly:route.look[1],lz:route.look[2]};
+}
+// INTRO_PATH's last beats were authored around the player's spawn. The live
+// director can start the flythrough from anywhere, so re-aim the tail at
+// wherever Turbo actually is — at spawn this reproduces the authored numbers.
+function introPathNow(){
+  const path=INTRO_PATH.map(w=>({p:w.p.slice(),l:w.l.slice()}));
+  const n=path.length, s=Math.sin(player.heading), c=Math.cos(player.heading);
+  path[n-3].l=[player.x,4.2,player.z];
+  path[n-2].p=[player.x-s*11,7.5,player.z-c*11];   path[n-2].l=[player.x,2.3,player.z];
+  path[n-1].p=[player.x-s*6.5,3.2,player.z-c*6.5]; path[n-1].l=[player.x,1.4,player.z];
+  return path;
+}
 function startIntro(){
   G.started=true; G.intro=true; introT=0;
+  introRoute=planCinematicRoute(introPathNow());   // one planned move, decided now
   introLinesSpoken=[];
   $('cineTop').style.display='block';
   $('cineBot').style.display='block';
@@ -9038,12 +9272,11 @@ function endIntro(){
 function updateIntroCam(dt){
   introT+=dt;
   updateIntroNarration(dt);
-  const SEG=INTRO_PATH.length-1, segT=INTRO_DUR/SEG;
-  const i=Math.min(SEG-1,Math.floor(introT/segT));
-  let f=(introT-i*segT)/segT;
-  f=f*f*(3-2*f);   // smoothstep
-  const A=INTRO_PATH[i], B=INTRO_PATH[i+1];
-  const s=flySample(A,B,f);
+  // End before sampling: past INTRO_DUR the route clamps to its last metre, so
+  // sampling it would spend the final frame decelerating to a dead stop.
+  if(introT>=INTRO_DUR){ endIntro(); return; }
+  if(!introRoute) introRoute=planCinematicRoute(introPathNow());
+  const s=cineRouteSample(introRoute,introT/INTRO_DUR,dt);
   camera.position.set(s.px,s.py,s.pz);
   camera.lookAt(s.lx,s.ly,s.lz);
   // logo: fade in fast, hold a moment, then fade out so the flythrough stays visible
@@ -9053,7 +9286,6 @@ function updateIntroCam(dt){
   else if(introT<5.4) lg.style.opacity=Math.max(0,1-(introT-4.2)/1.2);
   else lg.style.opacity=0;
   lg.style.transform=`scale(${1+Math.min(introT,5.4)*0.025})`;
-  if(introT>=INTRO_DUR) endIntro();
 }
 $('skipIntro').addEventListener('click',endIntro);
 $('skipIntro').addEventListener('touchend',e=>{ e.preventDefault(); endIntro(); });
@@ -10164,15 +10396,40 @@ function updateReplay(dt){
 // ================= CINEMA: SCENES & STAGING =================
 // point d metres ahead of Turbo (his forward is +sin/+cos of heading)
 function cinemaAhead(d){ return {x:player.x+Math.sin(player.heading)*d, z:player.z+Math.cos(player.heading)*d}; }
+// Is the subject actually visible from here, or is there a facade in the way?
+function cineSightClear(cx,cy,cz,tx,ty,tz){
+  const vols=cinematicBuildingVolumes();
+  for(let k=1;k<8;k++){
+    const f=k/8, x=lerp(cx,tx,f), y=lerp(cy,ty,f), z=lerp(cz,tz,f);
+    if(y<groundH(x,z)) return false;
+    for(const b of vols) if(y<b.baseY+b.h&&x>b.minX&&x<b.maxX&&z>b.minZ&&z<b.maxZ) return false;
+  }
+  return true;
+}
+// Pick where a staged shot cuts to. The authored 3/4 angle is tried first and
+// is still what you get on open ground; the sweep past it is what stops the
+// camera cutting into a hillside or a facade (28 of 36 placements did, before
+// this — the old floor was an absolute 0.6 with no solidity test at all).
+// Deterministic order, so the same staging always frames the same way.
+function planCinemaShot(tx,ty,tz,dist,height){
+  const base=player.heading+2.3;
+  for(const dm of [1,1.35,0.75]) for(const dh of [0,0.9,-0.9,1.9,-1.9,Math.PI]) for(const hb of [0,2.5,6]){
+    const a=base+dh, cx=tx+Math.sin(a)*dist*dm, cz=tz+Math.cos(a)*dist*dm;
+    const cy=Math.max(ty+height+hb,groundH(cx,cz)+CINE_CAM_CLEAR);
+    if(!cinematicCameraBlocked(cx,cy,cz,CINE_PAD)&&cineSightClear(cx,cy,cz,tx,ty,tz)) return {x:cx,y:cy,z:cz};
+  }
+  const s=cineSafeShot([tx,ty,tz]);   // nothing clear at this angle — crane above it
+  return {x:s.px,y:s.py,z:s.pz};
+}
 // swing the free-fly camera onto a target from a cinematic 3/4 angle
 function cinemaFrame(tx,ty,tz,dist,height){
   if(!replay) return;
   ty=(ty===undefined)?1.4:ty;
-  const a=player.heading+2.3;
-  const cx=tx+Math.sin(a)*dist, cz=tz+Math.cos(a)*dist, cy=ty+height;
+  const s=planCinemaShot(tx,ty,tz,dist,height);
+  const cx=s.x, cy=s.y, cz=s.z;
   const dx=tx-cx, dy=ty-cy, dz=tz-cz, d=Math.hypot(dx,dy,dz)||1;
   const c=replay.cam;
-  c.x=cx; c.y=Math.max(0.6,cy); c.z=cz;
+  c.x=cx; c.y=cy; c.z=cz;
   c.yaw=Math.atan2(dx,dz); c.pitch=Math.asin(clamp(dy/d,-1,1));
 }
 function cinemaFrameOnPlayer(){ cinemaFrame(player.x,1.4,player.z,8,3.4); }
@@ -10200,31 +10457,29 @@ function cinemaGoLive(){
 function cinemaIntro(){
   if(!replay) return;
   cinemaClearStaged();
-  replay.introPlay={t:0};
+  replay.introPlay={t:0,route:planCinematicRoute(introPathNow())};
   const lg=$('introLogo'); lg.style.display='flex'; lg.style.opacity='0';
   $('cineTop').style.display='block'; $('cineBot').style.display='block';
   toast('INTRO FLYTHROUGH','gold');
 }
 function updateCinemaIntro(dt){
   const ip=replay.introPlay; ip.t+=dt;
-  const SEG=INTRO_PATH.length-1, segT=INTRO_DUR/SEG;
-  const i=Math.min(SEG-1,Math.floor(ip.t/segT));
-  let f=(ip.t-i*segT)/segT; f=f*f*(3-2*f);
-  const A=INTRO_PATH[i], B=INTRO_PATH[i+1];
-  const s=flySample(A,B,f);
+  const lg=$('introLogo');
+  if(ip.t>=INTRO_DUR){   // end before sampling — see updateIntroCam
+    replay.introPlay=null; lg.style.display='none';
+    $('cineTop').style.display='none'; $('cineBot').style.display='none';
+    cinemaFrameOnPlayer();
+    return;
+  }
+  if(!ip.route) ip.route=planCinematicRoute(introPathNow());
+  const s=cineRouteSample(ip.route,ip.t/INTRO_DUR,dt);
   camera.position.set(s.px,s.py,s.pz);
   camera.lookAt(s.lx,s.ly,s.lz);
-  const lg=$('introLogo');
   if(ip.t<1.3) lg.style.opacity=ip.t/1.3;
   else if(ip.t<4.2) lg.style.opacity=1;
   else if(ip.t<5.4) lg.style.opacity=Math.max(0,1-(ip.t-4.2)/1.2);
   else lg.style.opacity=0;
   lg.style.transform=`scale(${1+Math.min(ip.t,5.4)*0.025})`;
-  if(ip.t>=INTRO_DUR){
-    replay.introPlay=null; lg.style.display='none';
-    $('cineTop').style.display='none'; $('cineBot').style.display='none';
-    cinemaFrameOnPlayer();
-  }
 }
 // scripted convo: hand off to the real cutscene system, then re-dress the
 // cinema UI once it returns (the cutscene restores the game HUD on its own)
