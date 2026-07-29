@@ -8,6 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-29 | `.github/workflows/ci.yml`, `STATUS.md` | **DONE** — CI job timeout 15→25 min. The OP2 merge on `main` (`a1d21e2`) passed in 14m03s (`npm test` 13m26s), under a minute of headroom, so the next test files would have gone red on the clock, not on a defect. No test or game change. | Signed: Claude Code \| Opus 5 \| medium |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
@@ -27,6 +28,7 @@ possible change and add a line here.
 - `HANDOFF.md` — expanded RV2 and added OP2-A–G/TM1–TM3 as owner-triggered future work; tasks share `index.html` and must be claimed sequentially. Signed: Codex | GPT-5 | high
 - `HANDOFF.md`, `CODEX/OP2_CONCURRENT/` — linked the repo-tracked four-agent OP2 dispatch packet; implementation agents must use isolated branches and owned sections. Signed: Codex | GPT-5 | high
 - `index.html`, `js/person.js` — OP2 five-agent batch, now integrated: `updatePersonShadows(simDt)` in the main loop; footsteps as plain functions after the `sfx` registry (no new module-level audio nodes, own LCG, so the `let AC=null,…` line, `exitCarSoft()`'s reset block and `_rng()` determinism are all untouched); `g.userData.shadow` exposed additively on the person rig; one `endMelee()` beside each existing `clearSprint()`/`disarmSprint()`; the cinematic route planner beside `flySample`, with `cinematicBuildingVolumes()` cached. Signed: Claude Code | Opus 5 | high
+- `.github/workflows/ci.yml` — one line, `timeout-minutes` 15→25, with the measured OP2 run time recorded in a comment above it. Signed: Claude Code | Opus 5 | medium
 
 ## Known issues
 - ~~PII in the docs~~ **RESOLVED — owner's decision, 2026-07-24:** the owner's first name in `HANDOFF.md`/`GAME_PLAN.md`/`ASSETS.md`/`STORY_BIBLE.md`/`CHARACTERS.md` is fine and does not need scrubbing. Do not re-flag it. The rest of AGENTS.md §3 still applies in full — no surnames, emails, phone numbers, addresses, other-platform usernames, or credentials of any kind. Latest scan found none of those. — 2026-07-24, Claude

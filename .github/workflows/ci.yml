@@ -12,7 +12,10 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # The suite grows with every feature batch. At the OP2 merge (a1d21e2) the
+    # job ran 14m03s of this budget — `npm test` alone was 13m26s — so the next
+    # few test files would have failed CI on the clock rather than on a defect.
+    timeout-minutes: 25
 
     defaults:
       run:
