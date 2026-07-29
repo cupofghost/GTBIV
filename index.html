@@ -3308,11 +3308,13 @@ const cars=[];
 function wedgeGeo(w,h,l){
   const hw=w/2, hl=l/2;
   const A=[-hw,0,-hl], B=[hw,0,-hl], C=[hw,h,-hl], D=[-hw,h,-hl], E=[-hw,0,hl], F=[hw,0,hl];
-  const tris=[A,B,C, A,C,D,   // tall back face
-              A,E,B, B,E,F,   // bottom
-              D,C,F, D,F,E,   // the slope
-              A,D,E,          // left side
-              B,F,C];         // right side
+  // Winding reversed (each triangle's last two verts swapped) so normals
+  // point outward: back face -z, bottom -y, slope up/+z-ish, sides ±x.
+  const tris=[A,C,B, A,D,C,   // tall back face
+              A,B,E, B,F,E,   // bottom
+              D,F,C, D,E,F,   // the slope
+              A,E,D,          // left side
+              B,C,F];         // right side
   const pos=new Float32Array(tris.flat());
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
@@ -3321,6 +3323,10 @@ function wedgeGeo(w,h,l){
 }
 function makeCarMesh(type,color){
   const t=CARTYPES[type], grp=new THREE.Group();
+  // Same fix as the helicopter: default XYZ Euler order applies pitch about
+  // world X after yaw, so a car driving east/west leaned sideways on a grade
+  // instead of nosing up/down. YXZ (yaw, then pitch, then roll) fixes it.
+  grp.rotation.order='YXZ';
   const bodyMat=new THREE.MeshLambertMaterial({color});
   const darkMat=new THREE.MeshLambertMaterial({color:0x14141c});
   const hl=new THREE.MeshBasicMaterial({color:0xfff2b0});
@@ -3376,11 +3382,13 @@ function makeCarMesh(type,color){
     // wedge nose, fastback glass, decklid — triangles doing the styling
     const glassMat=new THREE.MeshLambertMaterial({color:0x1a2030});
     const cabFront=0.15+t.l*0.18, cabRear=0.15-t.l*0.18;
+    // sunk ~0.01u below the body-top plane (0.825) so the wedge base never
+    // sits exactly coplanar with body's top face from any camera angle
     const hood=new THREE.Mesh(wedgeGeo(t.w*0.94,0.18,t.l/2-cabFront),bodyMat);
-    hood.position.set(0,0.825,(cabFront+t.l/2)/2); grp.add(hood);
+    hood.position.set(0,0.815,(cabFront+t.l/2)/2); grp.add(hood);
     const deck=new THREE.Mesh(wedgeGeo(t.w*0.94,0.15,cabRear+t.l/2),bodyMat);
     deck.rotation.y=Math.PI;
-    deck.position.set(0,0.825,(cabRear-t.l/2)/2); grp.add(deck);
+    deck.position.set(0,0.815,(cabRear-t.l/2)/2); grp.add(deck);
     const shield=new THREE.Mesh(wedgeGeo(t.w*0.74,cabH,0.95),glassMat);
     shield.position.set(0,0.84,cabFront-0.32); grp.add(shield);
     const rearGlass=new THREE.Mesh(wedgeGeo(t.w*0.74,cabH*0.92,0.85),glassMat);
@@ -5524,6 +5532,12 @@ scatterPickups();
 const helis=[];
 function makeHeliMesh(color){
   const g=new THREE.Group();
+  // Pitch must apply about the body's own lateral axis, not world X: default
+  // XYZ order composes RX·RY·RZ, so after yawing to a heading the "pitch"
+  // term rotates about world X instead — correct only facing north, inverted
+  // facing south, a pure sideways tip facing east/west. YXZ (yaw, then pitch,
+  // then roll) is the standard aircraft composition.
+  g.rotation.order='YXZ';
   const mat=new THREE.MeshLambertMaterial({color});
   const body=new THREE.Mesh(new THREE.BoxGeometry(2.2,1.6,5.2),mat);
   body.position.y=1.6; g.add(body);
