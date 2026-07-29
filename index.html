@@ -3323,6 +3323,10 @@ function wedgeGeo(w,h,l){
 }
 function makeCarMesh(type,color){
   const t=CARTYPES[type], grp=new THREE.Group();
+  // Same fix as the helicopter: default XYZ Euler order applies pitch about
+  // world X after yaw, so a car driving east/west leaned sideways on a grade
+  // instead of nosing up/down. YXZ (yaw, then pitch, then roll) fixes it.
+  grp.rotation.order='YXZ';
   const bodyMat=new THREE.MeshLambertMaterial({color});
   const darkMat=new THREE.MeshLambertMaterial({color:0x14141c});
   const hl=new THREE.MeshBasicMaterial({color:0xfff2b0});

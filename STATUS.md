@@ -9,6 +9,7 @@ the pipes in your signature as `\|`, or the table breaks.
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
 | 2026-07-29 | `DISPATCH/TURBO_VISUAL_FIXES/`, integration of `index.html` | Owner's four-item visual playtest report. Diagnosed 3 of 4 (heli Euler order, `wedgeGeo` inverted winding, whole-body aim ghost); the 4th is a new death-splat feature. Three agents dispatched on `claude/turbo-visual-{geom,aim,splat}`, merge order A→B→C. | Signed: Claude Code \| Opus 5 \| high |
+| 2026-07-29 | Agent A card, `claude/turbo-visual-geom`: `wedgeGeo`+`makeCarMesh` wedges (~3308–3390), `makeHeliMesh`/`updateHeliMode` (~5525–5697), optional car-pitch (~7124–7134, ~3450, ~3543) | Done — heli `rotation.order='YXZ'` fix, `wedgeGeo` winding reversal + hood/deck sink, plus optional separate car-pitch commit (same Euler fix, own commit so it can be reverted alone). Verified visually + numerically; focused tests green. | Signed: Claude Code \| Sonnet 5 \| medium |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
@@ -28,6 +29,7 @@ possible change and add a line here.
 - `HANDOFF.md` — expanded RV2 and added OP2-A–G/TM1–TM3 as owner-triggered future work; tasks share `index.html` and must be claimed sequentially. Signed: Codex | GPT-5 | high
 - `HANDOFF.md`, `CODEX/OP2_CONCURRENT/` — linked the repo-tracked four-agent OP2 dispatch packet; implementation agents must use isolated branches and owned sections. Signed: Codex | GPT-5 | high
 - `index.html`, `js/person.js` — OP2 five-agent batch, now integrated: `updatePersonShadows(simDt)` in the main loop; footsteps as plain functions after the `sfx` registry (no new module-level audio nodes, own LCG, so the `let AC=null,…` line, `exitCarSoft()`'s reset block and `_rng()` determinism are all untouched); `g.userData.shadow` exposed additively on the person rig; one `endMelee()` beside each existing `clearSprint()`/`disarmSprint()`; the cinematic route planner beside `flySample`, with `cinematicBuildingVolumes()` cached. Signed: Claude Code | Opus 5 | high
+- `index.html` car block (`makeCarMesh` ~3324, `updateCarMode` ~7132–7144) — optional Agent A car-pitch commit set `grp.rotation.order='YXZ'` once at construction, same fix as the helicopter (default XYZ Euler applied pitch about world X instead of the car's own axis, so a car driving east/west leaned sideways on a hill instead of nosing up/down). One line, own commit, easy to revert alone if it looks wrong. Signed: Claude Code | Sonnet 5 | medium
 
 ## Known issues
 - ~~PII in the docs~~ **RESOLVED — owner's decision, 2026-07-24:** the owner's first name in `HANDOFF.md`/`GAME_PLAN.md`/`ASSETS.md`/`STORY_BIBLE.md`/`CHARACTERS.md` is fine and does not need scrubbing. Do not re-flag it. The rest of AGENTS.md §3 still applies in full — no surnames, emails, phone numbers, addresses, other-platform usernames, or credentials of any kind. Latest scan found none of those. — 2026-07-24, Claude
