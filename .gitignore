@@ -2,3 +2,5 @@
 node_modules/
 *.log
 .DS_Store
+# transient agent worktrees (full checkouts, auto-removed when the agent ends)
+.claude/worktrees/
