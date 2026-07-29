@@ -8,6 +8,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-07-29 | `DISPATCH/TURBO_VISUAL_FIXES/`, integration of `index.html` | Owner's four-item visual playtest report. Diagnosed 3 of 4 (heli Euler order, `wedgeGeo` inverted winding, whole-body aim ghost); the 4th is a new death-splat feature. Three agents dispatched on `claude/turbo-visual-{geom,aim,splat}`, merge order A→B→C. | Signed: Claude Code \| Opus 5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
