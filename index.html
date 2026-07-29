@@ -5524,6 +5524,12 @@ scatterPickups();
 const helis=[];
 function makeHeliMesh(color){
   const g=new THREE.Group();
+  // Pitch must apply about the body's own lateral axis, not world X: default
+  // XYZ order composes RX·RY·RZ, so after yawing to a heading the "pitch"
+  // term rotates about world X instead — correct only facing north, inverted
+  // facing south, a pure sideways tip facing east/west. YXZ (yaw, then pitch,
+  // then roll) is the standard aircraft composition.
+  g.rotation.order='YXZ';
   const mat=new THREE.MeshLambertMaterial({color});
   const body=new THREE.Mesh(new THREE.BoxGeometry(2.2,1.6,5.2),mat);
   body.position.y=1.6; g.add(body);
