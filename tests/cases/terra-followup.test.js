@@ -1,39 +1,14 @@
 'use strict';
-// Regression coverage for the last Terra handoff items: the big explosion's
-// persistent mesh cloud and Turbo's strict recorded-audio policy.
+// Regression coverage for the last Terra handoff items: Turbo's strict
+// recorded-audio policy.
+//
+// The mushroom-cloud case that used to lead this file was retired on
+// 2026-07-28: OP2-G removed that presentation layer on owner direction, so
+// `boomFx`/`updateBoomFx` no longer exist. The retained single explosion is
+// covered by `vehicle-sanity.test.js` ("OP2-G: critical car damage halves the
+// detonation fuse…"), which also asserts the cloud globals are gone.
 module.exports = {
   cases: [
-    {
-      name: 'big explosions grow a solid red mushroom cloud without rising particles',
-      query: '?dev=1&skipintro=1',
-      run: async (page, { assert }) => {
-        const r = await page.evaluate(() => {
-          const before = boomFx.length;
-          bigExplosion(player.x, 1, player.z);
-          const cloud = boomFx[before];
-          const particlesAfterImpact = pNext;
-          updateBoomFx(0.5); // initial fireball bloom: cloud remains hidden
-          const hiddenDuringBloom = !cloud.group.visible;
-          updateBoomFx(0.2); // cap and stem begin growing after the bloom
-          const firstCapY = cloud.cap.position.y;
-          updateBoomFx(0.8);
-          return {
-            capIsSphere: cloud.cap.geometry.type === 'SphereGeometry',
-            stemIsCylinder: cloud.stem.geometry.type === 'CylinderGeometry',
-            redCap: cloud.cap.material.color.r > cloud.cap.material.color.g,
-            visible: cloud.group.visible,
-            hiddenDuringBloom,
-            rose: cloud.cap.position.y > firstCapY,
-            stemHeight: cloud.stem.scale.y,
-            noRisingParticles: pNext === particlesAfterImpact,
-          };
-        });
-        assert(r.capIsSphere && r.stemIsCylinder, 'expected a mesh sphere cap and cylinder stem, got ' + JSON.stringify(r));
-        assert(r.redCap && r.visible && r.hiddenDuringBloom, 'cloud should emerge as a red cap after the fireball bloom, got ' + JSON.stringify(r));
-        assert(r.rose && r.stemHeight > 1, 'cloud cap should rise while a solid stem grows beneath it, got ' + JSON.stringify(r));
-        assert(r.noRisingParticles, 'the mushroom cloud update should not emit rising particle sparkles');
-      },
-    },
     {
       name: 'Turbo stays MP3-only while Deb and NPC dialogue retain generated speech',
       query: '?dev=1&skipintro=1',

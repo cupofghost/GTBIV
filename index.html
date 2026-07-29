@@ -40,8 +40,8 @@
   #boostbar { width:130px; height:6px; background:rgba(0,0,0,.55); border:1px solid #fff2; border-radius:4px; margin-top:2px; overflow:hidden; }
   #boostfill { height:100%; width:100%; background:#37c8ff; }
   #mission, #storyObj { top:calc(46px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
-    max-width:min(calc(var(--lvw)*0.86),560px); text-align:center; font-size:14px; line-height:1.35;
-    background:rgba(6,2,16,.85); border:1px solid #ff3ea088; border-radius:10px; padding:7px 14px; color:#fff; }
+    max-width:min(calc(var(--lvw)*0.7),420px); text-align:center; font-size:12px; line-height:1.3;
+    background:rgba(6,2,16,.55); border:1px solid #ff3ea066; border-radius:16px; padding:4px 12px; color:#fff; }
   #mission b, #storyObj b { color:#ff9ecb; }
   #minimap { position:absolute; top:calc(44px + env(safe-area-inset-top)); right:12px;
     width:118px; height:118px; border-radius:50%; border:2px solid rgba(255,255,255,.35); background:#111; opacity:.92; }
@@ -50,7 +50,13 @@
     background:rgba(6,2,16,.68); border:1px solid rgba(255,255,255,.2); border-radius:8px;
     padding:3px 6px; opacity:.92; }
   #minimapLegend span { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:4px; }
-  #missionOffer { display:none; position:fixed; z-index:24; left:50%; top:50%; transform:translate(-50%,-50%); pointer-events:auto; padding:12px 22px; border-radius:14px; border:1px solid #ff9ecb88; background:rgba(34,8,50,.7); color:#fff; font:900 14px 'Arial Black',Arial,sans-serif; letter-spacing:2px; }
+  /* A quiet edge chip, not a screen-center modal: sits in the same out-of-the-way
+     strip as #mission/#storyObj (the three never show at once) so it never sits
+     over the reticule or dominates the view. */
+  #missionOffer { display:none; position:absolute; z-index:24; top:calc(46px + env(safe-area-inset-top)); left:50%;
+    transform:translateX(-50%); pointer-events:auto; padding:6px 16px; border-radius:16px;
+    border:1px solid #ff9ecb66; background:rgba(34,8,50,.55); color:#fff;
+    font:900 12px 'Arial Black',Arial,sans-serif; letter-spacing:1.5px; }
   #toasts { position:absolute; bottom:34%; left:50%; transform:translateX(-50%);
     display:flex; flex-direction:column; align-items:center; gap:5px; }
   .toast { font-size:17px; color:#fff; text-shadow:0 2px 3px #000, 0 0 8px #000;
@@ -83,14 +89,17 @@
     display:none; align-items:center; justify-content:center; text-shadow:0 1px 3px #000; }
   #bubble { position:fixed; z-index:16; display:none; background:#fff; color:#141414;
     font-family:Arial, sans-serif; font-weight:700; font-size:14px; padding:8px 12px;
-    border-radius:14px; max-width:230px; pointer-events:none; transform:translate(-50%,-115%);
+    border-radius:14px; max-width:230px; pointer-events:none;
     box-shadow:0 4px 14px rgba(0,0,0,.4); }
-  #bubble:after { content:''; position:absolute; left:32px; bottom:-9px;
-    border:10px solid transparent; border-top-color:#fff; border-bottom:0; }
   .chatBubble { position:fixed; z-index:15; display:none; background:#fff; color:#141414;
     font-family:Arial, sans-serif; font-weight:700; font-size:11px; padding:5px 9px;
-    border-radius:11px; max-width:170px; pointer-events:none; transform:translate(-50%,-120%);
+    border-radius:11px; max-width:170px; pointer-events:none;
     box-shadow:0 3px 10px rgba(0,0,0,.4); }
+  /* head-anchored tail: base triangle points straight down (0deg); JS rotates
+     it around its apex (transform-origin) to face the speaker's projected head */
+  .bubbleTail { position:absolute; width:0; height:0; pointer-events:none;
+    border-left:9px solid transparent; border-right:9px solid transparent; border-top:11px solid #fff;
+    transform-origin:9px 11px; }
   .tbtn { width:74px; height:64px; border-radius:16px; border:2px solid rgba(255,255,255,.35);
     background:rgba(30,14,60,.5); color:#fff; font-size:12px; font-weight:900;
     display:flex; align-items:center; justify-content:center; text-align:center; text-shadow:0 1px 3px #000; }
@@ -210,6 +219,8 @@
     #speedo { top:calc(84px + env(safe-area-inset-top)) !important; font-size:11px; transform:scale(0.62); transform-origin:top left; }
     #btnHorn { bottom:calc(146px + env(safe-area-inset-bottom)); left:40px; width:62px; height:44px; }
     .hudBox { font-size:12px; padding:4px 8px; }
+    #mission, #storyObj { top:calc(38px + env(safe-area-inset-top)) !important; font-size:11px !important; padding:3px 10px !important; }
+    #missionOffer { top:calc(38px + env(safe-area-inset-top)) !important; padding:5px 13px !important; font-size:11px !important; }
     /* --- compact title screen so it fits a phone --- */
     #startInner { gap:6px; padding:8px 12px; }
     #title { font-size:min(calc(var(--lvw)*0.065),26px); }
@@ -528,7 +539,7 @@
     </div>
   </div>
 </div>
-<div id="bubble"></div>
+<div id="bubble"><span id="bubbleTxt"></span><div class="bubbleTail" id="bubbleTail"></div></div>
 <div id="bigEvent" class="overlay">
   <div id="bigEventText"></div>
   <div id="bigEventSub"></div>
@@ -725,63 +736,63 @@ let TRAFFIC_CAP=30, PED_CAP=60, PARTICLE_SCALE=1, GFX_TIER='high';
 // CODE MAP — Search by section name to navigate quickly.
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
-// HELPERS & GLOBAL STATE                           (706–720, ~15 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                              (787–848, ~62 lines)
-// AUDIO                                             (849–1072, ~224 lines)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK               (1073–1575, ~503 lines)
-// THREE SETUP                                       (1576–1626, ~51 lines)
-// CITY                                              (1627–2468, ~842 lines)
-//   └ RADIO TOWERS                                 (2072–2177, ~106 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                    (2469–2519, ~51 lines)
-// ELEVATED LIGHT RAIL                               (2520–2644, ~125 lines)
-// STAIRS & FIRE ESCAPES                             (2645–2719, ~75 lines)
-// WALL LADDERS                                      (2720–2997, ~278 lines)
-// PARTICLES                                         (2998–3052, ~55 lines)
-// BLOB SHADOWS                                      (3053–3057, ~5 lines)
-// GPU RESOURCE CLEANUP                              (3058–3079, ~22 lines)
-// CARS                                              (3080–3322, ~243 lines)
-// PEDESTRIANS                                       (3323–3517, ~195 lines)
-// PIZZA DELIVERY SYSTEM                             (3518–3673, ~156 lines)
-// RIVAL PIZZA GANG: CHAOS PIZZA                     (3674–3801, ~128 lines)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                 (3802–3981, ~180 lines)
-// STRAY DOGS & DOG GANGS                            (3982–4287, ~306 lines)
-// PIZZA WARS MISSION                                (4288–4362, ~75 lines)
-// PLAYER                                            (4363–4406, ~44 lines)
-// PIZZA PLACE & INTERIOR                            (4407–4567, ~161 lines)
-// SIDEWALKS & STOREFRONT AWNINGS                    (4568–4676, ~109 lines)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS   (4677–4876, ~200 lines)
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS        (4877–4992, ~116 lines)
-// DAY/NIGHT & HEIST SYSTEM                          (4993–5185, ~193 lines)
-// PICKUPS                                           (5186–5228, ~43 lines)
-// HELICOPTERS                                       (5229–5709, ~481 lines)
-// TALKING PEDS                                      (5710–5826, ~117 lines)
-// WEAPONS                                           (5827–6529, ~703 lines)
-// WANTED                                            (6530–6635, ~106 lines)
-// CAR PHYSICS                                       (6636–6829, ~194 lines)
-// PLAYER: FOOT & CAR                                (6830–7468, ~639 lines)
-// HUD / TOASTS                                      (7469–7512, ~44 lines)
-// MISSIONS                                          (7513–7686, ~174 lines)
-// AI                                                (7687–7711, ~25 lines)
-// FOOT COPS                                         (7712–7755, ~44 lines)
-// SEWER RATS                                        (7756–7872, ~117 lines)
-// MAMA RAT (rat vengeance) — PLACEHOLDER            (7873–8239, ~367 lines)
-// BUSTED / WASTED                                   (8240–8330, ~91 lines)
-// CAMERA                                            (8331–8440, ~110 lines)
-// MINIMAP                                           (8441–8488, ~48 lines)
-// MAIN LOOP                                         (8489–8669, ~181 lines)
-// ORIENTATION                                       (8670–8727, ~58 lines)
-// ANIMATED INTRO                                    (8728–8851, ~124 lines)
-// STORY: TURBO JONES, CHAPTER 1                     (8852–9112, ~261 lines)
-// CUTSCENE SYSTEM                                   (9113–9359, ~247 lines)
-// VOICEOVER SYSTEM                                  (9360–9441, ~82 lines)
-// INTRO NARRATION                                   (9442–9743, ~302 lines)
-// DEV TOOLS                                         (9744–9821, ~78 lines)
-// CINEMA MODE (was REPLAY)                          (9822–9954, ~133 lines)
-// CINEMA: SCENES & STAGING                          (9955–10147, ~193 lines)
-// PAUSE MENU & SETTINGS                             (10148–10356, ~209 lines)
-// CONTROLS CARD (U2 onboarding)                    (10357–10389, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (10390–10445, ~56 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                   (10446–end, ~40 lines: boot, init, resize handlers, quality apply)
+// HELPERS & GLOBAL STATE                           (719–727, ~9 lines: rand, randi, pick, clamp, lerp, TAU, $)
+// DEVICE / ORIENTATION                             (798–859, ~62 lines)
+// AUDIO                                            (860–1158, ~299 lines)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1159–1661, ~503 lines)
+// THREE SETUP                                      (1662–1712, ~51 lines)
+// CITY                                             (1713–2621, ~909 lines)
+//   └ RADIO TOWERS                                 (2225–2331, ~107 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
+// FOOTBALL FIELD                                   (2622–2672, ~51 lines)
+// ELEVATED LIGHT RAIL                              (2673–2797, ~125 lines)
+// STAIRS & FIRE ESCAPES                            (2798–2872, ~75 lines)
+// WALL LADDERS                                     (2873–3150, ~278 lines)
+// PARTICLES                                        (3151–3205, ~55 lines)
+// BLOB SHADOWS                                     (3206–3267, ~62 lines)
+// GPU RESOURCE CLEANUP                             (3268–3289, ~22 lines)
+// CARS                                             (3290–3581, ~292 lines)
+// PEDESTRIANS                                      (3582–3790, ~209 lines)
+// PIZZA DELIVERY SYSTEM                            (3791–3946, ~156 lines)
+// RIVAL PIZZA GANG: CHAOS PIZZA                    (3947–4074, ~128 lines)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4075–4254, ~180 lines)
+// STRAY DOGS & DOG GANGS                           (4255–4560, ~306 lines)
+// PIZZA WARS MISSION                               (4561–4635, ~75 lines)
+// PLAYER                                           (4636–4679, ~44 lines)
+// PIZZA PLACE & INTERIOR                           (4680–4843, ~164 lines)
+// SIDEWALKS & STOREFRONT AWNINGS                   (4844–4970, ~127 lines)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (4971–5170, ~200 lines)
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (5171–5286, ~116 lines)
+// DAY/NIGHT & HEIST SYSTEM                         (5287–5479, ~193 lines)
+// PICKUPS                                          (5480–5522, ~43 lines)
+// HELICOPTERS                                      (5523–6025, ~503 lines)
+// TALKING PEDS                                     (6026–6167, ~142 lines)
+// WEAPONS                                          (6168–6875, ~708 lines)
+// WANTED                                           (6876–6981, ~106 lines)
+// CAR PHYSICS                                      (6982–7209, ~228 lines)
+// PLAYER: FOOT & CAR                               (7210–7959, ~750 lines)
+// HUD / TOASTS                                     (7960–8003, ~44 lines)
+// MISSIONS                                         (8004–8177, ~174 lines)
+// AI                                               (8178–8300, ~123 lines)
+// FOOT COPS                                        (8301–8344, ~44 lines)
+// SEWER RATS                                       (8345–8461, ~117 lines)
+// MAMA RAT (rat vengeance) — PLACEHOLDER           (8462–8828, ~367 lines)
+// BUSTED / WASTED                                  (8829–8919, ~91 lines)
+// CAMERA                                           (8920–9029, ~110 lines)
+// MINIMAP                                          (9030–9077, ~48 lines)
+// MAIN LOOP                                        (9078–9259, ~182 lines)
+// ORIENTATION                                      (9260–9317, ~58 lines)
+// ANIMATED INTRO                                   (9318–9673, ~356 lines)
+// STORY: TURBO JONES, CHAPTER 1                    (9674–9929, ~256 lines)
+// CUTSCENE SYSTEM                                  (9930–10177, ~248 lines)
+// VOICEOVER SYSTEM                                 (10178–10259, ~82 lines)
+// INTRO NARRATION                                  (10260–10561, ~302 lines)
+// DEV TOOLS                                        (10562–10639, ~78 lines)
+// CINEMA MODE (was REPLAY)                         (10640–10772, ~133 lines)
+// CINEMA: SCENES & STAGING                         (10773–10988, ~216 lines)
+// PAUSE MENU & SETTINGS                            (10989–11198, ~210 lines)
+// CONTROLS CARD (U2 onboarding)                    (11199–11231, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (11232–11287, ~56 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                   (11288–end, ~41 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -1070,6 +1081,81 @@ const sfx={
   dogGrowl(){ noiseBurst(0.22,0.3,380,1.4,'bandpass'); blip(180,90,0.16,0.16,'sawtooth'); },
   dogBite(){ noiseBurst(0.07,0.35,450,1.3,'bandpass'); blip(140,60,0.1,0.22,'sawtooth'); },
 };
+
+// ---- OP2-D: Turbo's footsteps -------------------------------------------
+// Driven by real left/right gait-phase crossings in updateFoot(), not a timer,
+// so a step lands when a foot lands. Deliberately built out of one cached noise
+// buffer plus per-step nodes: no new module-level audio state (the `let AC=…`
+// line and exitCarSoft()'s reset block are the two most-conflicted lines in the
+// repo) and no draw from _rng(), so the deterministic world stream is untouched
+// by how much the player walks.
+let _stepNoise=null, _stepLastT=-1;
+const STEP_MIN_GAP=0.085;   // a dropped frame must not fire a burst of steps
+const STEP_SURFACES={
+  //            filter        cut     Q     dur    scuff  thump  thumpHz
+  street : {type:'bandpass', f:1500, q:0.9, d:0.050, n:0.30, t:0.11, tf:96 },
+  grass  : {type:'lowpass',  f: 760, q:0.7, d:0.075, n:0.26, t:0.05, tf:78 },
+  sand   : {type:'lowpass',  f: 430, q:0.5, d:0.095, n:0.30, t:0.02, tf:64 },
+  roof   : {type:'bandpass', f: 900, q:2.6, d:0.085, n:0.24, t:0.09, tf:120},
+};
+function stepNoiseBuffer(){
+  if(_stepNoise&&_stepNoise.sampleRate===AC.sampleRate) return _stepNoise;
+  // its own tiny LCG — deliberately not _rng(), see above
+  const len=Math.floor(AC.sampleRate*0.14), b=AC.createBuffer(1,len,AC.sampleRate), d=b.getChannelData(0);
+  let s=0x9e3779b9>>>0;
+  for(let i=0;i<len;i++){ s=(s*1664525+1013904223)>>>0; d[i]=s/2147483648-1; }
+  return (_stepNoise=b);
+}
+// one shaped scuff off the cached buffer
+function stepScuff(S,vol,dur,rate,tone){
+  const now=AC.currentTime;
+  const src=AC.createBufferSource(); src.buffer=stepNoiseBuffer();
+  src.playbackRate.value=clamp(rate,0.5,1.8);
+  const flt=AC.createBiquadFilter(); flt.type=S.type;
+  flt.frequency.value=clamp(S.f*tone,60,12000); flt.Q.value=S.q;
+  const g=AC.createGain();
+  g.gain.setValueAtTime(0.0001,now);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002,vol),now+0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001,now+dur);
+  src.connect(flt); flt.connect(g); g.connect(sfxGain);
+  src.start(now); src.stop(now+dur+0.02);
+}
+// the weight of a plant: a short low body under the scuff
+function stepThump(f0,vol,dur){
+  const now=AC.currentTime, o=AC.createOscillator(), g=AC.createGain();
+  o.type='sine'; o.frequency.setValueAtTime(f0,now);
+  o.frequency.exponentialRampToValueAtTime(Math.max(22,f0*0.55),now+dur);
+  g.gain.setValueAtTime(Math.max(0.0002,vol),now);
+  g.gain.exponentialRampToValueAtTime(0.0001,now+dur);
+  o.connect(g); g.connect(sfxGain); o.start(now); o.stop(now+dur+0.02);
+}
+// foot: 0 left / 1 right. speed: 0 stroll .. 1 flat sprint. scale: Turbo's height.
+function footstep(surface,foot,speed,scale){
+  if(!AC||SETTINGS.sfx<=0) return false;
+  const now=AC.currentTime;
+  if(_stepLastT>=0&&now-_stepLastT<STEP_MIN_GAP) return false;
+  _stepLastT=now;
+  const S=STEP_SURFACES[surface]||STEP_SURFACES.street, sc=scale||1;
+  // the two feet are not the same foot: a little pitch and level between them
+  const side=foot?1:-1, tone=(1+side*0.045)/sc;
+  // heavier and lower the faster and bigger he is, but never cartoony, and the
+  // faster he goes the shorter each contact gets — that is what stops a sprint
+  // turning into a machine gun
+  const heavy=0.72+speed*0.42, vol=clamp(0.15*heavy*(1+side*0.10),0,0.30);
+  const dur=S.d*(1.22-speed*0.30);
+  stepScuff(S,vol*S.n*3.2,dur,tone*(1-speed*0.10),tone*(1-speed*0.12));
+  if(S.t>0.02) stepThump(S.tf*sc*(1+speed*0.10)*(1+side*0.03),vol*S.t*2.4,dur*0.9);
+  return true;
+}
+// Coming down off a jump, a roof or a fire escape: the same surface, with the
+// weight moved into the low end and none of the alternating-gait shaping.
+function footLand(surface,drop,scale){
+  if(!AC||SETTINGS.sfx<=0) return;
+  const S=STEP_SURFACES[surface]||STEP_SURFACES.street, sc=scale||1, w=clamp(drop,0.25,1.6);
+  _stepLastT=AC.currentTime;   // no gait step on the same frame as the landing
+  stepScuff(S,clamp(0.30*w,0.04,0.5),S.d*1.8,0.8/sc,0.75/sc);
+  stepThump(S.tf*1.35*sc,clamp(0.26*w,0.04,0.42),0.17+0.06*w);
+}
 // ================= PROCEDURAL 80s SYNTHWAVE SOUNDTRACK =================
 // Each radio station is a *playlist* of through-composed songs. A song is a
 // chord progression + a bassline + a lead melody + an arrangement of sections
@@ -1821,12 +1907,11 @@ groundCanvas.width=groundCanvas.height=1024;
       g.beginPath(); g.moveTo(0,px(l+o)); g.lineTo(1024,px(l+o)); g.stroke();
     });
   });
-  g.strokeStyle='#e8c14a'; g.lineWidth=2; g.setLineDash([10,12]);
-  roadLines.forEach(l=>{
-    g.beginPath(); g.moveTo(px(l),0); g.lineTo(px(l),1024); g.stroke();
-    g.beginPath(); g.moveTo(0,px(l)); g.lineTo(1024,px(l)); g.stroke();
-  });
-  g.setLineDash([]);
+  // grid-street centre dashes used to be painted here too, but a canvas this
+  // size (~1.4px/world-unit) makes a lane stripe read as a blurry, stretched
+  // smear at walking/driving distance — see the world-scale dash geometry
+  // built after groundTex below (OP2-A). Left off the texture entirely so
+  // nothing shows through around the new geometry.
   // the Coast Highway: one big curvy ring around the whole city
   g.fillStyle='#2c2839';
   g.beginPath(); g.arc(512,512,px(H+7)-512+(ROAD*0.85*S)/2,0,TAU);
@@ -1834,12 +1919,10 @@ groundCanvas.width=groundCanvas.height=1024;
   g.strokeStyle='#e8c14a'; g.lineWidth=2; g.setLineDash([10,12]);
   g.beginPath(); g.arc(512,512,px(H+7)-512,0,TAU); g.stroke();
   g.setLineDash([]);
-  // sewer manholes dot the streets
-  MANHOLE_SPOTS.forEach(mh=>{
-    g.fillStyle='#14121c'; g.beginPath(); g.arc(px(mh.x),px(mh.z),1.1*S,0,TAU); g.fill();
-    g.strokeStyle='#3a3450'; g.lineWidth=2;
-    g.beginPath(); g.arc(px(mh.x),px(mh.z),1.1*S,0,TAU); g.stroke();
-  });
+  // sewer manholes used to get a painted dot here too — same low-res problem
+  // as the centre dashes above, and this texture-space dot was also drawn
+  // oversized (1.1u radius). Real geometry replaces it below (OP2-A); the
+  // canvas is left blank at these spots so nothing shows through.
   // the football field: Wildcats green, yard lines, end zones
   const fbB=blockInfo.find(b=>b.football);
   if(fbB){
@@ -1953,6 +2036,76 @@ const sandGeo=terrainGeo(SAND_LINES,WORLD.size/2+13,sandOffset,SAND_EDGE-10);
 const sand=new THREE.Mesh(sandGeo,
   new THREE.MeshLambertMaterial({color:0xb89a66}));
 scene.add(sand);
+
+// ---- OP2-A: road centre-line dashes, world-scale geometry ----
+// Real-world lane paint: ~3u painted dash, ~9u gap, ~0.15u wide — the old
+// canvas dashes above were 2 canvas px wide, which at ~1.4px/world-unit
+// meant a ~1.4u-wide stripe, nearly 10x too fat, and blurred badly on
+// magnification. Actual geometry reads correctly at any camera distance.
+// Grid streets only (roadLines, both travel directions); the decorative
+// Coast Highway ring keeps its painted dash — it's a texture-space arc, not
+// part of this card's "grid street" scope.
+(function(){
+  const DASH_LEN=3, DASH_GAP=9, DASH_W=0.15, DASH_H=0.02;
+  const dashGeo=new THREE.BoxGeometry(DASH_LEN,DASH_H,DASH_W); dashGeo.translate(0,DASH_H/2,0);
+  const spots=[];
+  roadLines.forEach(l=>{
+    for(let z=-H;z<H;z+=DASH_LEN+DASH_GAP) spots.push({x:l,z:z+DASH_LEN/2,axis:1});
+    for(let x=-H;x<H;x+=DASH_LEN+DASH_GAP) spots.push({x:x+DASH_LEN/2,z:l,axis:0});
+  });
+  const dashInst=new THREE.InstancedMesh(dashGeo,new THREE.MeshLambertMaterial({color:0xe8c14a}),spots.length);
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
+        pos=new THREE.Vector3(), scl=new THREE.Vector3(1,1,1);
+  spots.forEach((s,i)=>{
+    e.set(0,s.axis?Math.PI/2:0,0); q.setFromEuler(e);
+    pos.set(s.x,groundH(s.x,s.z)+0.015,s.z);
+    m.compose(pos,q,scl); dashInst.setMatrixAt(i,m);
+  });
+  dashInst.instanceMatrix.needsUpdate=true; scene.add(dashInst);
+})();
+
+// ---- OP2-A: manhole covers, world-scale geometry ----
+// Rebuilt at believable street scale (~0.8u cover, real manholes run
+// 0.6-0.9u/60-90cm) with a rim + a slightly recessed lid carrying a
+// restrained tread pattern, replacing the blurry oversized painted dot.
+// MANHOLE_SPOTS itself is untouched — same positions, same count, same
+// array the sewer-rat system (§SEWER RATS) reads by reference.
+(function(){
+  // The rim is a torus (open centre), not a solid disc — a solid disc's top
+  // cap would cover its full radius and hide the lower, smaller lid
+  // entirely, which is exactly what happened during this card's first pass.
+  const RIM_R=0.42, TUBE_R=0.05, LID_R=0.33, LID_H=0.03, LID_Y=0.02;
+  const rimGeo=new THREE.TorusGeometry(RIM_R,TUBE_R,8,20); rimGeo.rotateX(Math.PI/2); rimGeo.translate(0,TUBE_R,0);
+  const lidGeo=new THREE.CylinderGeometry(LID_R,LID_R,LID_H,20); lidGeo.translate(0,LID_H/2,0);
+  function makeLidTex(){
+    const c=document.createElement('canvas'); c.width=c.height=64;
+    const g=c.getContext('2d');
+    g.fillStyle='#302d34'; g.fillRect(0,0,64,64);
+    g.strokeStyle='#1c1a20'; g.lineWidth=1.4;
+    for(let r=6;r<30;r+=6){ g.beginPath(); g.arc(32,32,r,0,TAU); g.stroke(); }
+    g.fillStyle='#413d46';
+    for(let a=0;a<8;a++){
+      const ang=a/8*TAU;
+      g.beginPath(); g.arc(32+Math.cos(ang)*20,32+Math.sin(ang)*20,3,0,TAU); g.fill();
+    }
+    return new THREE.CanvasTexture(c);
+  }
+  const rimInst=new THREE.InstancedMesh(rimGeo,new THREE.MeshLambertMaterial({color:0x232126}),MANHOLE_SPOTS.length);
+  const lidInst=new THREE.InstancedMesh(lidGeo,new THREE.MeshLambertMaterial({map:makeLidTex()}),MANHOLE_SPOTS.length);
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
+        pos=new THREE.Vector3(), scl=new THREE.Vector3(1,1,1);
+  MANHOLE_SPOTS.forEach((mh,i)=>{
+    const gy=groundH(mh.x,mh.z);
+    e.set(0,rand(0,TAU),0); q.setFromEuler(e);
+    pos.set(mh.x,gy,mh.z);
+    m.compose(pos,q,scl); rimInst.setMatrixAt(i,m);
+    pos.set(mh.x,gy+LID_Y,mh.z);
+    m.compose(pos,q,scl); lidInst.setMatrixAt(i,m);
+  });
+  rimInst.instanceMatrix.needsUpdate=true; lidInst.instanceMatrix.needsUpdate=true;
+  scene.add(rimInst); scene.add(lidInst);
+})();
+
 const waterCanvas=document.createElement('canvas');
 waterCanvas.width=waterCanvas.height=128;
 (function(){
@@ -3053,7 +3206,64 @@ function setTail(car,on){
 // ================= BLOB SHADOWS =================
 const shGeo=new THREE.CircleGeometry(1,10);
 const shMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.32,depthWrite:false});
-function makeShadow(rx){ const m=new THREE.Mesh(shGeo,shMat); m.rotation.x=-Math.PI/2; m.scale.set(rx,rx*0.7,1); m.position.y=0.03; return m; }
+function makeShadow(rx){ const m=new THREE.Mesh(shGeo,shMat); m.rotation.x=-Math.PI/2; m.scale.set(rx,rx*0.7,1); m.position.y=0.03; m.userData.rx=rx; return m; }
+
+// OP2-D. A person's shadow is a projection onto the ground, so it must not
+// inherit the body's rotation — when a ped was knocked flat, his shadow stood up
+// on its edge and hung in the air with him. The disc stays a CHILD of the person
+// (which is what makes it pool, hide and dispose exactly with its actor, for
+// free) and this pass overwrites its local matrix each frame with whatever
+// cancels the body: flat on the terrain under him, yawed with him, and easing
+// from a compact ellipse at the feet into a long body-shaped smear as he goes
+// down — and back again if he gets up. Shared shGeo/shMat throughout, no shadow
+// maps: this runs on a phone.
+const RIG_TORSO_Y=1.02;          // js/person.js: the torso pivot, in rig units
+const SHADOW_FALL_EASE=0.2;      // seconds to cross between the two shapes
+const _shUp=new THREE.Vector3(), _shPos=new THREE.Vector3(), _shScl=new THREE.Vector3(),
+      _shQ=new THREE.Quaternion(), _shE=new THREE.Euler(),
+      _shParent=new THREE.Matrix4(), _shWorld=new THREE.Matrix4(),
+      _shYawQ=new THREE.Quaternion(), _shAxisY=new THREE.Vector3(0,1,0);
+function updatePersonShadow(g,dt){
+  if(!g||!g.visible) return;
+  const s=g.userData&&g.userData.shadow;
+  if(!s||s.parent!==g) return;   // person meshes are scene children: local == world
+  const sy=g.scale.y||1;
+  _shUp.set(0,1,0).applyQuaternion(g.quaternion);        // where "up the spine" points
+  const tip=clamp(1-Math.abs(_shUp.y),0,1);              // 0 upright, 1 horizontal
+  const ground=groundH(g.position.x,g.position.z);
+  // horizontal alone isn't down: mid-kick Turbo is horizontal at waist height and
+  // should keep his feet-shadow. Only a body lying LOW earns the long one.
+  const torsoY=g.position.y+RIG_TORSO_Y*sy*_shUp.y;
+  const low=clamp((0.75-(torsoY-ground))/0.35,0,1);
+  const want=tip*low;
+  const fall=s.userData.fall=lerp(s.userData.fall||0,want,Math.min(1,dt/SHADOW_FALL_EASE));
+  // the body extends from its own origin along the spine; flatten that to the map
+  let dx=_shUp.x, dz=_shUp.z, len=Math.hypot(dx,dz);
+  if(len<1e-4){ dx=Math.sin(g.rotation.y); dz=Math.cos(g.rotation.y); len=1; }
+  dx/=len; dz/=len;
+  const half=0.86*sy*fall;                               // slide under the fallen torso
+  _shPos.set(g.position.x+dx*half,ground+0.03,g.position.z+dz*half);
+  // lay the disc flat, then yaw it so its long axis runs down the body
+  _shE.set(-Math.PI/2,0,0); _shQ.setFromEuler(_shE);
+  _shQ.premultiply(_shYawQ.setFromAxisAngle(_shAxisY,Math.atan2(-dx,-dz)));
+  const rx=s.userData.rx||0.5;
+  _shScl.set(rx*(1+fall*0.18),rx*(0.7+fall*1.55),1);
+  _shParent.compose(g.position,g.quaternion,g.scale).invert();
+  _shWorld.compose(_shPos,_shQ,_shScl);
+  s.matrixAutoUpdate=false;
+  s.matrix.multiplyMatrices(_shParent,_shWorld);
+}
+// Every array that holds a makePerson() rig. A type that isn't listed simply
+// keeps the old child-of-the-body behaviour, so missing one is never a crash.
+function updatePersonShadows(dt){
+  updatePersonShadow(player.mesh,dt);
+  for(const a of peds) if(a.mesh) updatePersonShadow(a.mesh,dt);
+  for(const a of footCops) if(a.mesh) updatePersonShadow(a.mesh,dt);
+  for(const a of jocks) if(a.mesh) updatePersonShadow(a.mesh,dt);
+  for(const a of gangMembers) if(a.mesh) updatePersonShadow(a.mesh,dt);
+  for(const a of guards) if(a.mesh) updatePersonShadow(a.mesh,dt);
+  if(deb&&deb.mesh) updatePersonShadow(deb.mesh,dt);
+}
 
 // ================= GPU RESOURCE CLEANUP =================
 // Every make*Mesh() builds fresh geometries/materials per instance except a
@@ -3481,15 +3691,25 @@ const CHAT_PLAYER=['Is that... TURBO JONES?','Hey! You\'re that guy from the new
   'Oh no. OH NO. Everybody act normal.','Nice jacket, menace!','I\'m not staring. YOU\'re staring.',
   'Five bucks says he punches a mailbox.','That\'s the guy who jumped the pier!','Don\'t make eye contact...',
   'Turbo Jones! Sign my cast!','The insurance people KNOW about you.','Careful, that\'s HIM.'];
+// Shared chatBubble construction (ambient chat + Deb) — one text node plus one
+// tail node, reused every frame; text/size are only touched when the line changes.
+function makeChatBubble(){
+  const el=document.createElement('div'); el.className='chatBubble';
+  const txt=document.createElement('span'); el.appendChild(txt);
+  const tail=document.createElement('div'); tail.className='bubbleTail'; el.appendChild(tail);
+  document.body.appendChild(el);
+  el._txt=txt; el._tail=tail;
+  return el;
+}
+function setChatBubbleText(el,text){
+  el.style.display='block';
+  el._txt.textContent=text;
+  el._bw=el.offsetWidth; el._bh=el.offsetHeight;
+}
 function chatSay(ped){
-  if(!ped.bub){
-    ped.bub=document.createElement('div');
-    ped.bub.className='chatBubble';
-    document.body.appendChild(ped.bub);
-  }
+  if(!ped.bub) ped.bub=makeChatBubble();
   const nearPlayer=Math.hypot(player.x-ped.x,player.z-ped.z)<8;
-  ped.bub.textContent=(nearPlayer&&_rng()<0.45)?pick(CHAT_PLAYER):pick(CHAT_LINES);
-  ped.bub.style.display='block';
+  setChatBubbleText(ped.bub,(nearPlayer&&_rng()<0.45)?pick(CHAT_PLAYER):pick(CHAT_LINES));
   ped.bubT=2.2;
   wahVoice(ped.mesh.userData.gender==='girl'?rand(175,235):rand(95,140),ped.x,ped.z);
 }
@@ -4618,6 +4838,9 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
   PIZZA.iDoorX=0; PIZZA.iDoorZ=PIZZA.interiorY+id/2-2;
 })();
 
+// terrain-conformance samples for the curb/sidewalk segments below — read by
+// tests/cases/road-sidewalk.test.js, not used by any gameplay system.
+const SIDEWALK_SEG_SAMPLES=[];
 // ================= SIDEWALKS & STOREFRONT AWNINGS =================
 // Cosmetic street dressing: curb strips along block edges, storefront
 // awnings (flat canopy or sloped wedge/prism), and curbside planters.
@@ -4651,12 +4874,30 @@ makeCar('sports',player.x+2.6,player.z,Math.PI/2,{parked:true,color:0xff3ea0});
   const m=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(),
         pos=new THREE.Vector3(), scl=new THREE.Vector3(1,1,1), col=new THREE.Color();
   if(curbSpots.length){
-    const curbGeo=new THREE.BoxGeometry(BLOCK-1,0.16,1.1); curbGeo.translate(0,0.08,0);
-    const curbInst=new THREE.InstancedMesh(curbGeo,new THREE.MeshLambertMaterial({color:0x3d3d42}),curbSpots.length);
-    curbSpots.forEach((s,i)=>{
-      e.set(0,s.axis?Math.PI/2:0,0); q.setFromEuler(e);
-      pos.set(s.x,groundH(s.x,s.z),s.z);
-      m.compose(pos,q,scl); curbInst.setMatrixAt(i,m);
+    // A single BLOCK-1-long rigid box sampling groundH once at its centre
+    // used to hang in the air at its ends on any graded block (TERRAIN.md
+    // Tier 1) — the reported "sidewalks float" defect. Segment each edge so
+    // every piece is seated between two of its own groundH samples instead.
+    const SEG_N=8, halfLen=(BLOCK-1)/2, segLen=(BLOCK-1)/SEG_N;
+    const SEG_AXIS=new THREE.Vector3(1,0,0);
+    const curbGeo=new THREE.BoxGeometry(1,0.16,1.1); curbGeo.translate(0,0.08,0);
+    const curbInst=new THREE.InstancedMesh(curbGeo,new THREE.MeshLambertMaterial({color:0x3d3d42}),curbSpots.length*SEG_N);
+    const pA=new THREE.Vector3(), pB=new THREE.Vector3(), dir=new THREE.Vector3();
+    let idx=0;
+    curbSpots.forEach(s=>{
+      for(let i=0;i<SEG_N;i++){
+        const u0=-halfLen+i*segLen, u1=u0+segLen;
+        if(s.axis){ pA.set(s.x,0,s.z+u0); pB.set(s.x,0,s.z+u1); }
+        else { pA.set(s.x+u0,0,s.z); pB.set(s.x+u1,0,s.z); }
+        pA.y=groundH(pA.x,pA.z); pB.y=groundH(pB.x,pB.z);
+        dir.copy(pB).sub(pA);
+        const len=dir.length(); dir.normalize();
+        q.setFromUnitVectors(SEG_AXIS,dir);
+        pos.copy(pA).add(pB).multiplyScalar(0.5);
+        scl.set(len,1,1);
+        m.compose(pos,q,scl); curbInst.setMatrixAt(idx++,m);
+        SIDEWALK_SEG_SAMPLES.push({x:pos.x,y:pos.y,z:pos.z});
+      }
     });
     curbInst.instanceMatrix.needsUpdate=true; scene.add(curbInst);
   }
@@ -5485,7 +5726,7 @@ function bailOut(){
   player.x=h.x; player.z=h.z; player.y=h.y;
   player.vy=Math.min(h.vy,0);               // keep whatever sink we had
   player.fallVX=h.vel.x*0.7; player.fallVZ=h.vel.z*0.7;  // and its momentum
-  player.chute=false; player.bailing=true;
+  player.chute=false; player.bailing=true; endMelee();   // OP2-C
   player.heli=null; footCamYaw=player.heading=h.heading;
   player.mesh.visible=true;
   $('speedo').style.display='none';
@@ -5815,7 +6056,29 @@ function segmentHitsBuilding(x0,y0,z0,x1,y1,z1){
   }
   return false;
 }
-function placeWorldBubble(el,x,y,z,maxDist,expired){
+// Shared tail math for every speech bubble (generic TALK/jocks via #bubble,
+// ambient chat, and Deb): the box is clamped to stay fully on-screen, then the
+// tail is placed/rotated at whichever box edge faces the speaker's actual
+// (unclamped) projected head, so it still points at them once clamped.
+function orientBubbleTail(el,tailEl,rawX,rawY){
+  const bw=el._bw||el.offsetWidth||1, bh=el._bh||el.offsetHeight||1;
+  const gap=12, margin=6;
+  const left=clamp(rawX-bw/2,margin,Math.max(margin,vw()-bw-margin));
+  const top=clamp(rawY-gap-bh,margin,Math.max(margin,vh()-bh-margin));
+  el.style.left=left+'px'; el.style.top=top+'px'; el.style.transform='none';
+  const cx=left+bw/2, cy=top+bh/2;
+  let dx=rawX-cx, dy=rawY-cy;
+  if(!dx&&!dy) dy=1;
+  const tX=dx?Math.abs((bw/2)/dx):Infinity, tY=dy?Math.abs((bh/2)/dy):Infinity;
+  const t=Math.min(tX,tY,1);
+  const em=Math.min(bw,bh)*0.18;
+  const ex=clamp(cx+dx*t,left+em,left+bw-em);
+  const ey=clamp(cy+dy*t,top+em,top+bh-em);
+  const angleDeg=Math.atan2(dy,dx)*180/Math.PI;
+  tailEl.style.left=(ex-left)+'px'; tailEl.style.top=(ey-top)+'px';
+  tailEl.style.transform='rotate('+(angleDeg-90).toFixed(1)+'deg)';
+}
+function placeWorldBubble(el,x,y,z,maxDist,expired,tailEl){
   if(expired||(maxDist!==undefined&&Math.hypot(x-camera.position.x,z-camera.position.z)>maxDist)){
     el.style.display='none'; return false;
   }
@@ -5824,21 +6087,24 @@ function placeWorldBubble(el,x,y,z,maxDist,expired){
      segmentHitsBuilding(camera.position.x,camera.position.y,camera.position.z,x,y,z)){
     el.style.display='none'; return false;
   }
-  el.style.left=((v.x*0.5+0.5)*vw())+'px';
-  el.style.top=((-v.y*0.5+0.5)*vh())+'px';
+  const rawX=(v.x*0.5+0.5)*vw(), rawY=(-v.y*0.5+0.5)*vh();
   el.style.display='block';
+  if(tailEl) orientBubbleTail(el,tailEl,rawX,rawY);
+  else{ el.style.left=rawX+'px'; el.style.top=rawY+'px'; }
   return true;
 }
 function showBubble(ped,text,dur){
-  $('bubble').textContent=text;
-  $('bubble').style.display='block';
+  const el=$('bubble');
+  el.style.display='block';
+  $('bubbleTxt').textContent=text;
+  el._bw=el.offsetWidth; el._bh=el.offsetHeight;
   bubblePed=ped;
   clearTimeout(bubbleT);
-  bubbleT=setTimeout(()=>{ $('bubble').style.display='none'; bubblePed=null; },dur||3000);
+  bubbleT=setTimeout(()=>{ el.style.display='none'; bubblePed=null; },dur||3000);
 }
 function positionBubble(){
   if(!bubblePed) return;
-  placeWorldBubble($('bubble'),bubblePed.x,2.4,bubblePed.z);
+  placeWorldBubble($('bubble'),bubblePed.x,2.4,bubblePed.z,undefined,undefined,$('bubbleTail'));
 }
 // ambient chat bubbles over gossiping pairs
 function positionChatBubbles(dt){
@@ -5851,7 +6117,7 @@ function positionChatBubbles(dt){
         ped.bub.style.display='none'; ped.bubT=0; continue;
       }
       if(ped.bubT<=0){ ped.bub.style.display='none'; continue; }
-      placeWorldBubble(ped.bub,ped.x,2.4,ped.z,42);
+      placeWorldBubble(ped.bub,ped.x,2.4,ped.z,42,undefined,ped.bub._tail);
     }
   }
 }
@@ -6257,7 +6523,7 @@ function rocketBuildingHit(x,y,z,r){
 // expanding fireball: a red-orange sphere that blooms hard, then cools to embers
 const fireballs=[];
 const fbGeo=new THREE.SphereGeometry(1,18,12);
-function spawnFireball(x,y,z,maxR){
+function spawnFireball(x,y,z,maxR,dur){
   const outer=new THREE.Mesh(fbGeo,new THREE.MeshBasicMaterial({
     color:0xff7a1a,transparent:true,opacity:0.95,blending:THREE.AdditiveBlending,depthWrite:false}));
   const inner=new THREE.Mesh(fbGeo,new THREE.MeshBasicMaterial({
@@ -6265,7 +6531,7 @@ function spawnFireball(x,y,z,maxR){
   outer.position.set(x,y,z); inner.position.set(x,y,z);
   outer.scale.set(0.2,0.2,0.2); inner.scale.set(0.15,0.15,0.15);
   scene.add(outer); scene.add(inner);
-  fireballs.push({outer,inner,t:0,dur:0.55,maxR});
+  fireballs.push({outer,inner,t:0,dur:dur||0.55,maxR});
 }
 function updateFireballs(dt){
   for(let i=fireballs.length-1;i>=0;i--){
@@ -6293,30 +6559,18 @@ function explode(x,y,z){
   burst(x,y,z,20,COL_SMOKE,4,1.6,1);
   damageArea(x,z,7,130);
 }
-// --- the BIG one: fireball, mushroom cloud, shockwave, and a camera moment ---
-const boomFx=[];      // solid, animated mushroom clouds
+// --- the BIG one: fireball, shockwave, and a camera moment ---
+// one authoritative vehicle-explosion event, one visual (the mushroom-cloud
+// layer that used to render alongside this fireball is gone — OP2-G)
 let shockwave=null;   // one reusable expanding ring
-function makeMushroomCloud(x,y,z){
-  const group=new THREE.Group();
-  const stem=new THREE.Mesh(
-    new THREE.CylinderGeometry(0.72,1.05,1,18),
-    new THREE.MeshBasicMaterial({color:0x8e171d})
-  );
-  const cap=new THREE.Mesh(
-    new THREE.SphereGeometry(1,20,16),
-    new THREE.MeshBasicMaterial({color:0xd3292f})
-  );
-  group.position.set(x,y,z); group.visible=false;
-  group.add(stem); group.add(cap); scene.add(group);
-  return {group,stem,cap,t:0,bloom:0.55,dur:6.2};
-}
+const CAR_BOOM_DUR=0.9;      // slowed from the shared 0.55s fireball default, enough to read
+const CAR_BOOM_RADIUS=10;    // the one blast radius, used by both damage and tests
 function bigExplosion(x,y,z){
   sfx.carBoom(); shake(1.2); triggerHitStop(0.08); haptic([60,40,90,40,120]);
-  spawnFireball(x,y+1,z,8.5);
+  spawnFireball(x,y+1,z,8.5,CAR_BOOM_DUR);
   burst(x,y,z,70,COL_FIRE,12,1.6,4);
   burst(x,y,z,40,COL_FIRE,6,2.2,1);
   burst(x,y,z,30,COL_SMOKE,5,2.5,1);
-  boomFx.push(makeMushroomCloud(x,y+1,z));
   if(!shockwave){
     shockwave=new THREE.Mesh(new THREE.RingGeometry(0.8,1,40),
       new THREE.MeshBasicMaterial({color:0xffd9a0,transparent:true,opacity:0.8,side:THREE.DoubleSide,depthWrite:false}));
@@ -6326,26 +6580,10 @@ function bigExplosion(x,y,z){
   shockwave.scale.set(1,1,1); shockwave.material.opacity=0.85; shockwave.userData.t=0.9;
   // remember where she blew — the camera only swings around if this wastes Turbo
   G.lastBoom={x,z,t:performance.now()};
-  damageArea(x,z,9,150);
+  damageArea(x,z,CAR_BOOM_RADIUS,150);
 }
 function updateBoomFx(dt){
   updateFireballs(dt);
-  for(let i=boomFx.length-1;i>=0;i--){
-    const b=boomFx[i]; b.t+=dt;
-    if(b.t>=b.bloom){
-      // Let the fireball bloom first, then grow a solid stem into a red cap.
-      // No rising particles: this stays readable as one persistent cloud.
-      const age=b.t-b.bloom, grow=clamp(age/1.4,0,1);
-      const capY=1.0+age*3.7, capR=lerp(1.1,4.4,grow);
-      const stemH=Math.max(0.12,capY-capR*0.3);
-      b.group.visible=true;
-      b.cap.position.y=capY;
-      b.cap.scale.set(capR,capR*0.82,capR);
-      b.stem.position.y=stemH*0.5;
-      b.stem.scale.set(lerp(0.35,1.05,grow),stemH,lerp(0.35,1.05,grow));
-    }
-    if(b.t>=b.dur){ scene.remove(b.group); disposeMesh(b.group); boomFx.splice(i,1); }
-  }
   if(shockwave&&shockwave.userData.t>0){
     shockwave.userData.t-=dt;
     const s=1+(0.9-shockwave.userData.t)*40;
@@ -6420,6 +6658,21 @@ function footGround(p){
   return (roofHere>0&&p.y>roofHere-1.0)?roofHere:
     Math.max(groundH(p.x,p.z),onStairs?sh:0);
 }
+// OP2-D: what is under Turbo's shoe right now, for the footstep voice. Read-only
+// against the city lattice and the terrain contract — it decides nothing but
+// which sound to play.
+function stepSurface(x,z,onRoofOrStairs){
+  if(G.interior||onRoofOrStairs) return 'roof';
+  const edge=roadLines[roadLines.length-1]+ROAD/2;
+  if(Math.max(Math.abs(x),Math.abs(z))>edge) return 'sand';   // off the grid: the beach ring
+  // inside a block (rather than out on the carriageway), and that block is a park
+  const bx=x+H-ROAD, bz=z+H-ROAD;
+  const i=Math.floor(bx/PITCH), j=Math.floor(bz/PITCH);
+  if(i<0||j<0||i>=WORLD.blocks||j>=WORLD.blocks) return 'street';
+  if(bx-i*PITCH>BLOCK||bz-j*PITCH>BLOCK) return 'street';     // on a road strip
+  const b=blockInfo[i*WORLD.blocks+j];
+  return (b&&b.type==='park')?'grass':'street';
+}
 function resetFootStuck(p){ p.stuckT=0; p.stuckNudged=false; }
 // Analytic resolution normally clears an overlap in one frame. Only if a
 // static blocker persists do we make one short, terrain-seated nudge; dynamic
@@ -6436,7 +6689,7 @@ function updateFootStuckRecovery(p,dt){
   const step=clamp(hit.depth+0.06,0.18,0.8);
   p.x=clamp(p.x+hit.nx*step,-(WATER_R-2),WATER_R-2);
   p.z=clamp(p.z+hit.nz*step,-(WATER_R-2),WATER_R-2);
-  p.y=footGround(p); p.vy=0; p.stuckNudged=true;
+  p.y=footGround(p); p.vy=0; p.fallPeakY=null; p.stuckNudged=true;
 }
 function doJump(){
   if(!G.started||G.over||G.mode!=='foot') return;
@@ -6449,21 +6702,31 @@ function doJump(){
 }
 $('btnJump').addEventListener('touchstart',e=>{e.preventDefault();doJump();},{passive:false});
 $('btnJump').addEventListener('mousedown',doJump);
-let meleePointer=null;
+let meleePointer=null, meleeKeyHeld=null;
+// OP2-C input reset. meleePointer is a one-slot lock and every later press is
+// dropped while it is held, so it must never outlive the touch that took it.
+// It used to be assigned BEFORE setPointerCapture(), which throws if the pointer
+// is already gone by the time the event is handled — the throw skipped
+// meleePress() and left the lock set for the rest of the session. Capture first,
+// claim second, and release on every way a pointer can end, capture loss (a
+// hidden or swapped button) included.
+function releaseMeleeButtons(){ meleePointer=null; meleeKeyHeld=null; }
 [['btnPunch','punch'],['btnKick','kick']].forEach(([id,type])=>{
   const el=$(id);
+  const release=()=>{ if(meleePointer&&meleePointer.type===type){ meleePointer=null; cancelMeleeCharge(); } };
   el.addEventListener('pointerdown',e=>{
     e.preventDefault(); if(meleePointer) return;
-    meleePointer={id:e.pointerId,type}; if(el.setPointerCapture) el.setPointerCapture(e.pointerId);
+    try{ if(el.setPointerCapture) el.setPointerCapture(e.pointerId); }catch(err){}
+    meleePointer={id:e.pointerId,type};
     meleePress(type);
   });
   el.addEventListener('pointerup',e=>{
     e.preventDefault(); if(!meleePointer||meleePointer.id!==e.pointerId||meleePointer.type!==type) return;
-    meleeRelease(type); meleePointer=null;
+    meleePointer=null; meleeRelease(type);
   });
-  el.addEventListener('pointercancel',e=>{
-    if(meleePointer&&meleePointer.id===e.pointerId){ cancelMeleeCharge(); meleePointer=null; }
-  });
+  el.addEventListener('pointercancel',e=>{ if(meleePointer&&meleePointer.id===e.pointerId) release(); });
+  // fires after a normal pointerup too, by which point the lock is already clear
+  el.addEventListener('lostpointercapture',e=>{ if(meleePointer&&meleePointer.id===e.pointerId) release(); });
 });
 $('btnGun').addEventListener('touchstart',e=>{e.preventDefault();cycleWeapon();},{passive:false});
 $('btnGun').addEventListener('mousedown',cycleWeapon);
@@ -6563,8 +6826,8 @@ document.addEventListener('keydown',e=>{
     else if(G.heist&&G.heist.phase===2) tapSafeCrack();
     else doJump();
   }
-  if(e.code==='KeyF'&&!e.repeat) meleePress('punch');
-  if(e.code==='KeyK'&&!e.repeat) meleePress('kick');
+  if(e.code==='KeyF'&&!e.repeat){ meleeKeyHeld='punch'; meleePress('punch'); }
+  if(e.code==='KeyK'&&!e.repeat){ meleeKeyHeld='kick'; meleePress('kick'); }
   if(e.code==='KeyT') doTalk();
   if(e.code==='KeyH') doHorn();
   if(e.code==='KeyG') cycleWeapon();
@@ -6583,7 +6846,15 @@ document.addEventListener('keydown',e=>{
     if(e.code==='Digit0'){ e.preventDefault(); stepOneFrame(); }
   }
 });
-document.addEventListener('keyup',e=>{ keys[e.code]=false; if(e.code==='KeyF') meleeRelease('punch'); if(e.code==='KeyK') meleeRelease('kick'); });
+document.addEventListener('keyup',e=>{ keys[e.code]=false;
+  if(e.code==='KeyF'){ if(meleeKeyHeld==='punch') meleeKeyHeld=null; meleeRelease('punch'); }
+  if(e.code==='KeyK'){ if(meleeKeyHeld==='kick') meleeKeyHeld=null; meleeRelease('kick'); } });
+// Alt-tab away mid-hold and the keyup never arrives, so the held attack would
+// sit there forever with its key stuck down. Losing the window releases it.
+window.addEventListener('blur',()=>{
+  if(meleeKeyHeld){ keys[meleeKeyHeld==='punch'?'KeyF':'KeyK']=false; meleeKeyHeld=null; }
+  cancelMeleeCharge(); meleePointer=null;
+});
 function pollKeys(){
   if(keys['KeyA']||keys['ArrowLeft']) input.jx=-1;
   else if(keys['KeyD']||keys['ArrowRight']) input.jx=1;
@@ -6905,6 +7176,7 @@ function applyCarTurboImpact(car){
   hapticCrash(relativeSpeed); shake(clamp(relativeSpeed*0.018,0.16,0.65));
   return damage;
 }
+const CAR_CRITICAL_FUSE=15;   // OP2-G: halved from the original 30s critical-to-detonation fuse
 function damageCar(car,amt,why){
   if(car.dead) return;
   if(DEV_STATE.god&&car===player.car) return;
@@ -6913,7 +7185,7 @@ function damageCar(car,amt,why){
     G.carHP=Math.max(0,car.hp/car.maxhp*100);
     // wounded past the point of no return: she burns, then she blows
     if(car.hp<=22&&!car.burning){
-      car.burning=true; car.burnT=car.hp<=0?2.5:30;
+      car.burning=true; car.burnT=car.hp<=0?2.5:CAR_CRITICAL_FUSE;
       toast('ENGINE\'S ON FIRE — GET CLEAR!','bad');
       sfx.fail();
     }
@@ -6948,12 +7220,28 @@ function nearestCar(x,z,r){
 function canSprint(p,mag){
   return G.mode==='foot'&&input.sprint&&mag>0.85&&!G.crouching&&!p.climb&&!p.bailing&&!p.stunT&&p.punchT<=0&&p.kickT<=0;
 }
+const FALL_LETHAL_MULT=4;   // OP2-G: ~4x Turbo's own height is a lethal unsupported drop
+// called once, right as an unsupported drop lands on solid ground (ladders,
+// stairs, parachute and vehicle exits never reach this — they clear or reset
+// player.fallPeakY before landing does). th is turboHeight() captured at the
+// moment the fall began — the airborne pose changes the mesh's bounding box,
+// so re-measuring at landing would make the threshold flicker frame to frame.
+function applyFallImpact(fallDist,th){
+  if(DEV_STATE.god||fallDist<FALL_LETHAL_MULT*th) return;
+  sfx.crash(0.6); shake(0.7); triggerHitStop(0.08); haptic([70,50,110]);
+  burst(player.x,player.y+0.3,player.z,16,COL_SMOKE,3,0.7,2);
+  wasted();
+}
 function updateFoot(dt){
   const p=player;
   let meleeDt=dt;
-  if(meleeCharge){
-    if(!canChargeMelee()){ cancelMeleeCharge(); }
-    else if(!meleeCharge.started){
+  if(meleeCharge&&!meleeCharge.started){
+    // Losing the wind-up mid-hold (he jumped, crouched, stepped indoors) demotes
+    // the press to an ordinary strike on release. Only losing the ability to
+    // fight at all drops it.
+    if(!canMelee()) cancelMeleeCharge();
+    else if(!meleeCharge.charge||!canChargeMelee()) meleeCharge.charge=false;
+    else {
       meleeCharge.t+=dt;
       if(meleeCharge.t>=1-1e-6){
         meleeDt=Math.max(0,meleeCharge.t-1);
@@ -7020,10 +7308,23 @@ function updateFoot(dt){
     Math.max(groundH(p.x,p.z),onStairs?sh:0);
   // jump & gravity physics
   if(p.y>ground+0.001||p.vy>0){
+    // track the highest point of this unsupported drop so a real fall (off a
+    // roof, a ledge) can be told from a hop the instant it lands
+    if(p.fallPeakY==null){ p.fallPeakY=p.y; p.fallTh=turboHeight(); }
     p.vy-=24*dt; p.y+=p.vy*dt;
-    if(p.y<=ground){ p.y=ground; p.vy=0; blip(120,60,0.08,0.12,'sine'); }
+    if(p.y<=ground){
+      // OP2-D: the landing has weight, and it names the surface it lands on
+      const fell=Math.max(0,-p.vy)/9;
+      p.y=ground; p.vy=0; p.stepK=null;   // gait restarts from the plant
+      footLand(stepSurface(p.x,p.z,(roofHere>0&&p.y>roofHere-1.0)||onStairs),fell,p.mesh.scale.y||1);
+      applyFallImpact(p.fallPeakY-ground,p.fallTh);   // OP2-G: a real drop is lethal
+      p.fallPeakY=null;
+    } else if(p.y>p.fallPeakY){ p.fallPeakY=p.y; }
   }
-  else if(p.y<ground){ p.y=ground; p.vy=0; }   // stairs & slopes lift you as you climb
+  else {
+    if(p.y<ground){ p.y=ground; p.vy=0; }   // stairs & slopes lift you as you climb
+    p.fallPeakY=null;
+  }
   updateFootStuckRecovery(p,dt);
   p.mesh.position.set(p.x,p.y+Math.abs(Math.sin(p.phase))*(sprinting?0.04:0.06),p.z);
   p.mesh.rotation.y=p.heading;
@@ -7080,6 +7381,21 @@ function updateFoot(dt){
       u.torso.rotation.x=airborne?0.12:mag*0.07;
     }
   }
+  // OP2-D: one step per planted stride, driven by the very phase the legs are
+  // swinging on — the sound IS the animation, not a timer running alongside it.
+  // Silent whenever there is no stride to hear: airborne, standing still, mid
+  // punch (arms only) or planted on a kick. Vehicles, pause, Cinema and
+  // cutscenes never reach here at all, because updateFoot() does not run.
+  const striding=mag>0.12&&!airborne&&p.punchT<=0&&p.kickT<=0;
+  if(striding){
+    const k=Math.floor((p.phase-Math.PI/2)/Math.PI);
+    if(p.stepK==null||k<p.stepK) p.stepK=k;          // (re)sync, don't fire
+    else if(k>p.stepK){
+      p.stepK=k;   // exactly one, however many strides a long frame swallowed
+      const speed=p.sprinting?1:(mag>0.85?0.55:0.15);
+      footstep(stepSurface(p.x,p.z,(roofHere>0&&p.y>roofHere-1.0)||onStairs),k&1,speed,p.mesh.scale.y||1);
+    }
+  } else p.stepK=null;
   if(p.kickT>0){
     // Slower than the punch: chamber, extend, then recover. The right leg
     // supplies the hit while both arms stay up to keep Turbo balanced.
@@ -7139,7 +7455,8 @@ function updateFoot(dt){
 // ---- wall-ladder climbing ----
 function mountLadder(grab){
   const p=player, L=grab.L, nX=Math.sin(L.ang), nZ=Math.cos(L.ang);
-  p.climb={L}; p.vy=0;
+  endMelee();   // OP2-C
+  p.climb={L}; p.vy=0; p.fallPeakY=null;   // grabbing on arrests any fall in progress
   p.x=L.x+nX*0.45; p.z=L.z+nZ*0.45;
   p.y=clamp(p.y,L.baseH,L.topH);
   p.heading=L.ang+Math.PI;   // chest to the wall
@@ -7184,6 +7501,7 @@ function doEnterExit(){
   if(G.mode==='foot'){
     const n=nearestVehicle(player.x,player.z,3.6);
     if(!n) return;
+    endMelee();   // OP2-C: never step into a vehicle mid-swing
     if(n.kind==='car'){
       const c=n.v;
       if(!claimJackableCar(c)) return;
@@ -7223,7 +7541,7 @@ function exitCar(){
   player.x=c.x+Math.cos(c.heading)*2.2; player.z=c.z-Math.sin(c.heading)*2.2;
   resolveFootCollision(player,0.5);
   player.y=groundH(player.x,player.z); player.mesh.visible=true;
-  player.car=null; footCamYaw=player.heading;
+  player.car=null; footCamYaw=player.heading; player.fallPeakY=null;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
   if(skidGain) skidGain.gain.value=0;
@@ -7420,15 +7738,34 @@ function updateCarMode(dt){
   $('btnEnter').style.display='flex';
 }
 let meleeCharge=null;
+// OP2-C. Two different questions, and the charged-melee pass answered both with
+// the second one: "can Turbo throw hands at all" is not "can he wind up a
+// charged special". meleePress() gated every attack on canChargeMelee(), so an
+// ordinary punch or kick was swallowed outright whenever the charge was
+// ineligible — crouched, indoors, mid-jump, mid-stride down a graded street, or
+// simply standing on a kerb. Nothing timed out and nothing recovered, which is
+// what "punch and kick stop working" looks like from the couch.
+function canMelee(){
+  const p=player;
+  return G.started&&!G.over&&G.mode==='foot'&&G.weapon==='fists'
+    &&!p.climb&&!p.bailing&&!p.stunT&&!p.meleeSpecial&&p.punchT<=0&&p.kickT<=0
+    &&!G.menuPaused&&!G.replay&&!activeCutscene;
+}
+// The extra conditions belong to the wind-up alone: you plant both feet to load
+// a windmill or a spin kick, and you can't do it crouched or in a doorway.
 function canChargeMelee(){
-  const p=player, g=footGround(p);
-  return G.started&&!G.over&&G.mode==='foot'&&G.weapon==='fists'&&!G.crouching&&!p.climb&&!p.bailing&&!p.stunT&&!p.punchT&&!p.kickT&&!p.meleeSpecial&&!G.menuPaused&&!G.replay&&!activeCutscene&&!G.interior&&p.y<=g+0.08;
+  const p=player;
+  return canMelee()&&!G.crouching&&!G.interior&&p.y<=footGround(p)+0.08;
 }
 function meleePress(type){
   if(type==='punch'&&G.weapon!=='fists'){ doAttack(); return; }
   if(type==='kick'&&G.weapon!=='fists') return;
-  if(!canChargeMelee()||meleeCharge) return;
-  meleeCharge={type,t:0,started:false}; clearSprint();
+  if(meleeCharge||!canMelee()) return;
+  // Every press becomes a live attack. `charge` only decides whether holding it
+  // can escalate into the special; losing eligibility mid-hold demotes the press
+  // to an ordinary strike instead of eating it.
+  meleeCharge={type,t:0,started:false,charge:canChargeMelee()};
+  if(meleeCharge.charge) clearSprint();
 }
 function meleeRelease(type){
   if(!meleeCharge||meleeCharge.type!==type) return;
@@ -7436,6 +7773,17 @@ function meleeRelease(type){
   if(!c.started) doPunch(false,type==='kick');
 }
 function cancelMeleeCharge(){ meleeCharge=null; }
+// Melee state is owned by the on-foot simulation. Every path that stops that
+// simulation — stepping into a car or a heli, a cutscene, Cinema, the pause
+// menu, BUSTED/WASTED, grabbing a ladder, bailing out — ends the attack right
+// there and hands the rig back neutral, instead of leaving a half-thrown strike
+// waiting on a frame of updateFoot() that is never going to arrive.
+function endMelee(){
+  const p=player;
+  if(p.meleeSpecial) finishChargedMelee(p.meleeSpecial);
+  p.punchT=0; p.kickT=0;
+  meleeCharge=null; releaseMeleeButtons();
+}
 function startChargedMelee(type){
   const p=player, dur=type==='kick'?1.05:.84;
   p.meleeSpecial={type,t:0,dur,x:p.x,z:p.z,y:footGround(p),heading:p.heading,lastRev:-1,hits:new Set()};
@@ -7465,25 +7813,57 @@ function chargedMeleeHit(s){
 }
 function finishChargedMelee(s){
   const p=player,u=p.mesh.userData;
-  p.heading=s.heading; p.mesh.rotation.set(0,s.heading,0);
+  p.heading=s.heading; p.mesh.rotation.order='XYZ'; p.mesh.rotation.set(0,s.heading,0);
   u.armL.rotation.x=0;u.armR.rotation.x=0;u.legL.rotation.x=0;u.legR.rotation.x=0;
   if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;
   if(u.torso){u.torso.rotation.x=0;u.torso.rotation.y=0;}
+  if(u.head)u.head.rotation.x=0;
   p.mesh.position.set(p.x,p.y,p.z); p.meleeSpecial=null;
+}
+// js/person.js builds the leg's hip pivot at y=0.86 in rig units, and the rig's
+// origin sits on the floor between the feet. That distance is the whole trick
+// below, so it is named rather than sprinkled through the arithmetic.
+const RIG_HIP_Y=0.86;
+// Hold the silhouette through the middle of the move and ease it in and out at
+// the ends, so the pose blends rather than snapping on.
+function meleeEase(u){
+  const s=x=>x*x*(3-2*x), r=0.22;
+  return Math.min(s(clamp(u/r,0,1)),s(clamp((1-u)/r,0,1)));
 }
 function updateChargedMelee(dt){
   const p=player,s=p.meleeSpecial; if(!s) return false;
+  // The attack's own preconditions, checked by the attack: if the run stopped
+  // being an on-foot run, the strike is over and the rig goes back to neutral.
+  if(!G.started||G.over||G.mode!=='foot'){ finishChargedMelee(s); return false; }
   s.t=Math.min(s.dur,s.t+dt); p.x=s.x;p.z=s.z;p.y=s.y;p.vy=0;
   const turns=s.t/s.dur*3, u=p.mesh.userData;
   if(s.type==='kick'){
-    p.mesh.rotation.y=s.heading+turns*TAU; p.mesh.rotation.x=-Math.PI/2;
-    u.legL.rotation.x=0; u.legR.rotation.x=Math.PI/2; u.armL.rotation.x=-1.35;u.armR.rotation.x=-1.35;
-    if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;if(u.torso)u.torso.rotation.x=1.2;
-  }else{
-    p.mesh.rotation.y=s.heading; p.mesh.rotation.x=0; const a=turns*TAU;
-    u.armL.rotation.x=a;u.armR.rotation.x=-a;if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;
+    // The planted spin kick. Turning the whole rig on its side about its own
+    // origin is what buried him in the asphalt — that origin is on the floor,
+    // so a 90 degree pitch laid his head, chest and arms flat along the street.
+    // Instead the body pivots about the HIP: the root climbs and slides back by
+    // exactly the arc the hip would otherwise have travelled, which parks the
+    // hip a leg's length directly above the planted foot and leaves the torso,
+    // arms and trailing leg horizontal at waist height.
+    const yaw=s.heading+turns*TAU;
+    const th=meleeEase(s.t/s.dur)*Math.PI/2, c=Math.cos(th), sn=Math.sin(th);
+    const hip=RIG_HIP_Y*(p.mesh.scale.y||1);
+    p.mesh.rotation.order='YXZ';   // yaw first, then pitch about his own lateral
+    p.mesh.rotation.y=yaw; p.mesh.rotation.x=th;
+    p.mesh.position.set(p.x-hip*sn*Math.sin(yaw),p.y+hip*(1-c),p.z-hip*sn*Math.cos(yaw));
+    u.legL.rotation.x=-th;                  // support leg counter-rotates: straight down
+    u.legR.rotation.x=0;                    // trailing leg follows the body: straight back
+    u.armL.rotation.x=u.armR.rotation.x=-Math.PI/2-th;   // both arms straight out front
+    if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;
     if(u.torso){u.torso.rotation.x=0;u.torso.rotation.y=0;}
+    if(u.head)u.head.rotation.x=-th*0.55;   // chin up so he looks down the kick
+    chargedMeleeHit(s);
+    if(s.t>=s.dur) finishChargedMelee(s);
+    return true;
   }
+  p.mesh.rotation.y=s.heading; p.mesh.rotation.x=0; const a=turns*TAU;
+  u.armL.rotation.x=a;u.armR.rotation.x=-a;if(u.kneeL)u.kneeL.rotation.x=0;if(u.kneeR)u.kneeR.rotation.x=0;
+  if(u.torso){u.torso.rotation.x=0;u.torso.rotation.y=0;}
   p.mesh.position.set(p.x,p.y,p.z); chargedMeleeHit(s);
   if(s.t>=s.dur) finishChargedMelee(s);
   return true;
@@ -8457,8 +8837,8 @@ function bigEvent(text,color,sub){
 function exitCarSoft(){
   if(player.car){ player.car.driver=null; player.car=null; }
   if(player.heli){ player.heli.driver=null; player.heli=null; }
-  G.mode='foot';
-  disarmSprint();
+  G.mode='foot'; player.fallPeakY=null;
+  disarmSprint(); endMelee();   // OP2-C
   player.mesh.visible=true;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
@@ -8479,7 +8859,7 @@ function respawn(spot){
     const p=custom?intended:safeGenericSpawnPoint(intended,
       ()=>({x:spot.x+rand(2,6),z:spot.z+rand(2,6)}),0.5);
     player.x=p.x; player.z=p.z; player.y=groundH(player.x,player.z); resetFootStuck(player);
-    player.mesh.visible=true; player.mesh.rotation.x=0; footCamYaw=player.heading;
+    player.mesh.visible=true; player.mesh.rotation.x=0; footCamYaw=player.heading; player.fallPeakY=null;
     makeCar('sedan',spot.x-4,spot.z-3,rand(0,TAU),{parked:true});
     G.mode='foot'; player.car=null;
     G.boost=100; G.carHP=100; G.hp=100; G.hpT=0; G.over=false;
@@ -8792,6 +9172,7 @@ function loop(){
       recTick(dt);
     }
     updateParticles(simDt);
+    updatePersonShadows(simDt);   // OP2-D: ground-anchored person shadows
     updatePickupVisuals(now/1000);
     if(cine) updateCinemaCam(simDt);
     else if(G.intro) updateIntroCam(simDt);
@@ -8946,21 +9327,13 @@ const INTRO_PATH=[
   {p:[player.x-Math.sin(player.heading)*11,7.5,player.z-Math.cos(player.heading)*11], l:[player.x,2.3,player.z]}, // pan down while moving in
   {p:[player.x-Math.sin(player.heading)*6.5,3.2,player.z-Math.cos(player.heading)*6.5], l:[player.x,1.4,player.z]}, // land behind the player
 ];
-let introT=0;
+let introT=0, introRoute=null;
 // Terrain-safe flythrough sampling. INTRO_PATH's heights were authored when the
 // world was flat — hills can rise above them now and the camera tunnels under
 // the street. Clamp both the camera and its look target above groundH so the
 // shot always stays over the surface (cam ≥2.4u, look point ≥0.6u). max() of
 // continuous functions stays continuous, so the path keeps its smooth sweep.
 // Shared by updateIntroCam and cinema's updateCinemaIntro.
-function cinematicBuildingVolumes(){
-  const out=buildings.slice();
-  if(PIZZA.x!==undefined) out.push({minX:PIZZA.x-PIZZA.w/2,maxX:PIZZA.x+PIZZA.w/2,
-    minZ:PIZZA.z-PIZZA.d/2,maxZ:PIZZA.z+PIZZA.d/2,baseY:PIZZA.baseY||groundH(PIZZA.x,PIZZA.z),h:PIZZA.h||14});
-  if(CHAOS.x!==undefined) out.push({minX:CHAOS.x-CHAOS.w/2,maxX:CHAOS.x+CHAOS.w/2,
-    minZ:CHAOS.z-CHAOS.d/2,maxZ:CHAOS.z+CHAOS.d/2,baseY:CHAOS.baseY||groundH(CHAOS.x,CHAOS.z),h:CHAOS.h||14});
-  return out;
-}
 function cinematicCameraBlocked(x,y,z,pad){
   pad=pad||1.8;
   for(const b of cinematicBuildingVolumes()){
@@ -9000,8 +9373,250 @@ function flySample(A,B,f){
   return { px:routed.x, py:routed.y, pz:routed.z,
            lx, ly:Math.max(ly,groundH(lx,lz)+0.6), lz };
 }
+
+// ---- OP2-F: deterministic cinematic route planner -------------------------
+// flySample() above makes one authored beat safe, and that is all it can do.
+// Asking it for a sample every frame is what made the intro look reactive: the
+// building set under the path changes discretely, so the height popped to a
+// roofline the moment the curve crossed a pad. Measured on seed 424242 before
+// this: 1262 u/s peak speed against a 27 u/s mean, 75k u/s^2 acceleration
+// spikes, and staged Cinema shots cut straight into hillsides (28 of 36 test
+// placements below terrain or inside a facade).
+//
+// The planner decides the whole shot up front instead — clear waypoints, one
+// arc-length spline, one eased speed profile — and the per-frame code only
+// reads it. Nothing here draws a random number, so a route depends solely on
+// the world state, and any `?seed=` replays it exactly.
+const CINE_CAM_CLEAR=3.0;   // camera floor over terrain (also clears traffic)
+const CINE_LOOK_CLEAR=0.6;  // look-target floor over terrain
+const CINE_PAD=1.8;         // horizontal/vertical padding around solids
+const CINE_LEG_N=20;        // samples per authored leg while choosing detours
+const CINE_CHECK_N=420;     // samples across the whole spline while repairing
+const CINE_REPAIRS=6;
+const CINE_ARC_N=6000;
+const CINE_LOOK_TAU=0.32;   // seconds — critically damped follow on the framing
+
+// buildings/PIZZA/CHAOS are fixed once the world is built; the planner samples
+// them thousands of times per shot, so hand back the same array.
+let _cineVols=null, _cineVolKey='';
+function cinematicBuildingVolumes(){
+  const key=buildings.length+'/'+(PIZZA.x!==undefined)+'/'+(CHAOS.x!==undefined);
+  if(_cineVols&&_cineVolKey===key) return _cineVols;
+  const out=buildings.slice();
+  if(PIZZA.x!==undefined) out.push({minX:PIZZA.x-PIZZA.w/2,maxX:PIZZA.x+PIZZA.w/2,
+    minZ:PIZZA.z-PIZZA.d/2,maxZ:PIZZA.z+PIZZA.d/2,baseY:PIZZA.baseY||groundH(PIZZA.x,PIZZA.z),h:PIZZA.h||14});
+  if(CHAOS.x!==undefined) out.push({minX:CHAOS.x-CHAOS.w/2,maxX:CHAOS.x+CHAOS.w/2,
+    minZ:CHAOS.z-CHAOS.d/2,maxZ:CHAOS.z+CHAOS.d/2,baseY:CHAOS.baseY||groundH(CHAOS.x,CHAOS.z),h:CHAOS.h||14});
+  _cineVolKey=key; _cineVols=out;
+  return out;
+}
+// Lowest camera height at this column that clears everything static under it.
+// Only static solids: planning around live traffic is the reactive behaviour
+// this card exists to remove, and CINE_CAM_CLEAR already flies over a car.
+function cineFloorAt(x,z){
+  let y=groundH(x,z)+CINE_CAM_CLEAR;
+  for(const b of cinematicBuildingVolumes()){
+    if(x>b.minX-CINE_PAD&&x<b.maxX+CINE_PAD&&z>b.minZ-CINE_PAD&&z<b.maxZ+CINE_PAD)
+      y=Math.max(y,b.baseY+b.h+CINE_PAD);
+  }
+  if(treeHit(x,z,CINE_PAD*0.65)) y=Math.max(y,groundH(x,z)+6.5);
+  else if(propHit(x,z,CINE_PAD*0.55,false)) y=Math.max(y,groundH(x,z)+4.5);
+  return y;
+}
+// Centripetal Catmull-Rom (alpha = 1/2). The uniform form cusps when control
+// points are unevenly spaced, which a planned detour guarantees — and a cusp is
+// exactly the whip-round the owner is complaining about. Endpoints are mirrored
+// rather than doubled so the knot spacing never degenerates.
+function cineKnots(pts){
+  const k=[0];
+  for(let i=1;i<pts.length;i++){
+    const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1],pts[i][2]-pts[i-1][2]);
+    k.push(k[i-1]+Math.max(1e-3,Math.sqrt(d)));
+  }
+  return k;
+}
+function cineCurveAt(pts,u,kn){
+  const n=pts.length;
+  if(n<2) return (pts[0]||[0,0,0]).slice();
+  kn=kn||cineKnots(pts);
+  const s=clamp(u,0,1)*(n-1), i=Math.min(n-2,Math.floor(s)), f=s-i;
+  const p1=pts[i], p2=pts[i+1];
+  const p0=i>0?pts[i-1]:[2*p1[0]-p2[0],2*p1[1]-p2[1],2*p1[2]-p2[2]];
+  const p3=i+2<n?pts[i+2]:[2*p2[0]-p1[0],2*p2[1]-p1[1],2*p2[2]-p1[2]];
+  const t1=kn[i], t2=kn[i+1];
+  const t0=i>0?kn[i-1]:t1-(t2-t1), t3=i+2<n?kn[i+2]:t2+(t2-t1);
+  const t=lerp(t1,t2,f), out=[0,0,0];
+  for(let c=0;c<3;c++){
+    const a1=((t1-t)*p0[c]+(t-t0)*p1[c])/(t1-t0);
+    const a2=((t2-t)*p1[c]+(t-t1)*p2[c])/(t2-t1);
+    const a3=((t3-t)*p2[c]+(t-t2)*p3[c])/(t3-t2);
+    const b1=((t2-t)*a1+(t-t0)*a2)/(t2-t0);
+    const b2=((t3-t)*a2+(t-t1)*a3)/(t3-t1);
+    out[c]=((t2-t)*b1+(t-t1)*b2)/(t2-t1);
+  }
+  return out;
+}
+// Cumulative arc length so the shot travels at a chosen speed rather than
+// racing the long legs and crawling the short ones.
+function cineArcTable(pts,kn){
+  const d=[0]; let prev=cineCurveAt(pts,0,kn);
+  for(let k=1;k<=CINE_ARC_N;k++){
+    const p=cineCurveAt(pts,k/CINE_ARC_N,kn);
+    d.push(d[k-1]+Math.hypot(p[0]-prev[0],p[1]-prev[1],p[2]-prev[2])); prev=p;
+  }
+  return d;
+}
+function cineUAtDist(tab,frac){
+  const total=tab[tab.length-1];
+  if(!(total>0)) return 0;
+  const want=clamp(frac,0,1)*total;
+  let lo=0, hi=tab.length-1;
+  while(lo<hi-1){ const m=(lo+hi)>>1; if(tab[m]<=want) lo=m; else hi=m; }
+  const span=tab[hi]-tab[lo];
+  return (lo+(span>1e-9?(want-tab[lo])/span:0))/CINE_ARC_N;
+}
+// Speed profile: move off, hold, settle. Both ramps are smoothstep, whose
+// derivative vanishes at each end, so speed is C1 and distance is C2 — there
+// is no step in acceleration anywhere in a planned shot.
+const CINE_IN=0.14, CINE_OUT=0.22, CINE_V0=0.35, CINE_V1=0.16;
+function cineSpeed(t){
+  if(t<CINE_IN){ const u=t/CINE_IN; return CINE_V0+(1-CINE_V0)*u*u*(3-2*u); }
+  if(t>1-CINE_OUT){ const u=(1-t)/CINE_OUT; return CINE_V1+(1-CINE_V1)*u*u*(3-2*u); }
+  return 1;
+}
+// Distance travelled by time t, integrated in closed form rather than from a
+// table: a sampled profile is only piecewise linear, so speed would step at
+// every bucket edge and put a visible ripple back into the move. The integral
+// of smoothstep is u^3 - u^4/2, so this stays exact and C1.
+const CINE_RAMP=u=>u*u*u-u*u*u*u/2;
+const CINE_DIST_IN=CINE_IN*(CINE_V0+(1-CINE_V0)*0.5);
+const CINE_DIST_OUT=CINE_OUT*(CINE_V1+(1-CINE_V1)*0.5);
+const CINE_DIST_TOTAL=CINE_DIST_IN+(1-CINE_IN-CINE_OUT)+CINE_DIST_OUT;
+function cineDistFrac(t){
+  t=clamp(t,0,1);
+  let d;
+  if(t<CINE_IN){ const u=t/CINE_IN; d=CINE_IN*(CINE_V0*u+(1-CINE_V0)*CINE_RAMP(u)); }
+  else if(t>1-CINE_OUT){ const u=(1-t)/CINE_OUT;
+    d=CINE_DIST_TOTAL-CINE_OUT*(CINE_V1*u+(1-CINE_V1)*CINE_RAMP(u)); }
+  else d=CINE_DIST_IN+(t-CINE_IN);
+  return d/CINE_DIST_TOTAL;
+}
+// How high a straight leg has to fly, and where its worst column is.
+function cineLegPeak(a,b,n){
+  let peak=-Infinity, pf=0;
+  for(let k=0;k<=n;k++){
+    const f=k/n, y=cineFloorAt(lerp(a[0],b[0],f),lerp(a[2],b[2],f));
+    if(y>peak){ peak=y; pf=f; }
+  }
+  return {peak,f:pf};
+}
+// Candidate mid-waypoints for a leg that can't fly straight: crane over the
+// obstruction, or swing wide of it on either side. Scored by how much altitude
+// the shot is forced to gain plus what the detour costs in length, so a swing
+// around a tower beats popping over its roof but a low wall is simply cleared.
+function cineDetour(a,b,hit){
+  const legLen=Math.hypot(b[0]-a[0],b[2]-a[2])||1;
+  const endMax=Math.max(a[1],b[1]);
+  const dx=(b[0]-a[0])/legLen, dz=(b[2]-a[2])/legLen;
+  const px=-dz, pz=dx;                      // perpendicular in the ground plane
+  const mx=lerp(a[0],b[0],0.5), mz=lerp(a[2],b[2],0.5);
+  const cands=[[lerp(a[0],b[0],hit.f),lerp(a[2],b[2],hit.f)]];   // crane over
+  for(const o of [14,-14,24,-24,36,-36]) cands.push([mx+px*o,mz+pz*o]);
+  let best=null;
+  for(const [cx,cz] of cands){
+    const p=[cx,0,cz];   // y is irrelevant here — only the column is scored
+    const need=Math.max(cineFloorAt(cx,cz),cineLegPeak(a,p,10).peak,cineLegPeak(p,b,10).peak);
+    const len=Math.hypot(cx-a[0],cz-a[2])+Math.hypot(b[0]-cx,b[2]-cz);
+    const cost=Math.max(0,need-endMax)+0.35*Math.max(0,len-legLen);
+    if(!best||cost<best.cost) best={cost,p:[cx,Math.max(endMax,need)+0.6,cz]};
+  }
+  return best?best.p:null;
+}
+function cineLookFloorAt(x,z){ return groundH(x,z)+CINE_LOOK_CLEAR; }
+// Lift the two control points bracketing any sample that sits below its floor,
+// then re-check — a spline sags between its control points, and moving control
+// points keeps the curve smooth where shoving samples would not. Lifting always
+// converges (in the limit the whole route clears the tallest roof), which is
+// why the caller's bail-out is a genuine last resort, not the normal path.
+function cineRepair(pts,floorFn){
+  for(let pass=0;pass<CINE_REPAIRS;pass++){
+    const lift=new Array(pts.length).fill(0), kn=cineKnots(pts);
+    let bad=0;
+    for(let k=0;k<=CINE_CHECK_N;k++){
+      const u=k/CINE_CHECK_N, p=cineCurveAt(pts,u,kn), need=floorFn(p[0],p[2]);
+      if(p[1]<need-1e-3){
+        bad++;
+        const s=u*(pts.length-1), i=Math.min(pts.length-2,Math.floor(s)), d=need-p[1]+0.3;
+        lift[i]=Math.max(lift[i],d); lift[i+1]=Math.max(lift[i+1],d);
+      }
+    }
+    if(!bad) return true;
+    for(let i=0;i<pts.length;i++) pts[i][1]+=lift[i];
+  }
+  return false;
+}
+// A known-safe shot: straight up and back from the subject, above everything.
+function cineSafeShot(look){
+  const bx=look[0], bz=look[2]+18;
+  const y=Math.max(cineFloorAt(look[0],look[2]),cineFloorAt(bx,bz))+6;
+  return {px:bx,py:y,pz:bz,lx:look[0],ly:look[1],lz:look[2]};
+}
+// Plan a whole shot from an authored path of {p,l} beats.
+function planCinematicRoute(path){
+  const pts=[], looks=[];
+  for(const w of path){
+    const s=flySample(w,w,0);   // the authored beat, made safe on its own
+    pts.push([s.px,Math.max(s.py,cineFloorAt(s.px,s.pz)),s.pz]);
+    looks.push([s.lx,s.ly,s.lz]);
+  }
+  // Choose a clear route leg by leg before anything moves.
+  const out=[pts[0]];
+  for(let i=0;i<pts.length-1;i++){
+    const a=pts[i], b=pts[i+1], hit=cineLegPeak(a,b,CINE_LEG_N);
+    if(hit.peak>Math.max(a[1],b[1])+0.05){
+      const mid=cineDetour(a,b,hit);
+      if(mid) out.push(mid);
+    }
+    out.push(b);
+  }
+  // Both curves get repaired the same way, and the framing curve is repaired
+  // here rather than clamped per frame: a max() applied every frame kinks the
+  // pan every time the look target crosses a rise.
+  const ok=cineRepair(out,cineFloorAt);
+  cineRepair(looks,cineLookFloorAt);
+  const kn=cineKnots(out), lkn=cineKnots(looks);
+  return {ok, pts:out, looks, kn, lkn, arc:cineArcTable(out,kn), look:null,
+          safe:cineSafeShot(looks[looks.length-1])};
+}
+// Read the planned shot at normalised time t. Position follows arc length under
+// the speed profile; the look target runs on its own clock and is then chased
+// by a critically damped follow, so framing eases through a bend instead of
+// snapping with the path.
+function cineRouteSample(route,t,dt){
+  if(!route||!route.ok) return route?route.safe:null;
+  const p=cineCurveAt(route.pts,cineUAtDist(route.arc,cineDistFrac(t)),route.kn);
+  const raw=cineCurveAt(route.looks,cineDistFrac(t),route.lkn);
+  if(!route.look) route.look=raw.slice();
+  const k=1-Math.exp(-Math.max(dt,0)/CINE_LOOK_TAU);
+  route.look[0]+=(raw[0]-route.look[0])*k;
+  route.look[1]+=(raw[1]-route.look[1])*k;
+  route.look[2]+=(raw[2]-route.look[2])*k;
+  return {px:p[0],py:p[1],pz:p[2],lx:route.look[0],ly:route.look[1],lz:route.look[2]};
+}
+// INTRO_PATH's last beats were authored around the player's spawn. The live
+// director can start the flythrough from anywhere, so re-aim the tail at
+// wherever Turbo actually is — at spawn this reproduces the authored numbers.
+function introPathNow(){
+  const path=INTRO_PATH.map(w=>({p:w.p.slice(),l:w.l.slice()}));
+  const n=path.length, s=Math.sin(player.heading), c=Math.cos(player.heading);
+  path[n-3].l=[player.x,4.2,player.z];
+  path[n-2].p=[player.x-s*11,7.5,player.z-c*11];   path[n-2].l=[player.x,2.3,player.z];
+  path[n-1].p=[player.x-s*6.5,3.2,player.z-c*6.5]; path[n-1].l=[player.x,1.4,player.z];
+  return path;
+}
 function startIntro(){
   G.started=true; G.intro=true; introT=0;
+  introRoute=planCinematicRoute(introPathNow());   // one planned move, decided now
   introLinesSpoken=[];
   $('cineTop').style.display='block';
   $('cineBot').style.display='block';
@@ -9038,12 +9653,11 @@ function endIntro(){
 function updateIntroCam(dt){
   introT+=dt;
   updateIntroNarration(dt);
-  const SEG=INTRO_PATH.length-1, segT=INTRO_DUR/SEG;
-  const i=Math.min(SEG-1,Math.floor(introT/segT));
-  let f=(introT-i*segT)/segT;
-  f=f*f*(3-2*f);   // smoothstep
-  const A=INTRO_PATH[i], B=INTRO_PATH[i+1];
-  const s=flySample(A,B,f);
+  // End before sampling: past INTRO_DUR the route clamps to its last metre, so
+  // sampling it would spend the final frame decelerating to a dead stop.
+  if(introT>=INTRO_DUR){ endIntro(); return; }
+  if(!introRoute) introRoute=planCinematicRoute(introPathNow());
+  const s=cineRouteSample(introRoute,introT/INTRO_DUR,dt);
   camera.position.set(s.px,s.py,s.pz);
   camera.lookAt(s.lx,s.ly,s.lz);
   // logo: fade in fast, hold a moment, then fade out so the flythrough stays visible
@@ -9053,7 +9667,6 @@ function updateIntroCam(dt){
   else if(introT<5.4) lg.style.opacity=Math.max(0,1-(introT-4.2)/1.2);
   else lg.style.opacity=0;
   lg.style.transform=`scale(${1+Math.min(introT,5.4)*0.025})`;
-  if(introT>=INTRO_DUR) endIntro();
 }
 $('skipIntro').addEventListener('click',endIntro);
 $('skipIntro').addEventListener('touchend',e=>{ e.preventDefault(); endIntro(); });
@@ -9109,13 +9722,8 @@ function makePillar(color,r,h){
   m.position.y=h/2; return m;
 }
 function debSay(txt){
-  if(!deb.bub){
-    deb.bub=document.createElement('div');
-    deb.bub.className='chatBubble';
-    document.body.appendChild(deb.bub);
-  }
-  deb.bub.textContent=txt;
-  deb.bub.style.display='block';
+  if(!deb.bub) deb.bub=makeChatBubble();
+  setChatBubbleText(deb.bub,txt);
   deb.bubT=2.4;
   wahVoice(rand(175,235),deb.x,deb.z);
 }
@@ -9158,7 +9766,7 @@ function updateStory(dt){
   // project her speech bubble
   if(deb.bub&&deb.bubT>0){
     deb.bubT-=dt;
-    placeWorldBubble(deb.bub,deb.x,2.5,deb.z,undefined,deb.bubT<=0);
+    placeWorldBubble(deb.bub,deb.x,2.5,deb.z,undefined,deb.bubT<=0,deb.bub._tail);
   }
   if(!G.story.metDeb){
     if(d<3&&G.mode==='foot'&&!activeCutscene){ 
@@ -9395,6 +10003,7 @@ function playCutscene(id, anchorX, anchorZ, onDone){
   if(activeCutscene) return;
   const data=CUTSCENES[id]; if(!data) return;
   activeCutscene={id, data, anchorX, anchorZ, time:0, idx:0, done:false};
+  endMelee();   // OP2-C
   cutsceneCallback=onDone||null;
   G.cutscene=true;
   // Hide gameplay UI
@@ -10064,7 +10673,7 @@ function hideStale(frameId){ // anything replay moved but not in this frame gets
 // out); the frozen ring-buffer scrub is now just one item on the scene menu.
 function enterReplay(){
   if(G.replay||!G.started||G.over||G.intro||activeCutscene) return;
-  clearSprint();
+  clearSprint(); endMelee();   // OP2-C
   G.replay=true;
   const d=new THREE.Vector3(); camera.getWorldDirection(d);
   replay={ pos:recBuf.length-1, playing:false, frame:0, talk:false, talkT:0, shadesAnim:null,
@@ -10164,15 +10773,40 @@ function updateReplay(dt){
 // ================= CINEMA: SCENES & STAGING =================
 // point d metres ahead of Turbo (his forward is +sin/+cos of heading)
 function cinemaAhead(d){ return {x:player.x+Math.sin(player.heading)*d, z:player.z+Math.cos(player.heading)*d}; }
+// Is the subject actually visible from here, or is there a facade in the way?
+function cineSightClear(cx,cy,cz,tx,ty,tz){
+  const vols=cinematicBuildingVolumes();
+  for(let k=1;k<8;k++){
+    const f=k/8, x=lerp(cx,tx,f), y=lerp(cy,ty,f), z=lerp(cz,tz,f);
+    if(y<groundH(x,z)) return false;
+    for(const b of vols) if(y<b.baseY+b.h&&x>b.minX&&x<b.maxX&&z>b.minZ&&z<b.maxZ) return false;
+  }
+  return true;
+}
+// Pick where a staged shot cuts to. The authored 3/4 angle is tried first and
+// is still what you get on open ground; the sweep past it is what stops the
+// camera cutting into a hillside or a facade (28 of 36 placements did, before
+// this — the old floor was an absolute 0.6 with no solidity test at all).
+// Deterministic order, so the same staging always frames the same way.
+function planCinemaShot(tx,ty,tz,dist,height){
+  const base=player.heading+2.3;
+  for(const dm of [1,1.35,0.75]) for(const dh of [0,0.9,-0.9,1.9,-1.9,Math.PI]) for(const hb of [0,2.5,6]){
+    const a=base+dh, cx=tx+Math.sin(a)*dist*dm, cz=tz+Math.cos(a)*dist*dm;
+    const cy=Math.max(ty+height+hb,groundH(cx,cz)+CINE_CAM_CLEAR);
+    if(!cinematicCameraBlocked(cx,cy,cz,CINE_PAD)&&cineSightClear(cx,cy,cz,tx,ty,tz)) return {x:cx,y:cy,z:cz};
+  }
+  const s=cineSafeShot([tx,ty,tz]);   // nothing clear at this angle — crane above it
+  return {x:s.px,y:s.py,z:s.pz};
+}
 // swing the free-fly camera onto a target from a cinematic 3/4 angle
 function cinemaFrame(tx,ty,tz,dist,height){
   if(!replay) return;
   ty=(ty===undefined)?1.4:ty;
-  const a=player.heading+2.3;
-  const cx=tx+Math.sin(a)*dist, cz=tz+Math.cos(a)*dist, cy=ty+height;
+  const s=planCinemaShot(tx,ty,tz,dist,height);
+  const cx=s.x, cy=s.y, cz=s.z;
   const dx=tx-cx, dy=ty-cy, dz=tz-cz, d=Math.hypot(dx,dy,dz)||1;
   const c=replay.cam;
-  c.x=cx; c.y=Math.max(0.6,cy); c.z=cz;
+  c.x=cx; c.y=cy; c.z=cz;
   c.yaw=Math.atan2(dx,dz); c.pitch=Math.asin(clamp(dy/d,-1,1));
 }
 function cinemaFrameOnPlayer(){ cinemaFrame(player.x,1.4,player.z,8,3.4); }
@@ -10200,31 +10834,29 @@ function cinemaGoLive(){
 function cinemaIntro(){
   if(!replay) return;
   cinemaClearStaged();
-  replay.introPlay={t:0};
+  replay.introPlay={t:0,route:planCinematicRoute(introPathNow())};
   const lg=$('introLogo'); lg.style.display='flex'; lg.style.opacity='0';
   $('cineTop').style.display='block'; $('cineBot').style.display='block';
   toast('INTRO FLYTHROUGH','gold');
 }
 function updateCinemaIntro(dt){
   const ip=replay.introPlay; ip.t+=dt;
-  const SEG=INTRO_PATH.length-1, segT=INTRO_DUR/SEG;
-  const i=Math.min(SEG-1,Math.floor(ip.t/segT));
-  let f=(ip.t-i*segT)/segT; f=f*f*(3-2*f);
-  const A=INTRO_PATH[i], B=INTRO_PATH[i+1];
-  const s=flySample(A,B,f);
+  const lg=$('introLogo');
+  if(ip.t>=INTRO_DUR){   // end before sampling — see updateIntroCam
+    replay.introPlay=null; lg.style.display='none';
+    $('cineTop').style.display='none'; $('cineBot').style.display='none';
+    cinemaFrameOnPlayer();
+    return;
+  }
+  if(!ip.route) ip.route=planCinematicRoute(introPathNow());
+  const s=cineRouteSample(ip.route,ip.t/INTRO_DUR,dt);
   camera.position.set(s.px,s.py,s.pz);
   camera.lookAt(s.lx,s.ly,s.lz);
-  const lg=$('introLogo');
   if(ip.t<1.3) lg.style.opacity=ip.t/1.3;
   else if(ip.t<4.2) lg.style.opacity=1;
   else if(ip.t<5.4) lg.style.opacity=Math.max(0,1-(ip.t-4.2)/1.2);
   else lg.style.opacity=0;
   lg.style.transform=`scale(${1+Math.min(ip.t,5.4)*0.025})`;
-  if(ip.t>=INTRO_DUR){
-    replay.introPlay=null; lg.style.display='none';
-    $('cineTop').style.display='none'; $('cineBot').style.display='none';
-    cinemaFrameOnPlayer();
-  }
 }
 // scripted convo: hand off to the real cutscene system, then re-dress the
 // cinema UI once it returns (the cutscene restores the game HUD on its own)
@@ -10520,6 +11152,7 @@ function pauseGame(){
   if(G.menuPaused||!G.started||G.over||G.intro||activeCutscene||G.replay) return;
   clearSprint();
   if($('storyCard').style.display==='flex') return;
+  endMelee();   // OP2-C
   G.menuPaused=true; syncPause();
   showPausePanel('pmMain');
   $('pauseMenu').style.display='flex';

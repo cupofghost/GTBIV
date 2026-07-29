@@ -202,10 +202,12 @@ module.exports = [
         damageCar(c, c.maxhp - 10, 'crash');   // down under 22 hp
         const burning = !!c.burning, fuse = c.burnT;
         c.burnT = 0.01;                        // fast-forward the fuse
-        return { burning, fuse };
+        return { burning, fuse, fuseConst: CAR_CRITICAL_FUSE };
       });
       assert(r.burning, 'car under 22hp should catch fire');
-      assert(r.fuse >= 29, 'default fuse should be ~30s, got ' + r.fuse);
+      // OP2-G halved this on owner direction (was ~30s); CAR_CRITICAL_FUSE is
+      // the one authority for it, so read the constant rather than a literal.
+      assert(r.fuse === r.fuseConst, 'critical fuse should be CAR_CRITICAL_FUSE (' + r.fuseConst + 's), got ' + r.fuse);
       await page.waitForTimeout(300);
       const r2 = await page.evaluate(() => ({
         gone: !cars.includes(cars.find(c2 => c2 === (window.__pc || null))),

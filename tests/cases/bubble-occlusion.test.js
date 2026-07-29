@@ -43,4 +43,37 @@ module.exports = { cases: [
       assert(!r.off&&!r.far&&!r.expired&&r.display==='none', 'off-screen, far, and expired bubbles should remain hidden');
     },
   },
+  {
+    name: 'OP2-E: bubble tails rotate to face the projected head, including when the box is edge-clamped',
+    query: '?dev=1&skipintro=1',
+    run: async (page, { assert }) => {
+      await page.setViewportSize({ width: 800, height: 390 });
+      const r = await page.evaluate(() => {
+        const el = makeChatBubble(); setChatBubbleText(el, 'Hey, over here!');
+        const angDiff = (a, b) => { let d = (a - b + 540) % 360 - 180; return d; };
+        const sample = (rawX, rawY) => {
+          orientBubbleTail(el, el._tail, rawX, rawY);
+          const left = parseFloat(el.style.left), top = parseFloat(el.style.top);
+          const cx = left + el._bw / 2, cy = top + el._bh / 2;
+          const expected = Math.atan2(rawY - cy, rawX - cx) * 180 / Math.PI - 90;
+          const m = /rotate\(([-\d.]+)deg\)/.exec(el._tail.style.transform);
+          const actual = m ? parseFloat(m[1]) : NaN;
+          return { left, top, angleError: Math.abs(angDiff(actual, expected)) };
+        };
+        // a head roughly centered in the viewport — box should sit unclamped above it
+        const center = sample(400, 150);
+        const centeredBox = Math.abs(center.left - (400 - el._bw / 2)) < 0.5;
+        // a head pinned to the far left edge — box must clamp horizontally,
+        // and the tail must still swing around to point at the true (unclamped) head
+        const edge = sample(2, 60);
+        const wasClamped = edge.left > 2; // margin, not the naive rawX-bw/2 (deeply negative)
+        el.remove();
+        return { centerAngleError: center.angleError, edgeAngleError: edge.angleError, centeredBox, wasClamped };
+      });
+      assert(r.centeredBox, 'an unclamped bubble should sit directly centered over its speaker: ' + JSON.stringify(r));
+      assert(r.centerAngleError < 1, 'centered tail angle should match the head direction: ' + JSON.stringify(r));
+      assert(r.wasClamped, 'a head near the screen edge should force the box to clamp: ' + JSON.stringify(r));
+      assert(r.edgeAngleError < 1, 'a clamped bubble tail must still point at the true head position: ' + JSON.stringify(r));
+    },
+  },
 ] };

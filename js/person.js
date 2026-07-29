@@ -195,7 +195,10 @@ function makePerson(spec,gender){
   }
   g.scale.y=spec.height;
   g.userData={legL,legR,kneeL:legL.userData.knee,kneeR:legR.userData.knee,armL,armR,body,torso:torsoG,head:headG,jaw,mouth,gender,spec};
-  if(typeof makeShadow==='function') g.add(makeShadow(0.5));
+  // OP2-D: the blob shadow stays a child (so it lives and dies with the rig) but
+  // is now named, so the game can keep it flat on the ground instead of letting
+  // it tip over with the body. Additive — nothing that ignores it changes.
+  if(typeof makeShadow==='function'){ const sh=makeShadow(0.5); g.userData.shadow=sh; g.add(sh); }
   return g;
 }
 

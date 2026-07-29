@@ -1676,7 +1676,7 @@ pin each agent's model, effort, base commit, branch, code ownership, tests, and
 integration order. Agents work on isolated branches/worktrees and never merge
 `main` themselves.
 
-#### OP2-A — Road and sidewalk visual integrity `P1 · Risk: Med` `OPEN`
+#### OP2-A — Road and sidewalk visual integrity `P1 · Risk: Med` `DONE`
 
 **Owner report:** manhole covers and center-road stripes look like
 trash-quality zoomed-in assets; some sidewalks do not follow terrain and hang
@@ -1702,7 +1702,7 @@ NPCs, and spawns behave exactly as before. Add a seeded terrain/geometry check
 and manually inspect representative flat, graded, and knoll-adjacent streets.
 
 #### OP2-B — Civilian vehicle sanity, jackability, and impact damage
-`P0 · Risk: High` `OPEN`
+`P0 · Risk: High` `DONE`
 
 **Owner report:** traffic often drives erratically; many cars cannot be
 carjacked, especially after clipping into buildings; being hit by a fast car
@@ -1734,7 +1734,7 @@ fires once per contact window. Preserve wanted logic, pooling bounds,
 determinism, car audio, missions, and the existing large STEAL CAR button.
 
 #### OP2-C — Reliable melee and the planted horizontal kick pose
-`P0 · Risk: Med–High` `OPEN`
+`P0 · Risk: Med–High` `DONE`
 
 **Owner report:** punch and kick stop working after extended play, and Turbo's
 kick drives his body into the ground instead of showing the intended pose.
@@ -1761,7 +1761,7 @@ and rear leg stay above terrain; hit geometry matches the visible attack.
 Extend focused melee tests and perform a side/front screenshot review.
 
 #### OP2-D — Grounded character shadows and better Turbo footsteps
-`P1 · Risk: Med` `OPEN`
+`P1 · Risk: Med` `DONE`
 
 **Owner report:** person blob shadows stay attached to the feet and rotate
 vertical when a character falls. Turbo's current footstep sound is poor.
@@ -1801,7 +1801,7 @@ owner listening pass—the final sound quality cannot be approved by assertions
 alone.
 
 #### OP2-E — Quieter mission UI and head-anchored speech bubbles
-`P1 · Risk: Low–Med` `OPEN`
+`P1 · Risk: Low–Med` `DONE`
 
 **Owner direction:** mission buttons and notifications should be smaller, more
 translucent, and out of the way. The context-sensitive STEAL CAR control is the
@@ -1826,7 +1826,7 @@ bubble tail points back to its speaker's projected head as the camera moves,
 including edge-clamped bubbles, and remains hidden when the speaker is
 occluded.
 
-#### OP2-F — Planned cinematic camera routes `P0 · Risk: High` `OPEN`
+#### OP2-F — Planned cinematic camera routes `P0 · Risk: High` `DONE`
 
 **Owner report:** some Cinema scenes still send the camera through terrain.
 The intro route avoids more collisions but looks reactive and janky instead of
@@ -1849,7 +1849,7 @@ the intro reads as one planned movie move. Add route-clearance regression
 coverage and conduct a full visual review—numeric safety alone is insufficient.
 
 #### OP2-G — Faster car failure, one better explosion, and lethal falls
-`P1 · Risk: Med` `OPEN`
+`P1 · Risk: Med` `DONE`
 
 **Owner direction:** once the player's car reaches its damaged/critical state,
 it should explode in roughly half the current time. Remove the redundant
@@ -2029,7 +2029,7 @@ throughout:
 —  FB5 Cheerleaders cutscene     OPEN
 —  RV2 Mama rat model/animation  OPEN (owner-expanded)
 —  RV3 Rat vengeance polish      OPEN (unscoped)
-—  OP2 Owner playtest corrections OPEN (owner-triggered; A–G)
+✔ OP2 Owner playtest corrections DONE (A–G; B via #41, rest in the five-agent batch)
 —  TM  Turbo Mode                 OPEN (owner-triggered, after OP2)
 —  AF  Codex audit follow-up      OPEN (owner-triggered)
 —  X1  Modular split (if approved) OPEN
