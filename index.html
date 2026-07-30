@@ -3195,7 +3195,10 @@ function updateParticles(dt){
 const COL_SMOKE=[[0.5,0.5,0.55],[0.35,0.35,0.4]], COL_FIRE=[[1,0.6,0.1],[1,0.3,0.05],[1,0.9,0.3]],
       COL_CASH=[[0.3,1,0.4],[0.8,1,0.3]], COL_SPARK=[[1,0.9,0.4],[1,1,1]],
       COL_NITRO=[[0.3,0.7,1],[0.6,0.9,1],[0.2,0.4,1]],
-      COL_WATER=[[0.55,0.82,1],[0.85,0.95,1],[0.35,0.65,0.95]];
+      COL_WATER=[[0.55,0.82,1],[0.85,0.95,1],[0.35,0.65,0.95]],
+      // arcade gore: flat comic red, no browns. Reads as a cartoon splat under
+      // the additive particle blend rather than anything anatomical.
+      COL_GORE=[[0.9,0.09,0.13],[1,0.24,0.2],[0.62,0.04,0.07]];
 // brake lights: dim cruising, bright on the pedal
 function setTail(car,on){
   const t=car.mesh.userData.tail; if(!t||car._tailOn===on) return;
@@ -8878,6 +8881,9 @@ function respawn(spot){
   G.over=true;
   exitCarSoft();
   setTimeout(()=>{
+    // FIRST, unconditionally: re-assemble the rig and clear the splat. This is
+    // the only guarantee that a death sequence can never outlive its respawn.
+    endDeathFx();
     const custom=!!spot;
     spot=spot||intersections[Math.floor(intersections.length/2)];
     const intended={x:spot.x+(custom?0:4),z:spot.z+(custom?0:4)};
@@ -8939,7 +8945,184 @@ function wasted(spot){
   }
   G.heat=0; G.stars=0; G.escapeT=0; G.bustT=0; G.hiddenT=0; updateStarsHUD();
   cops.forEach(cc=>{ cc.driver='leaving'; });
+  startDeathFx();
   respawn(spot||player._shore); player._shore=null;
+}
+
+// ================= DEATH FX: BREAK-APART + SPLAT =================
+// wasted() already idles 1800 ms before respawn() puts Turbo back on his feet,
+// and nothing else used that window. This is what plays in it: the rig comes
+// apart into eight pieces that tumble out under gravity, a red gore burst fires
+// at chest height, and a splat decal lands on the ground beneath him and fades
+// out just before he returns.
+//
+// RESTORE IS THE CONTRACT, NOT THE ANIMATION. respawn() knows nothing about
+// detached limbs, so endDeathFx() is what re-assembles the rig and respawn()'s
+// own timeout calls it unconditionally — a sequence cut short by a cutscene, a
+// cinema cut, a pause or a backgrounded tab still restores exactly on time,
+// because the restore is driven by the wall clock the respawn already runs on
+// and never by the animation reaching its end.
+//
+// Nothing is ever re-parented to the scene: every piece stays somewhere under
+// player.mesh, so a missed frame cannot strand a limb in the world. The splat
+// is the only world-space object here and this section owns its whole lifetime.
+//
+// Scope, decided here and stated in the commit: (1) every death, because
+// wasted() is the single choke point and a car fireball leaving him standing
+// intact would read as a bug; (2) cartoon/arcade gore — flat comic red, clothed
+// rig pieces, nothing anatomical, no decal that outlives the respawn;
+// (3) SETTINGS.reduceMotion softens rather than skips (see startDeathFx).
+const DEATH_PIECES=['legL','legR','kneeL','kneeR','armL','armR','torso','head'];
+const DEATH_TUMBLE=1.15;    // s of flight before the pieces shrink away
+const DEATH_SPAN=1.68;      // s for the whole sequence — ends inside respawn()'s 1.8 s
+const DEATH_GRAV=13;        // rig-local u/s^2. Heavier than real gravity so it reads fast
+const DEATH_SPLAT_R=1.15;   // splat radius at full size, world units
+// The rig's rest pose, captured once at boot while it is still pristine. Only
+// rotations are ever written to these handles (updateFoot and the melee/climb
+// poses); nothing in the game writes their .position, .scale or .visible, so
+// these values stay correct for the life of the page and every restore snaps
+// back to exactly the rig makePerson() built.
+const _deathRig=(function(){
+  const u=player.mesh.userData, pieces=[];
+  for(const key of DEATH_PIECES){
+    const o=u[key];
+    if(!o||!o.parent) continue;
+    pieces.push({key,o,parent:o.parent,pos:o.position.clone(),scl:o.scale.clone(),
+                 vis:o.visible,vx:0,vy:0,vz:0,rx:0,ry:0,rz:0});
+  }
+  // Whatever is left on the root that isn't a piece and isn't the blob shadow —
+  // pelvis, belt, neck. It gets hidden for the tumble instead of hanging in the
+  // air with nothing attached to it.
+  const owned=new Set(pieces.map(p=>p.o)), core=[];
+  for(const c of player.mesh.children) if(!owned.has(c)&&c!==u.shadow) core.push(c);
+  return {pieces,core};
+})();
+let deathFx=null, _splatMesh=null;
+// One splat, built once and re-used: added to the scene on death, removed on
+// restore. A single reused mesh cannot leak geometry or materials across
+// repeated deaths the way a build-then-disposeMesh() pair could. shGeo is the
+// shared blob-shadow circle; the material is a CLONE — shMat is every blob
+// shadow in the game and must not be tinted.
+function deathSplatMesh(){
+  if(_splatMesh) return _splatMesh;
+  const mat=shMat.clone();
+  mat.color.setHex(0x9e0d16); mat.opacity=0;
+  const g=new THREE.Group();
+  // one main pool plus two thrown-off droplets, so it isn't a perfect ellipse
+  [[0,0,0,1,0.86],[0.62,0.005,-0.5,0.4,0.34],[-0.55,0.008,0.66,0.3,0.26]].forEach(d=>{
+    const m=new THREE.Mesh(shGeo,mat);
+    m.rotation.x=-Math.PI/2; m.position.set(d[0],d[1],d[2]); m.scale.set(d[3],d[4],1);
+    g.add(m);
+  });
+  g.userData.mat=mat;
+  _splatMesh=g; return g;
+}
+// Puts everything back. Idempotent, and safe to call when no death is running.
+function endDeathFx(){
+  const d=deathFx;
+  deathFx=null;
+  // Re-assemble from the boot-time rest pose, not from the run's own list, so
+  // the rig is restored in full no matter which branch of the sequence ran.
+  for(const p of _deathRig.pieces){
+    if(p.o.parent!==p.parent) p.parent.add(p.o);
+    p.o.position.copy(p.pos);
+    p.o.rotation.set(0,0,0);
+    p.o.scale.copy(p.scl);
+    p.o.visible=p.vis;
+    p.vx=p.vy=p.vz=p.rx=p.ry=p.rz=0;
+  }
+  if(d){
+    for(const c of d.core) c.o.visible=c.was;
+    if(d.shadow) d.shadow.visible=d.shadowWas;
+  } else {
+    for(const c of _deathRig.core) c.visible=true;
+    const sh=player.mesh.userData.shadow; if(sh) sh.visible=true;
+  }
+  player.mesh.rotation.x=0;
+  if(_splatMesh){
+    if(_splatMesh.parent) _splatMesh.parent.remove(_splatMesh);
+    _splatMesh.userData.mat.opacity=0;
+  }
+}
+function startDeathFx(){
+  endDeathFx();   // never stack two sequences
+  const m=player.mesh, u=m.userData;
+  const px=player.x, pz=player.z, gy=groundH(px,pz);
+  // reduceMotion: soften, don't skip. shake()/triggerHitStop() early-return
+  // because they throw the CAMERA around, which is what the setting is for.
+  // Eight pieces whipping across the screen is the same kind of motion, so it
+  // is the part that goes: he topples flat instead, and the burst and the splat
+  // — which are not camera motion — still play. One restore path either way.
+  const soft=!!SETTINGS.reduceMotion;
+  // Anchor the whole sequence on the ground under wherever he died — pavement,
+  // car or chopper — so the body and the splat always agree. In car/heli mode
+  // the mesh is hidden and its position is stale; player.x/z track the vehicle.
+  m.position.set(px,gy,pz); m.rotation.x=0;
+  const shadow=u.shadow||null, shadowWas=shadow?shadow.visible:false;
+  const core=_deathRig.core.map(o=>({o,was:o.visible}));
+  const pieces=[];
+  if(!soft){
+    // the body is gone, so the blob shadow under it has to go with it
+    if(shadow) shadow.visible=false;
+    for(const c of core) c.o.visible=false;
+    for(const p of _deathRig.pieces){
+      const a=rand(0,TAU), sp=rand(2.2,4.2);
+      p.vx=Math.cos(a)*sp; p.vz=Math.sin(a)*sp; p.vy=rand(3.4,6.2);
+      p.rx=rand(-11,11); p.ry=rand(-11,11); p.rz=rand(-11,11);
+      if(p.o.parent!==m) m.add(p.o);   // the knees fly free of the thighs
+      pieces.push(p);
+    }
+  }
+  burst(px,gy+1.05,pz,soft?12:26,COL_GORE,soft?3:5.5,0.85,11);
+  // over the drink there is no ground to stain — the burst and the body still play
+  const splat=overWater(px,pz)?null:deathSplatMesh();
+  if(splat){
+    splat.position.set(px,gy+0.04,pz);
+    splat.rotation.y=rand(0,TAU);
+    splat.scale.setScalar(0.001);
+    splat.userData.mat.opacity=0;
+    scene.add(splat);
+  }
+  deathFx={t:0,soft,pieces,core,shadow,shadowWas,x:px,y:gy,z:pz,splat,wet:false};
+}
+// Ticked on real dt from loop(), above every early return — respawn()'s 1800 ms
+// is a wall-clock setTimeout, so the sequence has to run on the same clock or a
+// paused/slowed/cutscene frame would leave it half-played when he comes back.
+function updateDeathFx(dt){
+  const d=deathFx; if(!d) return;
+  d.t+=dt;
+  const m=player.mesh, sy=m.scale.y||1, floor=0.11/sy;
+  for(const p of d.pieces){
+    p.vy-=DEATH_GRAV/sy*dt;
+    p.o.position.x+=p.vx*dt; p.o.position.y+=p.vy*dt; p.o.position.z+=p.vz*dt;
+    p.o.rotation.x+=p.rx*dt; p.o.rotation.y+=p.ry*dt; p.o.rotation.z+=p.rz*dt;
+    if(p.o.position.y<floor&&p.vy<0){   // one damped bounce, then it settles
+      p.o.position.y=floor; p.vy*=-0.34;
+      p.vx*=0.55; p.vz*=0.55; p.rx*=0.4; p.ry*=0.4; p.rz*=0.4;
+    }
+  }
+  if(d.soft) m.rotation.x=-1.45*clamp(d.t/0.55,0,1);
+  if(!d.wet&&d.t>=0.3){   // the wet second beat, low and slow, as the pieces land
+    d.wet=true;
+    burst(d.x,d.y+0.25,d.z,d.soft?7:14,COL_GORE,d.soft?1.4:2.4,0.7,14);
+  }
+  // pieces shrink away rather than fading — the rig's materials are shared
+  // between its own meshes, so per-piece scale is the only isolated dial here
+  const sh=clamp((d.t-DEATH_TUMBLE)/0.28,0,1);
+  if(sh>0) for(const p of d.pieces){
+    p.o.scale.copy(p.scl).multiplyScalar(Math.max(0.001,1-sh));
+    if(sh>=1) p.o.visible=false;
+  }
+  if(d.splat){
+    const grow=clamp(d.t/0.22,0,1), e=1-Math.pow(1-grow,3);
+    d.splat.scale.setScalar(DEATH_SPLAT_R*(0.35+0.65*e)*(1+0.14*Math.sin(grow*Math.PI)));
+    d.splat.userData.mat.opacity=0.72*e*clamp((DEATH_SPAN-d.t)/0.32,0,1);
+  }
+  if(d.t>=DEATH_SPAN&&d.splat){   // gone before the respawn, not on top of it
+    if(d.splat.parent) d.splat.parent.remove(d.splat);
+    d.splat.userData.mat.opacity=0;
+    d.splat=null;
+  }
 }
 
 // ================= CAMERA =================
@@ -9116,6 +9299,9 @@ function loop(){
     simDt*=(1-freeze*0.95);
     HIT_STOP-=dt;
   }
+  // Above every early return below, and on real dt: the death sequence has to
+  // keep the same wall clock as respawn()'s setTimeout, cutscene or not.
+  updateDeathFx(dt);
 
   // Cutscene mode: cinematic camera, frozen gameplay, ambient world still alive
   if(activeCutscene){
