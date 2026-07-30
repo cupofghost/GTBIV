@@ -6241,12 +6241,23 @@ function setTurboAimTransparency(on){
     while(n&&n!==player.mesh){ if(weaponRoots.includes(n)){ weaponChild=true; break; } n=n.parent; }
     if(weaponChild) return;
     const mats=Array.isArray(o.material)?o.material:[o.material];
+    // u.backT (the pink back-of-shirt T) is deliberately NOT excluded here: it
+    // sits right on the back surface that BackSide culls below, so it fades
+    // out with the rest of his back instead of hanging opaque right in front
+    // of the reticule — the one thing this whole fix exists to avoid. It
+    // returns instantly once amount drops back near 0.
     mats.forEach(m=>{
-      if(!turboAimMats.has(m)) turboAimMats.set(m,{transparent:m.transparent,opacity:m.opacity,depthWrite:m.depthWrite});
+      if(!turboAimMats.has(m)) turboAimMats.set(m,{transparent:m.transparent,opacity:m.opacity,depthWrite:m.depthWrite,side:m.side});
       const base=turboAimMats.get(m);
       m.transparent=amount>0.01?true:base.transparent;
-      m.opacity=lerp(base.opacity,0.38,amount);
+      // BackSide culls the camera-facing (back) surfaces and draws only the far
+      // ones, so aiming reads as "see through his back" instead of his whole
+      // body going see-through. Far less geometry survives the cull, so the
+      // ghost can sit denser than the old whole-body 0.38 without losing the
+      // x-ray effect.
+      m.opacity=lerp(base.opacity,0.55,amount);
       m.depthWrite=amount>0.01?false:base.depthWrite;
+      m.side=amount>0.01?THREE.BackSide:base.side;
       m.needsUpdate=true;
     });
   });
