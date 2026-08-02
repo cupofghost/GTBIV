@@ -214,6 +214,7 @@ Sections, in file order, with what lives in each:
 | `PIZZA DELIVERY SYSTEM` | Jackable pizza cars, `activeDelivery`, delivery loop |
 | `RIVAL PIZZA GANG: CHAOS PIZZA` | `chaosDrivers`, `gangMembers`, turf on minimap |
 | `FOOTBALL RIVALS: CHAOS HIGH JOCKS` | `JOCK_TAUNTS`, `spawnJock`, jock AI |
+| `COACH REMATCH (FB3)` | Old Scores → Rematch (`updateCoachMission`, `startOldScores`, `spawnCoach`, `hurtCoach`, `coachYields`, `coachSoftRetry`), `jocksHostile`/`jockTauntPack`, strand bark packs |
 | `STRAY DOGS & DOG GANGS` | Dogs, packs, `angry` state + growl/bite cues, meat drops |
 | `PIZZA WARS MISSION` | Scripted gang-war mission (`startPizzaWars`) |
 | `PLAYER` | The `player` object and its initial state |
@@ -1275,7 +1276,21 @@ once this exists, same as gang members stay near `CHAOS`).
 **Acceptance:** the field is visible and reachable on foot/by car, shows on
 the minimap, doesn't break existing block/road generation, holds framerate.
 
-#### FB3 — "Revenge on Coach" mission `P1 · Risk: Med` `OPEN`
+#### FB3 — "Revenge on Coach" mission `P1 · Risk: Med` `DONE — Claude Code | Opus 5 | high (2026-08-02)`
+**Status: implemented & verified.** Built as `index.html` §COACH REMATCH (FB3),
+between §FOOTBALL RIVALS and §STRAY DOGS. Old Scores opens by walking to
+Wildcats Field and is bounded both ways — three staged Alumni Wildcats through
+the existing `spawnJock`, and it lets go on its own if Turbo drives off, then
+re-opens when he walks back. Clearing it plays `coach_rematch_intro` straight
+into a fists-only Rematch against a single named 240-HP Coach who barks
+`coach_taunt` at HP thresholds. He **yields** — upright, winded, no `knockPed`
+ragdoll — into `coach_defeat`, which sets and saves `G.coachBeaten`; ambient
+jocks then go non-hostile and switch to the `jock_post_rematch` pack. A Turbo
+loss is a soft retry at the field: no BUSTED/WASTED, no fine, Coach resets and
+the round restarts. Nothing in the strand calls `addHeat`.
+**FB4 was not built** — it still needs the owner's go-ahead; see its card.
+**Focused test:** `tests/cases/fb3-coach.test.js` (10/10).
+
 **Why:** The dramatic payoff of the backstory — Turbo settles the score with
 the man who ended his football career.
 **Canonical spec:** use `FOOTBALL_STRAND.md` §§3–6 for the detailed Old
@@ -1297,7 +1312,13 @@ That flag unlocks **FB4**.
 a clear win state, sets the unlock flag, persists across reload (once `F1`
 exists), and doesn't re-trigger after being beaten.
 
-#### FB4 — Football minigame `P2 · Risk: High` `OPEN`
+#### FB4 — Football minigame `P2 · Risk: High` `OPEN — BLOCKED ON OWNER SIGN-OFF`
+**FB3 has set the unlock flag; the build has still not been greenlit.** The
+design is locked (`FOOTBALL_STRAND.md` §5, Endless Run) but §8 flags this as the
+one item in the strand that is a new *mode* rather than content on existing
+verbs, so it needs the owner's explicit go-ahead before anyone starts. Do not
+pick this up off the NEXT marker alone.
+
 **Why:** The reward for beating Coach — Turbo gets to play again. This is the
 biggest single new system in the arc; scope it deliberately, don't let it
 balloon into a full sports sim.
@@ -1987,8 +2008,11 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: FB3 (Coach mission)** — OP1 is complete; return to the Football Saga
-and build the one-shot Coach encounter from `FOOTBALL_STRAND.md`.
+**NEXT: (owner's call)** — FB3 is done, and everything left in the Football
+Saga is gated on you. `FB4` (Turbo Bowl) has a locked design but no go-ahead,
+and `FB5` is downstream of it. `RV2`, `TM` and `AF` are all owner-triggered
+too. Nothing here should be picked up as "the next task" without you saying so
+first.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -2024,8 +2048,8 @@ throughout:
 ✔ OD3 Turbo sprint               DONE
 ✔ OD4 Denser street life         DONE
 ✔ OP1 Owner playtest polish     DONE
-—  FB3 Coach mission             ← NEXT
-—  FB4 Football minigame         OPEN
+✔ FB3 Coach mission             DONE (Old Scores → Rematch; sets G.coachBeaten)
+—  FB4 Football minigame         OPEN — needs owner sign-off  ← NEXT decision
 —  FB5 Cheerleaders cutscene     OPEN
 —  RV2 Mama rat model/animation  OPEN (owner-expanded)
 —  RV3 Rat vengeance polish      OPEN (unscoped)
@@ -2043,11 +2067,12 @@ tooling with Phase 0. Critical path there: `D6` viewer → `C1` spec refactor �
 save the painted character). See `CHARACTERS.md §5` for the full order.
 
 **Football saga track** (Phase 7, above) also runs in parallel — `FB1` (ambient
-jocks) and `FB2` (field) are done. Next: `FB3` Coach mission (depends on `F1`
-for the persistent unlock flag, and ideally the `CUTSCENES` system) → `FB4`
-minigame → `FB5` cutscene (benefits from `C8`'s actor/pose work, but
-can ship camera-only if that's not ready yet). See `STORY_BIBLE.md` for every
-narrative beat this track needs.
+jocks), `FB2` (field) and `FB3` (Coach mission) are done; `G.coachBeaten` is
+now really set and saved. What remains — `FB4` minigame → `FB5` cutscene
+(benefits from `C8`'s actor/pose work, but can ship camera-only if that's not
+ready yet) — is **stalled on the owner's `FB4` go-ahead**, not on engineering.
+See `STORY_BIBLE.md` for every narrative beat this track needs, and
+`FOOTBALL_STRAND.md` for the detailed contract.
 
 **Rat Vengeance track** (Phase 8, above) is a small ongoing side-track — `RV1`
 (shoot the swarm → mama rat spawns, hunts, bites, and can be killed) is done
