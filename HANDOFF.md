@@ -30,9 +30,9 @@
   task, not optional.** Consider a tiny `tests/handoff-sync` check that fails if
   a card says DONE but a named function is missing (or vice-versa).
 
-- **W2 — The single ~8k-line `index.html` taxes every edit.** `P1 · Risk: High`
+- **W2 — The single ~11.9k-line `index.html` taxes every edit.** `P1 · Risk: High`
   (this is **X1**, but the cost is felt on *all* tasks, not just refactors). One
-  328 KB `<script>` block means every Grep/Read/Edit fights the file size and it
+  ~565 KB `<script>` block means every Grep/Read/Edit fights the file size and it
   never fits in context; locating a function is always grep-for-line then
   read-a-window. *Cheap interim win without the full modular split:* commit a
   **code map** (a `CODEMAP.md` or a comment index near the top: section name →
@@ -69,8 +69,10 @@
 
 ## 1. TL;DR
 
-- The **entire game is one file**: `index.html` (~5,000 lines). Markup + CSS +
-  ~4,560 lines of game JS. Three.js is vendored as `three.min.js` (r128).
+- The **entire game is one file**: `index.html` (~11,850 lines, ~565 KB). Markup
+  + CSS + ~11,100 lines of game JS. Three.js is vendored as `three.min.js`
+  (r128). These figures are refreshed by `node tools/codemap.js --write` — if
+  they look wrong, run it rather than trusting them.
 - **Zero build step.** It's a static site; it deploys to GitHub Pages as-is and
   must keep working by just opening the served URL. **Do not add a bundler,
   npm dependency, framework, or transpile step.**
@@ -172,11 +174,11 @@ sound on, and confirm nothing regressed. Watch the on-screen `fps` readout
 
 ### Structure of `index.html`
 ```
-lines   1– 14   <head>, meta, PWA links
-lines  15–418   <style>   — all CSS (HUD, controls, overlays, cinematics)
-lines 301–418   <body>    — DOM: HUD, joystick, pedals, buttons, overlays
-line   419       <script src="three.min.js">
-lines 420–4979  <script>  — the entire game (see the Code Map in §5)
+lines     1–  14  <head>, meta, PWA links
+lines    15– 452  <style>   — all CSS (HUD, controls, overlays, cinematics)
+lines   454– 711  <body>    — DOM: HUD, joystick, pedals, buttons, overlays
+line    712        <script src="three.min.js">
+lines   715–11852 <script>  — the entire game (see the Code Map in §5)
 ```
 
 ---

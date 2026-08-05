@@ -3,6 +3,24 @@
 These rules apply to every AI agent (Claude, Codex, Kimi, Gemini, or other) working in this repo.
 The owner is not a coder. Be efficient, be brief, and never assume another agent's work is broken.
 
+## 0. Facts you would otherwise spend tokens grepping for
+Every one of these has cost a past session a search. Trust this table over any
+figure quoted elsewhere in the docs — the older markdown has stale numbers in it.
+
+| Thing | Answer |
+|---|---|
+| Size of `index.html` | ~11,850 lines / ~565 KB. The game's `<script>` starts at line 715. It never fits in context — grep for a banner, then read a window. |
+| Navigating `index.html` | Section banners are `// ====== NAME ======` at column 0. The `// CODE MAP` block near the top indexes them. |
+| Regenerating the code map | `node tools/codemap.js --write`. Never hand-edit the line numbers. `node tools/codemap.js` alone checks for drift and exits 1. |
+| Test suite size | 207 cases across 44 files (`tests/cases/*.test.js`). Docs quoting 36/43/53/70/77/198 are historical — ignore them. |
+| Running tests | See §4a below. Do not default to the full suite. |
+| CI | `.github/workflows/ci.yml` — syntax check + full suite on every PR and push to main. |
+| Dev URL flags | `?dev=1` (dev panel), `?skipintro=1`, `?seed=<n>` (deterministic RNG — use this to reproduce a flaky test), `?scene=<name>`, `?cutscene=<id>`, `?mode=car\|heli`. |
+| Test viewport | 800×390 (phone landscape) — the project's testing convention. |
+| Serving the game locally | `python3 -m http.server 8099`, or just let `tests/run.js` do it (it starts its own server on a free port). |
+| Character model viewer | `viewer.html` — turntable dev tool for the `js/person.js` rig. |
+| `CODEX/` and `DISPATCH/` | Completed historical dispatch packets. Do not read unless you are resuming that exact task. |
+
 ## 1. Start of every session (do this first, cheaply)
 1. Read this file and `STATUS.md`. Do NOT read the whole repo.
 2. Read only the files relevant to your task.
@@ -37,6 +55,21 @@ The owner is not a coder. Be efficient, be brief, and never assume another agent
 - Test ONLY what you changed, once, at the end of your work.
 - Do NOT re-run full test suites or re-verify other agents' work unless the owner asks
   or your change directly touches their code.
+
+### 4a. Which test tier to run (read this before running anything)
+CI already runs the full suite on every PR and every push to main
+(`.github/workflows/ci.yml`). Running it locally too is duplicate spend — about
+20 minutes of wall clock and a 200-line transcript. Default to tiers 0–2 and let
+CI own tier 3.
+
+| Tier | Command | Cost | When |
+|---|---|---|---|
+| 0 | `node tests/syntax-check.js` | ~2s | After every edit. Catches typos in the inline `<script>` before anything expensive. |
+| 1 | `cd tests && node run.js smoke` | ~20s | The game still boots with no console errors (matches 2 files). |
+| 2 | `cd tests && node run.js <substring>` | 30–90s | The case files covering what you touched. Substring matches the filename. |
+| 3 | `cd tests && node run.js` | ~20 min | Only when the owner asks, or you changed something genuinely cross-cutting. Run it alone — two Playwright suites in parallel starve each other and produce spurious failures. |
+
+`run.js` runs tier 0 itself before it launches a browser, so you never need both.
 - If a test you didn't write fails and it's unrelated to your change, log it in
   `STATUS.md` under **Known issues** and move on. Do not fix it unasked.
 

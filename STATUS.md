@@ -10,6 +10,8 @@ the pipes in your signature as `\|`, or the table breaks.
 |------|--------------|-------------------------|-----------|
 | 2026-08-02 | `index.html` §COACH REMATCH (FB3), `tests/cases/fb3-coach.test.js`, `HANDOFF.md` | FB3 DONE — Old Scores → Rematch, Coach yields instead of dying, a loss soft-retries at the field, the win sets/saves `G.coachBeaten` and the Wildcats go non-hostile. `fb3-coach.test.js` 10/10; full suite 206/207 (the one failure is the known `shadow-footsteps` audio flake — 5/5 alone). FB4 / Turbo Bowl deliberately NOT built — it still needs the owner's sign-off. | Signed: Claude Code \| Opus 5 \| high |
 
+| 2026-08-02 | `AGENTS.md` §0/§4a, `tools/codemap.js` (new), `HANDOFF.md` §1/§4 | Session-cost pass, owner-requested. Added the code-map regenerator nobody had written, a testing-tier table (CI already runs the full suite — stop duplicating it locally), and a facts table for the things every session re-greps. Corrected `index.html` size/structure figures that were ~2.4× wrong. | Signed: Claude Code \| Opus 5 \| high |
+
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
 possible change and add a line here.
