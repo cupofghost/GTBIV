@@ -78,8 +78,8 @@ function fmt(title, nested, body) {
 
 function main() {
   const write = process.argv.includes('--write');
-  const lines = fs.readFileSync(TARGET, 'utf8').split('\n');
-  const { rows, first, last, added, sections } = build(lines);
+  let lines = fs.readFileSync(TARGET, 'utf8').split('\n');
+  let { rows, first, last, added, sections } = build(lines);
   const current = lines.slice(first + 1, last);
   const drift = current.length !== rows.length || current.some((l, i) => l !== rows[i]);
 
@@ -98,9 +98,27 @@ function main() {
     console.error('\nRun: node tools/codemap.js --write');
     process.exit(1);
   }
-  lines.splice(first + 1, last - first - 1, ...rows);
-  fs.writeFileSync(TARGET, lines.join('\n'));
-  console.log(`CODE MAP rewritten — ${sections} sections${added.length ? '; added [' + added + ']' : ''}.`);
+  // Iterate to a fixpoint. Adding or removing a *row* moves every banner below
+  // the map by that many lines, so the ranges a single pass computes are stale
+  // the moment it writes them. Re-deriving until the block stops changing is
+  // the whole fix; it converges in two passes unless rows churn again.
+  const allAdded = new Set(added);
+  for (let pass = 1; pass <= 5; pass++) {
+    lines.splice(first + 1, last - first - 1, ...rows);
+    const next = build(lines);
+    next.added.forEach(t => allAdded.add(t));
+    const settled = next.rows.length === rows.length && next.rows.every((l, i) => l === rows[i]);
+    ({ rows, first, last, sections } = next);
+    if (settled) {
+      fs.writeFileSync(TARGET, lines.join('\n'));
+      console.log(`CODE MAP rewritten — ${sections} sections`
+        + `${allAdded.size ? '; added [' + [...allAdded] + ']' : ''}`
+        + `${pass > 1 ? ` (converged in ${pass} passes)` : ''}.`);
+      return;
+    }
+  }
+  console.error('CODE MAP did not converge in 5 passes — not writing. This is a bug in this script.');
+  process.exit(1);
 }
 
 main();

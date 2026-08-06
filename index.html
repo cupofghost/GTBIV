@@ -737,63 +737,64 @@ let TRAFFIC_CAP=30, PED_CAP=60, PARTICLE_SCALE=1, GFX_TIER='high';
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS & GLOBAL STATE                           (719–727, ~9 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                             (799–860, ~62 lines)
-// AUDIO                                            (861–1159, ~299 lines)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1160–1662, ~503 lines)
-// THREE SETUP                                      (1663–1713, ~51 lines)
-// CITY                                             (1714–2622, ~909 lines)
+// DEVICE / ORIENTATION                             (800–861, ~62 lines)
+// AUDIO                                            (862–1160, ~299 lines)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1161–1663, ~503 lines)
+// THREE SETUP                                      (1664–1714, ~51 lines)
+// CITY                                             (1715–2623, ~909 lines)
 //   └ RADIO TOWERS                                 (2225–2331, ~107 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                   (2623–2673, ~51 lines)
-// ELEVATED LIGHT RAIL                              (2674–2798, ~125 lines)
-// STAIRS & FIRE ESCAPES                            (2799–2873, ~75 lines)
-// WALL LADDERS                                     (2874–3151, ~278 lines)
-// PARTICLES                                        (3152–3206, ~55 lines)
-// BLOB SHADOWS                                     (3207–3268, ~62 lines)
-// GPU RESOURCE CLEANUP                             (3269–3290, ~22 lines)
-// CARS                                             (3291–3582, ~292 lines)
-// PEDESTRIANS                                      (3583–3791, ~209 lines)
-// PIZZA DELIVERY SYSTEM                            (3792–3947, ~156 lines)
-// RIVAL PIZZA GANG: CHAOS PIZZA                    (3948–4075, ~128 lines)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4076–4255, ~180 lines)
-// COACH REMATCH (FB3)                              (4256–4734, ~479 lines)
-// STRAY DOGS & DOG GANGS                           (4735–5040, ~306 lines)
-// PIZZA WARS MISSION                               (5041–5115, ~75 lines)
-// PLAYER                                           (5116–5159, ~44 lines)
-// PIZZA PLACE & INTERIOR                           (5160–5323, ~164 lines)
-// SIDEWALKS & STOREFRONT AWNINGS                   (5324–5450, ~127 lines)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (5451–5650, ~200 lines)
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (5651–5766, ~116 lines)
-// DAY/NIGHT & HEIST SYSTEM                         (5767–5959, ~193 lines)
-// PICKUPS                                          (5960–6002, ~43 lines)
-// HELICOPTERS                                      (6003–6505, ~503 lines)
-// TALKING PEDS                                     (6506–6647, ~142 lines)
-// WEAPONS                                          (6648–7355, ~708 lines)
-// WANTED                                           (7356–7461, ~106 lines)
-// CAR PHYSICS                                      (7462–7689, ~228 lines)
-// PLAYER: FOOT & CAR                               (7690–8441, ~752 lines)
-// HUD / TOASTS                                     (8442–8485, ~44 lines)
-// MISSIONS                                         (8486–8659, ~174 lines)
-// AI                                               (8660–8782, ~123 lines)
-// FOOT COPS                                        (8783–8826, ~44 lines)
-// SEWER RATS                                       (8827–8943, ~117 lines)
-// MAMA RAT (rat vengeance) — PLACEHOLDER           (8944–9310, ~367 lines)
-// BUSTED / WASTED                                  (9311–9401, ~91 lines)
-// CAMERA                                           (9402–9511, ~110 lines)
-// MINIMAP                                          (9512–9559, ~48 lines)
-// MAIN LOOP                                        (9560–9742, ~183 lines)
-// ORIENTATION                                      (9743–9800, ~58 lines)
-// ANIMATED INTRO                                   (9801–10156, ~356 lines)
-// STORY: TURBO JONES, CHAPTER 1                    (10157–10412, ~256 lines)
-// CUTSCENE SYSTEM                                  (10413–10704, ~292 lines)
-// VOICEOVER SYSTEM                                 (10705–10786, ~82 lines)
-// INTRO NARRATION                                  (10787–11088, ~302 lines)
-// DEV TOOLS                                        (11089–11166, ~78 lines)
-// CINEMA MODE (was REPLAY)                         (11167–11299, ~133 lines)
-// CINEMA: SCENES & STAGING                         (11300–11515, ~216 lines)
-// PAUSE MENU & SETTINGS                            (11516–11725, ~210 lines)
-// CONTROLS CARD (U2 onboarding)                    (11726–11758, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (11759–11814, ~56 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                   (11815–end, ~41 lines: boot, init, resize handlers, quality apply)
+// FOOTBALL FIELD                                   (2624–2674, ~51 lines)
+// ELEVATED LIGHT RAIL                              (2675–2799, ~125 lines)
+// STAIRS & FIRE ESCAPES                            (2800–2874, ~75 lines)
+// WALL LADDERS                                     (2875–3152, ~278 lines)
+// PARTICLES                                        (3153–3207, ~55 lines)
+// BLOB SHADOWS                                     (3208–3269, ~62 lines)
+// GPU RESOURCE CLEANUP                             (3270–3291, ~22 lines)
+// CARS                                             (3292–3583, ~292 lines)
+// PEDESTRIANS                                      (3584–3792, ~209 lines)
+// PIZZA DELIVERY SYSTEM                            (3793–3948, ~156 lines)
+// RIVAL PIZZA GANG: CHAOS PIZZA                    (3949–4076, ~128 lines)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4077–4256, ~180 lines)
+// COACH REMATCH (FB3)                              (4257–4735, ~479 lines)
+// TURBO BOWL (FB4)                                 (4736–5099, ~364 lines)
+// STRAY DOGS & DOG GANGS                           (5100–5405, ~306 lines)
+// PIZZA WARS MISSION                               (5406–5480, ~75 lines)
+// PLAYER                                           (5481–5524, ~44 lines)
+// PIZZA PLACE & INTERIOR                           (5525–5688, ~164 lines)
+// SIDEWALKS & STOREFRONT AWNINGS                   (5689–5815, ~127 lines)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (5816–6015, ~200 lines)
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6016–6131, ~116 lines)
+// DAY/NIGHT & HEIST SYSTEM                         (6132–6324, ~193 lines)
+// PICKUPS                                          (6325–6367, ~43 lines)
+// HELICOPTERS                                      (6368–6870, ~503 lines)
+// TALKING PEDS                                     (6871–7012, ~142 lines)
+// WEAPONS                                          (7013–7720, ~708 lines)
+// WANTED                                           (7721–7826, ~106 lines)
+// CAR PHYSICS                                      (7827–8054, ~228 lines)
+// PLAYER: FOOT & CAR                               (8055–8806, ~752 lines)
+// HUD / TOASTS                                     (8807–8850, ~44 lines)
+// MISSIONS                                         (8851–9024, ~174 lines)
+// AI                                               (9025–9147, ~123 lines)
+// FOOT COPS                                        (9148–9191, ~44 lines)
+// SEWER RATS                                       (9192–9308, ~117 lines)
+// MAMA RAT (rat vengeance) — PLACEHOLDER           (9309–9675, ~367 lines)
+// BUSTED / WASTED                                  (9676–9766, ~91 lines)
+// CAMERA                                           (9767–9876, ~110 lines)
+// MINIMAP                                          (9877–9924, ~48 lines)
+// MAIN LOOP                                        (9925–10108, ~184 lines)
+// ORIENTATION                                      (10109–10166, ~58 lines)
+// ANIMATED INTRO                                   (10167–10522, ~356 lines)
+// STORY: TURBO JONES, CHAPTER 1                    (10523–10778, ~256 lines)
+// CUTSCENE SYSTEM                                  (10779–11097, ~319 lines)
+// VOICEOVER SYSTEM                                 (11098–11179, ~82 lines)
+// INTRO NARRATION                                  (11180–11481, ~302 lines)
+// DEV TOOLS                                        (11482–11559, ~78 lines)
+// CINEMA MODE (was REPLAY)                         (11560–11692, ~133 lines)
+// CINEMA: SCENES & STAGING                         (11693–11908, ~216 lines)
+// PAUSE MENU & SETTINGS                            (11909–12118, ~210 lines)
+// CONTROLS CARD (U2 onboarding)                    (12119–12151, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (12152–12211, ~60 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                   (12212–end, ~41 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -4731,6 +4732,370 @@ function updateCoachMission(dt){
   }
 }
 // ================= END COACH REMATCH =================
+
+// ================= TURBO BOWL (FB4) =================
+// FOOTBALL_STRAND.md §5 — the reward for beating Coach, and the strand's only
+// real new *mode*. Locked design: one continuous endless run, not downs.
+// Walk into the PLAY BALL beacon at midfield, receive the ball at your own end
+// zone, and run the length of Wildcats Field while Alumni Wildcats converge.
+// Touch a defender and you're tackled; reach the far end zone and you score.
+//
+// Deliberately cheap, per the card's "don't let it balloon into a sports sim":
+//   · No new input and no new verb — this is the existing on-foot movement,
+//     pointed down a field. updateFoot() is not touched.
+//   · No new asset pipeline — defenders are the jock rig with the letterman
+//     jacket FB1 already builds; the ball is one ellipsoid on Turbo's arm.
+//   · Defenders live in their own array, never in `jocks`, so the roaming
+//     faction AI can't reach them and they can't turn hostile.
+// Getting tackled is a soft fail with no penalty — walk back into the beacon
+// and go again. The mode only exists once G.coachBeaten is set (FB3).
+
+// --- bark packs, verbatim from FOOTBALL_STRAND.md §7 ------------------------
+// pa_announcer_turbo_bowl, keyed to distance milestones rather than fired at
+// random — the PA is the run's narrator, so the line has to match the moment.
+const PA_KICKOFF=[
+  "And he's OFF! Turbo Jones — sorry, is it Jonas? — with the ball!",
+  "Ohhh he's cutting left, he's cutting right, does HE even know where he's going?",
+];
+const PA_MIDFIELD="Fifty yards! Halfway there, folks — halfway to glory or a pulled hamstring!";
+const PA_TOUCHDOWN="TOUCHDOWN! TOUCHDOWN JONES! I mean JONES-JONAS! SOMEBODY CONFIRM THE SPELLING!";
+const PA_TACKLED="Ohh, and he's DOWN. Tackled. That's gotta hurt. Today's game is brought to you by Big Gary's Discount Airbags — 'we cushion the blow, literally.'";
+const PA_FILLER="This broadcast is sponsored by Sunny Sam's Suspiciously Cheap Watches. Sunny Sam is not currently answering his phone.";
+// coach_sideline_turbobowl — the thaw from Rematch shows here
+const COACH_SIDELINE=[
+  "Head up, JONES! Eyes downfield!",
+  "That's it! That's what I've been trying to teach you for TWENTY YEARS!",
+  "Don't you dare fumble in front of me again!",
+  "ATTA BOY— don't let it go to your head.",
+];
+// jock_turbobowl_defender — competitive but warm, needling a friend
+const TB_DEFENDER_LINES=[
+  "Not today, Jones!",
+  "You're still slow, old man!",
+  "I've got you, I've got you— dang it, I don't got you!",
+  "Coach is WATCHING, Jones, don't embarrass us!",
+];
+// turbo_turbobowl_run, split by moment
+const TB_TURBO_RUN=[
+  "Outta my way, I'm HISTORIC!",
+  "Twenty years of cardio for THIS moment!",
+  "Juke left— no— juke RIGHT— just RUN, TURBO!",
+  "This is for the locker room I'll never see again!",
+];
+const TB_TURBO_TACKLED=["...I meant to do that.","The grass broke my fall. Mostly."];
+const TB_TURBO_SCORED=["STILL. GOT. IT.","Somebody call Deb, tell her I'm FAST again!"];
+// cheer_squad_ambient — background colour once the squad is on the field
+const CHEER_AMBIENT=[
+  "Two, four, six, eight, who do we NOT appreciate? Coach's whistle, that's who.",
+  "Is that guy allowed back here?",
+  "He's kind of got main-character energy, not gonna lie.",
+];
+
+// --- tuning -----------------------------------------------------------------
+// The field runs along X: §FOOTBALL FIELD puts goalposts at FOOTBALL.x±18 and
+// bleachers at FOOTBALL.z±15.5. Play stays just inside both.
+const TB_GOAL=17;                 // end-zone lines, ±this from midfield
+const TB_LENGTH=TB_GOAL*2;        // 34u of running, scored as 100 yards
+const TB_WIDE=12;                 // keep the runner inside the bleachers
+const TB_DEFENDERS_MIN=3, TB_DEFENDERS_MAX=6;
+const TB_DEF_SPEED=4.5;           // a shade under Turbo's sprint — outrunnable
+const TB_TACKLE_R=1.15;
+const TB_BEACON_R=2.6;
+let turboBowl=null;               // {phase,startX,best,...} — null when not running
+let tbDefenders=[], tbCast=[];    // runners, and the sideline Coach + cheer squad
+let tbBeacon=null, tbBall=null;
+let tbOutroT=0;
+G.turboBowlBest=0;                // yards, persisted in the save blob
+G.turboBowlWon=false;             // has the one-time payoff cutscene played
+
+function turboBowlUnlocked(){ return !!(G.coachBeaten&&FOOTBALL); }
+function turboBowlLive(){ return !!(turboBowl&&turboBowl.phase==='run'); }
+function tbYards(x){ return clamp(Math.round((x-(FOOTBALL.x-TB_GOAL))/TB_LENGTH*100),0,100); }
+
+// The PA is a stadium speaker, not a person in the world — a chime and a toast
+// read as "over the tannoy" where a floating speech bubble would not.
+function paSay(txt){
+  blip(760,980,0.10,0.07,'square');
+  setTimeout(()=>blip(980,760,0.14,0.07,'square'),110);
+  toast(txt,'gold');
+}
+function tbSay(actor,txt,pitch){
+  if(!actor) return;
+  showBubble(actor,txt,2600);
+  wahVoice(pitch||rand(95,140),actor.x,actor.z);
+}
+function tbHUD(html){
+  if(mission) return;   // the random-mission rotation owns that slot
+  if(html) setMissionHUD(html); else $('mission').style.display='none';
+}
+
+// --- the beacon -------------------------------------------------------------
+// Same pillar pattern as the story/store beacons. Built lazily the first time
+// the mode is unlocked so a save that never beat Coach pays nothing for it.
+function updateTurboBowlBeacon(dt){
+  if(!turboBowlUnlocked()){
+    if(tbBeacon){ scene.remove(tbBeacon); disposeMesh(tbBeacon); tbBeacon=null; }
+    return;
+  }
+  if(!tbBeacon){
+    tbBeacon=makePillar(0xffd23e,1.2,14);
+    tbBeacon.position.set(FOOTBALL.x,groundH(FOOTBALL.x,FOOTBALL.z),FOOTBALL.z);
+    scene.add(tbBeacon);
+  }
+  tbBeacon.visible=!turboBowl;
+  if(!tbBeacon.visible) return;
+  tbBeacon.material.opacity=0.22+Math.sin(performance.now()/300)*0.12;
+  if(turboBowl||G.over||G.mode!=='foot'||activeCutscene||G.replay||G.interior) return;
+  if(Math.hypot(player.x-FOOTBALL.x,player.z-FOOTBALL.z)<TB_BEACON_R) startTurboBowl();
+}
+
+// --- staging ----------------------------------------------------------------
+function tbSpawnPerson(spec,x,z,facing){
+  const mesh=makePerson(spec);
+  mesh.position.set(x,groundH(x,z),z);
+  mesh.rotation.y=facing;
+  scene.add(mesh);
+  return {mesh,x,z,phase:rand(0,TAU)};
+}
+// Coach watches from the sideline and Danny's cheer squad works the far side.
+// Both are staging only — never in `jocks`, `peds`, or any AI array.
+function tbSpawnCast(){
+  if(tbCast.length||!FOOTBALL) return;
+  const F=FOOTBALL;
+  const cspec=randomPersonSpec(0x2b2f38,'guy');
+  cspec.build=1.32; cspec.height=1.06;
+  cspec.hair={style:'buzz',color:0x8a8a8a,beard:false};
+  cspec.outfit.tank=false; cspec.outfit.dress=false;
+  cspec.outfit.pants.shorts=false; cspec.outfit.pants.color=0x232730;
+  const coachMesh=makePerson(cspec);
+  addCoachKit(coachMesh);
+  const cx=F.x, cz=F.z-13.5;
+  coachMesh.position.set(cx,groundH(cx,cz),cz);
+  coachMesh.rotation.y=Math.atan2(F.x-cx,F.z-cz);
+  scene.add(coachMesh);
+  tbCast.push({mesh:coachMesh,x:cx,z:cz,phase:0,role:'coach'});
+
+  for(let k=0;k<3;k++){
+    const s=randomPersonSpec(pick([0xffd23e,0xc4342a,0xf2ede2]),'girl');
+    s.height=rand(0.97,1.03); s.build=rand(0.9,1.0);
+    s.outfit.dress=false; s.outfit.pants.shorts=true;
+    const x=F.x-4+k*4, z=F.z+13.5;
+    const c=tbSpawnPerson(s,x,z,Math.atan2(F.x-x,F.z-z));
+    c.role='cheer'; c.barkT=rand(6,14);
+    tbCast.push(c);
+  }
+}
+function tbSpawnDefenders(n){
+  const F=FOOTBALL;
+  for(let k=0;k<n;k++){
+    const team=JOCK_TEAMS[k%JOCK_TEAMS.length];
+    const spec=randomPersonSpec(team.body,'guy');
+    spec.build=rand(1.12,1.28); spec.height=rand(1.03,1.1);
+    spec.outfit.tank=false; spec.outfit.dress=false;
+    const mesh=makePerson(spec);
+    addLettermanJacket(mesh,team.body,team.letter);
+    // spread them down the field ahead of the runner, not bunched on the line
+    const lane=(k/(n-1||1)-0.5)*2*TB_WIDE*0.8;
+    const x=F.x-TB_GOAL+TB_LENGTH*(0.42+0.5*(k/Math.max(1,n-1)));
+    const z=F.z+lane;
+    mesh.position.set(x,groundH(x,z),z); scene.add(mesh);
+    tbDefenders.push({mesh,x,z,heading:Math.PI,phase:rand(0,TAU),barkT:rand(1,5)});
+  }
+}
+// The ball rides Turbo's right forearm for the length of a run.
+function tbGiveBall(){
+  if(tbBall) return;
+  const u=player.mesh.userData;
+  tbBall=new THREE.Mesh(new THREE.SphereGeometry(0.13,10,8),
+    new THREE.MeshLambertMaterial({color:0x6b3a1a}));
+  tbBall.scale.set(1,0.72,0.72);
+  tbBall.rotation.z=0.4;
+  tbBall.position.set(0.05,-0.3,0.1);
+  u.armR.children[1].add(tbBall);
+}
+function tbTakeBall(){
+  if(!tbBall) return;
+  if(tbBall.parent) tbBall.parent.remove(tbBall);
+  disposeMesh(tbBall); tbBall=null;
+}
+function clearTurboBowlStaging(){
+  for(const d of tbDefenders){ scene.remove(d.mesh); disposeMesh(d.mesh); }
+  tbDefenders.length=0;
+  for(const c of tbCast){ scene.remove(c.mesh); disposeMesh(c.mesh); }
+  tbCast.length=0;
+  tbTakeBall();
+}
+
+// --- a run ------------------------------------------------------------------
+function startTurboBowl(){
+  if(turboBowl||!turboBowlUnlocked()) return null;
+  const F=FOOTBALL;
+  turboBowl={phase:'run',t:0,best:0,milestone:0,fillerT:rand(14,22),
+    defenders:clamp(TB_DEFENDERS_MIN+(G.turboBowlRuns||0),TB_DEFENDERS_MIN,TB_DEFENDERS_MAX)};
+  // kickoff: receive the ball on your own goal line, facing downfield
+  player.x=F.x-TB_GOAL; player.z=F.z; player.y=groundH(player.x,player.z);
+  player.heading=Math.PI/2;                    // +X, toward the far end zone
+  player.mesh.position.set(player.x,player.y,player.z);
+  player.mesh.rotation.set(0,player.heading,0);
+  footCamYaw=player.heading;
+  resetFootStuck(player); endMelee();
+  tbGiveBall(); tbSpawnCast(); tbSpawnDefenders(turboBowl.defenders);
+  if(tbBeacon) tbBeacon.visible=false;   // hide it now, not on the next frame's pass
+  sfx.mission(); paSay(pick(PA_KICKOFF));
+  toast('TURBO BOWL — RUN!','gold');
+  return turboBowl;
+}
+// Every ending is soft. Nothing here touches busted/wasted, heat, or money.
+function endTurboBowlRun(scored){
+  const m=turboBowl; if(!m) return;
+  const yards=tbYards(player.x);
+  m.phase=scored?'scored':'tackled';
+  m.yards=yards;
+  const record=yards>G.turboBowlBest;
+  if(record){ G.turboBowlBest=yards; }
+  G.turboBowlRuns=(G.turboBowlRuns||0)+(scored?1:0);
+  tbTakeBall();
+  for(const d of tbDefenders) d.done=true;
+  if(scored){
+    paSay(PA_TOUCHDOWN); sfx.coin(); shake(0.35); haptic([40,40,90]);
+    burst(player.x,1.6,player.z,26,COL_CASH,4,1.1,3);
+    tbHUD(null);
+  } else {
+    paSay(PA_TACKLED); sfx.fail(); shake(0.4); haptic(70);
+    player.stunT=Math.max(player.stunT||0,0.9);
+    burst(player.x,1.2,player.z,10,COL_SMOKE,2.5,0.7,1);
+    tbSay(playerActor(),pick(TB_TURBO_TACKLED),rand(95,125));
+    bigEvent('TACKLED',"#e0a253",yards+' yards'+(record?' — NEW BEST':''));
+    tbHUD(null);
+  }
+  queueSave();
+  m.overT=scored?1.4:2.6;
+}
+// showBubble/wahVoice both want an {x,z}; Turbo isn't a ped, so hand them one.
+function playerActor(){ return {x:player.x,z:player.z}; }
+
+function finishTurboBowl(){
+  const scored=turboBowl&&turboBowl.phase==='scored';
+  const first=scored&&!G.turboBowlWon;
+  turboBowl=null;
+  if(!scored){ clearTurboBowlStaging(); tbHUD(null); return; }
+  if(first){
+    G.turboBowlWon=true; saveGame();
+    playCutscene('turbo_bowl_payoff',FOOTBALL.x+TB_GOAL-3,FOOTBALL.z,()=>{
+      bigEvent('TURBO BOWL','#ffd23e','Still got it');
+      tbOutroT=4.5;
+    });
+  } else {
+    tbSay(playerActor(),pick(TB_TURBO_SCORED),rand(95,125));
+    bigEvent('TOUCHDOWN','#ffd23e','Best: '+G.turboBowlBest+' yards');
+    tbOutroT=3.2;
+  }
+}
+
+// --- per-frame --------------------------------------------------------------
+function updateTbDefenders(dt){
+  const F=FOOTBALL;
+  for(const d of tbDefenders){
+    const u=d.mesh.userData;
+    if(d.done){                                   // run over: pull up, hands on hips
+      d.phase+=dt*1.2;
+      u.legL.rotation.x=0; u.legR.rotation.x=0;
+      u.armL.rotation.x=-0.25; u.armR.rotation.x=-0.25;
+      d.mesh.position.set(d.x,groundH(d.x,d.z),d.z);
+      updatePersonShadow(d.mesh,dt);
+      continue;
+    }
+    const dx=player.x-d.x, dz=player.z-d.z, dist=Math.hypot(dx,dz);
+    d.heading=Math.atan2(dx,dz);
+    // the same "close the distance" shape as the cop chase, minus the lethality
+    let nx=d.x+Math.sin(d.heading)*TB_DEF_SPEED*dt;
+    let nz=d.z+Math.cos(d.heading)*TB_DEF_SPEED*dt;
+    if(buildingHit(nx,nz,0.45)||treeHit(nx,nz,0.45)){ nx=d.x; nz=d.z; }
+    d.x=clamp(nx,F.x-TB_GOAL-4,F.x+TB_GOAL+4);
+    d.z=clamp(nz,F.z-TB_WIDE-2,F.z+TB_WIDE+2);
+    d.phase+=dt*TB_DEF_SPEED*2.4;
+    d.mesh.position.set(d.x,groundH(d.x,d.z)+Math.abs(Math.sin(d.phase))*0.05,d.z);
+    d.mesh.rotation.set(0,d.heading,0);
+    const sw=Math.sin(d.phase)*0.75;
+    u.legL.rotation.x=sw; u.legR.rotation.x=-sw;
+    u.armL.rotation.x=-sw*0.8; u.armR.rotation.x=sw*0.8;
+    updatePersonShadow(d.mesh,dt);
+    d.barkT-=dt;
+    if(d.barkT<=0&&dist<11){ tbSay(d,pick(TB_DEFENDER_LINES),rand(95,140)); d.barkT=rand(6,11); }
+    if(dist<TB_TACKLE_R) endTurboBowlRun(false);
+  }
+}
+function updateTbCast(dt,clapping){
+  for(const c of tbCast){
+    const u=c.mesh.userData;
+    c.phase+=dt*(clapping?8:1.5);
+    if(clapping){
+      const a=Math.abs(Math.sin(c.phase))*0.5;
+      u.armL.rotation.x=-1.5-a; u.armR.rotation.x=-1.5-a;
+    } else if(c.role==='cheer'){
+      u.armL.rotation.x=Math.sin(c.phase)*0.5-0.3;
+      u.armR.rotation.x=-Math.sin(c.phase)*0.5-0.3;
+    } else {
+      u.armL.rotation.x=Math.sin(c.phase)*0.08;
+      u.armR.rotation.x=-Math.sin(c.phase)*0.08;
+    }
+    c.mesh.position.y=groundH(c.x,c.z)+Math.abs(Math.sin(c.phase*0.5))*0.02;
+    updatePersonShadow(c.mesh,dt);
+    if(c.role==='cheer'&&c.barkT!==undefined){
+      c.barkT-=dt;
+      if(c.barkT<=0){ tbSay(c,pick(CHEER_AMBIENT),rand(190,240)); c.barkT=rand(14,26); }
+    }
+  }
+}
+// Called once a frame from the main loop beside updateStory/updateCoachMission,
+// behind the same cinema guard.
+function updateTurboBowl(dt){
+  if(tbOutroT>0){
+    tbOutroT-=dt;
+    updateTbCast(dt,true);
+    if(tbOutroT<=0) clearTurboBowlStaging();
+    return;
+  }
+  updateTurboBowlBeacon(dt);
+  const m=turboBowl; if(!m) return;
+  if(m.overT>0){                       // holding on the result before cleaning up
+    m.overT-=dt;
+    updateTbCast(dt,m.phase==='scored');
+    updateTbDefenders(dt);
+    if(m.overT<=0) finishTurboBowl();
+    return;
+  }
+  // a run only exists on foot, alive, and in the world
+  if(G.over||G.mode!=='foot'||activeCutscene||G.replay){ endTurboBowlRun(false); return; }
+  m.t+=dt;
+  updateTbCast(dt,false);
+  updateTbDefenders(dt);
+  if(m.phase!=='run') return;
+
+  const F=FOOTBALL, yards=tbYards(player.x);
+  m.best=Math.max(m.best,yards);
+  // out of bounds sideways is just a soft edge, not a fail — nudge him back in
+  const zLim=F.z+Math.sign(player.z-F.z)*TB_WIDE;
+  if(Math.abs(player.z-F.z)>TB_WIDE){ player.z=zLim; }
+  // running backwards out of your own end zone ends it — no infinite stalling
+  if(player.x<F.x-TB_GOAL-3){ endTurboBowlRun(false); return; }
+
+  tbHUD('<b>TURBO BOWL</b> — '+yards+' yd · best '+G.turboBowlBest);
+  // PA milestones, each fired once, in order
+  if(m.milestone<1&&yards>=50){ m.milestone=1; paSay(PA_MIDFIELD); }
+  if(m.milestone<2&&yards>=80){ m.milestone=2; tbSay(playerActor(),pick(TB_TURBO_RUN),rand(95,125)); }
+  m.fillerT-=dt;
+  if(m.fillerT<=0){ m.fillerT=1e9; paSay(PA_FILLER); }
+  // Coach shouts from the sideline — the thaw from Rematch
+  m.coachT=(m.coachT||rand(4,7))-dt;
+  if(m.coachT<=0){
+    const c=tbCast.find(a=>a.role==='coach');
+    if(c) tbSay(c,pick(COACH_SIDELINE),rand(80,105));
+    m.coachT=rand(7,12);
+  }
+  if(player.x>=F.x+TB_GOAL) endTurboBowlRun(true);
+}
+// ================= END TURBO BOWL =================
 
 // ================= STRAY DOGS & DOG GANGS =================
 // Dogs outlive their owners. Lone strays drift together into roving packs;
@@ -9667,6 +10032,7 @@ function loop(){
     updateRadioTowers(now/1000*TIME_SCALE);
     if(!cine) updateStory(simDt);   // don't let proximity auto-fire convos while directing
     if(!cine) updateCoachMission(simDt);   // FB3 — same rule for the Coach encounter
+    if(!cine) updateTurboBowl(simDt);      // FB4 — and for the Turbo Bowl beacon/run
     if(!cine&&G.mode==='foot') updateStores(simDt);
     positionChatBubbles(simDt);
     // burning cars pour flame, then go up — with you inside or not
@@ -10522,6 +10888,33 @@ const CUTSCENES={
         dialogue:{speaker:'TURBO',text:'Coach... does this mean I can use the locker room again?'}, transition:'smooth' },
       { duration:1.8, pos:[0,5,13], lookAt:[0,1.2,0], fov:60, outdoor:true,
         dialogue:{speaker:'COACH',text:'Absolutely not.'}, transition:'fade' }
+    ]
+  },
+  // FB4's payoff, and the strand's FB5 beat. Built to HANDOFF.md's FB5 card
+  // rather than FOOTBALL_STRAND.md §6's version of the same scene: the two
+  // scripts contradict each other, and the owner's call (2026-08-02) was the
+  // card's — Dad never appears on-screen, he's a voice in Turbo's head, and
+  // Turbo waves the squad off himself. No Dad actor is created anywhere.
+  turbo_bowl_payoff:{
+    onStart(){ sfx.coin(); setTimeout(coachWhistle,2400); },
+    shots:[
+      // WIDE — the spike, crowd noise
+      { duration:2.4, pos:[7,3.4,7], lookAt:[0,1.3,0], fov:58, outdoor:true,
+        dialogue:{speaker:'TURBO',text:'Still got it! Twenty years later, STILL GOT IT!'}, transition:'smooth' },
+      // MEDIUM — the squad jogs over, Amber gets the strand's one named line
+      { duration:2.8, pos:[-3.4,1.8,3.6], lookAt:[0,1.4,0], fov:44, outdoor:true,
+        dialogue:{speaker:'AMBER',text:'Okay, that was actually kind of impressive.'}, transition:'cut' },
+      // CLOSE — he leans in, and stops himself. This is the beat the arc is for.
+      { duration:2.2, pos:[1.2,1.6,1.7], lookAt:[0,1.5,0], fov:32, outdoor:true,
+        dialogue:{speaker:'TURBO',text:'Ladies, there is plenty of Turbo to go—'}, transition:'cut' },
+      { duration:3.6, pos:[1.0,1.55,1.5], lookAt:[0,1.5,0], fov:30, outdoor:true,
+        dialogue:{speaker:'TURBO',text:"...nope. Nope. My father is not physically here and I can still hear him."}, transition:'smooth' },
+      // MEDIUM — they go, entirely of their own accord
+      { duration:2.6, pos:[-4.2,2.0,4.4], lookAt:[0,1.35,0], fov:48, outdoor:true,
+        dialogue:{speaker:'TURBO',text:'That was me. Nobody made me do that. Write it down.'}, transition:'cut' },
+      // WIDE pull-up — alone on the field, thoroughly pleased with himself
+      { duration:2.4, pos:[0,5.5,12], lookAt:[0,1.1,0], fov:60, outdoor:true,
+        dialogue:{speaker:'TURBO',text:'...worth it. Still worth it.'}, transition:'fade' }
     ]
   }
 };
@@ -11763,6 +12156,7 @@ let saveDirty=false, saveT=null;
 function saveGame(){
   const blob={ v:1, money:G.money, missionsDone:G.missionsDone, night:!!G.night,
     station:G.station, coachBeaten:!!G.coachBeaten, controlsCardSeen:!!G.controlsCardSeen,
+    turboBowlBest:G.turboBowlBest||0, turboBowlWon:!!G.turboBowlWon, turboBowlRuns:G.turboBowlRuns||0,
     strayDogCount:G.strayDogCount||0,
     story:{ metDeb:G.story.metDeb, debt:G.story.debt, paidOff:G.story.paidOff,
       pizzaHeat:G.story.pizzaHeat, pizzaWarned:G.story.pizzaWarned,
@@ -11785,6 +12179,9 @@ function restoreSave(s){
   G.money=s.money||0; $('money').textContent='$'+G.money;
   G.missionsDone=s.missionsDone||0;
   G.coachBeaten=!!s.coachBeaten;
+  G.turboBowlBest=s.turboBowlBest||0;
+  G.turboBowlWon=!!s.turboBowlWon;
+  G.turboBowlRuns=s.turboBowlRuns||0;
   G.controlsCardSeen=!!s.controlsCardSeen;
   G.strayDogCount=Math.max(0,s.strayDogCount||0);
   straySpawnT=0; // repopulate from the saved city count on the next dog update
