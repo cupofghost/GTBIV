@@ -30,4 +30,8 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: node syntax-check.js
+      # The CODE MAP is generated. Two branches editing index.html will both
+      # rewrite it, and a merge can land numbers that match neither side —
+      # silently, since it is only a comment. Fail here instead.
+      - run: node ../tools/codemap.js
       - run: npm test

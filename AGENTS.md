@@ -12,6 +12,7 @@ figure quoted elsewhere in the docs — the older markdown has stale numbers in 
 | Size of `index.html` | ~11,850 lines / ~565 KB. The game's `<script>` starts at line 715. It never fits in context — grep for a banner, then read a window. |
 | Navigating `index.html` | Section banners are `// ====== NAME ======` at column 0. The `// CODE MAP` block near the top indexes them. |
 | Regenerating the code map | `node tools/codemap.js --write`. Never hand-edit the line numbers. `node tools/codemap.js` alone checks for drift and exits 1. |
+| Who else is working right now | `node tools/preflight.js` — run it before writing code. Another account shares this repo; see §2a. |
 | Test suite size | 207 cases across 44 files (`tests/cases/*.test.js`). Docs quoting 36/43/53/70/77/198 are historical — ignore them. |
 | Running tests | See §4a below. Do not default to the full suite. |
 | CI | `.github/workflows/ci.yml` — syntax check + full suite on every PR and push to main. |
@@ -36,6 +37,40 @@ figure quoted elsewhere in the docs — the older markdown has stale numbers in 
   with minimal imports from other areas.
 - Do not refactor, reformat, or "improve" code you weren't asked to change. That wastes
   tokens and creates conflicts.
+
+## 2a. Working alongside another agent
+**More than one account works on this game at the same time.** They cannot see
+each other's local work — only what is pushed. Three rules, then the list of
+places that collide.
+
+1. **Run `node tools/preflight.js` before you write any code.** It fetches
+   `origin` and prints every live branch, what its `STATUS.md` row claims, and
+   whether `main` moved under you. Pass what you intend to touch and it will
+   flag the overlap and exit non-zero:
+   `node tools/preflight.js --touching "index.html §WEAPONS, tests/"`
+2. **Push your claim before you write game code.** A pushed branch is the lock —
+   the rule `DISPATCH/OP2_FINISH/README.md` established: *"The claim commit is
+   the lock. A branch that exists on `origin` is taken."* Add your `STATUS.md`
+   Active-work row, commit it on its own, and `git push -u origin <branch>`
+   **first**. A claim sitting uncommitted on your disk locks nothing.
+3. **Never reuse a branch name.** If `preflight` says `origin/<your branch>` has
+   commits you don't, another session is already on that name — pull, or move.
+
+### Shared anchors in `index.html`
+Two agents appending to the same list is a *semantic* collision, so these bite
+even when git merges without complaint. If you both touched one:
+
+| Anchor | Resolution |
+|---|---|
+| `// CODE MAP` block | Take either side wholesale, then `node tools/codemap.js --write`. Never hand-merge the numbers — that is what the tool is for. |
+| Main loop's `update*(simDt)` call list | Keep **both** lines. A dropped call means a whole system silently stops ticking. |
+| `CUTSCENES` table | Keep both entries. |
+| `saveGame()` / `restoreSave()` blob | Keep **both** field sets. A dropped field still parses and simply stops persisting — no error, ever. |
+| `const G={…}` initial state | Keep both. |
+| §AUDIO's `let AC=null,…` line and `exitCarSoft()`'s reset block | Longstanding hot spot; see **Shared-file touches** below before adding an audio node. |
+
+After resolving any merge that touched `index.html`, run
+`node tools/codemap.js` and `node tests/syntax-check.js` before you push.
 
 ## 3. Privacy & secrets (treat this repo as PUBLIC)
 - NEVER commit the owner's personal identifiable information: no real names, no email
