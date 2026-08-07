@@ -95,7 +95,9 @@ module.exports = [
         return { base, deep, rest };
       });
       assert(r.deep.depth > 0.95, 'held to the floor, depth should be ~1');
-      assert(r.deep.sat < r.base.sat - 0.4, `slow motion should desaturate (got ${r.deep.sat})`);
+      // Owner direction: keep it vibrant. Slow motion pushes saturation UP —
+      // the desaturated-slowmo cliche greys out the best thing in the picture.
+      assert(r.deep.sat > r.base.sat + 0.2, `slow motion should push colour, not drain it (got ${r.deep.sat})`);
       assert(r.deep.bloom > r.base.bloom + 0.2, `slow motion should lift bloom (got ${r.deep.bloom})`);
       assert(r.deep.ab > 0.05, `slow motion should strain the lens (got ${r.deep.ab})`);
       assert(r.deep.fov > 5, `slow motion should widen the camera (got ${r.deep.fov})`);

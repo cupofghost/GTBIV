@@ -754,66 +754,68 @@ let TRAFFIC_CAP=30, PED_CAP=60, PARTICLE_SCALE=1, GFX_TIER='high';
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS & GLOBAL STATE                           (719–727, ~9 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                             (819–880, ~62 lines)
-// AUDIO                                            (881–1178, ~298 lines)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1179–1681, ~503 lines)
-// THREE SETUP                                      (1682–1732, ~51 lines)
-// POST FX                                          (1733–2119, ~387 lines)
-// CITY                                             (2120–3061, ~942 lines)
+// DEVICE / ORIENTATION                             (821–882, ~62 lines)
+// AUDIO                                            (883–1180, ~298 lines)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1181–1683, ~503 lines)
+// THREE SETUP                                      (1684–1734, ~51 lines)
+// POST FX                                          (1735–2123, ~389 lines)
+// CITY                                             (2124–3065, ~942 lines)
 //   └ RADIO TOWERS                                 (2225–2331, ~107 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                   (3062–3112, ~51 lines)
-// ELEVATED LIGHT RAIL                              (3113–3237, ~125 lines)
-// STAIRS & FIRE ESCAPES                            (3238–3312, ~75 lines)
-// WALL LADDERS                                     (3313–3590, ~278 lines)
-// PARTICLES                                        (3591–3645, ~55 lines)
-// BLOB SHADOWS                                     (3646–3707, ~62 lines)
-// GPU RESOURCE CLEANUP                             (3708–3729, ~22 lines)
-// CARS                                             (3730–4021, ~292 lines)
-// PEDESTRIANS                                      (4022–4230, ~209 lines)
-// PIZZA DELIVERY SYSTEM                            (4231–4386, ~156 lines)
-// RIVAL PIZZA GANG: CHAOS PIZZA                    (4387–4514, ~128 lines)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4515–4694, ~180 lines)
-// COACH REMATCH (FB3)                              (4695–5173, ~479 lines)
-// TURBO BOWL (FB4)                                 (5174–5537, ~364 lines)
-// STRAY DOGS & DOG GANGS                           (5538–5843, ~306 lines)
-// PIZZA WARS MISSION                               (5844–5918, ~75 lines)
-// PLAYER                                           (5919–5962, ~44 lines)
-// PIZZA PLACE & INTERIOR                           (5963–6126, ~164 lines)
-// SIDEWALKS & STOREFRONT AWNINGS                   (6127–6253, ~127 lines)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (6254–6449, ~196 lines)
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6450–6565, ~116 lines)
-// DAY/NIGHT & HEIST SYSTEM                         (6566–6758, ~193 lines)
-// PICKUPS                                          (6759–6801, ~43 lines)
-// HELICOPTERS                                      (6802–7305, ~504 lines)
-// TALKING PEDS                                     (7306–7447, ~142 lines)
-// WEAPONS                                          (7448–8158, ~711 lines)
-// WANTED                                           (8159–8263, ~105 lines)
-// CAR PHYSICS                                      (8264–8491, ~228 lines)
-// PLAYER: FOOT & CAR                               (8492–9243, ~752 lines)
-// HUD / TOASTS                                     (9244–9287, ~44 lines)
-// MISSIONS                                         (9288–9461, ~174 lines)
-// AI                                               (9462–9584, ~123 lines)
-// FOOT COPS                                        (9585–9629, ~45 lines)
-// SEWER RATS                                       (9630–9746, ~117 lines)
-// MAMA RAT (rat vengeance) — PLACEHOLDER           (9747–10113, ~367 lines)
-// BUSTED / WASTED                                  (10114–10206, ~93 lines)
-// CAMERA                                           (10207–10316, ~110 lines)
-// MINIMAP                                          (10317–10364, ~48 lines)
-// SLOW MOTION (PV9)                                (10365–10471, ~107 lines)
-// MAIN LOOP                                        (10472–10659, ~188 lines)
-// ORIENTATION                                      (10660–10717, ~58 lines)
-// ANIMATED INTRO                                   (10718–11073, ~356 lines)
-// STORY: TURBO JONES, CHAPTER 1                    (11074–11332, ~259 lines)
-// CUTSCENE SYSTEM                                  (11333–11657, ~325 lines)
-// VOICEOVER SYSTEM                                 (11658–11680, ~23 lines)
-// INTRO NARRATION                                  (11681–11980, ~300 lines)
-// DEV TOOLS                                        (11981–12058, ~78 lines)
-// CINEMA MODE (was REPLAY)                         (12059–12191, ~133 lines)
-// CINEMA: SCENES & STAGING                         (12192–12407, ~216 lines)
-// PAUSE MENU & SETTINGS                            (12408–12635, ~228 lines)
-// CONTROLS CARD (U2 onboarding)                    (12636–12668, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (12669–12728, ~60 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                   (12729–end, ~41 lines: boot, init, resize handlers, quality apply)
+// FOOTBALL FIELD                                   (3066–3116, ~51 lines)
+// ELEVATED LIGHT RAIL                              (3117–3241, ~125 lines)
+// STAIRS & FIRE ESCAPES                            (3242–3316, ~75 lines)
+// WALL LADDERS                                     (3317–3594, ~278 lines)
+// PARTICLES                                        (3595–3642, ~48 lines)
+// CARNAGE: DEBRIS, SCORCH & CHAIN REACTIONS        (3643–3779, ~137 lines)
+// BLOB SHADOWS                                     (3780–3841, ~62 lines)
+// GPU RESOURCE CLEANUP                             (3842–3863, ~22 lines)
+// CARS                                             (3864–4156, ~293 lines)
+// PEDESTRIANS                                      (4157–4365, ~209 lines)
+// PIZZA DELIVERY SYSTEM                            (4366–4521, ~156 lines)
+// RIVAL PIZZA GANG: CHAOS PIZZA                    (4522–4649, ~128 lines)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4650–4829, ~180 lines)
+// COACH REMATCH (FB3)                              (4830–5308, ~479 lines)
+// TURBO BOWL (FB4)                                 (5309–5672, ~364 lines)
+// STRAY DOGS & DOG GANGS                           (5673–5978, ~306 lines)
+// PIZZA WARS MISSION                               (5979–6053, ~75 lines)
+// PLAYER                                           (6054–6097, ~44 lines)
+// PIZZA PLACE & INTERIOR                           (6098–6261, ~164 lines)
+// SIDEWALKS & STOREFRONT AWNINGS                   (6262–6388, ~127 lines)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (6389–6584, ~196 lines)
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6585–6700, ~116 lines)
+// DAY/NIGHT & HEIST SYSTEM                         (6701–6893, ~193 lines)
+// PICKUPS                                          (6894–6936, ~43 lines)
+// HELICOPTERS                                      (6937–7440, ~504 lines)
+// TALKING PEDS                                     (7441–7582, ~142 lines)
+// WEAPONS                                          (7583–8303, ~721 lines)
+// WANTED                                           (8304–8408, ~105 lines)
+// CAR PHYSICS                                      (8409–8642, ~234 lines)
+// PLAYER: FOOT & CAR                               (8643–9404, ~762 lines)
+// ACTION BAIL-OUT (PV8)                            (9405–9509, ~105 lines)
+// HUD / TOASTS                                     (9510–9553, ~44 lines)
+// MISSIONS                                         (9554–9727, ~174 lines)
+// AI                                               (9728–9850, ~123 lines)
+// FOOT COPS                                        (9851–9895, ~45 lines)
+// SEWER RATS                                       (9896–10012, ~117 lines)
+// MAMA RAT (rat vengeance) — PLACEHOLDER           (10013–10379, ~367 lines)
+// BUSTED / WASTED                                  (10380–10474, ~95 lines)
+// CAMERA                                           (10475–10584, ~110 lines)
+// MINIMAP                                          (10585–10632, ~48 lines)
+// SLOW MOTION (PV9)                                (10633–10761, ~129 lines)
+// MAIN LOOP                                        (10762–10951, ~190 lines)
+// ORIENTATION                                      (10952–11009, ~58 lines)
+// ANIMATED INTRO                                   (11010–11365, ~356 lines)
+// STORY: TURBO JONES, CHAPTER 1                    (11366–11624, ~259 lines)
+// CUTSCENE SYSTEM                                  (11625–11949, ~325 lines)
+// VOICEOVER SYSTEM                                 (11950–11972, ~23 lines)
+// INTRO NARRATION                                  (11973–12272, ~300 lines)
+// DEV TOOLS                                        (12273–12350, ~78 lines)
+// CINEMA MODE (was REPLAY)                         (12351–12483, ~133 lines)
+// CINEMA: SCENES & STAGING                         (12484–12699, ~216 lines)
+// PAUSE MENU & SETTINGS                            (12700–12927, ~228 lines)
+// CONTROLS CARD (U2 onboarding)                    (12928–12960, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (12961–13020, ~60 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                   (13021–end, ~41 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -1783,7 +1785,9 @@ function fxFlash(amt,r,g,b){         // explosions, lightning, muzzle flare
 function fxDamage(amt){              // took a hit — red bloom in from the edges
   if(!FX.enabled) return;
   FX.damage=Math.min(1,FX.damage+amt);
-  FX.desat=Math.min(0.8,FX.desat+amt*0.5);
+  // Only a trace of desaturation. Owner direction is to keep the picture
+  // vibrant, and the red edge pulse already carries "you got hit" on its own.
+  FX.desat=Math.min(0.18,FX.desat+amt*0.12);
 }
 function fxImpact(amt){              // lens punch: aberration + a bloom swell
   if(!FX.enabled||SETTINGS_REDUCE_MOTION()) return;
@@ -2097,7 +2101,7 @@ function updateFxImpulses(dt){
     const t=1-Math.max(0,G.hp)/35;
     const pulse=0.5+0.5*Math.sin(performance.now()/(430-t*150));
     FX.damage=Math.max(FX.damage,t*0.50*(0.55+0.45*pulse));
-    FX.desat=Math.max(FX.desat,t*0.50);
+    FX.desat=Math.max(FX.desat,t*0.14);   // a trace only — see fxDamage()
   }
 }
 
@@ -3636,6 +3640,136 @@ const COL_SMOKE=[[0.5,0.5,0.55],[0.35,0.35,0.4]], COL_FIRE=[[1,0.6,0.1],[1,0.3,0
       COL_CASH=[[0.3,1,0.4],[0.8,1,0.3]], COL_SPARK=[[1,0.9,0.4],[1,1,1]],
       COL_NITRO=[[0.3,0.7,1],[0.6,0.9,1],[0.2,0.4,1]],
       COL_WATER=[[0.55,0.82,1],[0.85,0.95,1],[0.35,0.65,0.95]];
+// ================= CARNAGE: DEBRIS, SCORCH & CHAIN REACTIONS =================
+// The point particles above are sparks and smoke — they sell heat, but nothing
+// in an explosion had mass. This adds the physical half: chunks that get thrown,
+// arc, bounce, tumble and settle, a scorch left behind, and a car blowing up
+// taking its neighbours with it a beat later.
+//
+// Everything here is pooled and bounded. Both pools are fixed-size and reused,
+// so an explosion in heavy traffic can't allocate; the chain reaction is capped
+// per blast AND globally rate-limited, so a pile-up can't recurse the city into
+// a frame-rate hole.
+
+const DEBRIS_MAX=54;
+const debris=[];
+(function initDebris(){
+  const geo=new THREE.BoxGeometry(1,1,1);
+  for(let i=0;i<DEBRIS_MAX;i++){
+    // own material per chunk so shrapnel can take the colour of whatever it
+    // came off — a hot pink car throws hot pink wreckage
+    const m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0x2a2a33}));
+    m.visible=false; m.frustumCulled=false; m.castShadow=false;
+    scene.add(m);
+    debris.push({mesh:m,life:0,max:1,vx:0,vy:0,vz:0,
+                 spin:new THREE.Vector3(),base:new THREE.Vector3(1,1,1),bounced:0});
+  }
+})();
+function spawnDebris(x,y,z,n,color,power){
+  n=Math.max(1,Math.round(n*PARTICLE_SCALE));
+  let made=0;
+  for(let i=0;i<debris.length&&made<n;i++){
+    const d=debris[i];
+    if(d.life>0) continue;
+    const a=rand(0,TAU), s=rand(0.45,1)*power;
+    d.vx=Math.cos(a)*s; d.vz=Math.sin(a)*s; d.vy=rand(0.6,1.5)*power*0.8;
+    d.max=d.life=rand(1.6,3.2); d.bounced=0;
+    d.spin.set(rand(-11,11),rand(-11,11),rand(-11,11));
+    const sc=rand(0.16,0.46);
+    d.base.set(sc,sc*rand(0.5,1),sc*rand(0.6,1.3));
+    d.mesh.scale.copy(d.base);
+    d.mesh.position.set(x+rand(-0.6,0.6),y+rand(0,0.8),z+rand(-0.6,0.6));
+    d.mesh.rotation.set(rand(0,TAU),rand(0,TAU),rand(0,TAU));
+    d.mesh.material.color.setHex(color===undefined?0x2a2a33:color);
+    d.mesh.visible=true;
+    made++;
+  }
+}
+function updateDebris(dt){
+  for(let i=0;i<debris.length;i++){
+    const d=debris[i];
+    if(d.life<=0) continue;
+    d.life-=dt;
+    if(d.life<=0){ d.mesh.visible=false; continue; }
+    const m=d.mesh;
+    d.vy-=26*dt;
+    m.position.x+=d.vx*dt; m.position.y+=d.vy*dt; m.position.z+=d.vz*dt;
+    const floor=groundH(m.position.x,m.position.z)+d.base.y*0.5;
+    if(m.position.y<=floor){
+      m.position.y=floor;
+      if(d.bounced<2&&Math.abs(d.vy)>2.5){
+        d.vy=-d.vy*0.38; d.vx*=0.62; d.vz*=0.62; d.bounced++;
+        d.spin.multiplyScalar(0.55);
+      } else {
+        d.vy=0;
+        const k=Math.exp(-6*dt);
+        d.vx*=k; d.vz*=k; d.spin.multiplyScalar(Math.exp(-7*dt));
+      }
+    }
+    m.rotation.x+=d.spin.x*dt; m.rotation.y+=d.spin.y*dt; m.rotation.z+=d.spin.z*dt;
+    // shrink out over the last half second. Scale is recomputed from the stored
+    // base rather than multiplied down, so it can't compound frame to frame.
+    if(d.life<0.5) m.scale.copy(d.base).multiplyScalar(Math.max(0.02,d.life/0.5));
+  }
+}
+
+// --- scorch marks: a blast leaves the pavement burnt for a while ---
+const SCORCH_MAX=10;
+const scorches=[];
+(function initScorch(){
+  const geo=new THREE.CircleGeometry(1,16);
+  for(let i=0;i<SCORCH_MAX;i++){
+    const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({
+      color:0x120d10,transparent:true,opacity:0,depthWrite:false}));
+    m.rotation.x=-Math.PI/2; m.visible=false; scene.add(m);
+    scorches.push({mesh:m,life:0,max:1,r:1});
+  }
+})();
+let scorchNext=0;
+function addScorch(x,z,r){
+  const s=scorches[scorchNext%SCORCH_MAX]; scorchNext++;
+  s.r=r; s.max=s.life=14;
+  s.mesh.position.set(x,groundH(x,z)+0.045,z);
+  s.mesh.scale.set(r,r,1);
+  s.mesh.material.opacity=0.72;
+  s.mesh.visible=true;
+}
+function updateScorch(dt){
+  for(let i=0;i<scorches.length;i++){
+    const s=scorches[i];
+    if(s.life<=0) continue;
+    s.life-=dt;
+    if(s.life<=0){ s.mesh.visible=false; s.mesh.material.opacity=0; continue; }
+    const f=s.life/s.max;
+    s.mesh.material.opacity=0.72*Math.min(1,f*2.2);   // hold, then fade out
+  }
+}
+
+// --- chain reactions ---
+// A car cooking off next to other cars should take them with it. Rather than
+// detonating them on the spot (which reads as one big bang) each neighbour gets
+// a short random fuse through the burning path the game already has, so they go
+// off in a ragged sequence.
+//
+// Two independent limiters, because dense traffic could otherwise cascade the
+// whole map: at most CHAIN_MAX neighbours per blast, and a global budget that
+// refills over time so a pile-up can't chain indefinitely.
+const CHAIN_RADIUS=11, CHAIN_MAX=3, CHAIN_BUDGET_MAX=7;
+let chainBudget=CHAIN_BUDGET_MAX;
+function updateChainBudget(dt){ chainBudget=Math.min(CHAIN_BUDGET_MAX,chainBudget+dt*0.9); }
+function chainReact(x,z,exclude){
+  let lit=0;
+  for(const c of cars){
+    if(lit>=CHAIN_MAX||chainBudget<1) break;
+    if(c===exclude||c.dead||c.burning) continue;
+    if(c===player.car) continue;              // your own ride is your problem, not a domino
+    if(Math.hypot(c.x-x,c.z-z)>CHAIN_RADIUS) continue;
+    c.burning=true; c.burnT=rand(0.35,1.15);  // ragged sequence, not one bang
+    chainBudget--; lit++;
+  }
+  return lit;
+}
+
 // brake lights: dim cruising, bright on the pedal
 function setTail(car,on){
   const t=car.mesh.userData.tail; if(!t||car._tailOn===on) return;
@@ -3761,6 +3895,7 @@ function wedgeGeo(w,h,l){
 }
 function makeCarMesh(type,color){
   const t=CARTYPES[type], grp=new THREE.Group();
+  grp.userData.paint=color;   // §CARNAGE reads this so shrapnel matches the wreck
   const bodyMat=new THREE.MeshLambertMaterial({color});
   const darkMat=new THREE.MeshLambertMaterial({color:0x14141c});
   const hl=new THREE.MeshBasicMaterial({color:0xfff2b0});
@@ -7834,6 +7969,7 @@ function updateFireballs(dt){
 function explode(x,y,z){
   sfx.rpgBoom(); shake(0.8); triggerHitStop(0.06); haptic([40,50,70]);
   fxFlash(0.30,1.0,0.72,0.38); fxImpact(0.55);   // §POST FX
+  spawnDebris(x,y+0.4,z,7,0x2a2a33,10); addScorch(x,z,rand(2.2,3.1));   // §CARNAGE
   G.lastBoom={x,z,t:performance.now()};
   spawnFireball(x,Math.max(y,1),z,4.5);
   burst(x,y,z,42,COL_FIRE,8,1.1,4);
@@ -7863,7 +7999,16 @@ function bigExplosion(x,y,z){
   // remember where she blew — the camera only swings around if this wastes Turbo
   G.lastBoom={x,z,t:performance.now()};
   damageArea(x,z,CAR_BOOM_RADIUS,150);
+  // §CARNAGE — the physical half of the blast
+  spawnDebris(x,y+0.6,z,14,bigExplosionTint,13);
+  addScorch(x,z,rand(3.4,4.6));
+  chainReact(x,z,null);
+  slowmoBurst(playerNear(x,z,30)?0.75:0);   // the money shot, if you're close
 }
+// Cars set this to their paint colour before detonating so the shrapnel
+// matches the wreck it came off; anything else blows grey-black.
+let bigExplosionTint=0x2a2a33;
+function playerNear(x,z,r){ return Math.hypot(px0()-x,pz0()-z)<r; }
 function updateBoomFx(dt){
   updateFireballs(dt);
   if(shockwave&&shockwave.userData.t>0){
@@ -8478,7 +8623,13 @@ function damageCar(car,amt,why){
 function killCar(car,boom){
   if(car.dead) return;
   car.dead=true;
-  if(boom) bigExplosion(car.x,1,car.z);
+  if(boom){
+    // §CARNAGE — shrapnel in this car's paint, then back to the default
+    const paint=car.mesh&&car.mesh.userData&&car.mesh.userData.paint;
+    bigExplosionTint=(paint===undefined||paint===null)?0x2a2a33:paint;
+    bigExplosion(car.x,1,car.z);
+    bigExplosionTint=0x2a2a33;
+  }
   else {
     burst(car.x,1,car.z,26,COL_FIRE,6,0.9,4);
     burst(car.x,1,car.z,16,COL_SMOKE,3,1.4,1);
@@ -8500,7 +8651,7 @@ function nearestCar(x,z,r){
   return best;
 }
 function canSprint(p,mag){
-  return G.mode==='foot'&&input.sprint&&mag>0.85&&!G.crouching&&!p.climb&&!p.bailing&&!p.stunT&&p.punchT<=0&&p.kickT<=0;
+  return G.mode==='foot'&&input.sprint&&mag>0.85&&!G.crouching&&!p.climb&&!p.bailing&&!p.dive&&!p.stunT&&p.punchT<=0&&p.kickT<=0;
 }
 const FALL_LETHAL_MULT=4;   // OP2-G: ~4x Turbo's own height is a lethal unsupported drop
 // called once, right as an unsupported drop lands on solid ground (ladders,
@@ -8535,6 +8686,7 @@ function updateFoot(dt){
   p.punchT=Math.max(0,p.punchT-dt);
   p.kickT=Math.max(0,p.kickT-dt);
   if(p.bailing){ clearSprint(); updateBail(dt); return; }
+  if(p.dive){ clearSprint(); updateBailDive(dt); return; }   // PV8 — thrown from a moving car
   if(p.stunT>0){   // clocked — flat on your back for a beat
     clearSprint();
     p.stunT-=dt;
@@ -8780,6 +8932,7 @@ function updateClimb(dt){
 }
 function doEnterExit(){
   if(!G.started||G.over) return;
+  if(player.dive) return;   // PV8 — finish the roll before you jack anything
   if(G.mode==='foot'){
     const n=nearestVehicle(player.x,player.z,3.6);
     if(!n) return;
@@ -8819,11 +8972,19 @@ function doEnterExit(){
 function exitCar(){
   const c=player.car;
   if(!c) return;
+  const bailing=Math.abs(c.speed)>BAIL_SPEED;   // PV8
   G.mode='foot'; c.driver=null;
-  player.x=c.x+Math.cos(c.heading)*2.2; player.z=c.z-Math.sin(c.heading)*2.2;
-  resolveFootCollision(player,0.5);
-  player.y=groundH(player.x,player.z); player.mesh.visible=true;
-  player.car=null; footCamYaw=player.heading; player.fallPeakY=null;
+  player.mesh.visible=true;
+  if(bailing){
+    startBailDive(c);          // sets player.x/z/y and the dive state itself
+    releaseRunaway(c,6);       // she keeps going without you
+  } else {
+    player.x=c.x+Math.cos(c.heading)*2.2; player.z=c.z-Math.sin(c.heading)*2.2;
+    resolveFootCollision(player,0.5);
+    player.y=groundH(player.x,player.z);
+    player.fallPeakY=null;
+  }
+  player.car=null; footCamYaw=player.heading;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
   if(skidGain) skidGain.gain.value=0;
@@ -9030,7 +9191,7 @@ let meleeCharge=null;
 function canMelee(){
   const p=player;
   return G.started&&!G.over&&G.mode==='foot'&&G.weapon==='fists'
-    &&!p.climb&&!p.bailing&&!p.stunT&&!p.meleeSpecial&&p.punchT<=0&&p.kickT<=0
+    &&!p.climb&&!p.bailing&&!p.dive&&!p.stunT&&!p.meleeSpecial&&p.punchT<=0&&p.kickT<=0
     &&!G.menuPaused&&!G.replay&&!activeCutscene;
 }
 // The extra conditions belong to the wind-up alone: you plant both feet to load
@@ -9238,6 +9399,111 @@ function knockPed(ped,byCar){
   if(_rng()<0.3){
     showBubble(ped,pick(YELLS),1600);
     wahVoice(ped.mesh.userData.gender==='girl'?rand(230,280):rand(150,190),ped.x,ped.z);
+  }
+}
+
+// ================= ACTION BAIL-OUT (PV8) =================
+// "When turbo bails out of cars while they're driving he needs to come flying
+//  out the side and roll on the ground for a bit. like an action movie."
+//
+// exitCar() used to place Turbo 2.2u to the side at any speed, so stepping out
+// of a car doing 90 looked exactly like stepping out of a parked one. Above
+// BAIL_SPEED he is thrown instead: a launch that inherits the car's momentum,
+// a short airborne arc, then a tumble that bleeds off along the ground before
+// he comes up on his feet. Below it, the old clean step-out is untouched.
+//
+// This is its own state rather than a reuse of p.stunT because stun is a POSE
+// — flat on your back, position pinned — while this is a TRAJECTORY: it has to
+// integrate, collide, and hand control back. It shares stun's shape in
+// updateFoot (an early return that owns the frame) so the two can never both
+// drive the body.
+const BAIL_SPEED=8;      // below this, exiting is still a clean step-out
+const BAIL_MAX_T=2.4;    // hard ceiling — the state must always terminate
+
+function startBailDive(c){
+  const p=player, sp=Math.abs(c.speed);
+  // car heading convention (see carPhysics/exitCar): forward is
+  // (sin h, cos h), the driver's side is (cos h, -sin h)
+  const fx=Math.sin(c.heading), fz=Math.cos(c.heading);
+  const sx=Math.cos(c.heading), sz=-Math.sin(c.heading);
+  const carry=Math.min(sp*0.72,26);
+  p.dive={ vx:fx*carry+sx*6.2, vz:fz*carry+sz*6.2, vy:3.6,
+           t:0, phase:'air', spin:0, yaw:Math.atan2(sx,sz) };
+  p.x=c.x+sx*1.6; p.z=c.z+sz*1.6;
+  p.y=Math.max(groundH(p.x,p.z),c.y||0)+0.7;
+  p.fallPeakY=null;        // a bail arc is not a lethal fall (OP2-G)
+  clearSprint(); endMelee();
+  sfx.crash(0.25); shake(clamp(sp*0.012,0.15,0.5)); fxImpact(0.4); haptic([25,40,60]);
+  // road rash scales with how fast you jumped, and goes through the normal
+  // damage path so the red pulse and low-health throb still apply
+  const rash=clamp((sp-BAIL_SPEED)*0.55,0,20);
+  if(rash>0.5) damagePlayer(rash);
+}
+
+function updateBailDive(dt){
+  const p=player, d=p.dive;
+  d.t+=dt;
+  const g=groundH(p.x,p.z);
+  if(d.phase==='air'){
+    d.vy-=24*dt;
+    p.y+=d.vy*dt;
+    if(p.y<=g){
+      p.y=g; d.vy=0; d.phase='roll';
+      burst(p.x,0.25,p.z,6,COL_SMOKE,1.6,0.5,0.4);
+      sfx.crash(0.18); haptic(35); fxImpact(0.25);
+    }
+  } else {
+    p.y=g;
+    const k=Math.exp(-3.2*dt);   // friction bleeds the roll off
+    d.vx*=k; d.vz*=k;
+  }
+  const bx=p.x, bz=p.z;
+  p.x+=d.vx*dt; p.z+=d.vz*dt;
+  const wantX=p.x, wantZ=p.z;
+  resolveFootCollision(p,0.5);
+  // shoved out of something solid: kill the slide instead of grinding along it
+  if(Math.hypot(p.x-wantX,p.z-wantZ)>0.01){ d.vx*=0.25; d.vz*=0.25; }
+  const speed=Math.hypot(d.vx,d.vz);
+  d.spin+=speed*dt*1.5;
+  // tumbling forward about the axis he is travelling along
+  p.mesh.position.set(p.x,p.y+0.45,p.z);
+  p.mesh.rotation.set(0,d.yaw,0);
+  p.mesh.rotateX(-d.spin);
+  if(d.phase==='roll'&&_rng()<dt*16) burst(p.x,0.2,p.z,1,COL_SMOKE,1,0.4,0.3);
+  if((d.phase==='roll'&&speed<1.6)||d.t>BAIL_MAX_T) endBailDive();
+  void bx; void bz;
+}
+
+// Every exit from the dive goes through here, so the rig can never be left
+// lying on its side (the rotation is applied to the shared person mesh).
+function endBailDive(){
+  const p=player;
+  if(!p.dive) return;
+  p.dive=null;
+  p.y=groundH(p.x,p.z);
+  p.mesh.rotation.set(0,p.heading,0);
+  p.mesh.position.set(p.x,p.y,p.z);
+  p.fallPeakY=null;
+}
+
+// ---- runaway cars ----
+// A car you abandon at speed is not in `traffic` (its driver is null, not
+// 'civ'), so nothing was ticking it and it simply froze mid-road the instant
+// you left. That is the one thing that would undercut the whole bail. These
+// coast on under carPhysics with no throttle — which already applies drag and
+// resolves collisions — until they run out of speed or the timer expires.
+const runaways=[];
+function releaseRunaway(c,seconds){
+  if(!c||c.dead||runaways.indexOf(c)>=0) return;
+  c.runawayT=seconds;
+  runaways.push(c);
+}
+function updateRunaways(dt){
+  for(let i=runaways.length-1;i>=0;i--){
+    const c=runaways[i];
+    if(c.dead||c===player.car||c.runawayT<=0||Math.abs(c.speed)<1.2){ runaways.splice(i,1); continue; }
+    c.runawayT-=dt;
+    carPhysics(c,dt,{steer:0,throttle:0,drift:false,boost:false});
   }
 }
 
@@ -10155,6 +10421,7 @@ function respawn(spot){
 function busted(){
   if(G.over) return;
   resetSlowmo();   // PV9 — never carry a stretched clock through a respawn
+  endBailDive();   // PV8 — never respawn mid-tumble
   sfx.busted(); haptic(120);
   const fine=Math.floor(G.money*0.12);
   G.money-=fine; $('money').textContent='$'+G.money;
@@ -10170,6 +10437,7 @@ function busted(){
 function wasted(spot){
   if(G.over) return;
   resetSlowmo();   // PV9 — never carry a stretched clock through a respawn
+  endBailDive();   // PV8 — never respawn mid-tumble
   endBail();
   sfx.bigCrash(); haptic([80,60,150]);
   const c=player.car;
@@ -10385,7 +10653,18 @@ const SLOWMO={
   MIN_START:18,     // needed in the tank to trigger, so it can't be stutter-spammed
   DRAIN:34,         // per real second while active
   REFILL:11,        // per real second while not
+  autoT:0,          // free cinematic window — see slowmoBurst()
 };
+// The money shot. A blast going off next to you bends time for a beat whether
+// or not you asked for it: bail out of a burning car and the explosion behind
+// you plays in slow motion for free. Deliberately does NOT touch the meter —
+// charging the player for a moment they didn't ask for would feel like a tax —
+// and it never re-triggers while one is already running.
+function slowmoBurst(seconds){
+  if(!(seconds>0)) return;
+  if(!slowmoAvailable()||SETTINGS_REDUCE_MOTION()) return;
+  SLOWMO.autoT=Math.max(SLOWMO.autoT,seconds);
+}
 // Base values §POST FX sits at when time is normal. updateSlowmo lerps away
 // from these and back, so letting go restores them exactly.
 const FX_BASE_SAT=FX.sat, FX_BASE_BLOOM=FX.bloom, FX_BASE_VIGNETTE=FX.vignette;
@@ -10427,16 +10706,22 @@ function slowmoFov(){ return slowmoDepth()*7; }
 
 const slowMeterEl=$('slowFill'), slowBtnEl=$('btnSlow');
 function updateSlowmo(dt){
+  if(SLOWMO.autoT>0){
+    SLOWMO.autoT-=dt;
+    if(!slowmoAvailable()) SLOWMO.autoT=0;   // a cutscene/death cancels the beat
+  }
   const canHold=slowmoAvailable()&&(SLOWMO.active?SLOWMO.meter>0:SLOWMO.meter>=SLOWMO.MIN_START);
-  const want=!!input.slow&&canHold;
+  const held=!!input.slow&&canHold;
+  const want=held||SLOWMO.autoT>0;
   if(want!==SLOWMO.active){
     SLOWMO.active=want;
     slowmoWhoosh(want);
     if(want) haptic(30);
   }
-  if(SLOWMO.active){
+  // Only a HELD activation costs meter — the free cinematic window doesn't.
+  if(held){
     SLOWMO.meter=Math.max(0,SLOWMO.meter-SLOWMO.DRAIN*dt);
-    if(SLOWMO.meter<=0){ SLOWMO.active=false; slowmoWhoosh(false); }
+    if(SLOWMO.meter<=0&&SLOWMO.autoT<=0){ SLOWMO.active=false; slowmoWhoosh(false); }
   } else {
     SLOWMO.meter=Math.min(100,SLOWMO.meter+SLOWMO.REFILL*dt);
   }
@@ -10446,10 +10731,15 @@ function updateSlowmo(dt){
   if(Math.abs(SLOWMO.scale-target)<0.002) SLOWMO.scale=target;
 
   const t=slowmoDepth();
-  // §POST FX: the world drains of colour, the lights swell, the lens strains
-  FX.sat=lerp(FX_BASE_SAT,0.42,t);
-  FX.bloom=lerp(FX_BASE_BLOOM,0.74,t);
-  FX.vignette=lerp(FX_BASE_VIGNETTE,0.52,t);
+  // §POST FX. Owner direction: keep it vibrant — slow motion PUSHES colour
+  // rather than draining it. The usual film-school move here is to desaturate,
+  // but on a neon city that just makes the best thing about the picture go
+  // grey. Cranking saturation and bloom together reads as the world going
+  // hyper-real, and the lens strain + muffled audio carry the "time bent"
+  // half on their own.
+  FX.sat=lerp(FX_BASE_SAT,1.42,t);
+  FX.bloom=lerp(FX_BASE_BLOOM,0.78,t);
+  FX.vignette=lerp(FX_BASE_VIGNETTE,0.50,t);
   FX.slowAberr=t*0.075;
   slowmoAudio(t);
 
@@ -10462,7 +10752,7 @@ function updateSlowmo(dt){
 // Hard reset — used by the paths that yank control away (WASTED/BUSTED, a new
 // game) so time can never stay stretched across a transition.
 function resetSlowmo(){
-  SLOWMO.active=false; SLOWMO.scale=1; SLOWMO.meter=100;
+  SLOWMO.active=false; SLOWMO.scale=1; SLOWMO.meter=100; SLOWMO.autoT=0;
   input.slow=false; btnHold.slow=false;
   FX.sat=FX_BASE_SAT; FX.bloom=FX_BASE_BLOOM; FX.vignette=FX_BASE_VIGNETTE; FX.slowAberr=0;
   slowmoAudio(0);
@@ -10527,6 +10817,7 @@ function loop(){
           updateCopHeli(sdt);
           updatePilotlessHelis(sdt);
           updateTraffic(sdt);
+          updateRunaways(sdt);   // PV8 — abandoned cars coast on
           updatePizzaDrivers(sdt);
           updateChaosDrivers(sdt);
           updateGangMembers(sdt);
@@ -10600,6 +10891,7 @@ function loop(){
       }
     }
     updateBoomFx(simDt);
+    updateDebris(simDt); updateScorch(simDt); updateChainBudget(simDt);   // §CARNAGE
     // car alarms: bumped parked cars beep and flash for a few seconds
     for(const c of cars){
       if(c.alarmT>0){

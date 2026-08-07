@@ -118,7 +118,7 @@ module.exports = [
   },
 
   {
-    name: 'Post FX: low health drives a sustained red throb and desaturation',
+    name: 'Post FX: low health drives a sustained red throb, and stays vibrant',
     start: 'skipintro',
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
@@ -136,7 +136,10 @@ module.exports = [
       });
       assert(r.healthy.d === 0 && r.healthy.s === 0, 'a healthy Turbo should get no damage grade');
       assert(r.hurt.d > 0.15, `near-death should push a visible red pulse (got ${r.hurt.d})`);
-      assert(r.hurt.s > 0.2, `near-death should desaturate (got ${r.hurt.s})`);
+      // Owner direction: the picture stays vibrant. The red edge pulse carries
+      // "you are dying"; desaturation is a trace, not a grey-out.
+      assert(r.hurt.s > 0, `near-death should still tint slightly (got ${r.hurt.s})`);
+      assert(r.hurt.s < 0.2, `near-death must not grey the world out (got ${r.hurt.s})`);
     }
   },
 
