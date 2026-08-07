@@ -319,6 +319,23 @@ Do that, discipline is 100%.
 
 ---
 
+## Keeping Knowledge From Walking Out (LESSONS.md)
+
+**The system learns, not just the person.**
+
+Every sprint, agents hit walls. Some are teaching moments; some are gotchas that didn't need to be hit twice. That's what `LESSONS.md` is for.
+
+**How it works:**
+- Update `LESSONS.md` once a sprint (or after solving something hard)
+- Format: **Date** • **Lesson** • **Action** 
+- Example: *"Learned: Shared-file touch entries don't sync if STATUS.md isn't committed first. Next time: always commit STATUS changes right after editing."*
+- Short (2–3 sentences). Real impact only.
+- Sign your entry: `Signed: <program> | <model> | <effort>`
+
+**Why:** The next agent who hits the same wall reads it in LESSONS.md and doesn't waste 2 hours. Your learning compounds.
+
+---
+
 ## One More Thing
 
 **You're measured on execution, not perfection.**

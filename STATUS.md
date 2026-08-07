@@ -12,6 +12,7 @@ _Sprints are ad-hoc. Owner has their own job. Expect gaps between sprints (days 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
 possible change and add a line here.
+- `LESSONS.md` — weekly knowledge base. Agents add lessons learned after solving hard problems or hitting walls; keeps the team from learning the same thing twice. Signed: Claude Code \| Haiku 4.5 \| high
 - `STATUS.md` — added Haiku row to Active work, shared-file touches for rewards system. Signed: Claude Code \| Haiku 4.5 \| high
 - `HAIKU.md`, `CONDUCTOR.md` — coordination layer (validation, consolidation triggers) + 5-hour sprint orchestration with reward tiers & autonomy. Signed: Claude Code \| Haiku 4.5 \| high
 - `tools/haiku-*.js` — four new scripts: pre-commit validation (check.js), post-commit scanning (overseer.js), work assignment (dispatch.js), performance tracking (rewards.js). Signed: Claude Code \| Haiku 4.5 \| high
