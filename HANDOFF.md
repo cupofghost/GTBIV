@@ -2073,7 +2073,7 @@ are all fine; trees between the kerbs are not.
 no tree in a driving lane; tree count doesn't collapse (rejecting a spot should
 re-roll, not just drop it).
 
-#### PV4 — The beach shelves into the sea `P2 · Risk: Med` `OPEN`
+#### PV4 — The beach shelves into the sea `P2 · Risk: Med` `DONE (2026-08-07)`
 
 > *"Make the beach go down into the water on the edge of the map. like real
 > life."*
@@ -2091,6 +2091,30 @@ perturb the road lattice or block patches.
 **Acceptance:** walking straight out to sea produces a smooth descent with no
 step at the shoreline; the drawn sand and `groundH` agree within the existing
 tolerance; `tests/cases/terrain.test.js` still passes unmodified.
+
+*Built note.* One term in `groundH`, gated on `m > SHORE_START` (= `H+14`), so
+it is beach only — no road, block or building footprint reaches that far and
+the city's grade/no-ledge guardrails are untouched. `terrainGeo()` samples
+`groundH` per vertex, so the drawn sand follows it automatically; measured mesh
+-vs-field error is **0.0000u across 6061 verts**, which is the exact
+disagreement that killed the terraced version.
+
+Two things worth knowing before tuning it:
+
+- `groundH` measures distance from the centre as **`max(|x|,|z|)`**, a square
+  metric matching the square city. Probing the shore along a radial ray is
+  wrong — the 45° direction never reaches the shelf at all. Walk outward in the
+  square metric.
+- **Fading the dunes out across the shelf makes the beach face steeper, not
+  gentler** (25.7° → 27.9°): dropping a positive dune to zero is one more
+  downward slope in series with the shelf. Tried and reverted. The lever that
+  works is the *length of the run* — smoothstep's peak gradient is
+  `1.5 × drop/run`, so a 5u drop over 40u is ~10°. Final worst face: 14.3°.
+
+The waterline lands ~11u inside `overWater()`'s boundary on purpose, so there is
+a shallow strip you wade through before the game calls it swimming. The order
+matters and the test asserts it: sand under *before* `overWater()` flips, never
+the reverse.
 
 #### PV5 — A city that isn't a square `P3 · Risk: High` `OPEN`
 
