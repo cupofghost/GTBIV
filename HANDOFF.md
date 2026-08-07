@@ -2126,7 +2126,7 @@ geometry.
 every crossing with a grid road is a junction traffic can take; AI traffic
 routed onto the ring completes a lap.
 
-#### PV7 — Real riders on motorcycles `P2 · Risk: Med` `OPEN`
+#### PV7 — Real riders on motorcycles `P2 · Risk: Med` `DONE (2026-08-07)`
 
 > *"make the motorcycles have real guys on them. when turbo steals one, turbos
 > model should be on the bike."*
@@ -2147,6 +2147,15 @@ with an invisible driver. Two halves:
 throws the rider off and seats Turbo's actual model; exiting returns him to foot
 with no duplicated or orphaned mesh; ten jack/exit cycles leak nothing
 (`js/person.js` additions stay backward-compatible per `STATUS.md`).
+
+*Built note:* Turbo's rig is **not** reparented to the bike — several systems
+write `player.mesh.position` in world space, and handing ownership to a vehicle
+group would make those silently wrong. `seatTurboOnBike()` copies the bike's
+world seat point and quaternion each frame instead, which gets lean and pitch
+for free. `js/person.js` was not modified at all. Watch the shared-rig hazard:
+he uses the same rig as the walk cycle, so `dismountBike()` must hand it back
+neutral or he walks away crouched over invisible handlebars — `bike-rider.test.js`
+asserts exactly that.
 
 #### PV8 — Action-movie bail-out `P2 · Risk: Med` `DONE (2026-08-07)`
 
