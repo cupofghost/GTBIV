@@ -12,7 +12,9 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # The suite grew to 215 cases and takes ~21 min locally; 15 was cutting it
+    # too fine to tell a real failure from a timeout.
+    timeout-minutes: 30
 
     defaults:
       run:
@@ -30,4 +32,8 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: node syntax-check.js
+      # The CODE MAP is generated. Two branches editing index.html will both
+      # rewrite it, and a merge can land numbers that match neither side —
+      # silently, since it is only a comment. Fail here instead.
+      - run: node ../tools/codemap.js
       - run: npm test

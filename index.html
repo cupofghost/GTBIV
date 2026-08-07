@@ -737,62 +737,64 @@ let TRAFFIC_CAP=30, PED_CAP=60, PARTICLE_SCALE=1, GFX_TIER='high';
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS & GLOBAL STATE                           (719–727, ~9 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                             (798–859, ~62 lines)
-// AUDIO                                            (860–1158, ~299 lines)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1159–1661, ~503 lines)
-// THREE SETUP                                      (1662–1712, ~51 lines)
-// CITY                                             (1713–2621, ~909 lines)
+// DEVICE / ORIENTATION                             (800–861, ~62 lines)
+// AUDIO                                            (862–1160, ~299 lines)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1161–1663, ~503 lines)
+// THREE SETUP                                      (1664–1714, ~51 lines)
+// CITY                                             (1715–2623, ~909 lines)
 //   └ RADIO TOWERS                                 (2225–2331, ~107 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                   (2622–2672, ~51 lines)
-// ELEVATED LIGHT RAIL                              (2673–2797, ~125 lines)
-// STAIRS & FIRE ESCAPES                            (2798–2872, ~75 lines)
-// WALL LADDERS                                     (2873–3150, ~278 lines)
-// PARTICLES                                        (3151–3205, ~55 lines)
-// BLOB SHADOWS                                     (3206–3267, ~62 lines)
-// GPU RESOURCE CLEANUP                             (3268–3289, ~22 lines)
-// CARS                                             (3290–3581, ~292 lines)
-// PEDESTRIANS                                      (3582–3790, ~209 lines)
-// PIZZA DELIVERY SYSTEM                            (3791–3946, ~156 lines)
-// RIVAL PIZZA GANG: CHAOS PIZZA                    (3947–4074, ~128 lines)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4075–4254, ~180 lines)
-// STRAY DOGS & DOG GANGS                           (4255–4560, ~306 lines)
-// PIZZA WARS MISSION                               (4561–4635, ~75 lines)
-// PLAYER                                           (4636–4679, ~44 lines)
-// PIZZA PLACE & INTERIOR                           (4680–4843, ~164 lines)
-// SIDEWALKS & STOREFRONT AWNINGS                   (4844–4970, ~127 lines)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (4971–5170, ~200 lines)
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (5171–5286, ~116 lines)
-// DAY/NIGHT & HEIST SYSTEM                         (5287–5479, ~193 lines)
-// PICKUPS                                          (5480–5522, ~43 lines)
-// HELICOPTERS                                      (5523–6025, ~503 lines)
-// TALKING PEDS                                     (6026–6167, ~142 lines)
-// WEAPONS                                          (6168–6875, ~708 lines)
-// WANTED                                           (6876–6981, ~106 lines)
-// CAR PHYSICS                                      (6982–7209, ~228 lines)
-// PLAYER: FOOT & CAR                               (7210–7959, ~750 lines)
-// HUD / TOASTS                                     (7960–8003, ~44 lines)
-// MISSIONS                                         (8004–8177, ~174 lines)
-// AI                                               (8178–8300, ~123 lines)
-// FOOT COPS                                        (8301–8344, ~44 lines)
-// SEWER RATS                                       (8345–8461, ~117 lines)
-// MAMA RAT (rat vengeance) — PLACEHOLDER           (8462–8828, ~367 lines)
-// BUSTED / WASTED                                  (8829–8919, ~91 lines)
-// CAMERA                                           (8920–9029, ~110 lines)
-// MINIMAP                                          (9030–9077, ~48 lines)
-// MAIN LOOP                                        (9078–9259, ~182 lines)
-// ORIENTATION                                      (9260–9317, ~58 lines)
-// ANIMATED INTRO                                   (9318–9673, ~356 lines)
-// STORY: TURBO JONES, CHAPTER 1                    (9674–9929, ~256 lines)
-// CUTSCENE SYSTEM                                  (9930–10177, ~248 lines)
-// VOICEOVER SYSTEM                                 (10178–10259, ~82 lines)
-// INTRO NARRATION                                  (10260–10561, ~302 lines)
-// DEV TOOLS                                        (10562–10639, ~78 lines)
-// CINEMA MODE (was REPLAY)                         (10640–10772, ~133 lines)
-// CINEMA: SCENES & STAGING                         (10773–10988, ~216 lines)
-// PAUSE MENU & SETTINGS                            (10989–11198, ~210 lines)
-// CONTROLS CARD (U2 onboarding)                    (11199–11231, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (11232–11287, ~56 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                   (11288–end, ~41 lines: boot, init, resize handlers, quality apply)
+// FOOTBALL FIELD                                   (2624–2674, ~51 lines)
+// ELEVATED LIGHT RAIL                              (2675–2799, ~125 lines)
+// STAIRS & FIRE ESCAPES                            (2800–2874, ~75 lines)
+// WALL LADDERS                                     (2875–3152, ~278 lines)
+// PARTICLES                                        (3153–3207, ~55 lines)
+// BLOB SHADOWS                                     (3208–3269, ~62 lines)
+// GPU RESOURCE CLEANUP                             (3270–3291, ~22 lines)
+// CARS                                             (3292–3583, ~292 lines)
+// PEDESTRIANS                                      (3584–3792, ~209 lines)
+// PIZZA DELIVERY SYSTEM                            (3793–3948, ~156 lines)
+// RIVAL PIZZA GANG: CHAOS PIZZA                    (3949–4076, ~128 lines)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4077–4256, ~180 lines)
+// COACH REMATCH (FB3)                              (4257–4735, ~479 lines)
+// TURBO BOWL (FB4)                                 (4736–5099, ~364 lines)
+// STRAY DOGS & DOG GANGS                           (5100–5405, ~306 lines)
+// PIZZA WARS MISSION                               (5406–5480, ~75 lines)
+// PLAYER                                           (5481–5524, ~44 lines)
+// PIZZA PLACE & INTERIOR                           (5525–5688, ~164 lines)
+// SIDEWALKS & STOREFRONT AWNINGS                   (5689–5815, ~127 lines)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (5816–6015, ~200 lines)
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6016–6131, ~116 lines)
+// DAY/NIGHT & HEIST SYSTEM                         (6132–6324, ~193 lines)
+// PICKUPS                                          (6325–6367, ~43 lines)
+// HELICOPTERS                                      (6368–6870, ~503 lines)
+// TALKING PEDS                                     (6871–7012, ~142 lines)
+// WEAPONS                                          (7013–7720, ~708 lines)
+// WANTED                                           (7721–7826, ~106 lines)
+// CAR PHYSICS                                      (7827–8054, ~228 lines)
+// PLAYER: FOOT & CAR                               (8055–8806, ~752 lines)
+// HUD / TOASTS                                     (8807–8850, ~44 lines)
+// MISSIONS                                         (8851–9024, ~174 lines)
+// AI                                               (9025–9147, ~123 lines)
+// FOOT COPS                                        (9148–9191, ~44 lines)
+// SEWER RATS                                       (9192–9308, ~117 lines)
+// MAMA RAT (rat vengeance) — PLACEHOLDER           (9309–9675, ~367 lines)
+// BUSTED / WASTED                                  (9676–9766, ~91 lines)
+// CAMERA                                           (9767–9876, ~110 lines)
+// MINIMAP                                          (9877–9924, ~48 lines)
+// MAIN LOOP                                        (9925–10108, ~184 lines)
+// ORIENTATION                                      (10109–10166, ~58 lines)
+// ANIMATED INTRO                                   (10167–10522, ~356 lines)
+// STORY: TURBO JONES, CHAPTER 1                    (10523–10778, ~256 lines)
+// CUTSCENE SYSTEM                                  (10779–11097, ~319 lines)
+// VOICEOVER SYSTEM                                 (11098–11179, ~82 lines)
+// INTRO NARRATION                                  (11180–11481, ~302 lines)
+// DEV TOOLS                                        (11482–11559, ~78 lines)
+// CINEMA MODE (was REPLAY)                         (11560–11692, ~133 lines)
+// CINEMA: SCENES & STAGING                         (11693–11908, ~216 lines)
+// PAUSE MENU & SETTINGS                            (11909–12118, ~210 lines)
+// CONTROLS CARD (U2 onboarding)                    (12119–12151, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (12152–12211, ~60 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                   (12212–end, ~41 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -4148,7 +4150,7 @@ function downJock(j,byCar){
   j.eatParts=null;
   burst(j.x,1,j.z,8,[[1,0.4,0.4],[0.9,0.2,0.2]],2,0.5,5);
   if(byCar) shake(0.25);
-  addHeat(18);
+  if(!j.alumni) addHeat(18);   // FB3: the Coach strand never touches the cops
   if(_rng()<0.45) spawnPickup('cash',j.x+rand(-1.5,1.5),j.z+rand(-1.5,1.5));
   toast('JOCK DOWN','gold');
 }
@@ -4176,7 +4178,7 @@ function updateJocks(dt){
     const d=Math.hypot(player.x-j.x,player.z-j.z);
     if(j.hitT>0) j.hitT-=dt;
     // pick a fight: spot Turbo, square up, chase him down
-    if(j.state==='guard'&&d<9&&G.mode==='foot') j.state='chase';
+    if(j.state==='guard'&&d<9&&G.mode==='foot'&&jocksHostile()) j.state='chase';   // FB3 gates this
     let sp=j.speed;
     if(j.state==='chase'){
       j.heading=Math.atan2(player.x-j.x,player.z-j.z);
@@ -4235,7 +4237,7 @@ function updateJocks(dt){
     // taunt when Turbo gets in earshot
     j.tauntT-=dt;
     if(d<12&&j.tauntT<=0){
-      showBubble(j,pick(JOCK_TAUNTS),2600);
+      showBubble(j,pick(jockTauntPack(j)),2600);   // FB3 picks the pack for the strand's state
       wahVoice(rand(95,140),j.x,j.z);
       j.tauntT=rand(6,10);
     }
@@ -4251,6 +4253,849 @@ function updateJocks(dt){
   }
 }
 // ================= END FOOTBALL RIVALS =================
+
+// ================= COACH REMATCH (FB3) =================
+// FOOTBALL_STRAND.md §4 — the payoff of "Grudge Season", and two linked beats
+// rather than one mission: OLD SCORES (reach Wildcats Field through a bounded
+// Alumni Wildcat warm-up) runs straight into REMATCH (a fists-only fight with
+// Coach Gary Grimsby). One-shot and proximity-triggered, the same shape as the
+// Deb story beats — deliberately NOT part of startMission()'s repeating pool.
+//
+// Three things here depart from the surrounding combat code, each because the
+// spec asks for it:
+//   · Coach YIELDS, he does not die — no knockPed() ragdoll, no death state.
+//   · A Turbo loss is a SOFT RETRY at the field, never BUSTED/WASTED.
+//   · The strand stays off the cops' radar entirely: nothing here calls
+//     addHeat(), and the three shared melee paths skip their heat for the
+//     mission's `alumni` jocks.
+// Winning sets the save blob's existing G.coachBeaten. That flag is where this
+// task stops: FB4 / Turbo Bowl (FOOTBALL_STRAND.md §5) is designed but still
+// needs the owner's go-ahead, and is not built here.
+
+// --- bark packs, verbatim from FOOTBALL_STRAND.md §7 ------------------------
+// jock_street_taunt — roaming Wildcats before the Rematch. These are the
+// "organic discovery" hook: two of them name Coach and Danny out loud.
+const JOCK_STREET_TAUNT=[
+  "Hey, it's Fumble Jones!",
+  "Coach still talks about what you did to Danny's knee, man.",
+  "You still owe this team an apology. And a knee replacement.",
+  "Nice bus pass, star player.",
+  "Heard you're back. Heard nobody cares.",
+  "You get banned from the locker room AND the whole city? Impressive.",
+];
+// jock_fight — during the Old Scores warm-up itself
+const JOCK_FIGHT_LINES=[
+  "This is for Danny's knee!",
+  "You're not even wearing pads, this is EASY!",
+  "Coach said if I see you, I hit you. Simple as that.",
+  "Should've stayed inside, Jones!",
+];
+// jock_post_rematch — ambient, once Turbo has beaten Coach
+const JOCK_POST_REMATCH=[
+  "...respect, man. Actual respect.",
+  "Coach never lost a fistfight before. You broke something sacred.",
+  "You're still banned from the group chat, though.",
+];
+// coach_taunt — he is genuinely coaching Turbo while fighting him
+const COACH_TAUNT=[
+  "PICK UP YOUR FEET, JONES!",
+  "That's the same sloppy footwork that cost you the season!",
+  "I've benched better hits than that!",
+  "You call that a punch? I've been hit harder by a cold front!",
+  "TWENTY YEARS and you STILL lead with your chin!",
+];
+// coach_defeat — the fight's end beat, beyond the cutscene's own lines
+const COACH_DEFEAT_BARKS=[
+  "...alright. Alright! Down. You're down— I mean, I'm down.",
+  "Get up. No — stay down a second. Then get up.",
+  "Fine! FINE! You've got heart, Jones! Misplaced, but heart!",
+];
+// FB1 shipped its own ten-line pack; the strand's canonical street taunts join
+// it rather than replacing it, so the older lines keep playing.
+const JOCK_PRE_REMATCH=JOCK_TAUNTS.concat(JOCK_STREET_TAUNT);
+
+// --- tuning -----------------------------------------------------------------
+const COACH_HP=240;               // ~8 clean punches, ~6 kicks, ~3 charged specials
+const COACH_DAMAGE=13;            // per connected swing, before difficulty scaling
+const COACH_SPEED=4.2, COACH_SWING=0.62, COACH_COOL=1.15;
+const COACH_TRIGGER_R=30;         // walk this close to the field on foot and Old Scores opens
+const COACH_LEASH_R=85;           // wander this far from it and the encounter lets go
+const COACH_WARMUP_JOCKS=3, COACH_WARMUP_LIMIT=150;
+const COACH_SPECTATORS=5;
+const COACH_BARK_AT=[0.8,0.6,0.4,0.2];   // he mouths off as his HP crosses these
+let coachMission=null;            // {phase,warmup[],spectators[],...} — null when dormant
+let coach=null;                   // the named boss ped; never enters `jocks`
+let coachOutroT=0, coachCoolT=0;
+
+// Predicates the shared jock code asks about. The Wildcats watch the Rematch,
+// they never join it (FOOTBALL_STRAND.md §4), and once Coach is beaten they
+// stop picking fights for good — they downgrade to teasing background colour.
+function coachRingClosed(){ return !!(coachMission&&coachMission.phase!=='warmup'); }
+function jocksHostile(){ return !G.coachBeaten&&!coachRingClosed(); }
+function jockTauntPack(j){
+  if(G.coachBeaten) return JOCK_POST_REMATCH;
+  if(j&&j.alumni&&coachMission&&coachMission.phase==='warmup') return JOCK_FIGHT_LINES;
+  return JOCK_PRE_REMATCH;
+}
+// Live only for the fight proper — the melee hooks in §WEAPONS ask this before
+// they do anything at all, so Coach is untouchable outside his own round.
+function coachFightLive(){ return !!(coachMission&&coachMission.phase==='fight'&&coach&&coach.state!=='yield'); }
+
+// A PE whistle: two detuned high tones with a noisy edge. Built from the shared
+// AUDIO primitives on the fly — no module-level nodes, nothing for exitCarSoft()
+// to reset (see STATUS.md → Shared-file touches).
+function coachWhistle(){
+  blip(2150,2500,0.32,0.10,'square');
+  blip(2720,2400,0.32,0.06,'sawtooth');
+  noiseBurst(0.3,0.05,3000,1.2,'bandpass');
+}
+function coachSay(txt){
+  if(!coach) return;
+  showBubble(coach,txt,2800);
+  wahVoice(rand(80,105),coach.x,coach.z);   // gruff, a register under the jocks
+}
+// The random-mission rotation owns #mission whenever it is running; the story
+// beat defers rather than fighting it for the slot.
+function coachHUD(html){
+  if(mission) return;
+  if(html) setMissionHUD(html); else $('mission').style.display='none';
+}
+
+// --- Coach Gary Grimsby -----------------------------------------------------
+// Whistle on a cord and "The List" — the literal clipboard he still keeps
+// Turbo's name on (FOOTBALL_STRAND.md §1).
+function addCoachKit(mesh){
+  const u=mesh.userData;
+  const cordMat=new THREE.MeshLambertMaterial({color:0x1a1a1a});
+  const cord=new THREE.Mesh(new THREE.TorusGeometry(0.17,0.012,4,14),cordMat);
+  cord.rotation.x=Math.PI/2*0.82; cord.position.y=0.5; u.torso.add(cord);
+  const whistle=new THREE.Mesh(new THREE.CylinderGeometry(0.028,0.028,0.06,6),
+    new THREE.MeshLambertMaterial({color:0xd9c44f}));
+  whistle.rotation.x=Math.PI/2;
+  whistle.position.set(0,0.33,u.body.scale.z*0.5+0.03); u.torso.add(whistle);
+  const board=new THREE.Mesh(new THREE.BoxGeometry(0.19,0.25,0.02),
+    new THREE.MeshLambertMaterial({color:0x8a6a3a}));
+  const sheet=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.21,0.008),
+    new THREE.MeshLambertMaterial({color:0xf2ede2}));
+  sheet.position.z=0.015; board.add(sheet);
+  board.position.set(0,-0.34,0.06); board.rotation.x=0.5;
+  u.armL.children[1].add(board);   // tucked under the left forearm
+}
+function spawnCoach(){
+  if(coach||!FOOTBALL) return null;
+  const spec=randomPersonSpec(0x2b2f38,'guy');   // grey tracksuit, whistle, twenty years of grudge
+  spec.build=1.32; spec.height=1.06;
+  spec.hair={style:'buzz',color:0x8a8a8a,beard:false};
+  spec.outfit.tank=false; spec.outfit.dress=false;
+  spec.outfit.pants.shorts=false; spec.outfit.pants.color=0x232730;
+  const mesh=makePerson(spec);
+  addCoachKit(mesh);
+  coach={mesh,x:FOOTBALL.x,z:FOOTBALL.z,heading:0,hp:COACH_HP,maxHp:COACH_HP,
+    state:'idle',swingT:0,hitT:0,phase:0,lead:true,barkIdx:0,tauntT:rand(6,10),yieldT:0};
+  mesh.position.set(coach.x,groundH(coach.x,coach.z),coach.z);
+  scene.add(mesh);
+  return coach;
+}
+// The ring of Alumni Wildcats from coach_rematch_intro's last shot. Staging
+// only: they are never added to `jocks`, so no AI path can make them join in.
+function spawnSpectators(){
+  if(!coachMission||!FOOTBALL) return;
+  for(let k=0;k<COACH_SPECTATORS;k++){
+    const a=k/COACH_SPECTATORS*TAU+0.45, r=rand(12,15);
+    const team=JOCK_TEAMS[k%JOCK_TEAMS.length];
+    const spec=randomPersonSpec(team.body,'guy');
+    spec.build=rand(1.12,1.28); spec.height=rand(1.03,1.1);
+    spec.outfit.tank=false; spec.outfit.dress=false;
+    const mesh=makePerson(spec);
+    addLettermanJacket(mesh,team.body,team.letter);
+    const x=FOOTBALL.x+Math.sin(a)*r, z=FOOTBALL.z+Math.cos(a)*r;
+    mesh.position.set(x,groundH(x,z),z);
+    mesh.rotation.y=Math.atan2(FOOTBALL.x-x,FOOTBALL.z-z);
+    scene.add(mesh);
+    coachMission.spectators.push({mesh,x,z,phase:rand(0,TAU)});
+  }
+}
+function updateSpectators(dt,clapping){
+  if(!coachMission) return;
+  for(const s of coachMission.spectators){
+    s.phase+=dt*(clapping?9:1.6);
+    const u=s.mesh.userData;
+    if(clapping){
+      const c=Math.abs(Math.sin(s.phase))*0.5;
+      u.armL.rotation.x=-1.5-c; u.armR.rotation.x=-1.5-c;
+    } else {
+      u.armL.rotation.x=Math.sin(s.phase)*0.06; u.armR.rotation.x=-Math.sin(s.phase)*0.06;
+    }
+    s.mesh.position.y=groundH(s.x,s.z)+Math.abs(Math.sin(s.phase*0.5))*0.02;
+    updatePersonShadow(s.mesh,dt);
+  }
+}
+function clearCoachStaging(){
+  if(coach){ scene.remove(coach.mesh); disposeMesh(coach.mesh); coach=null; }
+  if(coachMission){
+    for(const s of coachMission.spectators){ scene.remove(s.mesh); disposeMesh(s.mesh); }
+    coachMission.spectators.length=0;
+  }
+}
+
+// --- Old Scores -------------------------------------------------------------
+function startOldScores(){
+  if(coachMission||!FOOTBALL) return null;
+  coachMission={phase:'warmup',t:0,leaveT:0,phaseT:0,retryT:0,rounds:1,shownPct:-1,
+    warmup:[],spectators:[],fistsWarned:false};
+  for(let k=0;k<COACH_WARMUP_JOCKS;k++){
+    const a=k/COACH_WARMUP_JOCKS*TAU+rand(-0.3,0.3), r=rand(9,14);
+    const j=spawnJock(FOOTBALL.x+Math.sin(a)*r,FOOTBALL.z+Math.cos(a)*r);
+    j.alumni=true; j.state='chase'; j.tauntT=rand(0.2,1.6);
+    coachMission.warmup.push(j);
+  }
+  sfx.mission();
+  toast('OLD SCORES — the Wildcats want a warm-up','gold');
+  setTimeout(()=>toast('Beat them and Coach will see you','gold'),2200);
+  return coachMission;
+}
+// Bounded, in both directions: it ends when the warm-up is beaten, and it lets
+// go on its own if Turbo drives off or loses interest, so nobody is left in an
+// endless brawl. Letting go is not losing — walk back and it opens again.
+function abandonOldScores(msg){
+  if(!coachMission) return;
+  for(const j of coachMission.warmup){
+    if(j.state==='down') continue;
+    const i=jocks.indexOf(j);
+    if(i>=0){ scene.remove(j.mesh); disposeMesh(j.mesh); jocks.splice(i,1); }
+  }
+  clearCoachStaging();
+  coachHUD(null);
+  coachMission=null; coachCoolT=20;
+  if(msg) toast(msg,'bad');
+}
+function warmupLeft(){
+  if(!coachMission) return 0;
+  return coachMission.warmup.filter(j=>j.state!=='down').length;
+}
+
+// --- Rematch ----------------------------------------------------------------
+function startRematchIntro(){
+  if(!coachMission||coachMission.phase!=='warmup') return;
+  coachMission.phase='intro'; coachMission.phaseT=0;
+  spawnCoach(); spawnSpectators();
+  coachHUD('<b>REMATCH</b> — Coach Grimsby');
+  playCutscene('coach_rematch_intro',FOOTBALL.x,FOOTBALL.z,startRematch);
+}
+function startRematch(){
+  if(!coachMission||(coachMission.phase!=='intro'&&coachMission.phase!=='retry')) return;
+  coachMission.phase='fight'; coachMission.phaseT=0;
+  if(!coach) spawnCoach();
+  coach.state='square'; coach.hitT=0.6;
+  // House rules, and a mission rule only — weapons are untouched everywhere else.
+  G.weapon='fists'; refreshButtons();
+  for(const j of jocks) if(j.state!=='down') j.state='guard';
+  sfx.mission();
+  toast(coachMission.rounds>1?('REMATCH — round '+coachMission.rounds):'REMATCH — FISTS ONLY','gold');
+}
+// Damage Turbo takes from Coach, kept off damagePlayer() on purpose: reaching
+// zero here is a lost scrimmage, not a WASTED.
+function coachStrikePlayer(amt){
+  if(DEV_STATE.god||G.over) return;
+  G.hp-=amt*difficulty().dmgMult; G.hpT=0;
+  if(G.hp<=0){ G.hp=0; coachSoftRetry(); }
+}
+function coachSoftRetry(){
+  const m=coachMission; if(!m) return;
+  m.phase='retry'; m.phaseT=0; m.retryT=3.4; m.rounds++; m.shownPct=-1;
+  G.hp=100; G.hpT=0;            // no hospital bill, no fine, no respawn downtown
+  endMelee();
+  if(coach){ coach.hp=coach.maxHp; coach.state='idle'; coach.hitT=COACH_COOL; coach.barkIdx=0; coach.swingT=0; }
+  bigEvent('SCRIMMAGE OVER','#ffd23e','Coach walks it off with you — go again');
+  coachSay(COACH_DEFEAT_BARKS[1]);
+  coachWhistle();
+  coachHUD('<b>REMATCH</b> — shake it off…');
+}
+function coachThresholdBark(){
+  const c=coach; if(!c) return;
+  const f=c.hp/c.maxHp;
+  while(c.barkIdx<COACH_BARK_AT.length&&f<=COACH_BARK_AT[c.barkIdx]){
+    coachSay(COACH_TAUNT[c.barkIdx%COACH_TAUNT.length]);
+    c.barkIdx++;
+  }
+}
+// The two hooks §WEAPONS calls. Coach is not in `jocks` and not in `peds`, so
+// he is reachable only through these — which means he is unhittable outside his
+// own round, and the shared melee needs no knowledge of the boss beyond the
+// call. Deliberately no addHeat() in either path.
+function coachMeleeHit(px,pz,heading,reach,damage,push){
+  if(!coachFightLive()) return;
+  const c=coach, dx=c.x-px, dz=c.z-pz, d=Math.hypot(dx,dz);
+  if(d>=reach||Math.abs(angDiff(heading,Math.atan2(dx,dz)))>=1.1) return;
+  hurtCoach(damage,px,pz,push);
+  toast('POW!','gold');
+}
+function coachChargedHit(s){
+  if(!coachFightLive()||s.hits.has(coach)) return;
+  const c=coach, dx=c.x-player.x, dz=c.z-player.z, d=Math.hypot(dx,dz);
+  if(d>3.1||d<0.15) return;
+  if(s.type==='punch'){
+    const fx=Math.sin(s.heading), fz=Math.cos(s.heading);
+    if(Math.abs((dx*fx+dz*fz)/d)<Math.cos(0.96)) return;   // windmill stays frontal
+  }
+  s.hits.add(c);
+  hurtCoach(s.type==='kick'?28:22,player.x,player.z,s.type==='kick'?1.6:1.1);
+}
+function hurtCoach(damage,fromX,fromZ,push){
+  const c=coach; if(!c||c.state==='yield') return;
+  c.hp-=damage;
+  const dx=c.x-fromX, dz=c.z-fromZ, d=Math.hypot(dx,dz)||1;
+  c.x+=dx/d*(push||0.9); c.z+=dz/d*(push||0.9);
+  const np={x:c.x,z:c.z}; resolveFootCollision(np,0.45); c.x=np.x; c.z=np.z;
+  burst(c.x,1.3,c.z,6,COL_SPARK,2,0.3,4);
+  shake(0.16); haptic(16);
+  if(c.hp<=0){ c.hp=0; coachYields(); return; }
+  coachThresholdBark();
+}
+// The one genuinely new pattern in this task, and kept deliberately small: a
+// yield is not a death. Coach stays upright, hands on knees, and the strand
+// resolves through coach_defeat instead of through knockPed()'s ragdoll.
+function coachYields(){
+  const c=coach; if(!c) return;
+  c.state='yield'; c.yieldT=0; c.swingT=0;
+  coachMission.phase='yield'; coachMission.phaseT=0;
+  coachSay(pick(COACH_DEFEAT_BARKS));
+  coachWhistle(); shake(0.3); haptic(40);
+  coachHUD('<b>REMATCH</b> — Coach is done');
+}
+function finishRematch(){
+  G.coachBeaten=true;
+  saveGame();   // an explicit, durable unlock — see busted()/wasted() on why not queueSave()
+  coachHUD(null);
+  bigEvent('REMATCH WON','#ffd23e',"You're off The List — the field's open");
+  sfx.mission();
+  coachOutroT=5.5;              // the Wildcats clap it out, then the staging clears
+  if(coach) coach.state='stand';
+  if(coachMission) coachMission.phase='done';
+}
+
+// --- per-frame --------------------------------------------------------------
+function poseCoachYield(dt){
+  const c=coach, u=c.mesh.userData;
+  c.yieldT+=dt;
+  const breathe=Math.sin(c.yieldT*3.1)*0.05;
+  c.mesh.rotation.set(0,c.heading,0);
+  if(u.torso) u.torso.rotation.x=0.85+breathe;
+  u.armL.rotation.x=-0.5; u.armR.rotation.x=-0.5;
+  u.legL.rotation.x=0.34; u.legR.rotation.x=0.34;
+  if(u.kneeL) u.kneeL.rotation.x=-0.55;
+  if(u.kneeR) u.kneeR.rotation.x=-0.55;
+  if(u.head) u.head.rotation.x=-0.45;
+  c.mesh.position.set(c.x,groundH(c.x,c.z),c.z);   // the crouch is in the legs, not the seating
+}
+// ...and back up again for the payoff — "Coach hauls Turbo up off the ground".
+function poseCoachStand(dt){
+  const c=coach, u=c.mesh.userData;
+  const ease=k=>k+ (0-k)*Math.min(1,dt*3.2);
+  if(u.torso) u.torso.rotation.x=ease(u.torso.rotation.x);
+  u.armL.rotation.x=ease(u.armL.rotation.x); u.armR.rotation.x=ease(u.armR.rotation.x);
+  u.legL.rotation.x=ease(u.legL.rotation.x); u.legR.rotation.x=ease(u.legR.rotation.x);
+  if(u.kneeL) u.kneeL.rotation.x=ease(u.kneeL.rotation.x);
+  if(u.kneeR) u.kneeR.rotation.x=ease(u.kneeR.rotation.x);
+  if(u.head) u.head.rotation.x=ease(u.head.rotation.x);
+  c.mesh.rotation.set(0,c.heading,0);
+  c.mesh.position.set(c.x,groundH(c.x,c.z),c.z);
+}
+function updateCoachActor(dt,engaged){
+  const c=coach; if(!c) return;
+  if(c.state==='yield'){ poseCoachYield(dt); updatePersonShadow(c.mesh,dt); return; }
+  if(c.state==='stand'){ poseCoachStand(dt); updatePersonShadow(c.mesh,dt); return; }
+  const u=c.mesh.userData;
+  const d=Math.hypot(player.x-c.x,player.z-c.z);
+  if(c.hitT>0) c.hitT-=dt;
+  c.heading=Math.atan2(player.x-c.x,player.z-c.z);
+  let sp=0;
+  if(engaged){
+    if(c.state==='swing'){
+      c.swingT-=dt;
+      const pr=1-c.swingT/COACH_SWING, arm=c.lead?u.armR:u.armL;
+      arm.rotation.x=pr<0.3?lerp(0,1.1,pr/0.3):lerp(1.1,-2.0,(pr-0.3)/0.7);
+      if(pr>0.5&&c.hitT<=0&&d<2.6){
+        c.hitT=COACH_COOL;
+        WEAPON_SFX.fists.fire(); shake(0.32); haptic(26);
+        const kx=(player.x-c.x)/(d||1), kz=(player.z-c.z)/(d||1);
+        player.x+=kx*1.5; player.z+=kz*1.5;
+        resolveFootCollision(player,0.5);
+        player.stunT=0.7;
+        burst(player.x,1.4,player.z,6,COL_SPARK,2,0.3,4);
+        toast('COACH CONNECTS!','bad');
+        coachStrikePlayer(COACH_DAMAGE);
+      }
+      if(c.swingT<=0){ c.state='square'; c.lead=!c.lead; arm.rotation.x=0; }
+    } else {
+      c.state='square';
+      if(d>2.1) sp=COACH_SPEED;
+      else if(c.hitT<=0){ c.state='swing'; c.swingT=COACH_SWING; }
+    }
+    c.tauntT-=dt;
+    if(c.tauntT<=0){ coachSay(pick(COACH_TAUNT)); c.tauntT=rand(7,11); }
+  }
+  if(sp>0){
+    let nx=c.x+Math.sin(c.heading)*sp*dt, nz=c.z+Math.cos(c.heading)*sp*dt;
+    if(buildingHit(nx,nz,0.45)||treeHit(nx,nz,0.45)||vehicleHit(nx,nz,0.45)){ nx=c.x; nz=c.z; }
+    c.x=nx; c.z=nz;
+    c.phase+=dt*sp*2.4;
+  } else c.phase+=dt*1.4;
+  // He never leaves his own field.
+  const hd=Math.hypot(c.x-FOOTBALL.x,c.z-FOOTBALL.z);
+  if(hd>26){ c.x=FOOTBALL.x+(c.x-FOOTBALL.x)/hd*26; c.z=FOOTBALL.z+(c.z-FOOTBALL.z)/hd*26; }
+  // solid: Turbo shoulders into him rather than through him
+  const pd=Math.hypot(player.x-c.x,player.z-c.z);
+  if(pd<1.0&&pd>1e-4&&G.mode==='foot'&&!G.over){
+    const nx=(player.x-c.x)/pd, nz=(player.z-c.z)/pd, push=1.0-pd;
+    player.x+=nx*push*0.6; player.z+=nz*push*0.6;
+    c.x-=nx*push*0.4; c.z-=nz*push*0.4;
+    resolveFootCollision(player,0.5);
+  }
+  c.mesh.position.set(c.x,groundH(c.x,c.z)+Math.abs(Math.sin(c.phase))*0.05,c.z);
+  c.mesh.rotation.set(0,c.heading,0);
+  const sw=Math.sin(c.phase)*(sp>0?0.6:0.2);
+  u.legL.rotation.x=sw; u.legR.rotation.x=-sw;
+  if(c.state!=='swing'){ u.armL.rotation.x=-0.85; u.armR.rotation.x=-0.85; }   // guard up
+  updatePersonShadow(c.mesh,dt);
+}
+// Called once a frame from the main loop, beside updateStory() and behind the
+// same cinema guard, so a director filming a staged scene can't trip the
+// encounter by flying the camera over the field.
+function updateCoachMission(dt){
+  if(coachCoolT>0) coachCoolT-=dt;
+  if(coachOutroT>0){
+    coachOutroT-=dt;
+    updateSpectators(dt,true);
+    if(coach) updateCoachActor(dt,false);
+    if(coachOutroT<=0){ clearCoachStaging(); coachMission=null; }
+    return;
+  }
+  if(!FOOTBALL||G.coachBeaten) return;
+  const m=coachMission;
+  if(!m){
+    // dormant: the encounter opens by walking to the field, once
+    if(coachCoolT>0||G.over||G.mode!=='foot'||activeCutscene||G.replay||G.interior) return;
+    if(Math.hypot(player.x-FOOTBALL.x,player.z-FOOTBALL.z)<COACH_TRIGGER_R) startOldScores();
+    return;
+  }
+  m.phaseT+=dt;
+  // Both of these only apply while the encounter is still being contested —
+  // once Coach has yielded the result is banked and nothing takes it back.
+  if(m.phase!=='yield'&&m.phase!=='done'){
+    // An unrelated BUSTED/WASTED respawns Turbo downtown; the encounter lets go
+    // rather than carrying on without him.
+    if(G.over){ abandonOldScores(); return; }
+    if(Math.hypot(player.x-FOOTBALL.x,player.z-FOOTBALL.z)>COACH_LEASH_R||G.mode!=='foot'){
+      m.leaveT+=dt;
+      if(m.leaveT>6){ abandonOldScores('THE WILDCATS GAVE UP WAITING'); return; }
+    } else m.leaveT=0;
+  }
+
+  if(m.phase==='warmup'){
+    m.t+=dt;
+    if(m.t>COACH_WARMUP_LIMIT){ abandonOldScores('THE WILDCATS GAVE UP WAITING'); return; }
+    const left=warmupLeft();
+    coachHUD('<b>OLD SCORES</b> — Warm-up: '+(COACH_WARMUP_JOCKS-left)+'/'+COACH_WARMUP_JOCKS);
+    if(left===0) startRematchIntro();
+    return;
+  }
+  updateSpectators(dt,false);
+  if(m.phase==='intro'){
+    // watchdog: if the cutscene never took (or was cut short some other way),
+    // don't strand the player in a phase with no exit
+    if(!activeCutscene&&m.phaseT>0.6) startRematch();
+    return;
+  }
+  if(m.phase==='fight'){
+    // the house rule, enforced by the mission and nowhere else
+    if(G.weapon!=='fists'){
+      G.weapon='fists'; refreshButtons();
+      if(!m.fistsWarned){ m.fistsWarned=true; toast("HOUSE RULES — FISTS ONLY",'bad'); }
+    }
+    // a percentage only changes on a landed hit — no need to rewrite the slot every frame
+    const pct=Math.max(0,Math.round(coach?coach.hp/coach.maxHp*100:0));
+    if(pct!==m.shownPct){ m.shownPct=pct; coachHUD('<b>REMATCH</b> — Coach '+pct+'%'); }
+    updateCoachActor(dt,G.mode==='foot'&&!G.over);
+    return;
+  }
+  if(m.phase==='retry'){
+    m.retryT-=dt;
+    updateCoachActor(dt,false);
+    if(m.retryT<=0) startRematch();
+    return;
+  }
+  if(m.phase==='yield'){
+    updateCoachActor(dt,false);
+    if(!activeCutscene&&m.phaseT>1.3) playCutscene('coach_defeat',coach?coach.x:FOOTBALL.x,coach?coach.z:FOOTBALL.z,finishRematch);
+    return;
+  }
+}
+// ================= END COACH REMATCH =================
+
+// ================= TURBO BOWL (FB4) =================
+// FOOTBALL_STRAND.md §5 — the reward for beating Coach, and the strand's only
+// real new *mode*. Locked design: one continuous endless run, not downs.
+// Walk into the PLAY BALL beacon at midfield, receive the ball at your own end
+// zone, and run the length of Wildcats Field while Alumni Wildcats converge.
+// Touch a defender and you're tackled; reach the far end zone and you score.
+//
+// Deliberately cheap, per the card's "don't let it balloon into a sports sim":
+//   · No new input and no new verb — this is the existing on-foot movement,
+//     pointed down a field. updateFoot() is not touched.
+//   · No new asset pipeline — defenders are the jock rig with the letterman
+//     jacket FB1 already builds; the ball is one ellipsoid on Turbo's arm.
+//   · Defenders live in their own array, never in `jocks`, so the roaming
+//     faction AI can't reach them and they can't turn hostile.
+// Getting tackled is a soft fail with no penalty — walk back into the beacon
+// and go again. The mode only exists once G.coachBeaten is set (FB3).
+
+// --- bark packs, verbatim from FOOTBALL_STRAND.md §7 ------------------------
+// pa_announcer_turbo_bowl, keyed to distance milestones rather than fired at
+// random — the PA is the run's narrator, so the line has to match the moment.
+const PA_KICKOFF=[
+  "And he's OFF! Turbo Jones — sorry, is it Jonas? — with the ball!",
+  "Ohhh he's cutting left, he's cutting right, does HE even know where he's going?",
+];
+const PA_MIDFIELD="Fifty yards! Halfway there, folks — halfway to glory or a pulled hamstring!";
+const PA_TOUCHDOWN="TOUCHDOWN! TOUCHDOWN JONES! I mean JONES-JONAS! SOMEBODY CONFIRM THE SPELLING!";
+const PA_TACKLED="Ohh, and he's DOWN. Tackled. That's gotta hurt. Today's game is brought to you by Big Gary's Discount Airbags — 'we cushion the blow, literally.'";
+const PA_FILLER="This broadcast is sponsored by Sunny Sam's Suspiciously Cheap Watches. Sunny Sam is not currently answering his phone.";
+// coach_sideline_turbobowl — the thaw from Rematch shows here
+const COACH_SIDELINE=[
+  "Head up, JONES! Eyes downfield!",
+  "That's it! That's what I've been trying to teach you for TWENTY YEARS!",
+  "Don't you dare fumble in front of me again!",
+  "ATTA BOY— don't let it go to your head.",
+];
+// jock_turbobowl_defender — competitive but warm, needling a friend
+const TB_DEFENDER_LINES=[
+  "Not today, Jones!",
+  "You're still slow, old man!",
+  "I've got you, I've got you— dang it, I don't got you!",
+  "Coach is WATCHING, Jones, don't embarrass us!",
+];
+// turbo_turbobowl_run, split by moment
+const TB_TURBO_RUN=[
+  "Outta my way, I'm HISTORIC!",
+  "Twenty years of cardio for THIS moment!",
+  "Juke left— no— juke RIGHT— just RUN, TURBO!",
+  "This is for the locker room I'll never see again!",
+];
+const TB_TURBO_TACKLED=["...I meant to do that.","The grass broke my fall. Mostly."];
+const TB_TURBO_SCORED=["STILL. GOT. IT.","Somebody call Deb, tell her I'm FAST again!"];
+// cheer_squad_ambient — background colour once the squad is on the field
+const CHEER_AMBIENT=[
+  "Two, four, six, eight, who do we NOT appreciate? Coach's whistle, that's who.",
+  "Is that guy allowed back here?",
+  "He's kind of got main-character energy, not gonna lie.",
+];
+
+// --- tuning -----------------------------------------------------------------
+// The field runs along X: §FOOTBALL FIELD puts goalposts at FOOTBALL.x±18 and
+// bleachers at FOOTBALL.z±15.5. Play stays just inside both.
+const TB_GOAL=17;                 // end-zone lines, ±this from midfield
+const TB_LENGTH=TB_GOAL*2;        // 34u of running, scored as 100 yards
+const TB_WIDE=12;                 // keep the runner inside the bleachers
+const TB_DEFENDERS_MIN=3, TB_DEFENDERS_MAX=6;
+const TB_DEF_SPEED=4.5;           // a shade under Turbo's sprint — outrunnable
+const TB_TACKLE_R=1.15;
+const TB_BEACON_R=2.6;
+let turboBowl=null;               // {phase,startX,best,...} — null when not running
+let tbDefenders=[], tbCast=[];    // runners, and the sideline Coach + cheer squad
+let tbBeacon=null, tbBall=null;
+let tbOutroT=0;
+G.turboBowlBest=0;                // yards, persisted in the save blob
+G.turboBowlWon=false;             // has the one-time payoff cutscene played
+
+function turboBowlUnlocked(){ return !!(G.coachBeaten&&FOOTBALL); }
+function turboBowlLive(){ return !!(turboBowl&&turboBowl.phase==='run'); }
+function tbYards(x){ return clamp(Math.round((x-(FOOTBALL.x-TB_GOAL))/TB_LENGTH*100),0,100); }
+
+// The PA is a stadium speaker, not a person in the world — a chime and a toast
+// read as "over the tannoy" where a floating speech bubble would not.
+function paSay(txt){
+  blip(760,980,0.10,0.07,'square');
+  setTimeout(()=>blip(980,760,0.14,0.07,'square'),110);
+  toast(txt,'gold');
+}
+function tbSay(actor,txt,pitch){
+  if(!actor) return;
+  showBubble(actor,txt,2600);
+  wahVoice(pitch||rand(95,140),actor.x,actor.z);
+}
+function tbHUD(html){
+  if(mission) return;   // the random-mission rotation owns that slot
+  if(html) setMissionHUD(html); else $('mission').style.display='none';
+}
+
+// --- the beacon -------------------------------------------------------------
+// Same pillar pattern as the story/store beacons. Built lazily the first time
+// the mode is unlocked so a save that never beat Coach pays nothing for it.
+function updateTurboBowlBeacon(dt){
+  if(!turboBowlUnlocked()){
+    if(tbBeacon){ scene.remove(tbBeacon); disposeMesh(tbBeacon); tbBeacon=null; }
+    return;
+  }
+  if(!tbBeacon){
+    tbBeacon=makePillar(0xffd23e,1.2,14);
+    tbBeacon.position.set(FOOTBALL.x,groundH(FOOTBALL.x,FOOTBALL.z),FOOTBALL.z);
+    scene.add(tbBeacon);
+  }
+  tbBeacon.visible=!turboBowl;
+  if(!tbBeacon.visible) return;
+  tbBeacon.material.opacity=0.22+Math.sin(performance.now()/300)*0.12;
+  if(turboBowl||G.over||G.mode!=='foot'||activeCutscene||G.replay||G.interior) return;
+  if(Math.hypot(player.x-FOOTBALL.x,player.z-FOOTBALL.z)<TB_BEACON_R) startTurboBowl();
+}
+
+// --- staging ----------------------------------------------------------------
+function tbSpawnPerson(spec,x,z,facing){
+  const mesh=makePerson(spec);
+  mesh.position.set(x,groundH(x,z),z);
+  mesh.rotation.y=facing;
+  scene.add(mesh);
+  return {mesh,x,z,phase:rand(0,TAU)};
+}
+// Coach watches from the sideline and Danny's cheer squad works the far side.
+// Both are staging only — never in `jocks`, `peds`, or any AI array.
+function tbSpawnCast(){
+  if(tbCast.length||!FOOTBALL) return;
+  const F=FOOTBALL;
+  const cspec=randomPersonSpec(0x2b2f38,'guy');
+  cspec.build=1.32; cspec.height=1.06;
+  cspec.hair={style:'buzz',color:0x8a8a8a,beard:false};
+  cspec.outfit.tank=false; cspec.outfit.dress=false;
+  cspec.outfit.pants.shorts=false; cspec.outfit.pants.color=0x232730;
+  const coachMesh=makePerson(cspec);
+  addCoachKit(coachMesh);
+  const cx=F.x, cz=F.z-13.5;
+  coachMesh.position.set(cx,groundH(cx,cz),cz);
+  coachMesh.rotation.y=Math.atan2(F.x-cx,F.z-cz);
+  scene.add(coachMesh);
+  tbCast.push({mesh:coachMesh,x:cx,z:cz,phase:0,role:'coach'});
+
+  for(let k=0;k<3;k++){
+    const s=randomPersonSpec(pick([0xffd23e,0xc4342a,0xf2ede2]),'girl');
+    s.height=rand(0.97,1.03); s.build=rand(0.9,1.0);
+    s.outfit.dress=false; s.outfit.pants.shorts=true;
+    const x=F.x-4+k*4, z=F.z+13.5;
+    const c=tbSpawnPerson(s,x,z,Math.atan2(F.x-x,F.z-z));
+    c.role='cheer'; c.barkT=rand(6,14);
+    tbCast.push(c);
+  }
+}
+function tbSpawnDefenders(n){
+  const F=FOOTBALL;
+  for(let k=0;k<n;k++){
+    const team=JOCK_TEAMS[k%JOCK_TEAMS.length];
+    const spec=randomPersonSpec(team.body,'guy');
+    spec.build=rand(1.12,1.28); spec.height=rand(1.03,1.1);
+    spec.outfit.tank=false; spec.outfit.dress=false;
+    const mesh=makePerson(spec);
+    addLettermanJacket(mesh,team.body,team.letter);
+    // spread them down the field ahead of the runner, not bunched on the line
+    const lane=(k/(n-1||1)-0.5)*2*TB_WIDE*0.8;
+    const x=F.x-TB_GOAL+TB_LENGTH*(0.42+0.5*(k/Math.max(1,n-1)));
+    const z=F.z+lane;
+    mesh.position.set(x,groundH(x,z),z); scene.add(mesh);
+    tbDefenders.push({mesh,x,z,heading:Math.PI,phase:rand(0,TAU),barkT:rand(1,5)});
+  }
+}
+// The ball rides Turbo's right forearm for the length of a run.
+function tbGiveBall(){
+  if(tbBall) return;
+  const u=player.mesh.userData;
+  tbBall=new THREE.Mesh(new THREE.SphereGeometry(0.13,10,8),
+    new THREE.MeshLambertMaterial({color:0x6b3a1a}));
+  tbBall.scale.set(1,0.72,0.72);
+  tbBall.rotation.z=0.4;
+  tbBall.position.set(0.05,-0.3,0.1);
+  u.armR.children[1].add(tbBall);
+}
+function tbTakeBall(){
+  if(!tbBall) return;
+  if(tbBall.parent) tbBall.parent.remove(tbBall);
+  disposeMesh(tbBall); tbBall=null;
+}
+function clearTurboBowlStaging(){
+  for(const d of tbDefenders){ scene.remove(d.mesh); disposeMesh(d.mesh); }
+  tbDefenders.length=0;
+  for(const c of tbCast){ scene.remove(c.mesh); disposeMesh(c.mesh); }
+  tbCast.length=0;
+  tbTakeBall();
+}
+
+// --- a run ------------------------------------------------------------------
+function startTurboBowl(){
+  if(turboBowl||!turboBowlUnlocked()) return null;
+  const F=FOOTBALL;
+  turboBowl={phase:'run',t:0,best:0,milestone:0,fillerT:rand(14,22),
+    defenders:clamp(TB_DEFENDERS_MIN+(G.turboBowlRuns||0),TB_DEFENDERS_MIN,TB_DEFENDERS_MAX)};
+  // kickoff: receive the ball on your own goal line, facing downfield
+  player.x=F.x-TB_GOAL; player.z=F.z; player.y=groundH(player.x,player.z);
+  player.heading=Math.PI/2;                    // +X, toward the far end zone
+  player.mesh.position.set(player.x,player.y,player.z);
+  player.mesh.rotation.set(0,player.heading,0);
+  footCamYaw=player.heading;
+  resetFootStuck(player); endMelee();
+  tbGiveBall(); tbSpawnCast(); tbSpawnDefenders(turboBowl.defenders);
+  if(tbBeacon) tbBeacon.visible=false;   // hide it now, not on the next frame's pass
+  sfx.mission(); paSay(pick(PA_KICKOFF));
+  toast('TURBO BOWL — RUN!','gold');
+  return turboBowl;
+}
+// Every ending is soft. Nothing here touches busted/wasted, heat, or money.
+function endTurboBowlRun(scored){
+  const m=turboBowl; if(!m) return;
+  const yards=tbYards(player.x);
+  m.phase=scored?'scored':'tackled';
+  m.yards=yards;
+  const record=yards>G.turboBowlBest;
+  if(record){ G.turboBowlBest=yards; }
+  G.turboBowlRuns=(G.turboBowlRuns||0)+(scored?1:0);
+  tbTakeBall();
+  for(const d of tbDefenders) d.done=true;
+  if(scored){
+    paSay(PA_TOUCHDOWN); sfx.coin(); shake(0.35); haptic([40,40,90]);
+    burst(player.x,1.6,player.z,26,COL_CASH,4,1.1,3);
+    tbHUD(null);
+  } else {
+    paSay(PA_TACKLED); sfx.fail(); shake(0.4); haptic(70);
+    player.stunT=Math.max(player.stunT||0,0.9);
+    burst(player.x,1.2,player.z,10,COL_SMOKE,2.5,0.7,1);
+    tbSay(playerActor(),pick(TB_TURBO_TACKLED),rand(95,125));
+    bigEvent('TACKLED',"#e0a253",yards+' yards'+(record?' — NEW BEST':''));
+    tbHUD(null);
+  }
+  queueSave();
+  m.overT=scored?1.4:2.6;
+}
+// showBubble/wahVoice both want an {x,z}; Turbo isn't a ped, so hand them one.
+function playerActor(){ return {x:player.x,z:player.z}; }
+
+function finishTurboBowl(){
+  const scored=turboBowl&&turboBowl.phase==='scored';
+  const first=scored&&!G.turboBowlWon;
+  turboBowl=null;
+  if(!scored){ clearTurboBowlStaging(); tbHUD(null); return; }
+  if(first){
+    G.turboBowlWon=true; saveGame();
+    playCutscene('turbo_bowl_payoff',FOOTBALL.x+TB_GOAL-3,FOOTBALL.z,()=>{
+      bigEvent('TURBO BOWL','#ffd23e','Still got it');
+      tbOutroT=4.5;
+    });
+  } else {
+    tbSay(playerActor(),pick(TB_TURBO_SCORED),rand(95,125));
+    bigEvent('TOUCHDOWN','#ffd23e','Best: '+G.turboBowlBest+' yards');
+    tbOutroT=3.2;
+  }
+}
+
+// --- per-frame --------------------------------------------------------------
+function updateTbDefenders(dt){
+  const F=FOOTBALL;
+  for(const d of tbDefenders){
+    const u=d.mesh.userData;
+    if(d.done){                                   // run over: pull up, hands on hips
+      d.phase+=dt*1.2;
+      u.legL.rotation.x=0; u.legR.rotation.x=0;
+      u.armL.rotation.x=-0.25; u.armR.rotation.x=-0.25;
+      d.mesh.position.set(d.x,groundH(d.x,d.z),d.z);
+      updatePersonShadow(d.mesh,dt);
+      continue;
+    }
+    const dx=player.x-d.x, dz=player.z-d.z, dist=Math.hypot(dx,dz);
+    d.heading=Math.atan2(dx,dz);
+    // the same "close the distance" shape as the cop chase, minus the lethality
+    let nx=d.x+Math.sin(d.heading)*TB_DEF_SPEED*dt;
+    let nz=d.z+Math.cos(d.heading)*TB_DEF_SPEED*dt;
+    if(buildingHit(nx,nz,0.45)||treeHit(nx,nz,0.45)){ nx=d.x; nz=d.z; }
+    d.x=clamp(nx,F.x-TB_GOAL-4,F.x+TB_GOAL+4);
+    d.z=clamp(nz,F.z-TB_WIDE-2,F.z+TB_WIDE+2);
+    d.phase+=dt*TB_DEF_SPEED*2.4;
+    d.mesh.position.set(d.x,groundH(d.x,d.z)+Math.abs(Math.sin(d.phase))*0.05,d.z);
+    d.mesh.rotation.set(0,d.heading,0);
+    const sw=Math.sin(d.phase)*0.75;
+    u.legL.rotation.x=sw; u.legR.rotation.x=-sw;
+    u.armL.rotation.x=-sw*0.8; u.armR.rotation.x=sw*0.8;
+    updatePersonShadow(d.mesh,dt);
+    d.barkT-=dt;
+    if(d.barkT<=0&&dist<11){ tbSay(d,pick(TB_DEFENDER_LINES),rand(95,140)); d.barkT=rand(6,11); }
+    if(dist<TB_TACKLE_R) endTurboBowlRun(false);
+  }
+}
+function updateTbCast(dt,clapping){
+  for(const c of tbCast){
+    const u=c.mesh.userData;
+    c.phase+=dt*(clapping?8:1.5);
+    if(clapping){
+      const a=Math.abs(Math.sin(c.phase))*0.5;
+      u.armL.rotation.x=-1.5-a; u.armR.rotation.x=-1.5-a;
+    } else if(c.role==='cheer'){
+      u.armL.rotation.x=Math.sin(c.phase)*0.5-0.3;
+      u.armR.rotation.x=-Math.sin(c.phase)*0.5-0.3;
+    } else {
+      u.armL.rotation.x=Math.sin(c.phase)*0.08;
+      u.armR.rotation.x=-Math.sin(c.phase)*0.08;
+    }
+    c.mesh.position.y=groundH(c.x,c.z)+Math.abs(Math.sin(c.phase*0.5))*0.02;
+    updatePersonShadow(c.mesh,dt);
+    if(c.role==='cheer'&&c.barkT!==undefined){
+      c.barkT-=dt;
+      if(c.barkT<=0){ tbSay(c,pick(CHEER_AMBIENT),rand(190,240)); c.barkT=rand(14,26); }
+    }
+  }
+}
+// Called once a frame from the main loop beside updateStory/updateCoachMission,
+// behind the same cinema guard.
+function updateTurboBowl(dt){
+  if(tbOutroT>0){
+    tbOutroT-=dt;
+    updateTbCast(dt,true);
+    if(tbOutroT<=0) clearTurboBowlStaging();
+    return;
+  }
+  updateTurboBowlBeacon(dt);
+  const m=turboBowl; if(!m) return;
+  if(m.overT>0){                       // holding on the result before cleaning up
+    m.overT-=dt;
+    updateTbCast(dt,m.phase==='scored');
+    updateTbDefenders(dt);
+    if(m.overT<=0) finishTurboBowl();
+    return;
+  }
+  // a run only exists on foot, alive, and in the world
+  if(G.over||G.mode!=='foot'||activeCutscene||G.replay){ endTurboBowlRun(false); return; }
+  m.t+=dt;
+  updateTbCast(dt,false);
+  updateTbDefenders(dt);
+  if(m.phase!=='run') return;
+
+  const F=FOOTBALL, yards=tbYards(player.x);
+  m.best=Math.max(m.best,yards);
+  // out of bounds sideways is just a soft edge, not a fail — nudge him back in
+  const zLim=F.z+Math.sign(player.z-F.z)*TB_WIDE;
+  if(Math.abs(player.z-F.z)>TB_WIDE){ player.z=zLim; }
+  // running backwards out of your own end zone ends it — no infinite stalling
+  if(player.x<F.x-TB_GOAL-3){ endTurboBowlRun(false); return; }
+
+  tbHUD('<b>TURBO BOWL</b> — '+yards+' yd · best '+G.turboBowlBest);
+  // PA milestones, each fired once, in order
+  if(m.milestone<1&&yards>=50){ m.milestone=1; paSay(PA_MIDFIELD); }
+  if(m.milestone<2&&yards>=80){ m.milestone=2; tbSay(playerActor(),pick(TB_TURBO_RUN),rand(95,125)); }
+  m.fillerT-=dt;
+  if(m.fillerT<=0){ m.fillerT=1e9; paSay(PA_FILLER); }
+  // Coach shouts from the sideline — the thaw from Rematch
+  m.coachT=(m.coachT||rand(4,7))-dt;
+  if(m.coachT<=0){
+    const c=tbCast.find(a=>a.role==='coach');
+    if(c) tbSay(c,pick(COACH_SIDELINE),rand(80,105));
+    m.coachT=rand(7,12);
+  }
+  if(player.x>=F.x+TB_GOAL) endTurboBowlRun(true);
+}
+// ================= END TURBO BOWL =================
 
 // ================= STRAY DOGS & DOG GANGS =================
 // Dogs outlive their owners. Lone strays drift together into roving packs;
@@ -7800,10 +8645,11 @@ function chargedMeleeHit(s){
     if(s.type==='punch'&&Math.abs((dx*forward.x+dz*forward.z)/d)<Math.cos(.96)) return;
     s.hits.add(a); const push=s.type==='kick'?3:2.1, damage=s.type==='kick'?28:22;
     a.hp-=damage; a.x+=dx/d*push; a.z+=dz/d*push; const np={x:a.x,z:a.z}; resolveFootCollision(np,.42); a.x=np.x;a.z=np.z;
-    burst(a.x,1.1,a.z,5,COL_SPARK,2,.25,4); addHeat(kind==='c'?20:16);
+    burst(a.x,1.1,a.z,5,COL_SPARK,2,.25,4); if(!a.alumni) addHeat(kind==='c'?20:16);   // FB3: no heat off the Coach strand
     if(kind==='c'&&a.hp<=0) downFootCop(a); if(kind==='j'&&a.hp<=0) downJock(a,false);
   };
   footCops.forEach((a,i)=>hit(a,'c',i)); jocks.forEach((a,i)=>hit(a,'j',i));
+  coachChargedHit(s);   // FB3 — the windmill and the spin kick reach Coach too
   const dogHit=d=>{
     if(d.dead||s.hits.has(d)) return; const dx=d.x-p.x,dz=d.z-p.z,dist=Math.hypot(dx,dz);
     if(dist>3.1||dist<.15||(s.type==='punch'&&Math.abs((dx*forward.x+dz*forward.z)/dist)<Math.cos(.96))) return;
@@ -7906,11 +8752,12 @@ function doPunch(heavy,kicking){
       j.hp-=damage;
       j.x+=Math.sin(p.heading)*push; j.z+=Math.cos(p.heading)*push;
       burst(j.x,1.2,j.z,6,COL_SPARK,2,0.3,4);
-      addHeat(heavy?18:14);
+      if(!j.alumni) addHeat(heavy?18:14);   // FB3: no heat off the Coach strand
       if(j.hp<=0) downJock(j,false);
       toast('POW!','gold');
     }
   }
+  coachMeleeHit(p.x,p.z,p.heading,reach,damage,push);   // FB3 — Coach catches hands too
   for(const ped of peds){
     if(ped.state==='down') continue;
     const dx=ped.x-p.x, dz=ped.z-p.z, d=Math.hypot(dx,dz);
@@ -9184,6 +10031,8 @@ function loop(){
     updateLights(simDt);
     updateRadioTowers(now/1000*TIME_SCALE);
     if(!cine) updateStory(simDt);   // don't let proximity auto-fire convos while directing
+    if(!cine) updateCoachMission(simDt);   // FB3 — same rule for the Coach encounter
+    if(!cine) updateTurboBowl(simDt);      // FB4 — and for the Turbo Bowl beacon/run
     if(!cine&&G.mode==='foot') updateStores(simDt);
     positionChatBubbles(simDt);
     // burning cars pour flame, then go up — with you inside or not
@@ -9995,6 +10844,77 @@ const CUTSCENES={
         dialogue:{speaker:'DONNA (PHONE)',text:"That's a violation of the family recipe. Next slice you steal, I take something back. Something you'll miss more than a pizza."}, transition:'cut', shake:0.18 },
       { duration:2.2, pos:[0,3,8], lookAt:[0,1,0], fov:58,
         dialogue:{speaker:'TURBO',text:'Noted. Extra menace, hold the anchovies.'}, transition:'fade' }
+    ]
+  },
+  // FOOTBALL_STRAND.md §6 — FB3's two beats. Anchored on Wildcats Field, with
+  // Coach standing at the anchor itself; the offsets read as sideline coverage.
+  coach_rematch_intro:{
+    // the script's two whistle blasts land on the shot-4 and shot-6 boundaries
+    onStart(){ sfx.mission(); setTimeout(coachWhistle,9600); setTimeout(coachWhistle,16600); },
+    shots:[
+      // SHOT 1 — WIDE, push in across the field
+      { duration:2.6, pos:[16,6,18], lookAt:[0,1.4,0], fov:64, outdoor:true,
+        dialogue:null, transition:'smooth' },
+      // SHOT 2 — CLOSE on Coach
+      { duration:3.4, pos:[1.5,1.6,2.0], lookAt:[0,1.6,0], fov:32, outdoor:true,
+        dialogue:{speaker:'COACH',text:'Jones. Heard you were out. Heard you were causing trouble. Figures.'}, transition:'cut' },
+      // SHOT 3 — MEDIUM two-shot
+      { duration:3.6, pos:[-3.2,1.8,3.4], lookAt:[0,1.4,0], fov:44, outdoor:true,
+        dialogue:{speaker:'TURBO',text:"Twenty years, Coach. Twenty years I've been carrying this."}, transition:'smooth' },
+      // SHOT 4 — CLOSE on Coach (FX: whistle blast)
+      { duration:3.8, pos:[1.2,1.65,1.6], lookAt:[0,1.6,0], fov:30, outdoor:true,
+        dialogue:{speaker:'COACH',text:"You body-slammed my quarterback over a Gatorade, Jones. You're not a victim. You're a liability with a grudge."}, transition:'cut', shake:0.14 },
+      // SHOT 5 — MEDIUM two-shot
+      { duration:3.2, pos:[-3.0,1.7,3.2], lookAt:[0,1.4,0], fov:44, outdoor:true,
+        dialogue:{speaker:'TURBO',text:'...it was a really good Gatorade.'}, transition:'smooth' },
+      // SHOT 6 — WIDE, fade (FX: second whistle; the Wildcats ring the field)
+      { duration:2.4, pos:[0,4.5,12], lookAt:[0,1.2,0], fov:58, outdoor:true,
+        dialogue:{speaker:'COACH',text:"Rules haven't changed. You want back on my field, you go through me. Fists only. Let's go."}, transition:'fade' }
+    ]
+  },
+  coach_defeat:{
+    onStart(){ blip(300,520,0.3,0.14,'triangle'); },
+    shots:[
+      // SHOT 1 — CLOSE on Coach, winded
+      { duration:2.8, pos:[1.3,1.5,1.8], lookAt:[0,1.35,0], fov:32, outdoor:true,
+        dialogue:{speaker:'COACH',text:'...huh. Still got it, Jones. Still stupid. But you got it.'}, transition:'cut' },
+      // SHOT 2 — MEDIUM two-shot; Coach hauls Turbo up off the ground
+      { duration:3.4, pos:[-3.2,1.7,3.2], lookAt:[0,1.4,0], fov:44, outdoor:true,
+        dialogue:{speaker:'COACH',text:"Fine. You're off The List. Field's open. Don't make me regret this."}, transition:'smooth' },
+      // SHOT 3 — WIDE; the Wildcats clap, unimpressed but done being hostile.
+      // The script's last beat is two lines over one shot and a shot carries one
+      // line, so the button gets its own short fade rather than being cut.
+      { duration:2.2, pos:[0,4.2,11], lookAt:[0,1.2,0], fov:58, outdoor:true,
+        dialogue:{speaker:'TURBO',text:'Coach... does this mean I can use the locker room again?'}, transition:'smooth' },
+      { duration:1.8, pos:[0,5,13], lookAt:[0,1.2,0], fov:60, outdoor:true,
+        dialogue:{speaker:'COACH',text:'Absolutely not.'}, transition:'fade' }
+    ]
+  },
+  // FB4's payoff, and the strand's FB5 beat. Built to HANDOFF.md's FB5 card
+  // rather than FOOTBALL_STRAND.md §6's version of the same scene: the two
+  // scripts contradict each other, and the owner's call (2026-08-02) was the
+  // card's — Dad never appears on-screen, he's a voice in Turbo's head, and
+  // Turbo waves the squad off himself. No Dad actor is created anywhere.
+  turbo_bowl_payoff:{
+    onStart(){ sfx.coin(); setTimeout(coachWhistle,2400); },
+    shots:[
+      // WIDE — the spike, crowd noise
+      { duration:2.4, pos:[7,3.4,7], lookAt:[0,1.3,0], fov:58, outdoor:true,
+        dialogue:{speaker:'TURBO',text:'Still got it! Twenty years later, STILL GOT IT!'}, transition:'smooth' },
+      // MEDIUM — the squad jogs over, Amber gets the strand's one named line
+      { duration:2.8, pos:[-3.4,1.8,3.6], lookAt:[0,1.4,0], fov:44, outdoor:true,
+        dialogue:{speaker:'AMBER',text:'Okay, that was actually kind of impressive.'}, transition:'cut' },
+      // CLOSE — he leans in, and stops himself. This is the beat the arc is for.
+      { duration:2.2, pos:[1.2,1.6,1.7], lookAt:[0,1.5,0], fov:32, outdoor:true,
+        dialogue:{speaker:'TURBO',text:'Ladies, there is plenty of Turbo to go—'}, transition:'cut' },
+      { duration:3.6, pos:[1.0,1.55,1.5], lookAt:[0,1.5,0], fov:30, outdoor:true,
+        dialogue:{speaker:'TURBO',text:"...nope. Nope. My father is not physically here and I can still hear him."}, transition:'smooth' },
+      // MEDIUM — they go, entirely of their own accord
+      { duration:2.6, pos:[-4.2,2.0,4.4], lookAt:[0,1.35,0], fov:48, outdoor:true,
+        dialogue:{speaker:'TURBO',text:'That was me. Nobody made me do that. Write it down.'}, transition:'cut' },
+      // WIDE pull-up — alone on the field, thoroughly pleased with himself
+      { duration:2.4, pos:[0,5.5,12], lookAt:[0,1.1,0], fov:60, outdoor:true,
+        dialogue:{speaker:'TURBO',text:'...worth it. Still worth it.'}, transition:'fade' }
     ]
   }
 };
@@ -11236,6 +12156,7 @@ let saveDirty=false, saveT=null;
 function saveGame(){
   const blob={ v:1, money:G.money, missionsDone:G.missionsDone, night:!!G.night,
     station:G.station, coachBeaten:!!G.coachBeaten, controlsCardSeen:!!G.controlsCardSeen,
+    turboBowlBest:G.turboBowlBest||0, turboBowlWon:!!G.turboBowlWon, turboBowlRuns:G.turboBowlRuns||0,
     strayDogCount:G.strayDogCount||0,
     story:{ metDeb:G.story.metDeb, debt:G.story.debt, paidOff:G.story.paidOff,
       pizzaHeat:G.story.pizzaHeat, pizzaWarned:G.story.pizzaWarned,
@@ -11258,6 +12179,9 @@ function restoreSave(s){
   G.money=s.money||0; $('money').textContent='$'+G.money;
   G.missionsDone=s.missionsDone||0;
   G.coachBeaten=!!s.coachBeaten;
+  G.turboBowlBest=s.turboBowlBest||0;
+  G.turboBowlWon=!!s.turboBowlWon;
+  G.turboBowlRuns=s.turboBowlRuns||0;
   G.controlsCardSeen=!!s.controlsCardSeen;
   G.strayDogCount=Math.max(0,s.strayDogCount||0);
   straySpawnT=0; // repopulate from the saved city count on the next dog update

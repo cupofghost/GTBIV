@@ -30,9 +30,9 @@
   task, not optional.** Consider a tiny `tests/handoff-sync` check that fails if
   a card says DONE but a named function is missing (or vice-versa).
 
-- **W2 — The single ~8k-line `index.html` taxes every edit.** `P1 · Risk: High`
+- **W2 — The single ~11.9k-line `index.html` taxes every edit.** `P1 · Risk: High`
   (this is **X1**, but the cost is felt on *all* tasks, not just refactors). One
-  328 KB `<script>` block means every Grep/Read/Edit fights the file size and it
+  ~565 KB `<script>` block means every Grep/Read/Edit fights the file size and it
   never fits in context; locating a function is always grep-for-line then
   read-a-window. *Cheap interim win without the full modular split:* commit a
   **code map** (a `CODEMAP.md` or a comment index near the top: section name →
@@ -69,8 +69,10 @@
 
 ## 1. TL;DR
 
-- The **entire game is one file**: `index.html` (~5,000 lines). Markup + CSS +
-  ~4,560 lines of game JS. Three.js is vendored as `three.min.js` (r128).
+- The **entire game is one file**: `index.html` (~11,850 lines, ~565 KB). Markup
+  + CSS + ~11,100 lines of game JS. Three.js is vendored as `three.min.js`
+  (r128). These figures are refreshed by `node tools/codemap.js --write` — if
+  they look wrong, run it rather than trusting them.
 - **Zero build step.** It's a static site; it deploys to GitHub Pages as-is and
   must keep working by just opening the served URL. **Do not add a bundler,
   npm dependency, framework, or transpile step.**
@@ -172,11 +174,11 @@ sound on, and confirm nothing regressed. Watch the on-screen `fps` readout
 
 ### Structure of `index.html`
 ```
-lines   1– 14   <head>, meta, PWA links
-lines  15–418   <style>   — all CSS (HUD, controls, overlays, cinematics)
-lines 301–418   <body>    — DOM: HUD, joystick, pedals, buttons, overlays
-line   419       <script src="three.min.js">
-lines 420–4979  <script>  — the entire game (see the Code Map in §5)
+lines     1–  14  <head>, meta, PWA links
+lines    15– 452  <style>   — all CSS (HUD, controls, overlays, cinematics)
+lines   454– 711  <body>    — DOM: HUD, joystick, pedals, buttons, overlays
+line    712        <script src="three.min.js">
+lines   715–11852 <script>  — the entire game (see the Code Map in §5)
 ```
 
 ---
@@ -214,6 +216,8 @@ Sections, in file order, with what lives in each:
 | `PIZZA DELIVERY SYSTEM` | Jackable pizza cars, `activeDelivery`, delivery loop |
 | `RIVAL PIZZA GANG: CHAOS PIZZA` | `chaosDrivers`, `gangMembers`, turf on minimap |
 | `FOOTBALL RIVALS: CHAOS HIGH JOCKS` | `JOCK_TAUNTS`, `spawnJock`, jock AI |
+| `COACH REMATCH (FB3)` | Old Scores → Rematch (`updateCoachMission`, `startOldScores`, `spawnCoach`, `hurtCoach`, `coachYields`, `coachSoftRetry`), `jocksHostile`/`jockTauntPack`, strand bark packs |
+| `TURBO BOWL (FB4)` | Endless-run minigame (`updateTurboBowl`, `startTurboBowl`, `endTurboBowlRun`, `updateTbDefenders`), PLAY BALL beacon, yardage scoring + persisted best, `turbo_bowl_payoff` |
 | `STRAY DOGS & DOG GANGS` | Dogs, packs, `angry` state + growl/bite cues, meat drops |
 | `PIZZA WARS MISSION` | Scripted gang-war mission (`startPizzaWars`) |
 | `PLAYER` | The `player` object and its initial state |
@@ -1275,7 +1279,21 @@ once this exists, same as gang members stay near `CHAOS`).
 **Acceptance:** the field is visible and reachable on foot/by car, shows on
 the minimap, doesn't break existing block/road generation, holds framerate.
 
-#### FB3 — "Revenge on Coach" mission `P1 · Risk: Med` `OPEN`
+#### FB3 — "Revenge on Coach" mission `P1 · Risk: Med` `DONE — Claude Code | Opus 5 | high (2026-08-02)`
+**Status: implemented & verified.** Built as `index.html` §COACH REMATCH (FB3),
+between §FOOTBALL RIVALS and §STRAY DOGS. Old Scores opens by walking to
+Wildcats Field and is bounded both ways — three staged Alumni Wildcats through
+the existing `spawnJock`, and it lets go on its own if Turbo drives off, then
+re-opens when he walks back. Clearing it plays `coach_rematch_intro` straight
+into a fists-only Rematch against a single named 240-HP Coach who barks
+`coach_taunt` at HP thresholds. He **yields** — upright, winded, no `knockPed`
+ragdoll — into `coach_defeat`, which sets and saves `G.coachBeaten`; ambient
+jocks then go non-hostile and switch to the `jock_post_rematch` pack. A Turbo
+loss is a soft retry at the field: no BUSTED/WASTED, no fine, Coach resets and
+the round restarts. Nothing in the strand calls `addHeat`.
+**FB4 was not built** — it still needs the owner's go-ahead; see its card.
+**Focused test:** `tests/cases/fb3-coach.test.js` (10/10).
+
 **Why:** The dramatic payoff of the backstory — Turbo settles the score with
 the man who ended his football career.
 **Canonical spec:** use `FOOTBALL_STRAND.md` §§3–6 for the detailed Old
@@ -1297,7 +1315,26 @@ That flag unlocks **FB4**.
 a clear win state, sets the unlock flag, persists across reload (once `F1`
 exists), and doesn't re-trigger after being beaten.
 
-#### FB4 — Football minigame `P2 · Risk: High` `OPEN`
+#### FB4 — Football minigame `P2 · Risk: High` `DONE — Claude Code | Opus 5 | high (2026-08-02)`
+**Status: implemented & verified.** The owner gave the go-ahead on 2026-08-02;
+built to `FOOTBALL_STRAND.md` §5's locked Endless Run design as
+`index.html` §TURBO BOWL (FB4). A PLAY BALL beacon appears at midfield once
+`G.coachBeaten` is set and nowhere else; walking into it kicks off. Turbo takes
+the ball on his own goal line and runs the field's 34u (scored as 100 yards)
+while Alumni Wildcats converge with the same close-the-distance shape as the cop
+chase, minus the lethality. Touching one is a **soft fail** — no WASTED, no
+fine, no health loss, no heat — and the beacon is immediately back for a retry.
+Reaching the far end zone scores. Yardage banks a best either way, persisted in
+the save blob alongside a run count that adds a defender per touchdown (3→6).
+Defenders and the sideline cast are in their own arrays, never `jocks`, so the
+hostile faction can't reach them. No new input, no new verb, no new asset
+pipeline — `updateFoot` is untouched.
+**Payoff:** `turbo_bowl_payoff` fires on the **first** win only; later wins get a
+toast and a bark. That cutscene is also **FB5** — see its card.
+**Focused test:** `tests/cases/turbo-bowl.test.js` (8/8).
+
+<details><summary>original card</summary>
+
 **Why:** The reward for beating Coach — Turbo gets to play again. This is the
 biggest single new system in the arc; scope it deliberately, don't let it
 balloon into a full sports sim.
@@ -1314,8 +1351,22 @@ on a win.
 **Flag for Austin:** if this starts requiring real sports-sim mechanics to
 feel good, stop and check in rather than over-building — the FB5 cutscene
 is the actual payoff, not the football mechanics themselves.
+</details>
 
-#### FB5 — Cheerleaders cutscene (solo Turbo, no Dad on-screen) `P2 · Risk: Med` `OPEN`
+#### FB5 — Cheerleaders cutscene (solo Turbo, no Dad on-screen) `P2 · Risk: Med` `DONE — Claude Code | Opus 5 | high (2026-08-02)`
+**Status: implemented & verified**, as the `turbo_bowl_payoff` entry in
+`CUTSCENES`, fired by FB4's first touchdown. Built to **this card**, not to
+`FOOTBALL_STRAND.md` §6's version of the same scene — the two scripts
+contradict each other and the owner's call (2026-08-02) was this one. Beats:
+Turbo spikes the ball; the squad jogs over and Amber gets the strand's one named
+line; Turbo starts his usual line, **stops himself**, and cites his father
+unprompted; the squad leaves of its own accord; he's alone on the field, pleased
+with himself. **No Dad actor exists anywhere in the code** — a test asserts no
+shot has `DAD` as its speaker, so a future session can't quietly add one.
+It plays once (`G.turboBowlWon`, persisted); replays get a toast and a bark.
+
+<details><summary>original card</summary>
+
 **Why:** The character beat the whole arc is building to.
 **Where:** triggered on winning **FB4**; another `CUTSCENES` entry, using the
 new actor/pose work from `CHARACTERS.md` (**C8**) if that's landed yet, or a
@@ -1328,6 +1379,7 @@ actor/model for this.
 **Acceptance:** plays once on the minigame win, matches the scripted beats in
 `STORY_BIBLE.md`, ends cleanly back in normal gameplay, doesn't re-trigger on
 replay of the minigame (or does, deliberately — confirm with Austin which).
+</details>
 
 ---
 
@@ -1987,8 +2039,11 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: FB3 (Coach mission)** — OP1 is complete; return to the Football Saga
-and build the one-shot Coach encounter from `FOOTBALL_STRAND.md`.
+**NEXT: (owner's call)** — the Football Saga is **complete**: FB1–FB5 all
+done as of 2026-08-02. Everything still open is owner-triggered — `RV2` (mama
+rat model), `RV3` (rat polish, unscoped), `TM` (Turbo Mode), `AF` (audit
+follow-up), `X1` (modular split). Nothing here should be picked up as "the next
+task" without you saying so first.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:
@@ -2024,9 +2079,9 @@ throughout:
 ✔ OD3 Turbo sprint               DONE
 ✔ OD4 Denser street life         DONE
 ✔ OP1 Owner playtest polish     DONE
-—  FB3 Coach mission             ← NEXT
-—  FB4 Football minigame         OPEN
-—  FB5 Cheerleaders cutscene     OPEN
+✔ FB3 Coach mission             DONE (Old Scores → Rematch; sets G.coachBeaten)
+✔ FB4 Football minigame         DONE (Turbo Bowl endless run)
+✔ FB5 Cheerleaders cutscene     DONE (turbo_bowl_payoff; solo Turbo)
 —  RV2 Mama rat model/animation  OPEN (owner-expanded)
 —  RV3 Rat vengeance polish      OPEN (unscoped)
 ✔ OP2 Owner playtest corrections DONE (A–G; B via #41, rest in the five-agent batch)
@@ -2042,12 +2097,15 @@ tooling with Phase 0. Critical path there: `D6` viewer → `C1` spec refactor �
 `C6` character creator → `C8` cutscene actors/animation. `C6` depends on `F1` (to
 save the painted character). See `CHARACTERS.md §5` for the full order.
 
-**Football saga track** (Phase 7, above) also runs in parallel — `FB1` (ambient
-jocks) and `FB2` (field) are done. Next: `FB3` Coach mission (depends on `F1`
-for the persistent unlock flag, and ideally the `CUTSCENES` system) → `FB4`
-minigame → `FB5` cutscene (benefits from `C8`'s actor/pose work, but
-can ship camera-only if that's not ready yet). See `STORY_BIBLE.md` for every
-narrative beat this track needs.
+**Football saga track** (Phase 7, above) is **complete** — `FB1` (ambient
+jocks), `FB2` (field), `FB3` (Coach mission), `FB4` (Turbo Bowl) and `FB5`
+(the payoff cutscene) all landed. `G.coachBeaten` gates the minigame;
+`G.turboBowlBest`/`turboBowlWon` persist the score and the one-time payoff.
+The one loose thread the strand still describes but nobody has built is
+`danny_apology` (`FOOTBALL_STRAND.md` §6) — the equipment-shed scene where
+Turbo gives his first undeflected apology. It has no backlog card; add one if
+you want it. Note that `FOOTBALL_STRAND.md` §6 and this file's FB5 card
+disagree about the Turbo Bowl payoff — see Known issues in `STATUS.md`.
 
 **Rat Vengeance track** (Phase 8, above) is a small ongoing side-track — `RV1`
 (shoot the swarm → mama rat spawns, hunts, bites, and can be killed) is done
