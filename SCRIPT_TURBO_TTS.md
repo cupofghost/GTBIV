@@ -675,9 +675,9 @@ cutscene beats — **skip them.**
 | Bark packs (§34–§45) | 166–241 | 76 |
 | **Total** | | **239** |
 
-Eight of the 239 are alternate takes of a line that changes with the Chapter 1
-branch (#61, #65, #159 and the arrears figures in #166/#167 and their echoes) —
-generate both takes; the game picks one at runtime.
+Five of the 239 are branch alternates — #61, #65 and #159 are alternate takes of
+the line above them, and #166/#167 are the two arrears figures. Generate all of
+them; the game picks at runtime.
 
 Already recorded or already listed elsewhere and **not** in this file: the four
 intro-narration lines (`voice/turbo/intro/`), the 7 run-over lines and 6 firing
