@@ -18,6 +18,14 @@
 function installHelper(page) {
   return page.evaluate(() => {
     window.__seat = (speed) => {
+      // Freeze the live loop. These cases step updateBailDive()/updateRunaways()
+      // by hand, but loop() is also running updateFoot() on every rAF tick —
+      // so the dive gets driven TWICE at an interleaving that depends on how
+      // loaded the machine is. That is why a different case failed each
+      // full-suite run while all seven passed in isolation. loop() skips the
+      // whole sim block while G.paused, so this hands the state to the test
+      // alone. Each case gets a fresh page, so nothing needs restoring.
+      G.paused = true;
       const node = intersections[24];
       player.x = node.x; player.z = node.z;
       G.over = false; player.dive = null; player.stunT = 0;
