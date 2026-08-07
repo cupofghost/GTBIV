@@ -6,14 +6,14 @@ Previous: 2026-07-28 (eleventh pass — integrated the five-agent OP2 batch: OP2
 ## Active work
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-| 2026-08-07 | tools/, HAIKU.md, STATUS.md | Haiku autonomy layer — validate commits, track backlog sync, dispatch work to agents. haiku-check.js (pre-commit), haiku-overseer.js (post-commit/consolidation), haiku-dispatch.js (NEXT assignment). | Signed: Claude Code \| Haiku 4.5 \| high |
+| 2026-08-07 | tools/, HAIKU.md, CONDUCTOR.md, STATUS.md | Haiku autonomy layer + 5-hour sprint orchestration. haiku-check.js (pre-commit validation), haiku-overseer.js (post-commit scanning), haiku-dispatch.js (work assignment), haiku-rewards.js (performance tracking & autonomy rewards). Agents earn autonomy by hitting 5 metrics: velocity/efficiency/quality/discipline/reliability. Rewarded models generate own prompts; user runs them anywhere. | Signed: Claude Code \| Haiku 4.5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
 possible change and add a line here.
-- `STATUS.md` — added Haiku row to Active work (coordination oversight & agent dispatch), workflow automation. Signed: Claude Code \| Haiku 4.5 \| high
-- `HAIKU.md` — new file documenting autonomous coordination layer (validation, consolidation triggers, backlog sync). Signed: Claude Code \| Haiku 4.5 \| high
-- `tools/haiku-*.js` — three new scripts for pre-commit validation, post-commit scanning, and work assignment. Signed: Claude Code \| Haiku 4.5 \| high
+- `STATUS.md` — added Haiku row to Active work, shared-file touches for rewards system. Signed: Claude Code \| Haiku 4.5 \| high
+- `HAIKU.md`, `CONDUCTOR.md` — coordination layer (validation, consolidation triggers) + 5-hour sprint orchestration with reward tiers & autonomy. Signed: Claude Code \| Haiku 4.5 \| high
+- `tools/haiku-*.js` — four new scripts: pre-commit validation (check.js), post-commit scanning (overseer.js), work assignment (dispatch.js), performance tracking (rewards.js). Signed: Claude Code \| Haiku 4.5 \| high
 - `index.html` — the whole game. Hot spots, in order of how often they conflict: the AUDIO section (the `let AC=null,…` declaration line and the `exitCarSoft()` reset block each grow a variable every time someone adds a sound layer), `updateFoot`, and the terrain/ground block (`groundH`, `terrainLines`/`terrainGeo`) — terrain is settled as of #31, so read `TERRAIN.md` before reopening it.
 - `index.html`'s `// CODE MAP` comment block — its line ranges go stale the moment anyone inserts code. It is mechanical to regenerate from the section banners; don't hand-edit the numbers.
 - `HANDOFF.md` — §5 code map and §8 backlog get edited by most sessions; edit the row, not the structure.
