@@ -6,6 +6,28 @@
 
 ---
 
+## ⚠️ Important: Sprints Are Ad-Hoc, Not Scheduled
+
+**The owner has their own job.** Sprints don't run on a calendar. They run when the owner has time to focus.
+
+**What this means:**
+- Sprints might happen 2x a week, or 1x a week, or scattered
+- Broadcasts (10am/3pm during a sprint) only happen when a sprint is active
+- There will be gaps. Days, sometimes weeks, where nothing is happening—that's normal
+- When a sprint starts, you'll get a quick message: *"Sprint starting: [name]"*
+- When it ends, you get the scorecard
+
+**You will NOT:**
+- Get nagged if sprints are sparse
+- Lose tier status between sprints (it carries forward)
+- Be punished for gaps—the owner's day job comes first
+
+**This is intentional.** The system is built for quality over frequency. Better to run tight 5-hour sprints 2x a month than a mediocre always-on grind.
+
+---
+
+---
+
 ## TL;DR
 
 **Five metrics are measured every sprint:**

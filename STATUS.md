@@ -4,9 +4,10 @@ Last consolidation: 2026-08-02 (twelfth pass — archived the FB3/FB4/tooling/co
 Previous: 2026-07-28 (eleventh pass — integrated the five-agent OP2 batch: OP2-A/C/D/E/F/G merged in packet order, real melee+fall overlap resolved by hand, `index.html` code map regenerated, Phase 11 closed in `HANDOFF.md`, and two stale explosion assertions reconciled against the owner's OP2-G direction; full suite 198/198) — Signed: Claude Code | Opus 5 | high
 
 ## Active work
+_Sprints are ad-hoc. Owner has their own job. Expect gaps between sprints (days or weeks). This is intentional._
+
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-| 2026-08-07 | tools/, HAIKU.md, CONDUCTOR.md, STATUS.md | Haiku autonomy layer + 5-hour sprint orchestration. haiku-check.js (pre-commit validation), haiku-overseer.js (post-commit scanning), haiku-dispatch.js (work assignment), haiku-rewards.js (performance tracking & autonomy rewards). Agents earn autonomy by hitting 5 metrics: velocity/efficiency/quality/discipline/reliability. Rewarded models generate own prompts; user runs them anywhere. | Signed: Claude Code \| Haiku 4.5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
