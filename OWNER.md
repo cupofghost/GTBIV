@@ -4,6 +4,20 @@ You are the funding, the vision, and the person who breaks the rules on purpose.
 
 ---
 
+## Sprint Setup (Before You Start)
+
+One-time setup per sprint session:
+
+```bash
+node tools/haiku-web.js
+```
+
+Then **open in your browser:** `http://localhost:8899`
+
+Keep that terminal window open. You won't touch it again—everything else is in the browser.
+
+---
+
 ## Daily (During a Sprint)
 
 ### Morning (10am): Set the Tone
@@ -75,30 +89,32 @@ You MUST ask for impossible things. That's your job.
 
 ---
 
-## Command Reference (You'll Use These)
+## Browser Dashboard (You'll Use This All Day)
+
+Once you run `node tools/haiku-web.js`, everything is in the browser at `http://localhost:8899`:
+
+- **Standings tab** — See current tier for each agent (Bronze/Silver/Gold/Platinum)
+- **Log Idea tab** — Type an idea, pick optional tier, click "Log Idea"
+  - Agents see it on next broadcast
+  - No terminal, just the browser
+- **Give Feedback tab** — Select agent, type idea, choose decision (Greenlit/Deferred/Rejected/Under-Review)
+  - Agents see feedback instantly on next broadcast
+- **Broadcast tab** — Click "Send Broadcast Now" (shows agents all standings + recent ideas + feedback)
+  - Run this at 10am and 3pm
+
+**That's it.** No terminal commands. Everything point-and-click.
+
+### If You Really Need Terminal (rare)
 
 ```bash
-# === REWARDS & STATUS ===
-node tools/haiku-rewards.js --start-window="descriptive-name"
-node tools/haiku-rewards.js --status
+# Start sprint (only at sprint start)
+node tools/haiku-rewards.js --start-window="feature-name"
+
+# End sprint (only at 5-hour mark)
 node tools/haiku-rewards.js --end-window
-
-# === RAPID FEEDBACK (keep agents happy) ===
-# Log an idea (dumb or not—agents see it was heard)
-node tools/haiku-pulse.js --log-idea="your dumb idea here"
-
-# Give feedback on ideas
-node tools/haiku-pulse.js --log-feedback="AgentName|idea text|greenlit"
-# Options: greenlit, rejected, deferred, under-review
-
-# Broadcast status to agents (10am + 3pm)
-node tools/haiku-pulse.js --broadcast
-
-# === OTHER ===
-node tools/haiku-dispatch.js --next
-git log --oneline -10
-cat STATUS.md
 ```
+
+But honestly, you won't need these if you just use the dashboard.
 
 ---
 
