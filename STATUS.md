@@ -8,6 +8,7 @@ _Sprints are ad-hoc. Owner has their own job. Expect gaps between sprints (days 
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-08-07 | `SCRIPT.md`, `SCRIPT_STRANDS.md`, `SCRIPT_CAST.md`, `SCRIPT_BARKS.md`, `SCRIPT_TURBO_TTS.md`, `KIMI_TURBO_VO.md` (all new) | DONE. Full-game script: Ch1 three-way branch (pay/refuse/spent-it), Ch2–5 spine + 3 endings, 6 strands (the Meridian shirt, football, Grace Street/Dad, docks, pizza, Hardcastle), 44 new cutscenes, 413 new lines, 239 flat-numbered for Turbo TTS. Plus `KIMI_TURBO_VO.md`, the Kimi voice-acting handoff: delivery brief + all 239 lines + target `voice/turbo/` filenames, generated from the line file so it can't drift. Docs only — no code, no existing doc edited. One canon override on owner instruction: the kid is unnamed (retires `CHAPTER1.md`'s Mookie). | Claude Code \| Opus 5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
