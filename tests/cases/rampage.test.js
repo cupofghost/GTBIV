@@ -133,14 +133,24 @@ module.exports = [
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
       const r = await page.evaluate(() => {
+        // rampageHit() is gated on !G.over, and killCar(_, true) runs a real
+        // bigExplosion whose damageArea can reach the player and WASTE him — at
+        // which point the second wreck silently scores nothing. Blow the cars up
+        // well away from Turbo and make him unkillable for the duration, so this
+        // case measures the ladder rather than his luck. (It passed alone and
+        // failed in a full-suite run for exactly this reason.)
         endRampage();
+        const wasGod = DEV_STATE.god;
+        DEV_STATE.god = true; G.over = false;
         const node = intersections[52];
+        player.x = node.x + 120; player.z = node.z + 120;
         const c = makeCar('sedan', node.x, node.z, 0, { parked: true });
         killCar(c, true);
         const chip = document.getElementById('combo');
         const first = { combo: RAMPAGE.combo, shown: chip.style.display };
         const c2 = makeCar('sedan', node.x + 3, node.z, 0, { parked: true });
         killCar(c2, true);
+        DEV_STATE.god = wasGod;
         const second = { combo: RAMPAGE.combo, shown: chip.style.display,
                          mult: document.getElementById('comboMult').textContent };
         endRampage();

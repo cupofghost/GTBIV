@@ -6,19 +6,29 @@
 // The two things that matter are that it always ENDS — standing, controllable,
 // not inside geometry — and that the slow step-out is untouched.
 
-// Put Turbo behind the wheel on a clear stretch of road, pointed down it, so a
-// bail has somewhere to land that isn't the inside of a building.
-function seatInCar(page, speed) {
-  return page.evaluate((speed) => {
-    const node = intersections[24];
-    player.x = node.x; player.z = node.z;
-    const c = makeCar('sports', node.x, node.z, 0, {});
-    c.driver = 'player'; player.car = c; G.mode = 'car';
-    player.mesh.visible = false;
-    c.speed = speed;
-    c.vel.set(Math.sin(c.heading) * speed, 0, Math.cos(c.heading) * speed);
-    return { x: c.x, z: c.z, heading: c.heading, speed: c.speed };
-  }, speed);
+// Installs an in-page helper rather than seating Turbo from Node.
+//
+// This MUST be callable from inside the same page.evaluate() as the thing it
+// sets up. Seating him in one evaluate and asserting in the next leaves a gap
+// in which the live rAF loop keeps running updateCarMode on a car doing 30 with
+// nobody touching the controls — it drives itself into a building, takes damage
+// and can reach exitCarSoft(), which clears player.car. exitCar() then returns
+// early and there is no dive to assert on. That gap is why these cases passed
+// alone and failed in a full-suite run.
+function installHelper(page) {
+  return page.evaluate(() => {
+    window.__seat = (speed) => {
+      const node = intersections[24];
+      player.x = node.x; player.z = node.z;
+      G.over = false; player.dive = null; player.stunT = 0;
+      const c = makeCar('sports', node.x, node.z, 0, {});
+      c.driver = 'player'; player.car = c; G.mode = 'car';
+      player.mesh.visible = false;
+      c.speed = speed;
+      c.vel.set(Math.sin(c.heading) * speed, 0, Math.cos(c.heading) * speed);
+      return c;
+    };
+  });
 }
 
 module.exports = [
@@ -27,8 +37,9 @@ module.exports = [
     start: 'skipintro',
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
-      await seatInCar(page, 0);
+      await installHelper(page);
       const r = await page.evaluate(() => {
+        __seat(0);
         exitCar();
         return { dive: !!player.dive, mode: G.mode, visible: player.mesh.visible,
                  y: player.y, ground: groundH(player.x, player.z) };
@@ -45,8 +56,9 @@ module.exports = [
     start: 'skipintro',
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
-      const car = await seatInCar(page, 30);
+      await installHelper(page);
       const r = await page.evaluate(() => {
+        __seat(30);
         exitCar();
         const d = player.dive;
         return {
@@ -69,8 +81,9 @@ module.exports = [
     start: 'skipintro',
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
-      await seatInCar(page, 34);
+      await installHelper(page);
       const r = await page.evaluate(() => {
+        __seat(34);
         exitCar();
         let frames = 0, sawRoll = false;
         while (player.dive && frames < 600) {
@@ -100,8 +113,9 @@ module.exports = [
     start: 'skipintro',
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
-      await seatInCar(page, 30);
+      await installHelper(page);
       const r = await page.evaluate(() => {
+        __seat(30);
         exitCar();
         // pin the velocity high every frame so the "slow enough" exit can never
         // fire — only the timeout can end this
@@ -123,8 +137,9 @@ module.exports = [
     start: 'skipintro',
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
-      await seatInCar(page, 30);
+      await installHelper(page);
       const r = await page.evaluate(() => {
+        __seat(30);
         exitCar();
         input.sprint = true;
         const locked = { melee: canMelee(), sprint: canSprint(player, 1) };
@@ -146,9 +161,9 @@ module.exports = [
     start: 'skipintro',
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
-      await seatInCar(page, 30);
+      await installHelper(page);
       const r = await page.evaluate(() => {
-        const c = player.car;
+        const c = __seat(30);
         const x0 = c.x, z0 = c.z;
         exitCar();
         const queued = runaways.indexOf(c) >= 0;
@@ -169,8 +184,9 @@ module.exports = [
     start: 'skipintro',
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
-      await seatInCar(page, 30);
+      await installHelper(page);
       const r = await page.evaluate(() => {
+        __seat(30);
         exitCar();
         for (let i = 0; i < 6; i++) updateBailDive(0.016);   // mid-air
         const midRot = player.mesh.rotation.x;
