@@ -2116,7 +2116,7 @@ a shallow strip you wade through before the game calls it swimming. The order
 matters and the test asserts it: sand under *before* `overWater()` flips, never
 the reverse.
 
-#### PV5 — A city that isn't a square `P3 · Risk: High` `OPEN`
+#### PV5 — A city that isn't a square `P3 · Risk: High` `PARTIAL (2026-08-07)` — skyline done, footprint open
 
 > *"Make the city more city shaped and less like a square."*
 
@@ -2133,6 +2133,21 @@ takes `PV4` → `PV6` → `PV5` in that order, or they will fight.
 **Acceptance:** silhouette from a helicopter reads as a skyline with a centre,
 not a slab; traffic and pathing still route everywhere they did; no building
 intersects a road; frame cost at 800×390 is no worse than before.
+
+*Built note — HALF of this is done.* The **skyline** half landed: height was a
+hard step at `r=170` (`rand(24,64)` inside, `rand(10,30)` outside), which from
+the air is a square of tall boxes inside a square of short ones. It is now a
+smooth exponential falloff from a downtown core whose radius *wanders with
+bearing*, so the crest is an irregular ridge rather than a ring. Measured mean
+height by band: 0–80 → 80–160 → 160–240 → 240+ decreases monotonically, the
+core/edge ratio is >2.5×, and the tallest building per bearing sector varies
+>1.6× around a fixed radius band. `skyline.test.js` pins all of that.
+
+**Still open: the FOOTPRINT.** The city still ends on a hard square boundary. It
+was left alone deliberately — `groundH` and every static's Y are built on the
+road lattice, and thinning or irregularising blocks moves collision, stairs,
+ladders and store/heist placement with it. That is the high-risk part of this
+card and it still needs the `PV4 → PV6 → PV5` single-agent sequencing above.
 
 #### PV6 — Fix the island ring road `P2 · Risk: Med` `DONE (2026-08-07)` *(paint only — see note)*
 
