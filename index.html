@@ -87,6 +87,17 @@
     width:74px; height:52px; border-radius:14px; border:2px solid rgba(255,255,255,.35);
     background:rgba(30,14,60,.5); color:#fff; font-size:12px; font-weight:900;
     display:none; align-items:center; justify-content:center; text-shadow:0 1px 3px #000; }
+  /* PV9 slow motion. Sits beside HORN rather than inside #btns because it is
+     available in every mode, and #btns re-lays-out per mode. */
+  #btnSlow { position:absolute; bottom:calc(168px + env(safe-area-inset-bottom)); left:132px;
+    width:74px; height:52px; border-radius:14px; border:2px solid rgba(255,255,255,.35);
+    background:rgba(30,14,60,.5); color:#fff; font-size:11px; font-weight:900;
+    display:none; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    text-shadow:0 1px 3px #000; pointer-events:auto; z-index:12; }
+  #btnSlow.on { background:rgba(55,200,255,.55); border-color:#37c8ff; }
+  #btnSlow.spent { opacity:.42; }
+  #slowMeter { width:54px; height:4px; border-radius:2px; background:rgba(0,0,0,.6); overflow:hidden; }
+  #slowFill { height:100%; width:100%; background:linear-gradient(90deg,#37c8ff,#7dff8a); }
   #bubble { position:fixed; z-index:16; display:none; background:#fff; color:#141414;
     font-family:Arial, sans-serif; font-weight:700; font-size:14px; padding:8px 12px;
     border-radius:14px; max-width:230px; pointer-events:none;
@@ -202,7 +213,7 @@
     transform-origin:top left; transform:rotate(90deg) translateY(-100%); }
   /* touch-only vs desktop-only control affordances (see IS_TOUCH in the boot script) */
   html.is-desktop #joy, html.is-desktop #btns, html.is-desktop #btnHorn,
-  html.is-desktop #pedals, html.is-desktop #btnCrouch,
+  html.is-desktop #pedals, html.is-desktop #btnCrouch, html.is-desktop #btnSlow,
   html.is-desktop .touch-hint { display:none !important; }
   html.is-touch .desktop-hint { display:none !important; }
   /* shrink controls on short landscape screens so nothing overlaps */
@@ -471,7 +482,8 @@
     <div class="ccBody" id="ccTouch">
       <b>MOVE</b> left thumb stick &middot; <b>LOOK</b> swipe the right side<br>
       <b>DRIVE</b> GAS / BRAKE pedals &middot; <b>BOOST</b> &amp; <b>DRIFT</b> pedal buttons<br>
-      <b>ENTER</b> steals cars &middot; <b>SWAP</b> changes weapons &middot; <b>PUNCH / KICK</b> fights unarmed
+      <b>ENTER</b> steals cars &middot; <b>SWAP</b> changes weapons &middot; <b>PUNCH / KICK</b> fights unarmed<br>
+      <b>SLO-MO</b> hold it to slow the world down &mdash; the bar under the button is your meter
       <div class="ccFine">Portrait phone? The game rotates itself &mdash; landscape plays best.</div>
     </div>
     <div class="ccBody" id="ccDesk" style="display:none">
@@ -479,7 +491,7 @@
       <b>DRIVE</b> W gas / S brake &middot; <b>SHIFT</b> boost / sprint &middot; <b>SPACE</b> jump / drift<br>
       <b>E</b> enter/exit &middot; <b>F</b> attack &middot; <b>G</b> swap weapon &middot; <b>K</b> kick unarmed &middot; <b>T</b> talk &middot;
       <b>H</b> horn &middot; <b>Q</b> radio &middot; <b>C</b> crouch &middot; <b>N</b> day/night &middot;
-      <b>R</b> cinema &middot; <b>P</b> pause
+      <b>X</b> hold for slow motion &middot; <b>R</b> cinema &middot; <b>P</b> pause
       <div class="ccFine">Keys are hardcoded &mdash; no remapping yet.</div>
     </div>
     <div id="ccJob"><b>THE JOB:</b> Deb wants <b>$800</b> by tonight. Rob stores. Run missions.
@@ -526,6 +538,7 @@
   <div id="fsBtn">&#x26F6;</div>
   <div id="pauseBtn">&#10074;&#10074;</div>
   <div class="tbtn" id="btnHorn">HORN</div>
+  <div id="btnSlow"><span>SLO-MO</span><div id="slowMeter"><div id="slowFill"></div></div></div>
   <div class="tbtn" id="btnChute">CHUTE!</div>
   <div class="tbtn" id="btnDog">FEED MEAT</div>
   <div class="tbtn" id="btnScram">GO AWAY</div>
@@ -741,65 +754,66 @@ let TRAFFIC_CAP=30, PED_CAP=60, PARTICLE_SCALE=1, GFX_TIER='high';
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS & GLOBAL STATE                           (719–727, ~9 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                             (805–866, ~62 lines)
-// AUDIO                                            (867–1164, ~298 lines)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1165–1667, ~503 lines)
-// THREE SETUP                                      (1668–1718, ~51 lines)
-// POST FX                                          (1719–2104, ~386 lines)
-// CITY                                             (2105–3046, ~942 lines)
+// DEVICE / ORIENTATION                             (819–880, ~62 lines)
+// AUDIO                                            (881–1178, ~298 lines)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1179–1681, ~503 lines)
+// THREE SETUP                                      (1682–1732, ~51 lines)
+// POST FX                                          (1733–2119, ~387 lines)
+// CITY                                             (2120–3061, ~942 lines)
 //   └ RADIO TOWERS                                 (2225–2331, ~107 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                   (3047–3097, ~51 lines)
-// ELEVATED LIGHT RAIL                              (3098–3222, ~125 lines)
-// STAIRS & FIRE ESCAPES                            (3223–3297, ~75 lines)
-// WALL LADDERS                                     (3298–3575, ~278 lines)
-// PARTICLES                                        (3576–3630, ~55 lines)
-// BLOB SHADOWS                                     (3631–3692, ~62 lines)
-// GPU RESOURCE CLEANUP                             (3693–3714, ~22 lines)
-// CARS                                             (3715–4006, ~292 lines)
-// PEDESTRIANS                                      (4007–4215, ~209 lines)
-// PIZZA DELIVERY SYSTEM                            (4216–4371, ~156 lines)
-// RIVAL PIZZA GANG: CHAOS PIZZA                    (4372–4499, ~128 lines)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4500–4679, ~180 lines)
-// COACH REMATCH (FB3)                              (4680–5158, ~479 lines)
-// TURBO BOWL (FB4)                                 (5159–5522, ~364 lines)
-// STRAY DOGS & DOG GANGS                           (5523–5828, ~306 lines)
-// PIZZA WARS MISSION                               (5829–5903, ~75 lines)
-// PLAYER                                           (5904–5947, ~44 lines)
-// PIZZA PLACE & INTERIOR                           (5948–6111, ~164 lines)
-// SIDEWALKS & STOREFRONT AWNINGS                   (6112–6238, ~127 lines)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (6239–6434, ~196 lines)
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6435–6550, ~116 lines)
-// DAY/NIGHT & HEIST SYSTEM                         (6551–6743, ~193 lines)
-// PICKUPS                                          (6744–6786, ~43 lines)
-// HELICOPTERS                                      (6787–7289, ~503 lines)
-// TALKING PEDS                                     (7290–7431, ~142 lines)
-// WEAPONS                                          (7432–8141, ~710 lines)
-// WANTED                                           (8142–8246, ~105 lines)
-// CAR PHYSICS                                      (8247–8474, ~228 lines)
-// PLAYER: FOOT & CAR                               (8475–9226, ~752 lines)
-// HUD / TOASTS                                     (9227–9270, ~44 lines)
-// MISSIONS                                         (9271–9444, ~174 lines)
-// AI                                               (9445–9567, ~123 lines)
-// FOOT COPS                                        (9568–9612, ~45 lines)
-// SEWER RATS                                       (9613–9729, ~117 lines)
-// MAMA RAT (rat vengeance) — PLACEHOLDER           (9730–10096, ~367 lines)
-// BUSTED / WASTED                                  (10097–10187, ~91 lines)
-// CAMERA                                           (10188–10297, ~110 lines)
-// MINIMAP                                          (10298–10345, ~48 lines)
-// MAIN LOOP                                        (10346–10529, ~184 lines)
-// ORIENTATION                                      (10530–10587, ~58 lines)
-// ANIMATED INTRO                                   (10588–10943, ~356 lines)
-// STORY: TURBO JONES, CHAPTER 1                    (10944–11202, ~259 lines)
-// CUTSCENE SYSTEM                                  (11203–11527, ~325 lines)
-// VOICEOVER SYSTEM                                 (11528–11550, ~23 lines)
-// INTRO NARRATION                                  (11551–11850, ~300 lines)
-// DEV TOOLS                                        (11851–11928, ~78 lines)
-// CINEMA MODE (was REPLAY)                         (11929–12061, ~133 lines)
-// CINEMA: SCENES & STAGING                         (12062–12277, ~216 lines)
-// PAUSE MENU & SETTINGS                            (12278–12505, ~228 lines)
-// CONTROLS CARD (U2 onboarding)                    (12506–12538, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (12539–12598, ~60 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                   (12599–end, ~41 lines: boot, init, resize handlers, quality apply)
+// FOOTBALL FIELD                                   (3062–3112, ~51 lines)
+// ELEVATED LIGHT RAIL                              (3113–3237, ~125 lines)
+// STAIRS & FIRE ESCAPES                            (3238–3312, ~75 lines)
+// WALL LADDERS                                     (3313–3590, ~278 lines)
+// PARTICLES                                        (3591–3645, ~55 lines)
+// BLOB SHADOWS                                     (3646–3707, ~62 lines)
+// GPU RESOURCE CLEANUP                             (3708–3729, ~22 lines)
+// CARS                                             (3730–4021, ~292 lines)
+// PEDESTRIANS                                      (4022–4230, ~209 lines)
+// PIZZA DELIVERY SYSTEM                            (4231–4386, ~156 lines)
+// RIVAL PIZZA GANG: CHAOS PIZZA                    (4387–4514, ~128 lines)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4515–4694, ~180 lines)
+// COACH REMATCH (FB3)                              (4695–5173, ~479 lines)
+// TURBO BOWL (FB4)                                 (5174–5537, ~364 lines)
+// STRAY DOGS & DOG GANGS                           (5538–5843, ~306 lines)
+// PIZZA WARS MISSION                               (5844–5918, ~75 lines)
+// PLAYER                                           (5919–5962, ~44 lines)
+// PIZZA PLACE & INTERIOR                           (5963–6126, ~164 lines)
+// SIDEWALKS & STOREFRONT AWNINGS                   (6127–6253, ~127 lines)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (6254–6449, ~196 lines)
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6450–6565, ~116 lines)
+// DAY/NIGHT & HEIST SYSTEM                         (6566–6758, ~193 lines)
+// PICKUPS                                          (6759–6801, ~43 lines)
+// HELICOPTERS                                      (6802–7305, ~504 lines)
+// TALKING PEDS                                     (7306–7447, ~142 lines)
+// WEAPONS                                          (7448–8158, ~711 lines)
+// WANTED                                           (8159–8263, ~105 lines)
+// CAR PHYSICS                                      (8264–8491, ~228 lines)
+// PLAYER: FOOT & CAR                               (8492–9243, ~752 lines)
+// HUD / TOASTS                                     (9244–9287, ~44 lines)
+// MISSIONS                                         (9288–9461, ~174 lines)
+// AI                                               (9462–9584, ~123 lines)
+// FOOT COPS                                        (9585–9629, ~45 lines)
+// SEWER RATS                                       (9630–9746, ~117 lines)
+// MAMA RAT (rat vengeance) — PLACEHOLDER           (9747–10113, ~367 lines)
+// BUSTED / WASTED                                  (10114–10206, ~93 lines)
+// CAMERA                                           (10207–10316, ~110 lines)
+// MINIMAP                                          (10317–10364, ~48 lines)
+// SLOW MOTION (PV9)                                (10365–10471, ~107 lines)
+// MAIN LOOP                                        (10472–10659, ~188 lines)
+// ORIENTATION                                      (10660–10717, ~58 lines)
+// ANIMATED INTRO                                   (10718–11073, ~356 lines)
+// STORY: TURBO JONES, CHAPTER 1                    (11074–11332, ~259 lines)
+// CUTSCENE SYSTEM                                  (11333–11657, ~325 lines)
+// VOICEOVER SYSTEM                                 (11658–11680, ~23 lines)
+// INTRO NARRATION                                  (11681–11980, ~300 lines)
+// DEV TOOLS                                        (11981–12058, ~78 lines)
+// CINEMA MODE (was REPLAY)                         (12059–12191, ~133 lines)
+// CINEMA: SCENES & STAGING                         (12192–12407, ~216 lines)
+// PAUSE MENU & SETTINGS                            (12408–12635, ~228 lines)
+// CONTROLS CARD (U2 onboarding)                    (12636–12668, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (12669–12728, ~60 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                   (12729–end, ~41 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -1757,6 +1771,7 @@ const FX={
   // decaying impulses — see fxFlash/fxDamage/fxImpact
   flash:0, flashR:1, flashG:1, flashB:1,
   damage:0, desat:0, kick:0, bloomPulse:0,
+  slowAberr:0,           // §SLOW MOTION's lens strain, added on top of speed
 };
 // Impulses. Each one is a spike that decays in updateFxImpulses(); call sites
 // stay one-liners so the gameplay code reads the same as it did before.
@@ -1983,7 +1998,7 @@ const POSTFX=(function(){
     u.uVignette.value=FX.vignette;
     u.uGrain.value=reduce?0:FX.grain;
     u.uScan.value=reduce?0:FX.scan;
-    u.uAberr.value=reduce?0:(FX.aberration+FX.kick*0.06);
+    u.uAberr.value=reduce?0:(FX.aberration+FX.kick*0.06+FX.slowAberr);
     u.uFlash.value=FX.flash;
     u.uFlashCol.value.setRGB(FX.flashR,FX.flashG,FX.flashB);
     u.uDamage.value=FX.damage;
@@ -7240,6 +7255,7 @@ function refreshButtons(){
   // Restore the complete mode layout FIRST so proximity returns below can never
   // leave the action cluster centered or labelled like the car controls.
   $('btnHorn').style.display=car?'flex':'none';
+  $('btnSlow').style.display='flex';   // PV9 — slow motion works on foot, in a car and in a heli
   $('pedals').style.display=(car||heli)?'flex':'none';
   $('btnGas').style.display=car?'flex':'none';
   $('btnBrake').style.display=car?'flex':'none';
@@ -7881,7 +7897,7 @@ function damageArea(x,z,rad,dmg){
   addHeat(25);
 }
 
-const input={jx:0,jy:0,boost:false,sprint:false,drift:false,horn:false,gas:false,brake:false};
+const input={jx:0,jy:0,boost:false,sprint:false,drift:false,horn:false,gas:false,brake:false,slow:false};
 let joyTouch=null, joyCX=0, joyCY=0;
 const joyEl=$('joy'), knobEl=$('joyKnob');
 function joyStart(x,y,id){
@@ -7903,11 +7919,11 @@ function joyEnd(){
   knobEl.style.transform='translate(-50%,-50%)';
   joyEl.style.left='22px'; joyEl.style.top='auto'; joyEl.style.bottom='calc(26px + env(safe-area-inset-bottom))';
 }
-const btnHold={boost:false,sprint:false,drift:false,gas:false,brake:false};
+const btnHold={boost:false,sprint:false,drift:false,gas:false,brake:false,slow:false};
 // A vehicle boost must never become a sprint just because the player steps
 // out while still holding Shift.  Foot sprint is armed by a fresh press.
 let sprintArmed=true, sprintShiftWasDown=false;
-const btnMap={btnBoost:'boost',btnSprint:'sprint',btnDrift:'drift',btnHorn:'horn',btnGas:'gas',btnBrake:'brake'};
+const btnMap={btnBoost:'boost',btnSprint:'sprint',btnDrift:'drift',btnHorn:'horn',btnGas:'gas',btnBrake:'brake',btnSlow:'slow'};
 Object.keys(btnMap).forEach(id=>{
   const el=$(id), key=btnMap[id];
   const on=e=>{ e.preventDefault(); if(key==='sprint'&&G.mode==='foot') sprintArmed=true; input[key]=true; btnHold[key]=true; el.classList.add('on'); if(key==='horn')doHorn(); };
@@ -8137,6 +8153,7 @@ function pollKeys(){
   input.drift=btnHold.drift||!!keys['Space'];
   input.gas=btnHold.gas||!!(keys['KeyW']||keys['ArrowUp']);
   input.brake=btnHold.brake||!!(keys['KeyS']||keys['ArrowDown']);
+  input.slow=btnHold.slow||!!keys['KeyX'];   // PV9 — hold for slow motion
 }
 
 // ================= WANTED =================
@@ -10137,6 +10154,7 @@ function respawn(spot){
 }
 function busted(){
   if(G.over) return;
+  resetSlowmo();   // PV9 — never carry a stretched clock through a respawn
   sfx.busted(); haptic(120);
   const fine=Math.floor(G.money*0.12);
   G.money-=fine; $('money').textContent='$'+G.money;
@@ -10151,6 +10169,7 @@ function busted(){
 }
 function wasted(spot){
   if(G.over) return;
+  resetSlowmo();   // PV9 — never carry a stretched clock through a respawn
   endBail();
   sfx.bigCrash(); haptic([80,60,150]);
   const c=player.car;
@@ -10238,7 +10257,7 @@ function updateCamera(dt){
     camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-followRate*dt));
     const sr=Math.abs(c.speed)/CARTYPES[c.type].top;
     const fovKick=SETTINGS.reduceMotion?0:(input.boost&&G.boost>0?5:0);
-    camera.fov=lerp(camera.fov,62+sr*13+fovKick,0.1);
+    camera.fov=lerp(camera.fov,62+sr*13+fovKick+slowmoFov(),0.1);
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
     camera.lookAt(c.x+Math.sin(c.heading)*6,c.y+1.5-camPitch*2,c.z+Math.cos(c.heading)*6);
@@ -10248,7 +10267,7 @@ function updateCamera(dt){
     const a=h.heading+camYawOff;
     const bx=-Math.sin(a), bz=-Math.cos(a);
     camPos.lerp(new THREE.Vector3(h.x+bx*13,h.y+6+camPitch*3,h.z+bz*13),1-Math.exp(-4*dt));
-    camera.fov=lerp(camera.fov,66,0.1);
+    camera.fov=lerp(camera.fov,66+slowmoFov(),0.1);
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
     camera.lookAt(h.x,h.y+1,h.z);
@@ -10278,7 +10297,7 @@ function updateCamera(dt){
     camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-4*dt));
     const camFloor=groundH(camPos.x,camPos.z)+0.45;
     if(camPos.y<camFloor) camPos.y=camFloor;   // looking down from below ground is a bad time
-    camera.fov=lerp(camera.fov,lerp(62,54,aim),1-Math.exp(-10*dt));
+    camera.fov=lerp(camera.fov,lerp(62,54,aim)+slowmoFov(),1-Math.exp(-10*dt));
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
     const lookX=lerp(p.x,p.x+fx*8,aim), lookZ=lerp(p.z,p.z+fz*8,aim);
@@ -10343,14 +10362,125 @@ function drawMinimap(){
   mm.restore();
 }
 
+// ================= SLOW MOTION (PV9) =================
+// "Add a slow motion mechanic. idk how, just make it rad."
+//
+// Held, not toggled, and metered — it has to feel bought rather than free.
+// The plumbing already existed as a dev tool: the main loop scales the sim by
+// TIME_SCALE while leaving UI, audio scheduling and recording on real time
+// (D5). This promotes that to a player mechanic and sells it with the systems
+// that now exist around it — §POST FX for the look, a master lowpass for the
+// sound, a wider lens for the framing.
+//
+// One authoritative time scale: the loop multiplies TIME_SCALE * SLOWMO.scale,
+// so the dev controls and this mechanic compose instead of fighting. Note that
+// slowing time makes the physics MORE stable, not less: the loop's substep
+// count is ceil(simDt/0.017) clamped to 4, so a smaller simDt just means one
+// short step.
+const SLOWMO={
+  scale:1,          // live multiplier applied to simDt, always eased
+  meter:100,        // 0..100, drains while held and refills when released
+  active:false,
+  SCALE:0.32,       // how slow "slow" is
+  MIN_START:18,     // needed in the tank to trigger, so it can't be stutter-spammed
+  DRAIN:34,         // per real second while active
+  REFILL:11,        // per real second while not
+};
+// Base values §POST FX sits at when time is normal. updateSlowmo lerps away
+// from these and back, so letting go restores them exactly.
+const FX_BASE_SAT=FX.sat, FX_BASE_BLOOM=FX.bloom, FX_BASE_VIGNETTE=FX.vignette;
+
+function slowmoAvailable(){
+  return G.started&&!G.over&&!G.paused&&!G.intro&&!activeCutscene&&!G.replay;
+}
+// How deep we currently are, 0..1 — drives every presentation layer so they
+// all ramp together instead of switching at different moments.
+function slowmoDepth(){ return clamp((1-SLOWMO.scale)/(1-SLOWMO.SCALE),0,1); }
+
+// Master-bus lowpass. Created lazily on first use and left in the graph: the
+// world going quiet and muffled is most of what sells the effect, and it costs
+// nothing at 22kHz. masterGain's only output is AC.destination (see initAudio),
+// so re-routing it here is safe.
+let slowLP=null;
+function slowmoAudio(t){
+  if(!AC||!masterGain) return;
+  if(!slowLP){
+    try{
+      slowLP=AC.createBiquadFilter();
+      slowLP.type='lowpass'; slowLP.frequency.value=22050; slowLP.Q.value=0.4;
+      masterGain.disconnect();
+      masterGain.connect(slowLP); slowLP.connect(AC.destination);
+    }catch(e){ slowLP=null; return; }
+  }
+  // exponential in t so the first bit of the ramp is audible
+  const f=t>0.002?Math.max(380,22050*Math.pow(0.017,t)):22050;
+  try{ slowLP.frequency.setTargetAtTime(f,AC.currentTime,0.05); }catch(e){}
+}
+function slowmoWhoosh(entering){
+  if(!AC) return;
+  if(entering){ blip(760,190,0.45,0.05,'sawtooth'); noiseBurst(0.5,0.035,900,1.2); }
+  else        { blip(210,880,0.30,0.045,'sawtooth'); noiseBurst(0.28,0.028,1500,1.1); }
+}
+// Extra FOV the camera should take on while slowed. §CAMERA adds this to its
+// own lerp targets rather than having two writers fight over camera.fov.
+function slowmoFov(){ return slowmoDepth()*7; }
+
+const slowMeterEl=$('slowFill'), slowBtnEl=$('btnSlow');
+function updateSlowmo(dt){
+  const canHold=slowmoAvailable()&&(SLOWMO.active?SLOWMO.meter>0:SLOWMO.meter>=SLOWMO.MIN_START);
+  const want=!!input.slow&&canHold;
+  if(want!==SLOWMO.active){
+    SLOWMO.active=want;
+    slowmoWhoosh(want);
+    if(want) haptic(30);
+  }
+  if(SLOWMO.active){
+    SLOWMO.meter=Math.max(0,SLOWMO.meter-SLOWMO.DRAIN*dt);
+    if(SLOWMO.meter<=0){ SLOWMO.active=false; slowmoWhoosh(false); }
+  } else {
+    SLOWMO.meter=Math.min(100,SLOWMO.meter+SLOWMO.REFILL*dt);
+  }
+  // ramp in and out — snapping the time scale is what makes slow motion cheap
+  const target=SLOWMO.active?SLOWMO.SCALE:1;
+  SLOWMO.scale+=(target-SLOWMO.scale)*(1-Math.exp(-(SLOWMO.active?7:5)*dt));
+  if(Math.abs(SLOWMO.scale-target)<0.002) SLOWMO.scale=target;
+
+  const t=slowmoDepth();
+  // §POST FX: the world drains of colour, the lights swell, the lens strains
+  FX.sat=lerp(FX_BASE_SAT,0.42,t);
+  FX.bloom=lerp(FX_BASE_BLOOM,0.74,t);
+  FX.vignette=lerp(FX_BASE_VIGNETTE,0.52,t);
+  FX.slowAberr=t*0.075;
+  slowmoAudio(t);
+
+  if(slowMeterEl) slowMeterEl.style.width=SLOWMO.meter+'%';
+  if(slowBtnEl){
+    slowBtnEl.classList.toggle('on',SLOWMO.active);
+    slowBtnEl.classList.toggle('spent',SLOWMO.meter<SLOWMO.MIN_START&&!SLOWMO.active);
+  }
+}
+// Hard reset — used by the paths that yank control away (WASTED/BUSTED, a new
+// game) so time can never stay stretched across a transition.
+function resetSlowmo(){
+  SLOWMO.active=false; SLOWMO.scale=1; SLOWMO.meter=100;
+  input.slow=false; btnHold.slow=false;
+  FX.sat=FX_BASE_SAT; FX.bloom=FX_BASE_BLOOM; FX.vignette=FX_BASE_VIGNETTE; FX.slowAberr=0;
+  slowmoAudio(0);
+  if(slowBtnEl) slowBtnEl.classList.remove('on','spent');
+}
+
 // ================= MAIN LOOP =================
 let lastT=performance.now(), fpsAcc=0, fpsN=0, fpsT=0;
 function loop(){
   requestAnimationFrame(loop);
   const now=performance.now();
   const dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
-  // D5 — dev time controls: scale gameplay simulation dt, keep UI/recording on real time
-  let simDt=dt*TIME_SCALE;
+  // PV9 — runs on real dt, outside the started/paused gate, so the ramp always
+  // eases back to 1 when control is taken away instead of freezing mid-stretch
+  updateSlowmo(dt);
+  // D5 — dev time controls: scale gameplay simulation dt, keep UI/recording on
+  // real time. SLOWMO.scale is the player-facing half of the same product.
+  let simDt=dt*TIME_SCALE*SLOWMO.scale;
   let forceStep=false;
   if(DEV&&STEP_FRAMES>0){ STEP_FRAMES--; forceStep=true; simDt=0.017; }
   // J2 — hitstop: scale sim dt near-zero for a few frames on big impacts
