@@ -1,6 +1,7 @@
 # STATUS
 
-Last consolidation: 2026-07-28 (eleventh pass — integrated the five-agent OP2 batch: OP2-A/C/D/E/F/G merged in packet order, real melee+fall overlap resolved by hand, `index.html` code map regenerated, Phase 11 closed in `HANDOFF.md`, and two stale explosion assertions reconciled against the owner's OP2-G direction; full suite 198/198) — Signed: Claude Code | Opus 5 | high
+Last consolidation: 2026-08-02 (twelfth pass — archived the FB3/FB4/tooling/concurrency batch from this session; Football Saga FB1–FB5 closed in `HANDOFF.md`; code map and testing tiers now tool-backed and CI-gated. Focused suites green: fb3-coach 10/10, turbo-bowl 8/8, cutscenes 5/5, save-restore 4/4 — full suite left to CI per the new AGENTS.md §4a) — Signed: Claude Code | Opus 5 | high
+Previous: 2026-07-28 (eleventh pass — integrated the five-agent OP2 batch: OP2-A/C/D/E/F/G merged in packet order, real melee+fall overlap resolved by hand, `index.html` code map regenerated, Phase 11 closed in `HANDOFF.md`, and two stale explosion assertions reconciled against the owner's OP2-G direction; full suite 198/198) — Signed: Claude Code | Opus 5 | high
 
 ## Active work
 _Nothing claimed right now._ Add your row below per AGENTS.md §1.3 — and escape
@@ -8,10 +9,6 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-| 2026-08-02 | `index.html` §COACH REMATCH (FB3), `tests/cases/fb3-coach.test.js`, `HANDOFF.md` | FB3 DONE — Old Scores → Rematch, Coach yields instead of dying, a loss soft-retries at the field, the win sets/saves `G.coachBeaten` and the Wildcats go non-hostile. `fb3-coach.test.js` 10/10; full suite 206/207 (the one failure is the known `shadow-footsteps` audio flake — 5/5 alone). FB4 / Turbo Bowl deliberately NOT built — it still needs the owner's sign-off. | Signed: Claude Code \| Opus 5 \| high |
-| 2026-08-02 | `index.html` §TURBO BOWL (new), `tests/cases/turbo-bowl.test.js` | FB4 — Turbo Bowl endless-run minigame per `FOOTBALL_STRAND.md` §5. Owner gave the go-ahead this session. Payoff cutscene built to `HANDOFF.md`'s FB5 card (solo Turbo, no Dad actor) on the owner's call, not `FOOTBALL_STRAND.md` §6's conflicting version. | Signed: Claude Code \| Opus 5 \| high |
-| 2026-08-02 | `AGENTS.md` §0/§4a, `tools/codemap.js` (new), `HANDOFF.md` §1/§4 | Session-cost pass, owner-requested. Added the code-map regenerator nobody had written, a testing-tier table (CI already runs the full suite — stop duplicating it locally), and a facts table for the things every session re-greps. Corrected `index.html` size/structure figures that were ~2.4× wrong. | Signed: Claude Code \| Opus 5 \| high |
-| 2026-08-02 | `tools/preflight.js` (new), `AGENTS.md` §2a, `.github/workflows/ci.yml` | Two accounts now share this repo. Generalised the OP2 packet's "a pushed branch is the lock" rule into a preflight check that shows live claims and flags overlap, documented the `index.html` anchors that collide semantically, and CI-gated the generated code map so a bad merge fails the PR. | Signed: Claude Code \| Opus 5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
@@ -45,6 +42,9 @@ possible change and add a line here.
 - The suite baseline is **197 cases across 43 files** before FB3, not the 198 some notes quote (a case was retired in `terra-followup.test.js` on 2026-07-28 and the number wasn't resynced). With `fb3-coach.test.js` it is 207 across 44. — 2026-08-02, Claude Code
 
 ## Archive
+- FB4 Turbo Bowl + FB5 payoff (Claude Code | Opus 5 | high, 2026-08-02): endless-run minigame gated on `G.coachBeaten` — PLAY BALL beacon, 100-yard run, converging Alumni Wildcats, soft-fail tackles, persisted best. First touchdown plays `turbo_bowl_payoff`, built to HANDOFF's FB5 card (no Dad actor) on the owner's ruling over `FOOTBALL_STRAND.md` §6. `turbo-bowl.test.js` 8/8. Signed: Claude Code \| Opus 5 \| high
+- FB3 Coach mission (Claude Code | Opus 5 | high, 2026-08-02): Old Scores → Rematch; Coach yields rather than dies, a loss soft-retries at the field, the win sets and saves `G.coachBeaten` and the Wildcats go non-hostile. `fb3-coach.test.js` 10/10. Signed: Claude Code \| Opus 5 \| high
+- Session-cost + concurrency tooling (Claude Code | Opus 5 | high, 2026-08-02): `tools/codemap.js` (generated code map, CI-gated), `tools/preflight.js` (cross-account claim visibility), AGENTS.md §0 facts table / §2a two-account protocol / §4a testing tiers, and corrected `index.html` size figures that were ~2.4× wrong. Signed: Claude Code \| Opus 5 \| high
 - Test reconciliation (Claude Code | Opus 5 | high, 2026-07-28): retired the mushroom-cloud case in `terra-followup.test.js` and moved `new-features.test.js` off its 30s fuse literal onto `CAR_CRITICAL_FUSE` — both asserted behavior the owner's OP2-G direction deliberately removed. Signed: Claude Code | Opus 5 | high
 - Backlog bookkeeping (Codex | GPT-5 | high, 2026-07-25/26): the four-agent OP2 dispatch packet, the owner's Mama Rat / playtest-correction / shadow-footstep / Turbo Mode requirements, and the optional audit follow-up, all recorded as owner-triggered future work. Signed: Codex | GPT-5 | high
 - Consolidation (Claude Code | Opus 5 | high, 2026-07-28): merged all five OP2 branches in packet order, resolved the one real code overlap (fall-impact vs. footstep landing in `updateFoot`) and three bookkeeping conflicts, regenerated the `index.html` code map, and marked Phase 11 OP2-A–G done. Signed: Claude Code | Opus 5 | high
