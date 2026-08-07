@@ -2030,7 +2030,7 @@ drives it through three one-line impulse calls — `fxFlash()` (explosions),
 low-health red throb and desaturation. Tiers follow `applyQuality()`; **Settings
 → FILM FX** turns the whole thing off back to the plain render path.
 
-#### PV2 — MP3-only voice, no synthesis `P1 · Risk: Low` `OPEN`
+#### PV2 — MP3-only voice, no synthesis `P1 · Risk: Low` `DONE (2026-08-07)`
 
 > *"no more synthesized voice. turbos mp3 voice or bust."*
 
@@ -2052,7 +2052,7 @@ ever routed to `voiceGain` for speech; every previously-spoken line still
 appears on screen; the radio duck (`voDuckOn`/`voDuckOff`) stays balanced so
 music still dips for mp3 narration and recovers after it.
 
-#### PV3 — No trees in the roadway `P2 · Risk: Low` `OPEN`
+#### PV3 — No trees in the roadway `P2 · Risk: Low` `DONE (2026-08-07)`
 
 > *"no trees in streets."*
 
@@ -2148,7 +2148,7 @@ throws the rider off and seats Turbo's actual model; exiting returns him to foot
 with no duplicated or orphaned mesh; ten jack/exit cycles leak nothing
 (`js/person.js` additions stay backward-compatible per `STATUS.md`).
 
-#### PV8 — Action-movie bail-out `P2 · Risk: Med` `OPEN`
+#### PV8 — Action-movie bail-out `P2 · Risk: Med` `DONE (2026-08-07)`
 
 > *"When turbo bails out of cars while they're driving he needs to come flying
 > out the side and roll on the ground for a bit. like an action movie."*
@@ -2169,7 +2169,7 @@ geometry; the roll ends with him standing and fully controllable; bailing into
 a wall or off a ledge resolves through the existing collision/fall paths, not a
 special case; low-speed exit is unchanged.
 
-#### PV9 — Slow motion `P2 · Risk: Med` `OPEN`
+#### PV9 — Slow motion `P2 · Risk: Med` `DONE (2026-08-07)`
 
 > *"Add a slow motion mechanic. idk how, just make it rad."*
 
@@ -2196,6 +2196,39 @@ keep one authoritative product rather than two competing writers.
 substep clamp is `Math.min(4, …)` — verify it doesn't starve); audio pitch
 returns exactly on exit; the meter persists sensibly across BUSTED/WASTED,
 cutscenes and Cinema; `SETTINGS.reduceMotion` still gets a sane experience.
+
+*Built note:* the substep concern turned out to be backwards — slowing time
+makes the sim **more** stable, since substeps are `ceil(simDt/0.017)` and a
+smaller `simDt` is simply one short step. Slow motion also does **not**
+desaturate: the owner's direction mid-build was *"not a fan of the desaturated
+look, keep it vibrant"*, so it pushes saturation up instead. Don't "fix" that
+back to the film-school default.
+
+#### PV10 — Carnage: debris, scorch, chain reactions `P2 · Risk: Med` `DONE (2026-08-07)`
+
+> *"Explosions, action … anything that would make a 22 year old guy with pizza
+> stains on his shirt go sweeeeet."*
+
+`index.html` §CARNAGE. Explosions gained physical mass: pooled debris chunks
+that arc, bounce, tumble and settle in the paint colour of the wreck they came
+off; scorch marks on the road; and chain reactions that put neighbouring cars
+on short random fuses so a pile-up goes up as a ragged sequence. Both pools are
+fixed-size; the chain is capped per blast (`CHAIN_MAX`) **and** globally rate-
+limited (`chainBudget`) so dense traffic can't cascade the map.
+
+Plus the money shot: `slowmoBurst()` bends time for 0.75s when a blast goes off
+within 30u of you — free, never charging the §SLOW MOTION meter.
+
+#### PV11 — Rampage combos `P3 · Risk: Low` `DONE (2026-08-07)`
+
+`index.html` §RAMPAGE. Vehicles wrecked inside a rolling 4.2s window build a
+combo; crossing 2/3/5/7/10 fires an escalating callout, flash, shake, stinger
+and payout, and the top rung earns a cinematic time bend.
+
+It scores **vehicles, not people** — deliberately, so the ladder pays for
+spectacle rather than for running pedestrians down. Payouts total 550 for the
+whole ladder, sized against a big heist; `rampage.test.js` asserts it stays
+under Deb's $800 so one good night can't make Chapter 1's spine irrelevant.
 
 ---
 

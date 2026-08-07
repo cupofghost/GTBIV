@@ -57,6 +57,15 @@
     transform:translateX(-50%); pointer-events:auto; padding:6px 16px; border-radius:16px;
     border:1px solid #ff9ecb66; background:rgba(34,8,50,.55); color:#fff;
     font:900 12px 'Arial Black',Arial,sans-serif; letter-spacing:1.5px; }
+  /* PV11 rampage combo chip — sits under the wanted stars, out of the reticule */
+  #combo { display:none; position:absolute; top:calc(30px + env(safe-area-inset-top)); left:50%;
+    transform:translateX(-50%); align-items:center; gap:8px; padding:3px 14px; border-radius:14px;
+    background:rgba(6,2,16,.72); border:1px solid #ff9d3e88; z-index:22;
+    text-shadow:0 2px 4px #000, 0 0 12px rgba(255,110,60,.7); pointer-events:none; }
+  #comboMult { font-size:20px; font-weight:900; color:#ffd23e; letter-spacing:1px; }
+  #comboLabel { font-size:11px; font-weight:900; color:#ff9d3e; letter-spacing:2.5px; }
+  #combo.punch { animation:comboPunch .34s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes comboPunch { 0%{transform:translateX(-50%) scale(1.55);} 100%{transform:translateX(-50%) scale(1);} }
   #toasts { position:absolute; bottom:34%; left:50%; transform:translateX(-50%);
     display:flex; flex-direction:column; align-items:center; gap:5px; }
   .toast { font-size:17px; color:#fff; text-shadow:0 2px 3px #000, 0 0 8px #000;
@@ -523,6 +532,7 @@
     <div class="barLbl">NITRO</div>
     <div id="boostbar"><div id="boostfill"></div></div>
   </div>
+  <div id="combo"><span id="comboMult">&times;2</span><span id="comboLabel">DOUBLE</span></div>
   <div id="toasts"></div>
   <div id="joy"><div id="joyKnob"></div></div>
   <div id="btns">
@@ -754,68 +764,69 @@ let TRAFFIC_CAP=30, PED_CAP=60, PARTICLE_SCALE=1, GFX_TIER='high';
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS & GLOBAL STATE                           (719–727, ~9 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                             (821–882, ~62 lines)
-// AUDIO                                            (883–1180, ~298 lines)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1181–1683, ~503 lines)
-// THREE SETUP                                      (1684–1734, ~51 lines)
-// POST FX                                          (1735–2123, ~389 lines)
-// CITY                                             (2124–3065, ~942 lines)
+// DEVICE / ORIENTATION                             (832–893, ~62 lines)
+// AUDIO                                            (894–1191, ~298 lines)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1192–1694, ~503 lines)
+// THREE SETUP                                      (1695–1745, ~51 lines)
+// POST FX                                          (1746–2134, ~389 lines)
+// CITY                                             (2135–3076, ~942 lines)
 //   └ RADIO TOWERS                                 (2225–2331, ~107 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                   (3066–3116, ~51 lines)
-// ELEVATED LIGHT RAIL                              (3117–3241, ~125 lines)
-// STAIRS & FIRE ESCAPES                            (3242–3316, ~75 lines)
-// WALL LADDERS                                     (3317–3594, ~278 lines)
-// PARTICLES                                        (3595–3642, ~48 lines)
-// CARNAGE: DEBRIS, SCORCH & CHAIN REACTIONS        (3643–3779, ~137 lines)
-// BLOB SHADOWS                                     (3780–3841, ~62 lines)
-// GPU RESOURCE CLEANUP                             (3842–3863, ~22 lines)
-// CARS                                             (3864–4156, ~293 lines)
-// PEDESTRIANS                                      (4157–4365, ~209 lines)
-// PIZZA DELIVERY SYSTEM                            (4366–4521, ~156 lines)
-// RIVAL PIZZA GANG: CHAOS PIZZA                    (4522–4649, ~128 lines)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4650–4829, ~180 lines)
-// COACH REMATCH (FB3)                              (4830–5308, ~479 lines)
-// TURBO BOWL (FB4)                                 (5309–5672, ~364 lines)
-// STRAY DOGS & DOG GANGS                           (5673–5978, ~306 lines)
-// PIZZA WARS MISSION                               (5979–6053, ~75 lines)
-// PLAYER                                           (6054–6097, ~44 lines)
-// PIZZA PLACE & INTERIOR                           (6098–6261, ~164 lines)
-// SIDEWALKS & STOREFRONT AWNINGS                   (6262–6388, ~127 lines)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (6389–6584, ~196 lines)
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6585–6700, ~116 lines)
-// DAY/NIGHT & HEIST SYSTEM                         (6701–6893, ~193 lines)
-// PICKUPS                                          (6894–6936, ~43 lines)
-// HELICOPTERS                                      (6937–7440, ~504 lines)
-// TALKING PEDS                                     (7441–7582, ~142 lines)
-// WEAPONS                                          (7583–8303, ~721 lines)
-// WANTED                                           (8304–8408, ~105 lines)
-// CAR PHYSICS                                      (8409–8642, ~234 lines)
-// PLAYER: FOOT & CAR                               (8643–9404, ~762 lines)
-// ACTION BAIL-OUT (PV8)                            (9405–9509, ~105 lines)
-// HUD / TOASTS                                     (9510–9553, ~44 lines)
-// MISSIONS                                         (9554–9727, ~174 lines)
-// AI                                               (9728–9850, ~123 lines)
-// FOOT COPS                                        (9851–9895, ~45 lines)
-// SEWER RATS                                       (9896–10012, ~117 lines)
-// MAMA RAT (rat vengeance) — PLACEHOLDER           (10013–10379, ~367 lines)
-// BUSTED / WASTED                                  (10380–10474, ~95 lines)
-// CAMERA                                           (10475–10584, ~110 lines)
-// MINIMAP                                          (10585–10632, ~48 lines)
-// SLOW MOTION (PV9)                                (10633–10761, ~129 lines)
-// MAIN LOOP                                        (10762–10951, ~190 lines)
-// ORIENTATION                                      (10952–11009, ~58 lines)
-// ANIMATED INTRO                                   (11010–11365, ~356 lines)
-// STORY: TURBO JONES, CHAPTER 1                    (11366–11624, ~259 lines)
-// CUTSCENE SYSTEM                                  (11625–11949, ~325 lines)
-// VOICEOVER SYSTEM                                 (11950–11972, ~23 lines)
-// INTRO NARRATION                                  (11973–12272, ~300 lines)
-// DEV TOOLS                                        (12273–12350, ~78 lines)
-// CINEMA MODE (was REPLAY)                         (12351–12483, ~133 lines)
-// CINEMA: SCENES & STAGING                         (12484–12699, ~216 lines)
-// PAUSE MENU & SETTINGS                            (12700–12927, ~228 lines)
-// CONTROLS CARD (U2 onboarding)                    (12928–12960, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (12961–13020, ~60 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                   (13021–end, ~41 lines: boot, init, resize handlers, quality apply)
+// FOOTBALL FIELD                                   (3077–3127, ~51 lines)
+// ELEVATED LIGHT RAIL                              (3128–3252, ~125 lines)
+// STAIRS & FIRE ESCAPES                            (3253–3327, ~75 lines)
+// WALL LADDERS                                     (3328–3605, ~278 lines)
+// PARTICLES                                        (3606–3653, ~48 lines)
+// CARNAGE: DEBRIS, SCORCH & CHAIN REACTIONS        (3654–3790, ~137 lines)
+// BLOB SHADOWS                                     (3791–3852, ~62 lines)
+// GPU RESOURCE CLEANUP                             (3853–3874, ~22 lines)
+// CARS                                             (3875–4167, ~293 lines)
+// PEDESTRIANS                                      (4168–4376, ~209 lines)
+// PIZZA DELIVERY SYSTEM                            (4377–4532, ~156 lines)
+// RIVAL PIZZA GANG: CHAOS PIZZA                    (4533–4660, ~128 lines)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4661–4840, ~180 lines)
+// COACH REMATCH (FB3)                              (4841–5319, ~479 lines)
+// TURBO BOWL (FB4)                                 (5320–5683, ~364 lines)
+// STRAY DOGS & DOG GANGS                           (5684–5989, ~306 lines)
+// PIZZA WARS MISSION                               (5990–6064, ~75 lines)
+// PLAYER                                           (6065–6108, ~44 lines)
+// PIZZA PLACE & INTERIOR                           (6109–6272, ~164 lines)
+// SIDEWALKS & STOREFRONT AWNINGS                   (6273–6399, ~127 lines)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (6400–6595, ~196 lines)
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6596–6711, ~116 lines)
+// DAY/NIGHT & HEIST SYSTEM                         (6712–6904, ~193 lines)
+// PICKUPS                                          (6905–6947, ~43 lines)
+// HELICOPTERS                                      (6948–7451, ~504 lines)
+// TALKING PEDS                                     (7452–7593, ~142 lines)
+// WEAPONS                                          (7594–8314, ~721 lines)
+// WANTED                                           (8315–8419, ~105 lines)
+// CAR PHYSICS                                      (8420–8654, ~235 lines)
+// PLAYER: FOOT & CAR                               (8655–9416, ~762 lines)
+// ACTION BAIL-OUT (PV8)                            (9417–9521, ~105 lines)
+// RAMPAGE (PV11)                                   (9522–9584, ~63 lines)
+// HUD / TOASTS                                     (9585–9628, ~44 lines)
+// MISSIONS                                         (9629–9802, ~174 lines)
+// AI                                               (9803–9925, ~123 lines)
+// FOOT COPS                                        (9926–9970, ~45 lines)
+// SEWER RATS                                       (9971–10087, ~117 lines)
+// MAMA RAT (rat vengeance) — PLACEHOLDER           (10088–10454, ~367 lines)
+// BUSTED / WASTED                                  (10455–10551, ~97 lines)
+// CAMERA                                           (10552–10661, ~110 lines)
+// MINIMAP                                          (10662–10709, ~48 lines)
+// SLOW MOTION (PV9)                                (10710–10838, ~129 lines)
+// MAIN LOOP                                        (10839–11029, ~191 lines)
+// ORIENTATION                                      (11030–11087, ~58 lines)
+// ANIMATED INTRO                                   (11088–11443, ~356 lines)
+// STORY: TURBO JONES, CHAPTER 1                    (11444–11702, ~259 lines)
+// CUTSCENE SYSTEM                                  (11703–12027, ~325 lines)
+// VOICEOVER SYSTEM                                 (12028–12050, ~23 lines)
+// INTRO NARRATION                                  (12051–12350, ~300 lines)
+// DEV TOOLS                                        (12351–12428, ~78 lines)
+// CINEMA MODE (was REPLAY)                         (12429–12561, ~133 lines)
+// CINEMA: SCENES & STAGING                         (12562–12777, ~216 lines)
+// PAUSE MENU & SETTINGS                            (12778–13005, ~228 lines)
+// CONTROLS CARD (U2 onboarding)                    (13006–13038, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (13039–13098, ~60 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                   (13099–end, ~41 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -8629,6 +8640,7 @@ function killCar(car,boom){
     bigExplosionTint=(paint===undefined||paint===null)?0x2a2a33:paint;
     bigExplosion(car.x,1,car.z);
     bigExplosionTint=0x2a2a33;
+    rampageHit();   // §RAMPAGE — this one counts toward the ladder
   }
   else {
     burst(car.x,1,car.z,26,COL_FIRE,6,0.9,4);
@@ -9505,6 +9517,69 @@ function updateRunaways(dt){
     c.runawayT-=dt;
     carPhysics(c,dt,{steer:0,throttle:0,drift:false,boost:false});
   }
+}
+
+// ================= RAMPAGE (PV11) =================
+// Chaos that only ever produced one toast at a time doesn't reward escalation.
+// This is the ladder: wreck vehicles inside a rolling window and the combo
+// climbs, each tier louder than the last — bigger callout, bigger flash, bigger
+// shake, bigger payout — and the top tier bends time for you.
+//
+// It scores VEHICLES, not people. Blowing up cars is the spectacle the ladder
+// is for, and it keeps this from becoming a system that pays out for running
+// pedestrians down. Cop cars count — outrunning the heat is the game.
+const RAMPAGE={ combo:0, t:0, tier:-1, best:0, WINDOW:4.2 };
+// Payouts are deliberately modest. Running the whole ladder pays 550 total,
+// which sits alongside a big heist ($250-500 + escape, see P2 economy tuning) —
+// for something far harder and far hotter. Paying thousands would make Deb's
+// $800 debt, the entire spine of Chapter 1, irrelevant after one good night.
+const RAMPAGE_TIERS=[
+  { n:2,  label:'DOUBLE',       col:'#7dff8a', flash:0.10, shake:0.10, cash:20,  pitch:520 },
+  { n:3,  label:'TRIPLE',       col:'#ffd23e', flash:0.14, shake:0.16, cash:40,  pitch:620 },
+  { n:5,  label:'RAMPAGE',      col:'#ff9d3e', flash:0.20, shake:0.26, cash:90,  pitch:740 },
+  { n:7,  label:'CARNAGE',      col:'#ff5a5a', flash:0.28, shake:0.34, cash:150, pitch:880 },
+  { n:10, label:'CITY ON FIRE', col:'#ff3ea0', flash:0.42, shake:0.46, cash:250, pitch:1040 },
+];
+const comboEl=$('combo'), comboMultEl=$('comboMult'), comboLblEl=$('comboLabel');
+
+function rampageHit(){
+  if(!G.started||G.over) return;
+  RAMPAGE.combo++;
+  RAMPAGE.t=RAMPAGE.WINDOW;
+  RAMPAGE.best=Math.max(RAMPAGE.best,RAMPAGE.combo);
+  // highest tier this combo has reached; only fire when we cross into a new one
+  let tier=-1;
+  for(let i=0;i<RAMPAGE_TIERS.length;i++) if(RAMPAGE.combo>=RAMPAGE_TIERS[i].n) tier=i;
+  if(tier>RAMPAGE.tier){
+    RAMPAGE.tier=tier;
+    const T=RAMPAGE_TIERS[tier];
+    fxFlash(T.flash,1,0.8,0.5); fxImpact(T.flash*1.4); shake(T.shake);
+    addMoney(T.cash,T.label);
+    haptic(tier>=3?[40,30,70]:35);
+    // a rising stinger — each rung is a step up the scale
+    blip(T.pitch,T.pitch*1.5,0.16,0.055,'square');
+    if(tier>=3) blip(T.pitch*0.5,T.pitch*0.75,0.3,0.04,'sawtooth');
+    if(tier>=RAMPAGE_TIERS.length-1) slowmoBurst(1.0);   // the top rung earns a beat
+    if(comboLblEl) comboLblEl.textContent=T.label;
+  }
+  if(comboEl){
+    if(comboMultEl) comboMultEl.textContent='×'+RAMPAGE.combo;
+    comboEl.style.display=RAMPAGE.combo>=2?'flex':'none';
+    if(RAMPAGE.combo>=2){   // restart the punch animation
+      comboEl.classList.remove('punch'); void comboEl.offsetWidth; comboEl.classList.add('punch');
+    }
+  }
+}
+function updateRampage(dt){
+  if(RAMPAGE.t<=0) return;
+  RAMPAGE.t-=dt;
+  if(comboEl&&RAMPAGE.combo>=2) comboEl.style.opacity=Math.min(1,RAMPAGE.t/0.7);
+  if(RAMPAGE.t<=0) endRampage();
+}
+function endRampage(){
+  if(RAMPAGE.combo>=RAMPAGE_TIERS[0].n&&comboLblEl) toast('COMBO ENDED ×'+RAMPAGE.combo,'gold');
+  RAMPAGE.combo=0; RAMPAGE.t=0; RAMPAGE.tier=-1;
+  if(comboEl){ comboEl.style.display='none'; comboEl.style.opacity=1; comboEl.classList.remove('punch'); }
 }
 
 // ================= HUD / TOASTS =================
@@ -10422,6 +10497,7 @@ function busted(){
   if(G.over) return;
   resetSlowmo();   // PV9 — never carry a stretched clock through a respawn
   endBailDive();   // PV8 — never respawn mid-tumble
+  endRampage();    // PV11 — the combo dies with you
   sfx.busted(); haptic(120);
   const fine=Math.floor(G.money*0.12);
   G.money-=fine; $('money').textContent='$'+G.money;
@@ -10438,6 +10514,7 @@ function wasted(spot){
   if(G.over) return;
   resetSlowmo();   // PV9 — never carry a stretched clock through a respawn
   endBailDive();   // PV8 — never respawn mid-tumble
+  endRampage();    // PV11 — the combo dies with you
   endBail();
   sfx.bigCrash(); haptic([80,60,150]);
   const c=player.car;
@@ -10892,6 +10969,7 @@ function loop(){
     }
     updateBoomFx(simDt);
     updateDebris(simDt); updateScorch(simDt); updateChainBudget(simDt);   // §CARNAGE
+    updateRampage(simDt);   // §RAMPAGE
     // car alarms: bumped parked cars beep and flash for a few seconds
     for(const c of cars){
       if(c.alarmT>0){
