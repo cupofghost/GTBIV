@@ -2110,7 +2110,7 @@ takes `PV4` → `PV6` → `PV5` in that order, or they will fight.
 not a slab; traffic and pathing still route everywhere they did; no building
 intersects a road; frame cost at 800×390 is no worse than before.
 
-#### PV6 — Fix the island ring road `P2 · Risk: Med` `OPEN`
+#### PV6 — Fix the island ring road `P2 · Risk: Med` `DONE (2026-08-07)` *(paint only — see note)*
 
 > *"Fix the circle road around the island. it conflicts with other roads and
 > leads into buildings."*
@@ -2125,6 +2125,25 @@ geometry.
 **Acceptance:** driving the full ring never enters a building or a dead end;
 every crossing with a grid road is a junction traffic can take; AI traffic
 routed onto the ring completes a lap.
+
+*Built note — read before reopening this.* The diagnosis was not what the card
+assumed. The Coast Highway is **not generated geometry at all**: it is a canvas
+arc painted into `groundTex`, with no collision, no junctions and no traffic
+routing. It was drawn as a **circle of radius `H+7`** around a **square** city
+of half-width `H`, and a circle of that radius only clears the grid at the four
+cardinal points — at 15° it is already inside the outer blocks and at 45° it
+runs 94u deep into the city. Measured: 27 of 315 points along the old route sat
+inside a building footprint.
+
+No circle can fix it. Clearing the corners of a square city needs radius
+`H*sqrt(2)` = 478 and the entire world is 358 from centre. It is now a **rounded
+rectangle** threading the 14u gap between the outermost kerb (±338) and the sand
+(±352): 0 of 1264 sampled points hit a building. `coast-highway.test.js` pins
+the geometry, including the arithmetic proving a circle can't fit.
+
+**Still open:** it remains paint. Making it a genuine drivable route — real
+junctions with the grid, traffic routed onto it, a lap that AI can complete —
+is a separate job and the acceptance criteria above still describe it.
 
 #### PV7 — Real riders on motorcycles `P2 · Risk: Med` `DONE (2026-08-07)`
 
