@@ -653,6 +653,10 @@
       <button class="qBtn" data-v="on">ON</button>
       <button class="qBtn" data-v="off">OFF</button>
     </div></div>
+    <div class="pmRow"><label>FILM FX</label><div class="qGroup" id="postFxGroup">
+      <button class="qBtn" data-v="on">ON</button>
+      <button class="qBtn" data-v="off">OFF</button>
+    </div></div>
     <button class="pmBtn" id="pmSetBack">BACK</button>
   </div>
 </div>
@@ -737,64 +741,65 @@ let TRAFFIC_CAP=30, PED_CAP=60, PARTICLE_SCALE=1, GFX_TIER='high';
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS & GLOBAL STATE                           (719–727, ~9 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                             (800–861, ~62 lines)
-// AUDIO                                            (862–1160, ~299 lines)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1161–1663, ~503 lines)
-// THREE SETUP                                      (1664–1714, ~51 lines)
-// CITY                                             (1715–2623, ~909 lines)
+// DEVICE / ORIENTATION                             (805–866, ~62 lines)
+// AUDIO                                            (867–1165, ~299 lines)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1166–1668, ~503 lines)
+// THREE SETUP                                      (1669–1719, ~51 lines)
+// POST FX                                          (1720–2105, ~386 lines)
+// CITY                                             (2106–3014, ~909 lines)
 //   └ RADIO TOWERS                                 (2225–2331, ~107 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                   (2624–2674, ~51 lines)
-// ELEVATED LIGHT RAIL                              (2675–2799, ~125 lines)
-// STAIRS & FIRE ESCAPES                            (2800–2874, ~75 lines)
-// WALL LADDERS                                     (2875–3152, ~278 lines)
-// PARTICLES                                        (3153–3207, ~55 lines)
-// BLOB SHADOWS                                     (3208–3269, ~62 lines)
-// GPU RESOURCE CLEANUP                             (3270–3291, ~22 lines)
-// CARS                                             (3292–3583, ~292 lines)
-// PEDESTRIANS                                      (3584–3792, ~209 lines)
-// PIZZA DELIVERY SYSTEM                            (3793–3948, ~156 lines)
-// RIVAL PIZZA GANG: CHAOS PIZZA                    (3949–4076, ~128 lines)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4077–4256, ~180 lines)
-// COACH REMATCH (FB3)                              (4257–4735, ~479 lines)
-// TURBO BOWL (FB4)                                 (4736–5099, ~364 lines)
-// STRAY DOGS & DOG GANGS                           (5100–5405, ~306 lines)
-// PIZZA WARS MISSION                               (5406–5480, ~75 lines)
-// PLAYER                                           (5481–5524, ~44 lines)
-// PIZZA PLACE & INTERIOR                           (5525–5688, ~164 lines)
-// SIDEWALKS & STOREFRONT AWNINGS                   (5689–5815, ~127 lines)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (5816–6015, ~200 lines)
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6016–6131, ~116 lines)
-// DAY/NIGHT & HEIST SYSTEM                         (6132–6324, ~193 lines)
-// PICKUPS                                          (6325–6367, ~43 lines)
-// HELICOPTERS                                      (6368–6870, ~503 lines)
-// TALKING PEDS                                     (6871–7012, ~142 lines)
-// WEAPONS                                          (7013–7720, ~708 lines)
-// WANTED                                           (7721–7826, ~106 lines)
-// CAR PHYSICS                                      (7827–8054, ~228 lines)
-// PLAYER: FOOT & CAR                               (8055–8806, ~752 lines)
-// HUD / TOASTS                                     (8807–8850, ~44 lines)
-// MISSIONS                                         (8851–9024, ~174 lines)
-// AI                                               (9025–9147, ~123 lines)
-// FOOT COPS                                        (9148–9191, ~44 lines)
-// SEWER RATS                                       (9192–9308, ~117 lines)
-// MAMA RAT (rat vengeance) — PLACEHOLDER           (9309–9675, ~367 lines)
-// BUSTED / WASTED                                  (9676–9766, ~91 lines)
-// CAMERA                                           (9767–9876, ~110 lines)
-// MINIMAP                                          (9877–9924, ~48 lines)
-// MAIN LOOP                                        (9925–10108, ~184 lines)
-// ORIENTATION                                      (10109–10166, ~58 lines)
-// ANIMATED INTRO                                   (10167–10522, ~356 lines)
-// STORY: TURBO JONES, CHAPTER 1                    (10523–10778, ~256 lines)
-// CUTSCENE SYSTEM                                  (10779–11097, ~319 lines)
-// VOICEOVER SYSTEM                                 (11098–11179, ~82 lines)
-// INTRO NARRATION                                  (11180–11481, ~302 lines)
-// DEV TOOLS                                        (11482–11559, ~78 lines)
-// CINEMA MODE (was REPLAY)                         (11560–11692, ~133 lines)
-// CINEMA: SCENES & STAGING                         (11693–11908, ~216 lines)
-// PAUSE MENU & SETTINGS                            (11909–12118, ~210 lines)
-// CONTROLS CARD (U2 onboarding)                    (12119–12151, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (12152–12211, ~60 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                   (12212–end, ~41 lines: boot, init, resize handlers, quality apply)
+// FOOTBALL FIELD                                   (3015–3065, ~51 lines)
+// ELEVATED LIGHT RAIL                              (3066–3190, ~125 lines)
+// STAIRS & FIRE ESCAPES                            (3191–3265, ~75 lines)
+// WALL LADDERS                                     (3266–3543, ~278 lines)
+// PARTICLES                                        (3544–3598, ~55 lines)
+// BLOB SHADOWS                                     (3599–3660, ~62 lines)
+// GPU RESOURCE CLEANUP                             (3661–3682, ~22 lines)
+// CARS                                             (3683–3974, ~292 lines)
+// PEDESTRIANS                                      (3975–4183, ~209 lines)
+// PIZZA DELIVERY SYSTEM                            (4184–4339, ~156 lines)
+// RIVAL PIZZA GANG: CHAOS PIZZA                    (4340–4467, ~128 lines)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4468–4647, ~180 lines)
+// COACH REMATCH (FB3)                              (4648–5126, ~479 lines)
+// TURBO BOWL (FB4)                                 (5127–5490, ~364 lines)
+// STRAY DOGS & DOG GANGS                           (5491–5796, ~306 lines)
+// PIZZA WARS MISSION                               (5797–5871, ~75 lines)
+// PLAYER                                           (5872–5915, ~44 lines)
+// PIZZA PLACE & INTERIOR                           (5916–6079, ~164 lines)
+// SIDEWALKS & STOREFRONT AWNINGS                   (6080–6206, ~127 lines)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (6207–6406, ~200 lines)
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6407–6522, ~116 lines)
+// DAY/NIGHT & HEIST SYSTEM                         (6523–6715, ~193 lines)
+// PICKUPS                                          (6716–6758, ~43 lines)
+// HELICOPTERS                                      (6759–7261, ~503 lines)
+// TALKING PEDS                                     (7262–7403, ~142 lines)
+// WEAPONS                                          (7404–8113, ~710 lines)
+// WANTED                                           (8114–8219, ~106 lines)
+// CAR PHYSICS                                      (8220–8447, ~228 lines)
+// PLAYER: FOOT & CAR                               (8448–9199, ~752 lines)
+// HUD / TOASTS                                     (9200–9243, ~44 lines)
+// MISSIONS                                         (9244–9417, ~174 lines)
+// AI                                               (9418–9540, ~123 lines)
+// FOOT COPS                                        (9541–9585, ~45 lines)
+// SEWER RATS                                       (9586–9702, ~117 lines)
+// MAMA RAT (rat vengeance) — PLACEHOLDER           (9703–10069, ~367 lines)
+// BUSTED / WASTED                                  (10070–10160, ~91 lines)
+// CAMERA                                           (10161–10270, ~110 lines)
+// MINIMAP                                          (10271–10318, ~48 lines)
+// MAIN LOOP                                        (10319–10502, ~184 lines)
+// ORIENTATION                                      (10503–10560, ~58 lines)
+// ANIMATED INTRO                                   (10561–10916, ~356 lines)
+// STORY: TURBO JONES, CHAPTER 1                    (10917–11172, ~256 lines)
+// CUTSCENE SYSTEM                                  (11173–11491, ~319 lines)
+// VOICEOVER SYSTEM                                 (11492–11573, ~82 lines)
+// INTRO NARRATION                                  (11574–11875, ~302 lines)
+// DEV TOOLS                                        (11876–11953, ~78 lines)
+// CINEMA MODE (was REPLAY)                         (11954–12086, ~133 lines)
+// CINEMA: SCENES & STAGING                         (12087–12302, ~216 lines)
+// PAUSE MENU & SETTINGS                            (12303–12531, ~229 lines)
+// CONTROLS CARD (U2 onboarding)                    (12532–12564, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (12565–12624, ~60 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                   (12625–end, ~41 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -1711,6 +1716,392 @@ let skyMesh, sunSpr, skyTexNight, skyTexDay, sunTexNight, sunTexDay;
   sunSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:sunTexNight,fog:false,depthWrite:false,transparent:true}));
   sunSpr.scale.set(220,220,1); sunSpr.position.set(240,330,-700); scene.add(sunSpr);
 })();
+
+// ================= POST FX =================
+// Screen-space finishing pass. Everything the game draws now lands in an
+// offscreen target first; this section blooms the neon, grades the colour, and
+// lays on the film/CRT texture that makes San Chaos read as *shot* rather than
+// *rendered*. Nothing here touches gameplay state — it is a pure function of
+// the rendered frame plus a few decaying impulses gameplay pokes in through
+// fxFlash() / fxDamage() / fxImpact().
+//
+// Written against the vendored three.js r128 CORE only (no examples/jsm
+// EffectComposer), so the zero-build deploy rule still holds.
+//
+// Pipeline at tier 'high':
+//   scene ─▶ rtScene (MSAA on WebGL2)
+//             ├─▶ bright-pass ½ ─▶ blur H/V ×2 ─▶ rtHalf ─┐
+//             │                     └─▶ ¼ ─▶ blur H/V ×2 ─┤ (wide halo)
+//             └─────────────────────────── composite ◀────┴─▶ screen
+// 'medium' drops the ¼ halo and one blur iteration; 'low' skips bloom entirely
+// and runs the (cheap) grade/vignette/grain composite only.
+//
+// On the bright-pass metric: it thresholds MAX CHANNEL, not luminance. The
+// scene renders LDR into an 8-bit target, so a saturated neon sign (1,0.1,0.9)
+// and a saturated car paint (1,0.24,0.6) are genuinely indistinguishable to a
+// screen-space filter — luminance would throw away the neon, which is the one
+// thing that must glow. The threshold below is tuned so lit windows, sign
+// faces, headlights and fireballs bloom while paint only picks up a sheen.
+// The real fix, if this is ever worth it, is a half-float scene target plus
+// >1.0 emissive colours on the §CITY GLOW materials; that is an HDR authoring
+// change across another section, not a post-FX one.
+const FX={
+  enabled:true,          // master switch — Settings > FILM FX
+  tier:'high',
+  bloom:0.40,            // strength of the ½-res glow
+  bloomWide:0.26,        // strength of the ¼-res halo
+  threshold:0.88, knee:0.20,
+  exposure:1.0,
+  contrast:1.06, sat:1.10,
+  vignette:0.36, grain:0.024, scan:0.018,
+  aberration:0.0,        // driven by speed/boost, plus impulses
+  // decaying impulses — see fxFlash/fxDamage/fxImpact
+  flash:0, flashR:1, flashG:1, flashB:1,
+  damage:0, desat:0, kick:0, bloomPulse:0,
+};
+// Impulses. Each one is a spike that decays in updateFxImpulses(); call sites
+// stay one-liners so the gameplay code reads the same as it did before.
+function fxFlash(amt,r,g,b){         // explosions, lightning, muzzle flare
+  if(!FX.enabled) return;
+  if(amt<=FX.flash) return;          // keep the brightest flash in flight
+  FX.flash=Math.min(1.1,amt); FX.flashR=r!==undefined?r:1; FX.flashG=g!==undefined?g:1; FX.flashB=b!==undefined?b:1;
+}
+function fxDamage(amt){              // took a hit — red bloom in from the edges
+  if(!FX.enabled) return;
+  FX.damage=Math.min(1,FX.damage+amt);
+  FX.desat=Math.min(0.8,FX.desat+amt*0.5);
+}
+function fxImpact(amt){              // lens punch: aberration + a bloom swell
+  if(!FX.enabled||SETTINGS_REDUCE_MOTION()) return;
+  FX.kick=Math.min(1,FX.kick+amt);
+  FX.bloomPulse=Math.min(1.2,FX.bloomPulse+amt*0.7);
+}
+// SETTINGS is a `const` declared much further down (§PAUSE MENU & SETTINGS),
+// but loop() starts before that line runs, so the first frames land inside its
+// temporal dead zone. `typeof` does NOT save you there — reading a TDZ binding
+// throws ReferenceError either way — so probe it once through try/catch and
+// cache the reference the moment it exists.
+let _fxSettings=null;
+function SETTINGS_REDUCE_MOTION(){
+  if(_fxSettings===null){ try{ _fxSettings=SETTINGS; }catch(e){ return false; } }
+  return !!_fxSettings.reduceMotion;
+}
+
+const POSTFX=(function(){
+  const caps=renderer.capabilities;
+  const canMSAA=!!(caps.isWebGL2&&THREE.WebGLMultisampleRenderTarget&&caps.maxSamples>1);
+  const _size=new THREE.Vector2();
+
+  function makeRT(w,h,msaa){
+    const opts={ minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter,
+                 format:THREE.RGBAFormat, depthBuffer:!!msaa, stencilBuffer:false };
+    if(msaa&&canMSAA){
+      try{
+        const rt=new THREE.WebGLMultisampleRenderTarget(w,h,opts);
+        rt.samples=Math.min(4,caps.maxSamples);
+        return rt;
+      }catch(e){ /* fall through to a plain target */ }
+    }
+    return new THREE.WebGLRenderTarget(w,h,opts);
+  }
+
+  // rtScene keeps a depth buffer (it's what the world renders into); the bloom
+  // chain is colour-only.
+  let W=1,H=1;
+  let rtScene=makeRT(1,1,true);
+  let rtA=makeRT(1,1,false), rtB=makeRT(1,1,false);      // ½ res ping-pong
+  let rtC=makeRT(1,1,false), rtD=makeRT(1,1,false);      // ¼ res ping-pong
+
+  const VERT=`varying vec2 vUv;
+    void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }`;
+
+  // --- bright pass: 4-tap box downsample, then a soft-knee threshold so the
+  // glow ramps in instead of popping at a hard cutoff.
+  const matBright=new THREE.ShaderMaterial({
+    uniforms:{ tDiffuse:{value:null}, uTexel:{value:new THREE.Vector2()},
+               uThreshold:{value:0.88}, uKnee:{value:0.20} },
+    vertexShader:VERT,
+    fragmentShader:`
+      uniform sampler2D tDiffuse; uniform vec2 uTexel;
+      uniform float uThreshold, uKnee;
+      varying vec2 vUv;
+      void main(){
+        vec3 c  = texture2D(tDiffuse, vUv+uTexel*vec2(-1.0,-1.0)).rgb;
+             c += texture2D(tDiffuse, vUv+uTexel*vec2( 1.0,-1.0)).rgb;
+             c += texture2D(tDiffuse, vUv+uTexel*vec2(-1.0, 1.0)).rgb;
+             c += texture2D(tDiffuse, vUv+uTexel*vec2( 1.0, 1.0)).rgb;
+        c *= 0.25;
+        float l = max(c.r, max(c.g, c.b));
+        float soft = clamp(l-uThreshold+uKnee, 0.0, 2.0*uKnee);
+        soft = soft*soft/(4.0*uKnee+1e-4);
+        float contrib = max(soft, l-uThreshold)/max(l,1e-4);
+        gl_FragColor = vec4(c*contrib, 1.0);
+      }`,
+    depthTest:false, depthWrite:false });
+
+  // --- separable gaussian, 5 linear-filtered taps ≈ a 9-tap kernel
+  const matBlur=new THREE.ShaderMaterial({
+    uniforms:{ tDiffuse:{value:null}, uDir:{value:new THREE.Vector2()} },
+    vertexShader:VERT,
+    fragmentShader:`
+      uniform sampler2D tDiffuse; uniform vec2 uDir;
+      varying vec2 vUv;
+      void main(){
+        vec3 s = texture2D(tDiffuse, vUv).rgb*0.227027;
+        s += (texture2D(tDiffuse, vUv+uDir*1.3846153846).rgb
+            + texture2D(tDiffuse, vUv-uDir*1.3846153846).rgb)*0.3162162162;
+        s += (texture2D(tDiffuse, vUv+uDir*3.2307692308).rgb
+            + texture2D(tDiffuse, vUv-uDir*3.2307692308).rgb)*0.0702702703;
+        gl_FragColor = vec4(s,1.0);
+      }`,
+    depthTest:false, depthWrite:false });
+
+  // --- composite: bloom + grade + vignette + grain + aberration + impulses.
+  // Order is deliberate and matches how a real grade is built: optics first
+  // (aberration, bloom), then exposure/curve/tint, then the impulse overlays,
+  // then the lens/film texture last so vignette and grain sit *over* the image.
+  const matComp=new THREE.ShaderMaterial({
+    uniforms:{
+      tScene:{value:null}, tHalf:{value:null}, tQuarter:{value:null},
+      uBloom:{value:0.40}, uBloomWide:{value:0.26}, uBloomOn:{value:1},
+      uExposure:{value:1.0}, uContrast:{value:1.06}, uSat:{value:1.10},
+      uVignette:{value:0.36}, uGrain:{value:0.024}, uScan:{value:0.018},
+      uAberr:{value:0.0}, uFlash:{value:0.0}, uFlashCol:{value:new THREE.Color(1,1,1)},
+      uDamage:{value:0.0}, uDesat:{value:0.0},
+      uTime:{value:0.0}, uRes:{value:new THREE.Vector2(1,1)},
+      // synthwave split-tone: shadows drift indigo, highlights warm up
+      uShadowTint:{value:new THREE.Color(0.90,0.92,1.10)},
+      uHighTint:{value:new THREE.Color(1.07,1.00,0.94)},
+    },
+    vertexShader:VERT,
+    fragmentShader:`
+      uniform sampler2D tScene, tHalf, tQuarter;
+      uniform float uBloom, uBloomWide, uBloomOn;
+      uniform float uExposure, uContrast, uSat;
+      uniform float uVignette, uGrain, uScan;
+      uniform float uAberr, uFlash, uDamage, uDesat, uTime;
+      uniform vec3 uFlashCol, uShadowTint, uHighTint;
+      uniform vec2 uRes;
+      varying vec2 vUv;
+
+      float luma(vec3 c){ return dot(c, vec3(0.2126,0.7152,0.0722)); }
+      float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
+      // soft shoulder: linear to 0.8, then rolls asymptotically to 1.0 so a
+      // blown-out neon sign keeps its hue instead of clipping to flat white
+      vec3 softClip(vec3 c){
+        vec3 k = vec3(0.8);
+        vec3 over = max(c-k, 0.0);
+        return min(c,k) + (1.0-k)*(over/(over+(1.0-k)));
+      }
+
+      void main(){
+        vec2 uv = vUv;
+        vec2 fromC = uv - 0.5;
+        float r2 = dot(fromC, fromC);
+
+        // --- chromatic aberration: radial, quadratic toward the corners
+        vec3 col;
+        if(uAberr > 0.0005){
+          vec2 off = fromC * r2 * uAberr;
+          col.r = texture2D(tScene, uv + off).r;
+          col.g = texture2D(tScene, uv).g;
+          col.b = texture2D(tScene, uv - off).b;
+        } else {
+          col = texture2D(tScene, uv).rgb;
+        }
+
+        // --- bloom. Both branches are on uniforms, so they are coherent across
+        // the whole draw and the skipped fetch really is skipped — at tier
+        // 'medium' tQuarter is bound to the same texture as tHalf and must not
+        // be sampled just to be multiplied by zero.
+        if(uBloomOn > 0.5){
+          col += texture2D(tHalf, uv).rgb * uBloom;
+          if(uBloomWide > 0.001) col += texture2D(tQuarter, uv).rgb * uBloomWide;
+        }
+
+        // --- grade
+        col *= uExposure;
+        col = softClip(col);
+        float l = luma(col);
+        col *= mix(uShadowTint, uHighTint, smoothstep(0.0, 0.70, l));
+        col = (col - 0.5)*uContrast + 0.5;
+        col = max(col, 0.0);
+        col = mix(vec3(luma(col)), col, uSat);
+
+        // --- impulses: flash reads as light in the room, damage as blood at
+        // the edge of vision, desat as the world greying out
+        col += uFlashCol * uFlash;
+        col = mix(col, vec3(0.62,0.03,0.07), uDamage*smoothstep(0.06,0.24,r2));
+        col = mix(vec3(luma(col)), col, 1.0-uDesat);
+
+        // --- lens + film, last
+        col *= 1.0 - uVignette*smoothstep(0.02, 0.30, r2);
+        if(uScan > 0.0){
+          col *= 1.0 - uScan*(0.5 + 0.5*sin(uv.y*uRes.y*1.55));
+        }
+        if(uGrain > 0.0){
+          float n = hash(uv*uRes*0.5 + fract(uTime)*57.31);
+          col += (n-0.5)*uGrain;
+        }
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+    depthTest:false, depthWrite:false });
+
+  // one fullscreen triangle-ish quad, reused by every pass
+  const quadScene=new THREE.Scene();
+  const quadCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+  const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2), matComp);
+  quad.frustumCulled=false;
+  quadScene.add(quad);
+
+  function blit(mat,target){
+    quad.material=mat;
+    renderer.setRenderTarget(target||null);
+    renderer.render(quadScene,quadCam);
+  }
+
+  function resize(w,h){
+    if(w===W&&h===H) return;
+    W=w; H=h;
+    const hw=Math.max(1,w>>1), hh=Math.max(1,h>>1);
+    const qw=Math.max(1,w>>2), qh=Math.max(1,h>>2);
+    rtScene.setSize(w,h);
+    rtA.setSize(hw,hh); rtB.setSize(hw,hh);
+    rtC.setSize(qw,qh); rtD.setSize(qw,qh);
+    matComp.uniforms.uRes.value.set(w,h);
+  }
+
+  // Pushes the FX state object into the shader uniforms once per frame.
+  function syncUniforms(){
+    const u=matComp.uniforms, reduce=SETTINGS_REDUCE_MOTION();
+    const bloomOn=FX.tier!=='low';
+    u.uBloomOn.value=bloomOn?1:0;
+    u.uBloom.value=FX.bloom+FX.bloomPulse*0.9;
+    u.uBloomWide.value=FX.tier==='high'?(FX.bloomWide+FX.bloomPulse*0.6):0;
+    u.uExposure.value=FX.exposure;
+    u.uContrast.value=FX.contrast;
+    u.uSat.value=FX.sat;
+    u.uVignette.value=FX.vignette;
+    u.uGrain.value=reduce?0:FX.grain;
+    u.uScan.value=reduce?0:FX.scan;
+    u.uAberr.value=reduce?0:(FX.aberration+FX.kick*0.06);
+    u.uFlash.value=FX.flash;
+    u.uFlashCol.value.setRGB(FX.flashR,FX.flashG,FX.flashB);
+    u.uDamage.value=FX.damage;
+    u.uDesat.value=FX.desat;
+    matBright.uniforms.uThreshold.value=FX.threshold;
+    matBright.uniforms.uKnee.value=FX.knee;
+  }
+
+  function render(){
+    renderer.getDrawingBufferSize(_size);
+    resize(Math.max(1,Math.floor(_size.x)), Math.max(1,Math.floor(_size.y)));
+    syncUniforms();
+
+    // 1. the world, into the offscreen target
+    renderer.setRenderTarget(rtScene);
+    renderer.render(scene,camera);
+
+    const u=matComp.uniforms;
+    u.tScene.value=rtScene.texture;
+
+    if(FX.tier==='low'){
+      u.tHalf.value=rtA.texture; u.tQuarter.value=rtA.texture;   // unread (uBloomOn=0)
+    } else {
+      const iters=FX.tier==='high'?2:1;
+      // 2. bright pass into ½ res
+      matBright.uniforms.tDiffuse.value=rtScene.texture;
+      matBright.uniforms.uTexel.value.set(1/W,1/H);
+      blit(matBright,rtA);
+      // 3. separable blur, ping-ponging A→B→A
+      const hw=Math.max(1,W>>1), hh=Math.max(1,H>>1);
+      for(let i=0;i<iters;i++){
+        matBlur.uniforms.tDiffuse.value=rtA.texture;
+        matBlur.uniforms.uDir.value.set(1/hw,0); blit(matBlur,rtB);
+        matBlur.uniforms.tDiffuse.value=rtB.texture;
+        matBlur.uniforms.uDir.value.set(0,1/hh); blit(matBlur,rtA);
+      }
+      u.tHalf.value=rtA.texture;
+
+      if(FX.tier==='high'){
+        // 4. the wide halo: take the ½ result down to ¼ and blur it again
+        const qw=Math.max(1,W>>2), qh=Math.max(1,H>>2);
+        matBlur.uniforms.tDiffuse.value=rtA.texture;
+        matBlur.uniforms.uDir.value.set(1/qw,0); blit(matBlur,rtC);
+        matBlur.uniforms.tDiffuse.value=rtC.texture;
+        matBlur.uniforms.uDir.value.set(0,1/qh); blit(matBlur,rtD);
+        matBlur.uniforms.tDiffuse.value=rtD.texture;
+        matBlur.uniforms.uDir.value.set(2/qw,0); blit(matBlur,rtC);
+        matBlur.uniforms.tDiffuse.value=rtC.texture;
+        matBlur.uniforms.uDir.value.set(0,2/qh); blit(matBlur,rtD);
+        u.tQuarter.value=rtD.texture;
+      } else {
+        u.tQuarter.value=rtA.texture;   // uBloomWide is 0 at this tier
+      }
+    }
+
+    // 5. composite to the screen
+    blit(matComp,null);
+  }
+
+  return { render, resize,
+           // exposed for tests/debug
+           _rt:()=>({rtScene,rtA,rtB,rtC,rtD,W,H}), _msaa:canMSAA, _mats:{matBright,matBlur,matComp} };
+})();
+
+// Decays every impulse and derives the continuous, state-driven values
+// (speed aberration, low-health throb). Called from renderFrame() rather than
+// the sim loop so it keeps running through cutscenes, replays and pauses.
+function updateFxImpulses(dt){
+  const k=Math.exp(-6.5*dt);
+  FX.flash*=Math.exp(-9*dt);      if(FX.flash<0.002) FX.flash=0;
+  FX.kick*=k;                     if(FX.kick<0.002) FX.kick=0;
+  FX.bloomPulse*=Math.exp(-4.5*dt); if(FX.bloomPulse<0.002) FX.bloomPulse=0;
+  FX.damage*=Math.exp(-3.2*dt);   if(FX.damage<0.002) FX.damage=0;
+  FX.desat*=Math.exp(-2.4*dt);    if(FX.desat<0.002) FX.desat=0;
+
+  // Speed sells itself: the lens stretches as you go faster, hardest under
+  // boost. Foot mode gets a much smaller share so sprinting still reads.
+  let speedA=0;
+  if(typeof G!=='undefined'&&typeof player!=='undefined'){
+    if(G.mode==='car'&&player.car){
+      const c=player.car, top=(typeof CARTYPES!=='undefined'&&CARTYPES[c.type])?CARTYPES[c.type].top:30;
+      const sr=Math.min(1.4,Math.abs(c.speed)/Math.max(1,top));
+      speedA=sr*0.055+((typeof input!=='undefined'&&input.boost&&G.boost>0)?0.05:0);
+    } else if(G.mode==='heli'&&player.heli){
+      speedA=0.018;
+    } else if(player.sprinting){
+      speedA=0.016;
+    }
+  }
+  FX.aberration+=(speedA-FX.aberration)*(1-Math.exp(-5*dt));
+
+  // Low health: the world greys out and the edges keep bleeding. This is a
+  // floor under the decaying impulse, not an addition, so a fresh hit still
+  // spikes above it.
+  if(typeof G!=='undefined'&&G.started&&!G.over&&G.mode==='foot'&&G.hp<35){
+    const t=1-Math.max(0,G.hp)/35;
+    const pulse=0.5+0.5*Math.sin(performance.now()/(430-t*150));
+    FX.damage=Math.max(FX.damage,t*0.50*(0.55+0.45*pulse));
+    FX.desat=Math.max(FX.desat,t*0.50);
+  }
+}
+
+// The one render entry point. Every former `renderer.render(scene,camera)`
+// call site goes through here so post FX can never be half-applied.
+let _fxLastT=performance.now();
+function renderFrame(){
+  const now=performance.now();
+  const dt=Math.min(0.05,(now-_fxLastT)/1000); _fxLastT=now;
+  if(!FX.enabled){ renderer.setRenderTarget(null); renderer.render(scene,camera); return; }
+  updateFxImpulses(dt);
+  FX._t=(FX._t||0)+dt;
+  POSTFX._mats.matComp.uniforms.uTime.value=FX._t;
+  POSTFX.render();
+}
+// Called by applyQuality() so the bloom chain follows the same auto/manual
+// tier the rest of the renderer uses.
+function fxSetTier(tier){ FX.tier=(tier==='low'||tier==='medium'||tier==='high')?tier:'high'; }
 
 // ================= CITY =================
 const H=WORLD.half, PITCH=WORLD.pitch, ROAD=WORLD.road, BLOCK=WORLD.block;
@@ -7398,6 +7789,7 @@ function updateFireballs(dt){
 }
 function explode(x,y,z){
   sfx.rpgBoom(); shake(0.8); triggerHitStop(0.06); haptic([40,50,70]);
+  fxFlash(0.30,1.0,0.72,0.38); fxImpact(0.55);   // §POST FX
   G.lastBoom={x,z,t:performance.now()};
   spawnFireball(x,Math.max(y,1),z,4.5);
   burst(x,y,z,42,COL_FIRE,8,1.1,4);
@@ -7412,6 +7804,7 @@ const CAR_BOOM_DUR=0.9;      // slowed from the shared 0.55s fireball default, e
 const CAR_BOOM_RADIUS=10;    // the one blast radius, used by both damage and tests
 function bigExplosion(x,y,z){
   sfx.carBoom(); shake(1.2); triggerHitStop(0.08); haptic([60,40,90,40,120]);
+  fxFlash(0.52,1.0,0.70,0.33); fxImpact(0.9);   // §POST FX
   spawnFireball(x,y+1,z,8.5,CAR_BOOM_DUR);
   burst(x,y,z,70,COL_FIRE,12,1.6,4);
   burst(x,y,z,40,COL_FIRE,6,2.2,1);
@@ -9179,6 +9572,7 @@ function damagePlayer(amt){
   amt*=difficulty().dmgMult;
   G.hp-=amt; G.hpT=0;
   shake(clamp(amt*0.03,0.12,0.4));
+  fxDamage(clamp(amt*0.035,0.16,0.6));   // §POST FX — red edge pulse
   if(G.hp<=0){ G.hp=0; wasted(); }
 }
 // cheap building line-of-sight: sample the segment between two points
@@ -9945,7 +10339,7 @@ function loop(){
     waterTex.offset.x+=dt*0.014; waterTex.offset.y+=dt*0.007;
     water.position.y=-0.34+Math.sin(now/1400)*0.05;
     updateClouds(dt); updateGulls(dt); updateParticles(dt); updateLights(dt); updateRadioTowers(now/1000);
-    renderer.render(scene,camera);
+    renderFrame();
     return;
   }
 
@@ -9953,7 +10347,7 @@ function loop(){
   // falls through to the normal sim loop so staged scenes actually play out.
   if(G.replay&&(!replay||!replay.live)){
     updateReplay(dt);
-    renderer.render(scene,camera);
+    renderFrame();
     return;
   }
 
@@ -10066,7 +10460,7 @@ function loop(){
     fpsAcc+=dt; fpsN++; fpsT+=dt;
     if(fpsT>2){ const fps=fpsN/fpsAcc; $('fpsWarn').textContent=Math.round(fps)+' fps'; autoQualityTick(fps); fpsAcc=0; fpsN=0; fpsT=0; }
   }
-  renderer.render(scene,camera);
+  renderFrame();
 }
 // deferred spawns: pizza place, chaos gang, gang members and guards all exist by now
 function bootSpawns(){
@@ -11911,7 +12305,7 @@ function cinemaPlayScene(id){
 // so each sets its own flag and syncPause() is the only writer of G.paused.
 const SET_KEY='gtb4.settings';
 const SETTINGS=(function(){
-  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true, lookSens:100, invertY:false, difficulty:'normal', reduceMotion:false };
+  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true, lookSens:100, invertY:false, difficulty:'normal', reduceMotion:false, postFx:true };
   try{ const s=JSON.parse(localStorage.getItem(SET_KEY)); if(s&&s.v===1) Object.assign(d,s); }catch(e){}
   return d;
 })();
@@ -11999,6 +12393,7 @@ function applyQuality(tier){
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,cfg.pixelRatio));
   TRAFFIC_CAP=cfg.trafficCap; PED_CAP=cfg.pedCap; PARTICLE_SCALE=cfg.particleScale;
   if(scene.fog){ scene.fog.near=cfg.fogNear; scene.fog.far=cfg.fogFar; }
+  fxSetTier(tier);   // §POST FX — bloom chain follows the same tier
   trimToCaps();
 }
 function refreshQualityButtons(){
@@ -12064,6 +12459,24 @@ function setReduceMotion(on){ SETTINGS.reduceMotion=on; saveSettings(); refreshR
   g.querySelectorAll('.qBtn').forEach(b=>{
     b.addEventListener('click',()=>setReduceMotion(b.dataset.v==='on'));
     b.addEventListener('touchend',e=>{ e.preventDefault(); setReduceMotion(b.dataset.v==='on'); });
+  });
+})();
+
+// ---- FILM FX toggle (§POST FX): bloom/grade/vignette/grain on or off ----
+// Off falls all the way back to the pre-post-FX `renderer.render(scene,camera)`
+// path, so this is also the escape hatch if a device hates render targets.
+function refreshPostFxButtons(){
+  const g=$('postFxGroup'); if(!g) return;
+  g.querySelectorAll('.qBtn').forEach(b=>b.classList.toggle('on',(b.dataset.v==='on')===!!SETTINGS.postFx));
+}
+function setPostFx(on){ SETTINGS.postFx=on; FX.enabled=on; saveSettings(); refreshPostFxButtons(); }
+(function initPostFxUI(){
+  FX.enabled=SETTINGS.postFx!==false;
+  const g=$('postFxGroup'); if(!g) return;
+  refreshPostFxButtons();
+  g.querySelectorAll('.qBtn').forEach(b=>{
+    b.addEventListener('click',()=>setPostFx(b.dataset.v==='on'));
+    b.addEventListener('touchend',e=>{ e.preventDefault(); setPostFx(b.dataset.v==='on'); });
   });
 })();
 
