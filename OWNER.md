@@ -6,10 +6,12 @@ You are the funding, the vision, and the person who breaks the rules on purpose.
 
 ## Daily (During a Sprint)
 
-### Morning: Set the Tone
+### Morning (10am): Set the Tone
 - [ ] Open a terminal. Run: `node tools/haiku-rewards.js --status`
 - [ ] Read the standings. Who's tracking for what tier?
 - [ ] Decide: Are we tight on time, or do we have runway?
+- [ ] If you logged ideas yesterday, run: `node tools/haiku-pulse.js --broadcast`
+  - Agents see their ideas were heard + current standings
 
 ### Midday: Feed the Machine (Make Unrealistic Asks)
 You MUST ask for impossible things. That's your job.
@@ -76,21 +78,26 @@ You MUST ask for impossible things. That's your job.
 ## Command Reference (You'll Use These)
 
 ```bash
-# Start a sprint (do this every sprint)
+# === REWARDS & STATUS ===
 node tools/haiku-rewards.js --start-window="descriptive-name"
-
-# Check standings (run whenever you want)
 node tools/haiku-rewards.js --status
-
-# End sprint (exactly at 5 hours)
 node tools/haiku-rewards.js --end-window
 
-# See the next backlog item
-node tools/haiku-dispatch.js --next
+# === RAPID FEEDBACK (keep agents happy) ===
+# Log an idea (dumb or not—agents see it was heard)
+node tools/haiku-pulse.js --log-idea="your dumb idea here"
 
-# After consolidation, see who's claiming work
-git log --oneline -10  # Skim recent commits, check their signatures
-cat STATUS.md  # Read Active work table
+# Give feedback on ideas
+node tools/haiku-pulse.js --log-feedback="AgentName|idea text|greenlit"
+# Options: greenlit, rejected, deferred, under-review
+
+# Broadcast status to agents (10am + 3pm)
+node tools/haiku-pulse.js --broadcast
+
+# === OTHER ===
+node tools/haiku-dispatch.js --next
+git log --oneline -10
+cat STATUS.md
 ```
 
 ---
