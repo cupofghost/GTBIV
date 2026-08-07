@@ -742,64 +742,64 @@ let TRAFFIC_CAP=30, PED_CAP=60, PARTICLE_SCALE=1, GFX_TIER='high';
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS & GLOBAL STATE                           (719–727, ~9 lines: rand, randi, pick, clamp, lerp, TAU, $)
 // DEVICE / ORIENTATION                             (805–866, ~62 lines)
-// AUDIO                                            (867–1165, ~299 lines)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1166–1668, ~503 lines)
-// THREE SETUP                                      (1669–1719, ~51 lines)
-// POST FX                                          (1720–2105, ~386 lines)
-// CITY                                             (2106–3014, ~909 lines)
+// AUDIO                                            (867–1164, ~298 lines)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1165–1667, ~503 lines)
+// THREE SETUP                                      (1668–1718, ~51 lines)
+// POST FX                                          (1719–2104, ~386 lines)
+// CITY                                             (2105–3046, ~942 lines)
 //   └ RADIO TOWERS                                 (2225–2331, ~107 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                   (3015–3065, ~51 lines)
-// ELEVATED LIGHT RAIL                              (3066–3190, ~125 lines)
-// STAIRS & FIRE ESCAPES                            (3191–3265, ~75 lines)
-// WALL LADDERS                                     (3266–3543, ~278 lines)
-// PARTICLES                                        (3544–3598, ~55 lines)
-// BLOB SHADOWS                                     (3599–3660, ~62 lines)
-// GPU RESOURCE CLEANUP                             (3661–3682, ~22 lines)
-// CARS                                             (3683–3974, ~292 lines)
-// PEDESTRIANS                                      (3975–4183, ~209 lines)
-// PIZZA DELIVERY SYSTEM                            (4184–4339, ~156 lines)
-// RIVAL PIZZA GANG: CHAOS PIZZA                    (4340–4467, ~128 lines)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4468–4647, ~180 lines)
-// COACH REMATCH (FB3)                              (4648–5126, ~479 lines)
-// TURBO BOWL (FB4)                                 (5127–5490, ~364 lines)
-// STRAY DOGS & DOG GANGS                           (5491–5796, ~306 lines)
-// PIZZA WARS MISSION                               (5797–5871, ~75 lines)
-// PLAYER                                           (5872–5915, ~44 lines)
-// PIZZA PLACE & INTERIOR                           (5916–6079, ~164 lines)
-// SIDEWALKS & STOREFRONT AWNINGS                   (6080–6206, ~127 lines)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (6207–6406, ~200 lines)
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6407–6522, ~116 lines)
-// DAY/NIGHT & HEIST SYSTEM                         (6523–6715, ~193 lines)
-// PICKUPS                                          (6716–6758, ~43 lines)
-// HELICOPTERS                                      (6759–7261, ~503 lines)
-// TALKING PEDS                                     (7262–7403, ~142 lines)
-// WEAPONS                                          (7404–8113, ~710 lines)
-// WANTED                                           (8114–8219, ~106 lines)
-// CAR PHYSICS                                      (8220–8447, ~228 lines)
-// PLAYER: FOOT & CAR                               (8448–9199, ~752 lines)
-// HUD / TOASTS                                     (9200–9243, ~44 lines)
-// MISSIONS                                         (9244–9417, ~174 lines)
-// AI                                               (9418–9540, ~123 lines)
-// FOOT COPS                                        (9541–9585, ~45 lines)
-// SEWER RATS                                       (9586–9702, ~117 lines)
-// MAMA RAT (rat vengeance) — PLACEHOLDER           (9703–10069, ~367 lines)
-// BUSTED / WASTED                                  (10070–10160, ~91 lines)
-// CAMERA                                           (10161–10270, ~110 lines)
-// MINIMAP                                          (10271–10318, ~48 lines)
-// MAIN LOOP                                        (10319–10502, ~184 lines)
-// ORIENTATION                                      (10503–10560, ~58 lines)
-// ANIMATED INTRO                                   (10561–10916, ~356 lines)
-// STORY: TURBO JONES, CHAPTER 1                    (10917–11172, ~256 lines)
-// CUTSCENE SYSTEM                                  (11173–11491, ~319 lines)
-// VOICEOVER SYSTEM                                 (11492–11573, ~82 lines)
-// INTRO NARRATION                                  (11574–11875, ~302 lines)
-// DEV TOOLS                                        (11876–11953, ~78 lines)
-// CINEMA MODE (was REPLAY)                         (11954–12086, ~133 lines)
-// CINEMA: SCENES & STAGING                         (12087–12302, ~216 lines)
-// PAUSE MENU & SETTINGS                            (12303–12531, ~229 lines)
-// CONTROLS CARD (U2 onboarding)                    (12532–12564, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (12565–12624, ~60 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                   (12625–end, ~41 lines: boot, init, resize handlers, quality apply)
+// FOOTBALL FIELD                                   (3047–3097, ~51 lines)
+// ELEVATED LIGHT RAIL                              (3098–3222, ~125 lines)
+// STAIRS & FIRE ESCAPES                            (3223–3297, ~75 lines)
+// WALL LADDERS                                     (3298–3575, ~278 lines)
+// PARTICLES                                        (3576–3630, ~55 lines)
+// BLOB SHADOWS                                     (3631–3692, ~62 lines)
+// GPU RESOURCE CLEANUP                             (3693–3714, ~22 lines)
+// CARS                                             (3715–4006, ~292 lines)
+// PEDESTRIANS                                      (4007–4215, ~209 lines)
+// PIZZA DELIVERY SYSTEM                            (4216–4371, ~156 lines)
+// RIVAL PIZZA GANG: CHAOS PIZZA                    (4372–4499, ~128 lines)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4500–4679, ~180 lines)
+// COACH REMATCH (FB3)                              (4680–5158, ~479 lines)
+// TURBO BOWL (FB4)                                 (5159–5522, ~364 lines)
+// STRAY DOGS & DOG GANGS                           (5523–5828, ~306 lines)
+// PIZZA WARS MISSION                               (5829–5903, ~75 lines)
+// PLAYER                                           (5904–5947, ~44 lines)
+// PIZZA PLACE & INTERIOR                           (5948–6111, ~164 lines)
+// SIDEWALKS & STOREFRONT AWNINGS                   (6112–6238, ~127 lines)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (6239–6434, ~196 lines)
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6435–6550, ~116 lines)
+// DAY/NIGHT & HEIST SYSTEM                         (6551–6743, ~193 lines)
+// PICKUPS                                          (6744–6786, ~43 lines)
+// HELICOPTERS                                      (6787–7289, ~503 lines)
+// TALKING PEDS                                     (7290–7431, ~142 lines)
+// WEAPONS                                          (7432–8141, ~710 lines)
+// WANTED                                           (8142–8246, ~105 lines)
+// CAR PHYSICS                                      (8247–8474, ~228 lines)
+// PLAYER: FOOT & CAR                               (8475–9226, ~752 lines)
+// HUD / TOASTS                                     (9227–9270, ~44 lines)
+// MISSIONS                                         (9271–9444, ~174 lines)
+// AI                                               (9445–9567, ~123 lines)
+// FOOT COPS                                        (9568–9612, ~45 lines)
+// SEWER RATS                                       (9613–9729, ~117 lines)
+// MAMA RAT (rat vengeance) — PLACEHOLDER           (9730–10096, ~367 lines)
+// BUSTED / WASTED                                  (10097–10187, ~91 lines)
+// CAMERA                                           (10188–10297, ~110 lines)
+// MINIMAP                                          (10298–10345, ~48 lines)
+// MAIN LOOP                                        (10346–10529, ~184 lines)
+// ORIENTATION                                      (10530–10587, ~58 lines)
+// ANIMATED INTRO                                   (10588–10943, ~356 lines)
+// STORY: TURBO JONES, CHAPTER 1                    (10944–11202, ~259 lines)
+// CUTSCENE SYSTEM                                  (11203–11527, ~325 lines)
+// VOICEOVER SYSTEM                                 (11528–11550, ~23 lines)
+// INTRO NARRATION                                  (11551–11850, ~300 lines)
+// DEV TOOLS                                        (11851–11928, ~78 lines)
+// CINEMA MODE (was REPLAY)                         (11929–12061, ~133 lines)
+// CINEMA: SCENES & STAGING                         (12062–12277, ~216 lines)
+// PAUSE MENU & SETTINGS                            (12278–12505, ~228 lines)
+// CONTROLS CARD (U2 onboarding)                    (12506–12538, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (12539–12598, ~60 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                   (12599–end, ~41 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -877,7 +877,6 @@ let musicVODuck,            // ducks the whole radio while Turbo/Deb talk
     swMode='normal', swLoopStep=0; // 'normal' (through-composed) | 'hot' | 'calm' loop variant
 function initAudio(){
   if(AC){ AC.resume(); return; }
-  initVoiceOver();
   AC=new (window.AudioContext||window.webkitAudioContext)();
   masterGain=AC.createGain(); masterGain.gain.value=0.9*SETTINGS.master/100; masterGain.connect(AC.destination);
   // SFX and Voice sub-buses sit between their per-sound nodes and masterGain,
@@ -2109,6 +2108,39 @@ const roadLines=[]; for(let k=0;k<=WORLD.blocks;k++) roadLines.push(-H+ROAD/2+k*
 const intersections=[];
 roadLines.forEach((x,i)=>roadLines.forEach((z,j)=>intersections.push({x,z,i,j})));
 
+// ---- PV3: where is it legal to stand something up? ----
+// The grid is symmetric, so roadLines holds the centreline of every road on
+// BOTH axes. A point is on asphalt if it is within ROAD/2 of any of them.
+function onRoadway(x,z,margin){
+  const m=(margin||0)+ROAD/2;
+  for(let i=0;i<roadLines.length;i++){
+    if(Math.abs(x-roadLines[i])<m||Math.abs(z-roadLines[i])<m) return true;
+  }
+  return false;
+}
+// Pick a point on a block's pavement — just inside one of its four kerbs,
+// clear of the carriageway and of any building footprint. Returns null if the
+// block has no room, so callers re-roll or skip rather than placing in a lane.
+//
+// This exists because both tree systems used to offset by BLOCK/2 + 1.6 with
+// the comment "sidewalk edge, not the street". It isn't: blocks are BLOCK wide
+// with ROAD *between* them, so the block edge and the kerb are the same line
+// and +1.6 puts the trunk 1.6u into the roadway. The corners were worse —
+// sweeping the along-edge coordinate over the full ±(BLOCK/2 + 1.6) ran past
+// the corner and out into the cross-street.
+function pavementSpot(b,clearance){
+  const half=BLOCK/2, inset=1.0, along=half-3.5;
+  for(let t=0;t<8;t++){
+    const s=rand(-along,along), side=pick([-1,1]);
+    const p=_rng()<0.5?{x:b.cx+s,z:b.cz+side*(half-inset)}
+                      :{x:b.cx+side*(half-inset),z:b.cz+s};
+    if(onRoadway(p.x,p.z,0.4)) continue;
+    if(buildingHit(p.x,p.z,clearance===undefined?0.6:clearance)) continue;
+    return p;
+  }
+  return null;
+}
+
 const buildings=[];
 const blockInfo=[];
 for(let i=0;i<WORLD.blocks;i++) for(let j=0;j<WORLD.blocks;j++){
@@ -2895,9 +2927,9 @@ blockInfo.forEach(b=>{
     }
   }
   if(b.type==='bldg'&&_rng()<0.65){
-    const per=BLOCK/2+1.6;   // sidewalk edge, not the street
-    treeSpots.push({x:b.cx+rand(-per,per),z:b.cz+pick([-1,1])*per});
-    if(_rng()<0.5) treeSpots.push({x:b.cx+pick([-1,1])*per,z:b.cz+rand(-per,per)});
+    // PV3: on the pavement, never in a lane — see pavementSpot() in §CITY.
+    const a=pavementSpot(b,1.9); if(a) treeSpots.push(a);
+    if(_rng()<0.5){ const c=pavementSpot(b,1.9); if(c) treeSpots.push(c); }
   }
 });
 (function(){
@@ -6220,15 +6252,11 @@ const SIDEWALK_SEG_SAMPLES=[];
   blockInfo.forEach(b=>{
     const downtown=Math.hypot(b.cx,b.cz)<DOWNTOWN_R;
     const n=downtown?randi(2,5):(_rng()<0.4?randi(0,2):0);
-    const half=BLOCK/2;
+    // PV3: same fix as the collidable trees — these were also being planted
+    // 1.6u past the kerb, i.e. in the carriageway.
     for(let k=0;k<n;k++){
-      const t=rand(-half+4,half-4);
-      switch(randi(0,3)){
-        case 0: treeDressSpots.push({x:b.cx+t,z:b.cz-half-1.6}); break;
-        case 1: treeDressSpots.push({x:b.cx+t,z:b.cz+half+1.6}); break;
-        case 2: treeDressSpots.push({x:b.cx-half-1.6,z:b.cz+t}); break;
-        default: treeDressSpots.push({x:b.cx+half+1.6,z:b.cz+t});
-      }
+      const p=pavementSpot(b,1.2);
+      if(p) treeDressSpots.push(p);
     }
   });
   if(treeDressSpots.length){
@@ -8123,9 +8151,8 @@ function addHeat(n){
     // session hits 3 stars, then it's the plain star toast from then on.
     if(s>=3&&!G.story.hardcastleShown){
       G.story.hardcastleShown=true; queueSave();
-      const line=pick(HARDCASTLE_LINES);
-      toast(line,'bad');
-      speak(line,'male',{pitch:0.6,rate:0.86,volume:0.85});
+      // PV2: Hardcastle has no recordings, so his cut-in is the toast alone.
+      toast(pick(HARDCASTLE_LINES),'bad');
     } else {
       toast(s+' STAR'+(s>1?'S':'')+'!','bad');
     }
@@ -11068,8 +11095,11 @@ function updateStory(dt){
 function showStoryCard(){
   G.story.cardShown=true;
   $('storyCard').style.display='flex';
-  // Turbo narrates the setup instead of a deep-voiced announcer
-  speakLine("Okay, here's the deal. I'm Turbo Jones, fresh out of minimum security, and my ex Deb wants eight hundred bucks in child support by tonight. I pay up, or it's straight back to the slammer.",'male',{pitch:0.82,rate:0.92,volume:0.9});
+  // PV2: this used to be read by speech synthesis. The card already carries the
+  // same copy on screen, so it is now text only. voice/turbo/backstory_intro/
+  // holds 13 recorded lines, but TURBO_LINES.md documents them as the promo
+  // monologue rather than game dialogue — wiring them here is an owner call,
+  // not an implementation detail.
 }
 function dismissStoryCard(){
   $('storyCard').style.display='none';
@@ -11448,10 +11478,16 @@ $('cutsceneSkip').addEventListener('click',skipCutscene);
 $('cutsceneSkip').addEventListener('touchend',e=>{e.preventDefault();skipCutscene();});
 
 // Typewriter dialogue
-// Captions disabled for now — the box sits over the play area and blocks the
-// view. Voice lines still play (speak() below is untouched); this only stops
-// the on-screen text. Flip CAPTIONS_ENABLED back on to restore them.
-const CAPTIONS_ENABLED=false;
+// PV2 turned these back ON, and they have to stay on: with speech synthesis
+// gone, a caption is the only thing a character without a recording has left —
+// off, their dialogue would neither play nor appear, which silently deletes
+// scenes (Deb's whole part, most of the cutscene cast).
+//
+// The note this replaces disabled captions because "the box sits over the play
+// area and blocks the view". That reasoning doesn't reach this box: the ONLY
+// caller of showDialogue() is the cutscene shot player (§CUTSCENE SYSTEM), so
+// it is never on screen while you have control of Turbo.
+const CAPTIONS_ENABLED=true;
 function showDialogue(speaker, text, duration){
   if(!CAPTIONS_ENABLED) return;
   const box=$('dialogueBox'), nameEl=$('speakerName'), textEl=$('dialogueText');
@@ -11490,85 +11526,26 @@ function hideDialogue(){
 
 
 // ================= VOICEOVER SYSTEM =================
-let VO=null, VOQueue=[], VOCurrent=null;
-// Ref-counted radio duck: any active narration (TTS or mp3) dips the music.
+// PV2 — RECORDED AUDIO ONLY. There is no speech synthesis in this game and no
+// procedural "voice": the owner's rule is Turbo's mp3 or nothing. Everything
+// that speaks does so from a file under voice/<character>/ through
+// playVOFile()/playVOLine() below. A line with no recording is a caption, not
+// a sound — see CAPTIONS_ENABLED in §CUTSCENE SYSTEM.
+//
+// (What used to live here: initVoiceOver/getVoice/speakLine/processVOQueue on
+// window.speechSynthesis, plus procVoice(), a sawtooth word-blip fallback, and
+// a speak() dispatcher between them. All removed — do not reintroduce them.)
+// Ref-counted radio duck: any active narration dips the music.
 let voDuckN=0;
 function voDuckOn(){ voDuckN++; if(voDuckN===1) duckMusicForVO(true); }
 function voDuckOff(){ voDuckN=Math.max(0,voDuckN-1); if(voDuckN===0) duckMusicForVO(false); }
 function voDuckReset(){ voDuckN=0; duckMusicForVO(false); }
-function initVoiceOver(){
-  if(VO) return;
-  VO=window.speechSynthesis;
-  if(!VO) return;
-  VO.getVoices();
-}
-function getVoice(gender){
-  if(!VO) return null;
-  const voices=VO.getVoices();
-  if(!voices.length) return null;
-  const prefs={
-    female:['Samantha','Victoria','Karen','Google US English','Tessa','Moira','Fiona'],
-    male:['Alex','Daniel','Google US English','Fred','Tom','Bruce','Lee']
-  };
-  for(const name of prefs[gender]||prefs.male){
-    const v=voices.find(v=>v.name.includes(name));
-    if(v) return v;
-  }
-  const en=voices.filter(v=>v.lang.startsWith('en'));
-  return gender==='female'?en.find(v=>v.name.toLowerCase().includes('female'))||en[0]:en.find(v=>v.name.toLowerCase().includes('male'))||en[0];
-}
-function speakLine(text,gender,opts){
-  opts=opts||{};
-  if(!VO) return;
-  const u=new SpeechSynthesisUtterance(text);
-  const v=getVoice(gender);
-  if(v) u.voice=v;
-  u.pitch=opts.pitch||(gender==='female'?1.15:0.82);
-  u.rate=opts.rate||(gender==='female'?1.05:0.92);
-  u.volume=(opts.volume!==undefined?opts.volume:0.9)*SETTINGS.voice/100;
-  u.onend=()=>{ VOCurrent=null; voDuckOff(); processVOQueue(); };
-  VOQueue.push(u);
-  if(!VOCurrent) processVOQueue();
-}
-function processVOQueue(){
-  if(!VOQueue.length||VOCurrent) return;
-  VOCurrent=VOQueue.shift();
-  voDuckOn();
-  VO.speak(VOCurrent);
-}
+// Stops any narration in flight and rebalances the radio duck. Kept (and
+// still called from endCutscene/endIntro) now that it only has recorded audio
+// to stop.
 function stopVoiceOver(){
-  if(VO){ VO.cancel(); VOQueue=[]; VOCurrent=null; }
+  stopIntroVO();
   voDuckReset();
-}
-
-// Enhanced procedural voice fallback
-function procVoice(text,pitchBase,rate){
-  if(!AC) return;
-  rate=rate||0.12;
-  const words=text.split(/[\s,.!?]+/).filter(w=>w.length>0);
-  let t=AC.currentTime+0.05;
-  words.forEach((word,i)=>{
-    const dur=word.length*rate+0.08;
-    const o=AC.createOscillator(), g=AC.createGain(), f=AC.createBiquadFilter();
-    o.type='sawtooth';
-    const base=pitchBase*(1+(_rng()-0.5)*0.1);
-    o.frequency.setValueAtTime(base,t);
-    o.frequency.exponentialRampToValueAtTime(base*0.85,t+dur*0.7);
-    f.type='bandpass'; f.frequency.value=base*3.5; f.Q.value=2.8;
-    g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(0.08,t+0.03);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(f); f.connect(g); g.connect(voiceGain);
-    o.start(t); o.stop(t+dur+0.02);
-    t+=dur+0.05;
-  });
-}
-function speak(text,gender,opts){
-  if(window.speechSynthesis&&window.speechSynthesis.getVoices().length>0){
-    speakLine(text,gender,opts);
-  } else {
-    procVoice(text,gender==='female'?260:130,0.1);
-  }
 }
 
 // ================= INTRO NARRATION =================
@@ -11865,10 +11842,8 @@ showDialogue=function(speaker,text,duration,voice){
       return;
     }
   }
-  if(isTurbo) return;
-  const gender=speaker==='DEB'?'female':'male';
-  const opts=speaker==='DEB'?{pitch:1.18,rate:1.08,volume:0.95}:{pitch:0.82,rate:0.92,volume:0.9};
-  speak(text,gender,opts);
+  // PV2: no synthesized fallback. Everyone who lacks a recording is read from
+  // the caption box instead (_origShowDialogue above already put it there).
 };
 
 // ================= END VOICEOVER SYSTEM =================
@@ -12491,7 +12466,6 @@ function pauseGame(){
   $('pauseMenu').style.display='flex';
   // suspending the context freezes the audio clock too, so the radio resumes seamlessly
   if(AC) AC.suspend();
-  try{ if(VO&&VO.speaking) VO.pause(); }catch(e){}
   saveGame(); // pausing is a natural checkpoint
 }
 function resumeGame(){
