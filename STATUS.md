@@ -9,6 +9,7 @@ the pipes in your signature as `\|`, or the table breaks.
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
+| 2026-08-07 | `index.html` §POST FX, §WEATHER, §CAMERA JUICE (new sections) + tests | PV production-value pass: screen-space post stack (bloom/grade/vignette/grain/aberration), a weather system (rain, storm, lightning, wet roads), and camera/damage juice wired through it. In progress on `claude/game-production-value-dzzac5`. | Claude Code \| Opus 5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
