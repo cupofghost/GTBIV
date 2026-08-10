@@ -39,10 +39,16 @@ function installHelper(page) {
   });
 }
 
+// Every case here steps the sim by hand through a world the seed pins. Without
+// it the default query builds a RANDOM city each run, so which wall Turbo is
+// thrown into — and therefore how the tumble plays out — changed between runs.
+const QUERY = '?dev=1&skipintro=1&seed=424242';
+
 module.exports = [
   {
     name: 'Bail-out: exiting a parked car is still a clean step-out',
     start: 'skipintro',
+    query: QUERY,
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
       await installHelper(page);
@@ -62,6 +68,7 @@ module.exports = [
   {
     name: 'Bail-out: exiting at speed throws him out the side with the car\'s momentum',
     start: 'skipintro',
+    query: QUERY,
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
       await installHelper(page);
@@ -87,6 +94,7 @@ module.exports = [
   {
     name: 'Bail-out: the tumble always ends standing and controllable',
     start: 'skipintro',
+    query: QUERY,
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
       await installHelper(page);
@@ -95,8 +103,16 @@ module.exports = [
         exitCar();
         let frames = 0, sawRoll = false;
         while (player.dive && frames < 600) {
+          // Hold the dive object across the call. The roll phase can be zero
+          // frames long — land already slowed (thrown into a wall, which bleeds
+          // 75% of the slide per contact) and the same call that switches to
+          // 'roll' also ends the dive — and endBailDive() nulls player.dive.
+          // Sampling player.dive after the call therefore misses the touchdown
+          // entirely and reads as "he never rolled". The object it leaves
+          // behind still records the phase it reached.
+          const d = player.dive;
           updateBailDive(0.016);
-          if (player.dive && player.dive.phase === 'roll') sawRoll = true;
+          if (d.phase === 'roll') sawRoll = true;
           frames++;
         }
         return {
@@ -119,6 +135,7 @@ module.exports = [
   {
     name: 'Bail-out: BAIL_MAX_T is a hard ceiling even if he never slows down',
     start: 'skipintro',
+    query: QUERY,
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
       await installHelper(page);
@@ -143,6 +160,7 @@ module.exports = [
   {
     name: 'Bail-out: no sprinting, punching or jacking mid-tumble',
     start: 'skipintro',
+    query: QUERY,
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
       await installHelper(page);
@@ -167,6 +185,7 @@ module.exports = [
   {
     name: 'Bail-out: the abandoned car keeps going, then settles',
     start: 'skipintro',
+    query: QUERY,
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
       await installHelper(page);
@@ -190,6 +209,7 @@ module.exports = [
   {
     name: 'Bail-out: death mid-tumble cannot leave the rig lying down',
     start: 'skipintro',
+    query: QUERY,
     async run(page, { assert }) {
       await page.waitForTimeout(1200);
       await installHelper(page);
