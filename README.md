@@ -63,6 +63,7 @@ see a phone joystick on a desktop browser, or keyboard hints on a phone.
 | Cinema Mode (free-fly director + staged scenes; "Replay last 30s" is one of them) | 🎬 CINEMA button | `R` (Space = play/pause during the 30s replay, Esc = exit) |
 | Day / night | — | `N` |
 | Crouch | — | `C` |
+| Slow motion (hold; drains a meter) | Hold SLO-MO | Hold `X` |
 | Pizza Wars mission | — | `M` |
 | Pause | Pause button | `P` / `Esc` |
 

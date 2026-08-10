@@ -11,7 +11,12 @@ module.exports = {
         const r = await page.evaluate(() => {
           DEV_STATE.god = false; G.mode = 'foot'; G.over = false; G.hp = 100;
           player.car = null; player.climb = null; player.bailing = false; player.stunT = 0;
-          player.x = H + 100; player.z = H + 100;   // flat open ground past the city
+          // PV4 note: this used to sit 100u past H, which is 67u BEYOND the map
+          // edge — open ocean. It only behaved like ground because groundH
+          // returned a phantom positive height out there; the shore shelf made
+          // it honest (overWater() is true, groundH is the sea floor). H + 8 is
+          // real open ground past the city: not water, no building, no road.
+          player.x = H + 8; player.z = H + 8;
           input.jx = 0; input.jy = 0; input.sprint = false;
           const ground = groundH(player.x, player.z);
           const th = turboHeight();
@@ -34,7 +39,7 @@ module.exports = {
         const r = await page.evaluate(() => {
           DEV_STATE.god = false; G.mode = 'foot'; G.over = false; G.hp = 100;
           player.car = null; player.climb = null; player.bailing = false; player.stunT = 0;
-          player.x = H + 100; player.z = H + 100;
+          player.x = H + 8; player.z = H + 8;   // real open ground — see the note in the first case
           input.jx = 0; input.jy = 0; input.sprint = false;
           const ground = groundH(player.x, player.z);
           const th = turboHeight();
@@ -119,7 +124,7 @@ module.exports = {
           DEV_STATE.god = false; G.mode = 'foot'; G.over = false; G.hp = 100;
           player.car = null; player.climb = null; player.stunT = 0;
           input.jx = 0; input.jy = 0; input.sprint = false;
-          player.x = H + 100; player.z = H + 100;
+          player.x = H + 8; player.z = H + 8;   // real open ground — see the note in the first case
           const ground = groundH(player.x, player.z);
           player.bailing = true; player.chute = true; player.fallVX = 0; player.fallVZ = 0;
           player.y = ground + 80; player.vy = -1;

@@ -2007,6 +2007,298 @@ bounded.
 
 ---
 
+### Phase 13 — Production value `PV · OWNER-DIRECTED`
+
+**Origin:** the owner's 2026-08-07 direction — *"make things more like a real
+game, I want production value"* — plus the follow-up punch list given the same
+night. Everything below except `PV1` came straight from that list; the owner's
+wording is quoted in each card so intent survives the handoff.
+
+These are largely independent of each other and of Phases 10–12. `PV2`, `PV3`,
+`PV7`, `PV8` and `PV9` are self-contained and can be picked up in any order.
+`PV4`, `PV5` and `PV6` all reshape the world and **must be sequenced together**
+by one agent — see the warning on `PV5`.
+
+#### PV1 — Screen-space post FX `P1 · Risk: Med` `DONE (2026-08-07)`
+
+`index.html` §POST FX. Every render now goes through `renderFrame()` into an
+offscreen target and comes back graded: threshold+blur bloom (two mips), a
+synthwave split-tone grade, soft highlight rolloff, vignette, film grain, faint
+scanlines, and radial chromatic aberration that scales with speed. Gameplay
+drives it through three one-line impulse calls — `fxFlash()` (explosions),
+`fxDamage()` (taking a hit) and `fxImpact()` (lens punch) — plus a sustained
+low-health red throb and desaturation. Tiers follow `applyQuality()`; **Settings
+→ FILM FX** turns the whole thing off back to the plain render path.
+
+#### PV2 — MP3-only voice, no synthesis `P1 · Risk: Low` `DONE (2026-08-07)`
+
+> *"no more synthesized voice. turbos mp3 voice or bust."*
+
+Kill both synthetic voice paths in §VOICEOVER SYSTEM: `speakLine()` (browser
+`SpeechSynthesis`) and `procVoice()` (the sawtooth word-blip fallback), plus the
+`speak()` dispatcher that chooses between them. Recorded audio under
+`voice/turbo/…` is the only thing that may ever produce a voice.
+
+Call sites today are `index.html:8125` (a bark), `:11069` (the long backstory
+narration) and `:11868` (the generic talking-ped line). Each one must become
+either a real mp3 from the registry or **text only** — the subtitle/chat bubble
+still shows, nothing speaks. Do not silently drop the line's text: a line with
+no recording is a caption, not a deletion. `README.md`'s voice table lists which
+folders are recorded-but-unwired (`voice/turbo/story/`, `voice/turbo/cutscenes/`)
+— prefer wiring a real take over captioning where one exists.
+
+**Acceptance:** `window.speechSynthesis` is never called and no oscillator is
+ever routed to `voiceGain` for speech; every previously-spoken line still
+appears on screen; the radio duck (`voDuckOn`/`voDuckOff`) stays balanced so
+music still dips for mp3 narration and recovers after it.
+
+#### PV3 — No trees in the roadway `P2 · Risk: Low` `DONE (2026-08-07)`
+
+> *"no trees in streets."*
+
+Two independent tree systems place spots and neither is fully road-aware:
+`treeSpots` in §STAIRS & FIRE ESCAPES / park dressing (`index.html:~2891–2897`)
+and `treeDressSpots` in §MORE CITY BEAUTIFICATION (`:~6214–6227`). Both offset
+from a block centre by a half-block plus a fixed margin, which lands in the
+carriageway wherever the block is smaller than assumed or the offset overshoots
+the kerb.
+
+Add one shared predicate — "is this point on pavement, not asphalt" — - built
+from the existing `roadLines`/`ROAD` geometry rather than a new constant, and
+reject any spot that fails it. Trees on sidewalks, in parks and on the beach
+are all fine; trees between the kerbs are not.
+
+**Acceptance:** a headless sweep over every placed tree asserts none is within
+`ROAD/2` of a road centreline; visual check at 800×390 down a long avenue shows
+no tree in a driving lane; tree count doesn't collapse (rejecting a spot should
+re-roll, not just drop it).
+
+#### PV4 — The beach shelves into the sea `P2 · Risk: Med` `DONE (2026-08-07)`
+
+> *"Make the beach go down into the water on the edge of the map. like real
+> life."*
+
+Today the sand meets the water at a hard edge. Grade the last stretch of beach
+so it descends continuously below the waterline, and carry that grade into
+`groundH` so Turbo wades and sinks instead of walking on a shelf.
+
+**Read `TERRAIN.md`'s Tier 1 revision note before touching `groundH`** — terrain
+is a settled contract as of PR #31 and several earlier attempts at local
+elevation edits (terraced pads, retaining walls, seam stairs) were tried and
+deliberately removed. This card changes the *seaward* margin only; it must not
+perturb the road lattice or block patches.
+
+**Acceptance:** walking straight out to sea produces a smooth descent with no
+step at the shoreline; the drawn sand and `groundH` agree within the existing
+tolerance; `tests/cases/terrain.test.js` still passes unmodified.
+
+*Built note.* One term in `groundH`, gated on `m > SHORE_START` (= `H+14`), so
+it is beach only — no road, block or building footprint reaches that far and
+the city's grade/no-ledge guardrails are untouched. `terrainGeo()` samples
+`groundH` per vertex, so the drawn sand follows it automatically; measured mesh
+-vs-field error is **0.0000u across 6061 verts**, which is the exact
+disagreement that killed the terraced version.
+
+Two things worth knowing before tuning it:
+
+- `groundH` measures distance from the centre as **`max(|x|,|z|)`**, a square
+  metric matching the square city. Probing the shore along a radial ray is
+  wrong — the 45° direction never reaches the shelf at all. Walk outward in the
+  square metric.
+- **Fading the dunes out across the shelf makes the beach face steeper, not
+  gentler** (25.7° → 27.9°): dropping a positive dune to zero is one more
+  downward slope in series with the shelf. Tried and reverted. The lever that
+  works is the *length of the run* — smoothstep's peak gradient is
+  `1.5 × drop/run`, so a 5u drop over 40u is ~10°. Final worst face: 14.3°.
+
+The waterline lands ~11u inside `overWater()`'s boundary on purpose, so there is
+a shallow strip you wade through before the game calls it swimming. The order
+matters and the test asserts it: sand under *before* `overWater()` flips, never
+the reverse.
+
+#### PV5 — A city that isn't a square `P3 · Risk: High` `PARTIAL (2026-08-07)` — skyline done, footprint open
+
+> *"Make the city more city shaped and less like a square."*
+
+The city is a uniform `WORLD.blocks²` grid to the map edge, which is what makes
+it read as a board rather than a place. Give it a shape: a dense downtown core
+with the tall towers, mid-rise around it, low buildings and gaps toward the
+edges, and an irregular outer boundary that dissolves into beach/water/lots
+instead of stopping square.
+
+**Sequencing warning:** this shares the road lattice with `PV4` and `PV6`, and
+the lattice is also what `groundH` and every static's Y are built on. One agent
+takes `PV4` → `PV6` → `PV5` in that order, or they will fight.
+
+**Acceptance:** silhouette from a helicopter reads as a skyline with a centre,
+not a slab; traffic and pathing still route everywhere they did; no building
+intersects a road; frame cost at 800×390 is no worse than before.
+
+*Built note — HALF of this is done.* The **skyline** half landed: height was a
+hard step at `r=170` (`rand(24,64)` inside, `rand(10,30)` outside), which from
+the air is a square of tall boxes inside a square of short ones. It is now a
+smooth exponential falloff from a downtown core whose radius *wanders with
+bearing*, so the crest is an irregular ridge rather than a ring. Measured mean
+height by band: 0–80 → 80–160 → 160–240 → 240+ decreases monotonically, the
+core/edge ratio is >2.5×, and the tallest building per bearing sector varies
+>1.6× around a fixed radius band. `skyline.test.js` pins all of that.
+
+**Still open: the FOOTPRINT.** The city still ends on a hard square boundary. It
+was left alone deliberately — `groundH` and every static's Y are built on the
+road lattice, and thinning or irregularising blocks moves collision, stairs,
+ladders and store/heist placement with it. That is the high-risk part of this
+card and it still needs the `PV4 → PV6 → PV5` single-agent sequencing above.
+
+#### PV6 — Fix the island ring road `P2 · Risk: Med` `DONE (2026-08-07)` *(paint only — see note)*
+
+> *"Fix the circle road around the island. it conflicts with other roads and
+> leads into buildings."*
+
+The curved perimeter road is generated independently of the orthogonal grid, so
+it crosses grid roads at unresolved junctions and terminates inside building
+footprints. Either give it real intersections with the grid (and clear the
+building footprints it passes through), or replace it with a perimeter route
+that follows the lattice. Whichever way, no drivable road may dead-end inside
+geometry.
+
+**Acceptance:** driving the full ring never enters a building or a dead end;
+every crossing with a grid road is a junction traffic can take; AI traffic
+routed onto the ring completes a lap.
+
+*Built note — read before reopening this.* The diagnosis was not what the card
+assumed. The Coast Highway is **not generated geometry at all**: it is a canvas
+arc painted into `groundTex`, with no collision, no junctions and no traffic
+routing. It was drawn as a **circle of radius `H+7`** around a **square** city
+of half-width `H`, and a circle of that radius only clears the grid at the four
+cardinal points — at 15° it is already inside the outer blocks and at 45° it
+runs 94u deep into the city. Measured: 27 of 315 points along the old route sat
+inside a building footprint.
+
+No circle can fix it. Clearing the corners of a square city needs radius
+`H*sqrt(2)` = 478 and the entire world is 358 from centre. It is now a **rounded
+rectangle** threading the 14u gap between the outermost kerb (±338) and the sand
+(±352): 0 of 1264 sampled points hit a building. `coast-highway.test.js` pins
+the geometry, including the arithmetic proving a circle can't fit.
+
+**Still open:** it remains paint. Making it a genuine drivable route — real
+junctions with the grid, traffic routed onto it, a lap that AI can complete —
+is a separate job and the acceptance criteria above still describe it.
+
+#### PV7 — Real riders on motorcycles `P2 · Risk: Med` `DONE (2026-08-07)`
+
+> *"make the motorcycles have real guys on them. when turbo steals one, turbos
+> model should be on the bike."*
+
+`moto` is a `CARTYPES` entry (`index.html:~3691`) that renders as a bare bike
+with an invisible driver. Two halves:
+
+1. **Traffic bikes carry a rider.** Build the rider from the shared
+   `js/person.js` rig so it inherits the existing materials, shadows and NPC
+   variety, seated and leaning with the bike's existing lean logic (`:~8358`).
+2. **Turbo rides his own model.** Stealing a bike should keep `player.mesh`
+   visible, parented to (or positioned on) the bike, rather than hiding it the
+   way a car does. Everything that assumes "in a vehicle ⇒ player mesh hidden"
+   needs to tolerate the bike case — check `exitCar`, the camera, aim
+   transparency and the person-shadow pass.
+
+**Acceptance:** every spawned `moto` has a visible seated rider; jacking one
+throws the rider off and seats Turbo's actual model; exiting returns him to foot
+with no duplicated or orphaned mesh; ten jack/exit cycles leak nothing
+(`js/person.js` additions stay backward-compatible per `STATUS.md`).
+
+*Built note:* Turbo's rig is **not** reparented to the bike — several systems
+write `player.mesh.position` in world space, and handing ownership to a vehicle
+group would make those silently wrong. `seatTurboOnBike()` copies the bike's
+world seat point and quaternion each frame instead, which gets lean and pitch
+for free. `js/person.js` was not modified at all. Watch the shared-rig hazard:
+he uses the same rig as the walk cycle, so `dismountBike()` must hand it back
+neutral or he walks away crouched over invisible handlebars — `bike-rider.test.js`
+asserts exactly that.
+
+#### PV8 — Action-movie bail-out `P2 · Risk: Med` `DONE (2026-08-07)`
+
+> *"When turbo bails out of cars while they're driving he needs to come flying
+> out the side and roll on the ground for a bit. like an action movie."*
+
+`exitCar()` (`index.html:~8772`) teleports Turbo 2.2u to the side at any speed.
+Above a speed threshold it should instead launch him: lateral + forward velocity
+inherited from the car, a short airborne arc, then a ground roll that bleeds
+speed over a second or so before he pops back up. Below the threshold, keep
+today's clean step-out.
+
+Reuse what exists rather than inventing a second knockdown: there is already a
+stun/knockdown vocabulary (`p.stunT`), a fall-damage path (OP2-G) and person
+shadows that smear on knockdown (OP2-D). The driverless car must keep going and
+behave like any other runaway.
+
+**Acceptance:** bailing at speed never leaves Turbo inside the car or inside
+geometry; the roll ends with him standing and fully controllable; bailing into
+a wall or off a ledge resolves through the existing collision/fall paths, not a
+special case; low-speed exit is unchanged.
+
+#### PV9 — Slow motion `P2 · Risk: Med` `DONE (2026-08-07)`
+
+> *"Add a slow motion mechanic. idk how, just make it rad."*
+
+The plumbing already exists and is proven: the main loop scales `simDt` by
+`TIME_SCALE` while keeping UI and recording on real time (D5 dev time controls),
+and `HIT_STOP` already does a micro-freeze on impacts. Slow motion is that
+mechanic promoted from a dev tool to a player one.
+
+Design intent — *rad*, so make it feel bought rather than free:
+
+- A player-facing trigger (button + key), with a meter that drains while active
+  and refills over time, so it's a resource and not a toggle.
+- Sell it with the systems that now exist: push `FX` hard while it's live
+  (desaturate, lift the bloom, wind the chromatic aberration up), pitch the
+  engine and radio down through the existing audio graph, and widen the camera
+  slightly.
+- Entry and exit are ramps, not steps — snapping time scale is what makes slow
+  motion feel cheap.
+
+**Sequencing note:** it multiplies whatever `TIME_SCALE` the dev controls set;
+keep one authoritative product rather than two competing writers.
+
+**Acceptance:** physics stay stable at the lowest time scale (the loop's
+substep clamp is `Math.min(4, …)` — verify it doesn't starve); audio pitch
+returns exactly on exit; the meter persists sensibly across BUSTED/WASTED,
+cutscenes and Cinema; `SETTINGS.reduceMotion` still gets a sane experience.
+
+*Built note:* the substep concern turned out to be backwards — slowing time
+makes the sim **more** stable, since substeps are `ceil(simDt/0.017)` and a
+smaller `simDt` is simply one short step. Slow motion also does **not**
+desaturate: the owner's direction mid-build was *"not a fan of the desaturated
+look, keep it vibrant"*, so it pushes saturation up instead. Don't "fix" that
+back to the film-school default.
+
+#### PV10 — Carnage: debris, scorch, chain reactions `P2 · Risk: Med` `DONE (2026-08-07)`
+
+> *"Explosions, action … anything that would make a 22 year old guy with pizza
+> stains on his shirt go sweeeeet."*
+
+`index.html` §CARNAGE. Explosions gained physical mass: pooled debris chunks
+that arc, bounce, tumble and settle in the paint colour of the wreck they came
+off; scorch marks on the road; and chain reactions that put neighbouring cars
+on short random fuses so a pile-up goes up as a ragged sequence. Both pools are
+fixed-size; the chain is capped per blast (`CHAIN_MAX`) **and** globally rate-
+limited (`chainBudget`) so dense traffic can't cascade the map.
+
+Plus the money shot: `slowmoBurst()` bends time for 0.75s when a blast goes off
+within 30u of you — free, never charging the §SLOW MOTION meter.
+
+#### PV11 — Rampage combos `P3 · Risk: Low` `DONE (2026-08-07)`
+
+`index.html` §RAMPAGE. Vehicles wrecked inside a rolling 4.2s window build a
+combo; crossing 2/3/5/7/10 fires an escalating callout, flash, shake, stinger
+and payout, and the top rung earns a cinematic time bend.
+
+It scores **vehicles, not people** — deliberately, so the ladder pays for
+spectacle rather than for running pedestrians down. Payouts total 550 for the
+whole ladder, sized against a big heist; `rampage.test.js` asserts it stays
+under Deb's $800 so one good night can't make Chapter 1's spine irrelevant.
+
+---
+
 ## 9. Verification & Definition of Done
 
 Before committing **any** task:

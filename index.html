@@ -57,6 +57,15 @@
     transform:translateX(-50%); pointer-events:auto; padding:6px 16px; border-radius:16px;
     border:1px solid #ff9ecb66; background:rgba(34,8,50,.55); color:#fff;
     font:900 12px 'Arial Black',Arial,sans-serif; letter-spacing:1.5px; }
+  /* PV11 rampage combo chip — sits under the wanted stars, out of the reticule */
+  #combo { display:none; position:absolute; top:calc(30px + env(safe-area-inset-top)); left:50%;
+    transform:translateX(-50%); align-items:center; gap:8px; padding:3px 14px; border-radius:14px;
+    background:rgba(6,2,16,.72); border:1px solid #ff9d3e88; z-index:22;
+    text-shadow:0 2px 4px #000, 0 0 12px rgba(255,110,60,.7); pointer-events:none; }
+  #comboMult { font-size:20px; font-weight:900; color:#ffd23e; letter-spacing:1px; }
+  #comboLabel { font-size:11px; font-weight:900; color:#ff9d3e; letter-spacing:2.5px; }
+  #combo.punch { animation:comboPunch .34s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes comboPunch { 0%{transform:translateX(-50%) scale(1.55);} 100%{transform:translateX(-50%) scale(1);} }
   #toasts { position:absolute; bottom:34%; left:50%; transform:translateX(-50%);
     display:flex; flex-direction:column; align-items:center; gap:5px; }
   .toast { font-size:17px; color:#fff; text-shadow:0 2px 3px #000, 0 0 8px #000;
@@ -87,6 +96,22 @@
     width:74px; height:52px; border-radius:14px; border:2px solid rgba(255,255,255,.35);
     background:rgba(30,14,60,.5); color:#fff; font-size:12px; font-weight:900;
     display:none; align-items:center; justify-content:center; text-shadow:0 1px 3px #000; }
+  /* PV9 slow motion. Sits beside HORN rather than inside #btns because it is
+     available in every mode, and #btns re-lays-out per mode. */
+  /* display:flex, not none — this button is available in every mode, so it must
+     not depend on refreshButtons() having run. It only fires on a mode change,
+     which meant the button stayed invisible on a phone from boot until the
+     first time you got into a car. #hud already hides it before the game
+     starts, and html.is-desktop below hides it for good on desktop. */
+  #btnSlow { position:absolute; bottom:calc(168px + env(safe-area-inset-bottom)); left:132px;
+    width:74px; height:52px; border-radius:14px; border:2px solid rgba(255,255,255,.35);
+    background:rgba(30,14,60,.5); color:#fff; font-size:11px; font-weight:900;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    text-shadow:0 1px 3px #000; pointer-events:auto; z-index:12; }
+  #btnSlow.on { background:rgba(55,200,255,.55); border-color:#37c8ff; }
+  #btnSlow.spent { opacity:.42; }
+  #slowMeter { width:54px; height:4px; border-radius:2px; background:rgba(0,0,0,.6); overflow:hidden; }
+  #slowFill { height:100%; width:100%; background:linear-gradient(90deg,#37c8ff,#7dff8a); }
   #bubble { position:fixed; z-index:16; display:none; background:#fff; color:#141414;
     font-family:Arial, sans-serif; font-weight:700; font-size:14px; padding:8px 12px;
     border-radius:14px; max-width:230px; pointer-events:none;
@@ -202,7 +227,7 @@
     transform-origin:top left; transform:rotate(90deg) translateY(-100%); }
   /* touch-only vs desktop-only control affordances (see IS_TOUCH in the boot script) */
   html.is-desktop #joy, html.is-desktop #btns, html.is-desktop #btnHorn,
-  html.is-desktop #pedals, html.is-desktop #btnCrouch,
+  html.is-desktop #pedals, html.is-desktop #btnCrouch, html.is-desktop #btnSlow,
   html.is-desktop .touch-hint { display:none !important; }
   html.is-touch .desktop-hint { display:none !important; }
   /* shrink controls on short landscape screens so nothing overlaps */
@@ -471,7 +496,8 @@
     <div class="ccBody" id="ccTouch">
       <b>MOVE</b> left thumb stick &middot; <b>LOOK</b> swipe the right side<br>
       <b>DRIVE</b> GAS / BRAKE pedals &middot; <b>BOOST</b> &amp; <b>DRIFT</b> pedal buttons<br>
-      <b>ENTER</b> steals cars &middot; <b>SWAP</b> changes weapons &middot; <b>PUNCH / KICK</b> fights unarmed
+      <b>ENTER</b> steals cars &middot; <b>SWAP</b> changes weapons &middot; <b>PUNCH / KICK</b> fights unarmed<br>
+      <b>SLO-MO</b> hold it to slow the world down &mdash; the bar under the button is your meter
       <div class="ccFine">Portrait phone? The game rotates itself &mdash; landscape plays best.</div>
     </div>
     <div class="ccBody" id="ccDesk" style="display:none">
@@ -479,7 +505,7 @@
       <b>DRIVE</b> W gas / S brake &middot; <b>SHIFT</b> boost / sprint &middot; <b>SPACE</b> jump / drift<br>
       <b>E</b> enter/exit &middot; <b>F</b> attack &middot; <b>G</b> swap weapon &middot; <b>K</b> kick unarmed &middot; <b>T</b> talk &middot;
       <b>H</b> horn &middot; <b>Q</b> radio &middot; <b>C</b> crouch &middot; <b>N</b> day/night &middot;
-      <b>R</b> cinema &middot; <b>P</b> pause
+      <b>X</b> hold for slow motion &middot; <b>R</b> cinema &middot; <b>P</b> pause
       <div class="ccFine">Keys are hardcoded &mdash; no remapping yet.</div>
     </div>
     <div id="ccJob"><b>THE JOB:</b> Deb wants <b>$800</b> by tonight. Rob stores. Run missions.
@@ -511,6 +537,7 @@
     <div class="barLbl">NITRO</div>
     <div id="boostbar"><div id="boostfill"></div></div>
   </div>
+  <div id="combo"><span id="comboMult">&times;2</span><span id="comboLabel">DOUBLE</span></div>
   <div id="toasts"></div>
   <div id="joy"><div id="joyKnob"></div></div>
   <div id="btns">
@@ -526,6 +553,7 @@
   <div id="fsBtn">&#x26F6;</div>
   <div id="pauseBtn">&#10074;&#10074;</div>
   <div class="tbtn" id="btnHorn">HORN</div>
+  <div id="btnSlow"><span>SLO-MO</span><div id="slowMeter"><div id="slowFill"></div></div></div>
   <div class="tbtn" id="btnChute">CHUTE!</div>
   <div class="tbtn" id="btnDog">FEED MEAT</div>
   <div class="tbtn" id="btnScram">GO AWAY</div>
@@ -653,6 +681,10 @@
       <button class="qBtn" data-v="on">ON</button>
       <button class="qBtn" data-v="off">OFF</button>
     </div></div>
+    <div class="pmRow"><label>FILM FX</label><div class="qGroup" id="postFxGroup">
+      <button class="qBtn" data-v="on">ON</button>
+      <button class="qBtn" data-v="off">OFF</button>
+    </div></div>
     <button class="pmBtn" id="pmSetBack">BACK</button>
   </div>
 </div>
@@ -737,64 +769,69 @@ let TRAFFIC_CAP=30, PED_CAP=60, PARTICLE_SCALE=1, GFX_TIER='high';
 // Format: "SECTION TITLE" (line range, size in lines, key functions)
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS & GLOBAL STATE                           (719–727, ~9 lines: rand, randi, pick, clamp, lerp, TAU, $)
-// DEVICE / ORIENTATION                             (800–861, ~62 lines)
-// AUDIO                                            (862–1160, ~299 lines)
-// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1161–1663, ~503 lines)
-// THREE SETUP                                      (1664–1714, ~51 lines)
-// CITY                                             (1715–2623, ~909 lines)
+// DEVICE / ORIENTATION                             (837–898, ~62 lines)
+// AUDIO                                            (899–1196, ~298 lines)
+// PROCEDURAL 80s SYNTHWAVE SOUNDTRACK              (1197–1699, ~503 lines)
+// THREE SETUP                                      (1700–1750, ~51 lines)
+// POST FX                                          (1751–2139, ~389 lines)
+// CITY                                             (2140–3168, ~1029 lines)
 //   └ RADIO TOWERS                                 (2225–2331, ~107 lines: tall guyed mast + rooftop masts, blinking obstruction lamps)
-// FOOTBALL FIELD                                   (2624–2674, ~51 lines)
-// ELEVATED LIGHT RAIL                              (2675–2799, ~125 lines)
-// STAIRS & FIRE ESCAPES                            (2800–2874, ~75 lines)
-// WALL LADDERS                                     (2875–3152, ~278 lines)
-// PARTICLES                                        (3153–3207, ~55 lines)
-// BLOB SHADOWS                                     (3208–3269, ~62 lines)
-// GPU RESOURCE CLEANUP                             (3270–3291, ~22 lines)
-// CARS                                             (3292–3583, ~292 lines)
-// PEDESTRIANS                                      (3584–3792, ~209 lines)
-// PIZZA DELIVERY SYSTEM                            (3793–3948, ~156 lines)
-// RIVAL PIZZA GANG: CHAOS PIZZA                    (3949–4076, ~128 lines)
-// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4077–4256, ~180 lines)
-// COACH REMATCH (FB3)                              (4257–4735, ~479 lines)
-// TURBO BOWL (FB4)                                 (4736–5099, ~364 lines)
-// STRAY DOGS & DOG GANGS                           (5100–5405, ~306 lines)
-// PIZZA WARS MISSION                               (5406–5480, ~75 lines)
-// PLAYER                                           (5481–5524, ~44 lines)
-// PIZZA PLACE & INTERIOR                           (5525–5688, ~164 lines)
-// SIDEWALKS & STOREFRONT AWNINGS                   (5689–5815, ~127 lines)
-// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (5816–6015, ~200 lines)
-// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6016–6131, ~116 lines)
-// DAY/NIGHT & HEIST SYSTEM                         (6132–6324, ~193 lines)
-// PICKUPS                                          (6325–6367, ~43 lines)
-// HELICOPTERS                                      (6368–6870, ~503 lines)
-// TALKING PEDS                                     (6871–7012, ~142 lines)
-// WEAPONS                                          (7013–7720, ~708 lines)
-// WANTED                                           (7721–7826, ~106 lines)
-// CAR PHYSICS                                      (7827–8054, ~228 lines)
-// PLAYER: FOOT & CAR                               (8055–8806, ~752 lines)
-// HUD / TOASTS                                     (8807–8850, ~44 lines)
-// MISSIONS                                         (8851–9024, ~174 lines)
-// AI                                               (9025–9147, ~123 lines)
-// FOOT COPS                                        (9148–9191, ~44 lines)
-// SEWER RATS                                       (9192–9308, ~117 lines)
-// MAMA RAT (rat vengeance) — PLACEHOLDER           (9309–9675, ~367 lines)
-// BUSTED / WASTED                                  (9676–9766, ~91 lines)
-// CAMERA                                           (9767–9876, ~110 lines)
-// MINIMAP                                          (9877–9924, ~48 lines)
-// MAIN LOOP                                        (9925–10108, ~184 lines)
-// ORIENTATION                                      (10109–10166, ~58 lines)
-// ANIMATED INTRO                                   (10167–10522, ~356 lines)
-// STORY: TURBO JONES, CHAPTER 1                    (10523–10778, ~256 lines)
-// CUTSCENE SYSTEM                                  (10779–11097, ~319 lines)
-// VOICEOVER SYSTEM                                 (11098–11179, ~82 lines)
-// INTRO NARRATION                                  (11180–11481, ~302 lines)
-// DEV TOOLS                                        (11482–11559, ~78 lines)
-// CINEMA MODE (was REPLAY)                         (11560–11692, ~133 lines)
-// CINEMA: SCENES & STAGING                         (11693–11908, ~216 lines)
-// PAUSE MENU & SETTINGS                            (11909–12118, ~210 lines)
-// CONTROLS CARD (U2 onboarding)                    (12119–12151, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
-// SAVE SYSTEM                                      (12152–12211, ~60 lines: queueSave, restoreSave, localStorage blob)
-// START / RESIZE                                   (12212–end, ~41 lines: boot, init, resize handlers, quality apply)
+// FOOTBALL FIELD                                   (3169–3219, ~51 lines)
+// ELEVATED LIGHT RAIL                              (3220–3344, ~125 lines)
+// STAIRS & FIRE ESCAPES                            (3345–3424, ~80 lines)
+// WALL LADDERS                                     (3425–3702, ~278 lines)
+// PARTICLES                                        (3703–3750, ~48 lines)
+// CARNAGE: DEBRIS, SCORCH & CHAIN REACTIONS        (3751–3887, ~137 lines)
+// BLOB SHADOWS                                     (3888–3949, ~62 lines)
+// GPU RESOURCE CLEANUP                             (3950–3971, ~22 lines)
+// CARS                                             (3972–4299, ~328 lines)
+// PEDESTRIANS                                      (4300–4508, ~209 lines)
+// PIZZA DELIVERY SYSTEM                            (4509–4664, ~156 lines)
+// RIVAL PIZZA GANG: CHAOS PIZZA                    (4665–4792, ~128 lines)
+// FOOTBALL RIVALS: CHAOS HIGH JOCKS                (4793–4972, ~180 lines)
+// COACH REMATCH (FB3)                              (4973–5451, ~479 lines)
+// TURBO BOWL (FB4)                                 (5452–5815, ~364 lines)
+// STRAY DOGS & DOG GANGS                           (5816–6121, ~306 lines)
+// PIZZA WARS MISSION                               (6122–6196, ~75 lines)
+// PLAYER                                           (6197–6240, ~44 lines)
+// PIZZA PLACE & INTERIOR                           (6241–6404, ~164 lines)
+// SIDEWALKS & STOREFRONT AWNINGS                   (6405–6531, ~127 lines)
+// MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS  (6532–6727, ~196 lines)
+// CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS       (6728–6843, ~116 lines)
+// DAY/NIGHT & HEIST SYSTEM                         (6844–7036, ~193 lines)
+// PICKUPS                                          (7037–7079, ~43 lines)
+// HELICOPTERS                                      (7080–7587, ~508 lines)
+// TALKING PEDS                                     (7588–7729, ~142 lines)
+// WEAPONS                                          (7730–8455, ~726 lines)
+// WANTED                                           (8456–8560, ~105 lines)
+// CAR PHYSICS                                      (8561–8795, ~235 lines)
+// PLAYER: FOOT & CAR                               (8796–9572, ~777 lines)
+// ACTION BAIL-OUT (PV8)                            (9573–9715, ~143 lines)
+// RAMPAGE (PV11)                                   (9716–9778, ~63 lines)
+// HUD / TOASTS                                     (9779–9822, ~44 lines)
+// MISSIONS                                         (9823–9996, ~174 lines)
+// AI                                               (9997–10119, ~123 lines)
+// FOOT COPS                                        (10120–10164, ~45 lines)
+// SEWER RATS                                       (10165–10281, ~117 lines)
+// MAMA RAT (rat vengeance) — PLACEHOLDER           (10282–10648, ~367 lines)
+// BUSTED / WASTED                                  (10649–10746, ~98 lines)
+// CAMERA                                           (10747–10856, ~110 lines)
+// MINIMAP                                          (10857–10904, ~48 lines)
+// SLOW MOTION (PV9)                                (10905–11033, ~129 lines)
+// MAIN LOOP                                        (11034–11225, ~192 lines)
+// ORIENTATION                                      (11226–11283, ~58 lines)
+// ANIMATED INTRO                                   (11284–11639, ~356 lines)
+// STORY: TURBO JONES, CHAPTER 1                    (11640–11898, ~259 lines)
+// CUTSCENE SYSTEM                                  (11899–12223, ~325 lines)
+// VOICEOVER SYSTEM                                 (12224–12246, ~23 lines)
+// INTRO NARRATION                                  (12247–12546, ~300 lines)
+// DEV TOOLS                                        (12547–12624, ~78 lines)
+// CINEMA MODE (was REPLAY)                         (12625–12757, ~133 lines)
+// CINEMA: SCENES & STAGING                         (12758–12973, ~216 lines)
+// PAUSE MENU & SETTINGS                            (12974–13201, ~228 lines)
+// CONTROLS CARD (U2 onboarding)                    (13202–13234, ~33 lines: openControlsCard/closeControlsCard, first-boot auto-show, ccTab switching)
+// SAVE SYSTEM                                      (13235–13294, ~60 lines: queueSave, restoreSave, localStorage blob)
+// START / RESIZE                                   (13295–end, ~41 lines: boot, init, resize handlers, quality apply)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ================= DEVICE / ORIENTATION =================
@@ -872,7 +909,6 @@ let musicVODuck,            // ducks the whole radio while Turbo/Deb talk
     swMode='normal', swLoopStep=0; // 'normal' (through-composed) | 'hot' | 'calm' loop variant
 function initAudio(){
   if(AC){ AC.resume(); return; }
-  initVoiceOver();
   AC=new (window.AudioContext||window.webkitAudioContext)();
   masterGain=AC.createGain(); masterGain.gain.value=0.9*SETTINGS.master/100; masterGain.connect(AC.destination);
   // SFX and Voice sub-buses sit between their per-sound nodes and masterGain,
@@ -1712,11 +1748,433 @@ let skyMesh, sunSpr, skyTexNight, skyTexDay, sunTexNight, sunTexDay;
   sunSpr.scale.set(220,220,1); sunSpr.position.set(240,330,-700); scene.add(sunSpr);
 })();
 
+// ================= POST FX =================
+// Screen-space finishing pass. Everything the game draws now lands in an
+// offscreen target first; this section blooms the neon, grades the colour, and
+// lays on the film/CRT texture that makes San Chaos read as *shot* rather than
+// *rendered*. Nothing here touches gameplay state — it is a pure function of
+// the rendered frame plus a few decaying impulses gameplay pokes in through
+// fxFlash() / fxDamage() / fxImpact().
+//
+// Written against the vendored three.js r128 CORE only (no examples/jsm
+// EffectComposer), so the zero-build deploy rule still holds.
+//
+// Pipeline at tier 'high':
+//   scene ─▶ rtScene (MSAA on WebGL2)
+//             ├─▶ bright-pass ½ ─▶ blur H/V ×2 ─▶ rtHalf ─┐
+//             │                     └─▶ ¼ ─▶ blur H/V ×2 ─┤ (wide halo)
+//             └─────────────────────────── composite ◀────┴─▶ screen
+// 'medium' drops the ¼ halo and one blur iteration; 'low' skips bloom entirely
+// and runs the (cheap) grade/vignette/grain composite only.
+//
+// On the bright-pass metric: it thresholds MAX CHANNEL, not luminance. The
+// scene renders LDR into an 8-bit target, so a saturated neon sign (1,0.1,0.9)
+// and a saturated car paint (1,0.24,0.6) are genuinely indistinguishable to a
+// screen-space filter — luminance would throw away the neon, which is the one
+// thing that must glow. The threshold below is tuned so lit windows, sign
+// faces, headlights and fireballs bloom while paint only picks up a sheen.
+// The real fix, if this is ever worth it, is a half-float scene target plus
+// >1.0 emissive colours on the §CITY GLOW materials; that is an HDR authoring
+// change across another section, not a post-FX one.
+const FX={
+  enabled:true,          // master switch — Settings > FILM FX
+  tier:'high',
+  bloom:0.40,            // strength of the ½-res glow
+  bloomWide:0.26,        // strength of the ¼-res halo
+  threshold:0.88, knee:0.20,
+  exposure:1.0,
+  contrast:1.06, sat:1.10,
+  vignette:0.36, grain:0.024, scan:0.018,
+  aberration:0.0,        // driven by speed/boost, plus impulses
+  // decaying impulses — see fxFlash/fxDamage/fxImpact
+  flash:0, flashR:1, flashG:1, flashB:1,
+  damage:0, desat:0, kick:0, bloomPulse:0,
+  slowAberr:0,           // §SLOW MOTION's lens strain, added on top of speed
+};
+// Impulses. Each one is a spike that decays in updateFxImpulses(); call sites
+// stay one-liners so the gameplay code reads the same as it did before.
+function fxFlash(amt,r,g,b){         // explosions, lightning, muzzle flare
+  if(!FX.enabled) return;
+  if(amt<=FX.flash) return;          // keep the brightest flash in flight
+  FX.flash=Math.min(1.1,amt); FX.flashR=r!==undefined?r:1; FX.flashG=g!==undefined?g:1; FX.flashB=b!==undefined?b:1;
+}
+function fxDamage(amt){              // took a hit — red bloom in from the edges
+  if(!FX.enabled) return;
+  FX.damage=Math.min(1,FX.damage+amt);
+  // Only a trace of desaturation. Owner direction is to keep the picture
+  // vibrant, and the red edge pulse already carries "you got hit" on its own.
+  FX.desat=Math.min(0.18,FX.desat+amt*0.12);
+}
+function fxImpact(amt){              // lens punch: aberration + a bloom swell
+  if(!FX.enabled||SETTINGS_REDUCE_MOTION()) return;
+  FX.kick=Math.min(1,FX.kick+amt);
+  FX.bloomPulse=Math.min(1.2,FX.bloomPulse+amt*0.7);
+}
+// SETTINGS is a `const` declared much further down (§PAUSE MENU & SETTINGS),
+// but loop() starts before that line runs, so the first frames land inside its
+// temporal dead zone. `typeof` does NOT save you there — reading a TDZ binding
+// throws ReferenceError either way — so probe it once through try/catch and
+// cache the reference the moment it exists.
+let _fxSettings=null;
+function SETTINGS_REDUCE_MOTION(){
+  if(_fxSettings===null){ try{ _fxSettings=SETTINGS; }catch(e){ return false; } }
+  return !!_fxSettings.reduceMotion;
+}
+
+const POSTFX=(function(){
+  const caps=renderer.capabilities;
+  const canMSAA=!!(caps.isWebGL2&&THREE.WebGLMultisampleRenderTarget&&caps.maxSamples>1);
+  const _size=new THREE.Vector2();
+
+  function makeRT(w,h,msaa){
+    const opts={ minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter,
+                 format:THREE.RGBAFormat, depthBuffer:!!msaa, stencilBuffer:false };
+    if(msaa&&canMSAA){
+      try{
+        const rt=new THREE.WebGLMultisampleRenderTarget(w,h,opts);
+        rt.samples=Math.min(4,caps.maxSamples);
+        return rt;
+      }catch(e){ /* fall through to a plain target */ }
+    }
+    return new THREE.WebGLRenderTarget(w,h,opts);
+  }
+
+  // rtScene keeps a depth buffer (it's what the world renders into); the bloom
+  // chain is colour-only.
+  let W=1,H=1;
+  let rtScene=makeRT(1,1,true);
+  let rtA=makeRT(1,1,false), rtB=makeRT(1,1,false);      // ½ res ping-pong
+  let rtC=makeRT(1,1,false), rtD=makeRT(1,1,false);      // ¼ res ping-pong
+
+  const VERT=`varying vec2 vUv;
+    void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }`;
+
+  // --- bright pass: 4-tap box downsample, then a soft-knee threshold so the
+  // glow ramps in instead of popping at a hard cutoff.
+  const matBright=new THREE.ShaderMaterial({
+    uniforms:{ tDiffuse:{value:null}, uTexel:{value:new THREE.Vector2()},
+               uThreshold:{value:0.88}, uKnee:{value:0.20} },
+    vertexShader:VERT,
+    fragmentShader:`
+      uniform sampler2D tDiffuse; uniform vec2 uTexel;
+      uniform float uThreshold, uKnee;
+      varying vec2 vUv;
+      void main(){
+        vec3 c  = texture2D(tDiffuse, vUv+uTexel*vec2(-1.0,-1.0)).rgb;
+             c += texture2D(tDiffuse, vUv+uTexel*vec2( 1.0,-1.0)).rgb;
+             c += texture2D(tDiffuse, vUv+uTexel*vec2(-1.0, 1.0)).rgb;
+             c += texture2D(tDiffuse, vUv+uTexel*vec2( 1.0, 1.0)).rgb;
+        c *= 0.25;
+        float l = max(c.r, max(c.g, c.b));
+        float soft = clamp(l-uThreshold+uKnee, 0.0, 2.0*uKnee);
+        soft = soft*soft/(4.0*uKnee+1e-4);
+        float contrib = max(soft, l-uThreshold)/max(l,1e-4);
+        gl_FragColor = vec4(c*contrib, 1.0);
+      }`,
+    depthTest:false, depthWrite:false });
+
+  // --- separable gaussian, 5 linear-filtered taps ≈ a 9-tap kernel
+  const matBlur=new THREE.ShaderMaterial({
+    uniforms:{ tDiffuse:{value:null}, uDir:{value:new THREE.Vector2()} },
+    vertexShader:VERT,
+    fragmentShader:`
+      uniform sampler2D tDiffuse; uniform vec2 uDir;
+      varying vec2 vUv;
+      void main(){
+        vec3 s = texture2D(tDiffuse, vUv).rgb*0.227027;
+        s += (texture2D(tDiffuse, vUv+uDir*1.3846153846).rgb
+            + texture2D(tDiffuse, vUv-uDir*1.3846153846).rgb)*0.3162162162;
+        s += (texture2D(tDiffuse, vUv+uDir*3.2307692308).rgb
+            + texture2D(tDiffuse, vUv-uDir*3.2307692308).rgb)*0.0702702703;
+        gl_FragColor = vec4(s,1.0);
+      }`,
+    depthTest:false, depthWrite:false });
+
+  // --- composite: bloom + grade + vignette + grain + aberration + impulses.
+  // Order is deliberate and matches how a real grade is built: optics first
+  // (aberration, bloom), then exposure/curve/tint, then the impulse overlays,
+  // then the lens/film texture last so vignette and grain sit *over* the image.
+  const matComp=new THREE.ShaderMaterial({
+    uniforms:{
+      tScene:{value:null}, tHalf:{value:null}, tQuarter:{value:null},
+      uBloom:{value:0.40}, uBloomWide:{value:0.26}, uBloomOn:{value:1},
+      uExposure:{value:1.0}, uContrast:{value:1.06}, uSat:{value:1.10},
+      uVignette:{value:0.36}, uGrain:{value:0.024}, uScan:{value:0.018},
+      uAberr:{value:0.0}, uFlash:{value:0.0}, uFlashCol:{value:new THREE.Color(1,1,1)},
+      uDamage:{value:0.0}, uDesat:{value:0.0},
+      uTime:{value:0.0}, uRes:{value:new THREE.Vector2(1,1)},
+      // synthwave split-tone: shadows drift indigo, highlights warm up
+      uShadowTint:{value:new THREE.Color(0.90,0.92,1.10)},
+      uHighTint:{value:new THREE.Color(1.07,1.00,0.94)},
+    },
+    vertexShader:VERT,
+    fragmentShader:`
+      uniform sampler2D tScene, tHalf, tQuarter;
+      uniform float uBloom, uBloomWide, uBloomOn;
+      uniform float uExposure, uContrast, uSat;
+      uniform float uVignette, uGrain, uScan;
+      uniform float uAberr, uFlash, uDamage, uDesat, uTime;
+      uniform vec3 uFlashCol, uShadowTint, uHighTint;
+      uniform vec2 uRes;
+      varying vec2 vUv;
+
+      float luma(vec3 c){ return dot(c, vec3(0.2126,0.7152,0.0722)); }
+      float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
+      // soft shoulder: linear to 0.8, then rolls asymptotically to 1.0 so a
+      // blown-out neon sign keeps its hue instead of clipping to flat white
+      vec3 softClip(vec3 c){
+        vec3 k = vec3(0.8);
+        vec3 over = max(c-k, 0.0);
+        return min(c,k) + (1.0-k)*(over/(over+(1.0-k)));
+      }
+
+      void main(){
+        vec2 uv = vUv;
+        vec2 fromC = uv - 0.5;
+        float r2 = dot(fromC, fromC);
+
+        // --- chromatic aberration: radial, quadratic toward the corners
+        vec3 col;
+        if(uAberr > 0.0005){
+          vec2 off = fromC * r2 * uAberr;
+          col.r = texture2D(tScene, uv + off).r;
+          col.g = texture2D(tScene, uv).g;
+          col.b = texture2D(tScene, uv - off).b;
+        } else {
+          col = texture2D(tScene, uv).rgb;
+        }
+
+        // --- bloom. Both branches are on uniforms, so they are coherent across
+        // the whole draw and the skipped fetch really is skipped — at tier
+        // 'medium' tQuarter is bound to the same texture as tHalf and must not
+        // be sampled just to be multiplied by zero.
+        if(uBloomOn > 0.5){
+          col += texture2D(tHalf, uv).rgb * uBloom;
+          if(uBloomWide > 0.001) col += texture2D(tQuarter, uv).rgb * uBloomWide;
+        }
+
+        // --- grade
+        col *= uExposure;
+        col = softClip(col);
+        float l = luma(col);
+        col *= mix(uShadowTint, uHighTint, smoothstep(0.0, 0.70, l));
+        col = (col - 0.5)*uContrast + 0.5;
+        col = max(col, 0.0);
+        col = mix(vec3(luma(col)), col, uSat);
+
+        // --- impulses: flash reads as light in the room, damage as blood at
+        // the edge of vision, desat as the world greying out
+        col += uFlashCol * uFlash;
+        col = mix(col, vec3(0.62,0.03,0.07), uDamage*smoothstep(0.06,0.24,r2));
+        col = mix(vec3(luma(col)), col, 1.0-uDesat);
+
+        // --- lens + film, last
+        col *= 1.0 - uVignette*smoothstep(0.02, 0.30, r2);
+        if(uScan > 0.0){
+          col *= 1.0 - uScan*(0.5 + 0.5*sin(uv.y*uRes.y*1.55));
+        }
+        if(uGrain > 0.0){
+          float n = hash(uv*uRes*0.5 + fract(uTime)*57.31);
+          col += (n-0.5)*uGrain;
+        }
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+    depthTest:false, depthWrite:false });
+
+  // one fullscreen triangle-ish quad, reused by every pass
+  const quadScene=new THREE.Scene();
+  const quadCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+  const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2), matComp);
+  quad.frustumCulled=false;
+  quadScene.add(quad);
+
+  function blit(mat,target){
+    quad.material=mat;
+    renderer.setRenderTarget(target||null);
+    renderer.render(quadScene,quadCam);
+  }
+
+  function resize(w,h){
+    if(w===W&&h===H) return;
+    W=w; H=h;
+    const hw=Math.max(1,w>>1), hh=Math.max(1,h>>1);
+    const qw=Math.max(1,w>>2), qh=Math.max(1,h>>2);
+    rtScene.setSize(w,h);
+    rtA.setSize(hw,hh); rtB.setSize(hw,hh);
+    rtC.setSize(qw,qh); rtD.setSize(qw,qh);
+    matComp.uniforms.uRes.value.set(w,h);
+  }
+
+  // Pushes the FX state object into the shader uniforms once per frame.
+  function syncUniforms(){
+    const u=matComp.uniforms, reduce=SETTINGS_REDUCE_MOTION();
+    const bloomOn=FX.tier!=='low';
+    u.uBloomOn.value=bloomOn?1:0;
+    u.uBloom.value=FX.bloom+FX.bloomPulse*0.9;
+    u.uBloomWide.value=FX.tier==='high'?(FX.bloomWide+FX.bloomPulse*0.6):0;
+    u.uExposure.value=FX.exposure;
+    u.uContrast.value=FX.contrast;
+    u.uSat.value=FX.sat;
+    u.uVignette.value=FX.vignette;
+    u.uGrain.value=reduce?0:FX.grain;
+    u.uScan.value=reduce?0:FX.scan;
+    u.uAberr.value=reduce?0:(FX.aberration+FX.kick*0.06+FX.slowAberr);
+    u.uFlash.value=FX.flash;
+    u.uFlashCol.value.setRGB(FX.flashR,FX.flashG,FX.flashB);
+    u.uDamage.value=FX.damage;
+    u.uDesat.value=FX.desat;
+    matBright.uniforms.uThreshold.value=FX.threshold;
+    matBright.uniforms.uKnee.value=FX.knee;
+  }
+
+  function render(){
+    renderer.getDrawingBufferSize(_size);
+    resize(Math.max(1,Math.floor(_size.x)), Math.max(1,Math.floor(_size.y)));
+    syncUniforms();
+
+    // 1. the world, into the offscreen target
+    renderer.setRenderTarget(rtScene);
+    renderer.render(scene,camera);
+
+    const u=matComp.uniforms;
+    u.tScene.value=rtScene.texture;
+
+    if(FX.tier==='low'){
+      u.tHalf.value=rtA.texture; u.tQuarter.value=rtA.texture;   // unread (uBloomOn=0)
+    } else {
+      const iters=FX.tier==='high'?2:1;
+      // 2. bright pass into ½ res
+      matBright.uniforms.tDiffuse.value=rtScene.texture;
+      matBright.uniforms.uTexel.value.set(1/W,1/H);
+      blit(matBright,rtA);
+      // 3. separable blur, ping-ponging A→B→A
+      const hw=Math.max(1,W>>1), hh=Math.max(1,H>>1);
+      for(let i=0;i<iters;i++){
+        matBlur.uniforms.tDiffuse.value=rtA.texture;
+        matBlur.uniforms.uDir.value.set(1/hw,0); blit(matBlur,rtB);
+        matBlur.uniforms.tDiffuse.value=rtB.texture;
+        matBlur.uniforms.uDir.value.set(0,1/hh); blit(matBlur,rtA);
+      }
+      u.tHalf.value=rtA.texture;
+
+      if(FX.tier==='high'){
+        // 4. the wide halo: take the ½ result down to ¼ and blur it again
+        const qw=Math.max(1,W>>2), qh=Math.max(1,H>>2);
+        matBlur.uniforms.tDiffuse.value=rtA.texture;
+        matBlur.uniforms.uDir.value.set(1/qw,0); blit(matBlur,rtC);
+        matBlur.uniforms.tDiffuse.value=rtC.texture;
+        matBlur.uniforms.uDir.value.set(0,1/qh); blit(matBlur,rtD);
+        matBlur.uniforms.tDiffuse.value=rtD.texture;
+        matBlur.uniforms.uDir.value.set(2/qw,0); blit(matBlur,rtC);
+        matBlur.uniforms.tDiffuse.value=rtC.texture;
+        matBlur.uniforms.uDir.value.set(0,2/qh); blit(matBlur,rtD);
+        u.tQuarter.value=rtD.texture;
+      } else {
+        u.tQuarter.value=rtA.texture;   // uBloomWide is 0 at this tier
+      }
+    }
+
+    // 5. composite to the screen
+    blit(matComp,null);
+  }
+
+  return { render, resize,
+           // exposed for tests/debug
+           _rt:()=>({rtScene,rtA,rtB,rtC,rtD,W,H}), _msaa:canMSAA, _mats:{matBright,matBlur,matComp} };
+})();
+
+// Decays every impulse and derives the continuous, state-driven values
+// (speed aberration, low-health throb). Called from renderFrame() rather than
+// the sim loop so it keeps running through cutscenes, replays and pauses.
+function updateFxImpulses(dt){
+  const k=Math.exp(-6.5*dt);
+  FX.flash*=Math.exp(-9*dt);      if(FX.flash<0.002) FX.flash=0;
+  FX.kick*=k;                     if(FX.kick<0.002) FX.kick=0;
+  FX.bloomPulse*=Math.exp(-4.5*dt); if(FX.bloomPulse<0.002) FX.bloomPulse=0;
+  FX.damage*=Math.exp(-3.2*dt);   if(FX.damage<0.002) FX.damage=0;
+  FX.desat*=Math.exp(-2.4*dt);    if(FX.desat<0.002) FX.desat=0;
+
+  // Speed sells itself: the lens stretches as you go faster, hardest under
+  // boost. Foot mode gets a much smaller share so sprinting still reads.
+  let speedA=0;
+  if(typeof G!=='undefined'&&typeof player!=='undefined'){
+    if(G.mode==='car'&&player.car){
+      const c=player.car, top=(typeof CARTYPES!=='undefined'&&CARTYPES[c.type])?CARTYPES[c.type].top:30;
+      const sr=Math.min(1.4,Math.abs(c.speed)/Math.max(1,top));
+      speedA=sr*0.055+((typeof input!=='undefined'&&input.boost&&G.boost>0)?0.05:0);
+    } else if(G.mode==='heli'&&player.heli){
+      speedA=0.018;
+    } else if(player.sprinting){
+      speedA=0.016;
+    }
+  }
+  FX.aberration+=(speedA-FX.aberration)*(1-Math.exp(-5*dt));
+
+  // Low health: the world greys out and the edges keep bleeding. This is a
+  // floor under the decaying impulse, not an addition, so a fresh hit still
+  // spikes above it.
+  if(typeof G!=='undefined'&&G.started&&!G.over&&G.mode==='foot'&&G.hp<35){
+    const t=1-Math.max(0,G.hp)/35;
+    const pulse=0.5+0.5*Math.sin(performance.now()/(430-t*150));
+    FX.damage=Math.max(FX.damage,t*0.50*(0.55+0.45*pulse));
+    FX.desat=Math.max(FX.desat,t*0.14);   // a trace only — see fxDamage()
+  }
+}
+
+// The one render entry point. Every former `renderer.render(scene,camera)`
+// call site goes through here so post FX can never be half-applied.
+let _fxLastT=performance.now();
+function renderFrame(){
+  const now=performance.now();
+  const dt=Math.min(0.05,(now-_fxLastT)/1000); _fxLastT=now;
+  if(!FX.enabled){ renderer.setRenderTarget(null); renderer.render(scene,camera); return; }
+  updateFxImpulses(dt);
+  FX._t=(FX._t||0)+dt;
+  POSTFX._mats.matComp.uniforms.uTime.value=FX._t;
+  POSTFX.render();
+}
+// Called by applyQuality() so the bloom chain follows the same auto/manual
+// tier the rest of the renderer uses.
+function fxSetTier(tier){ FX.tier=(tier==='low'||tier==='medium'||tier==='high')?tier:'high'; }
+
 // ================= CITY =================
 const H=WORLD.half, PITCH=WORLD.pitch, ROAD=WORLD.road, BLOCK=WORLD.block;
 const roadLines=[]; for(let k=0;k<=WORLD.blocks;k++) roadLines.push(-H+ROAD/2+k*PITCH);
 const intersections=[];
 roadLines.forEach((x,i)=>roadLines.forEach((z,j)=>intersections.push({x,z,i,j})));
+
+// ---- PV3: where is it legal to stand something up? ----
+// The grid is symmetric, so roadLines holds the centreline of every road on
+// BOTH axes. A point is on asphalt if it is within ROAD/2 of any of them.
+function onRoadway(x,z,margin){
+  const m=(margin||0)+ROAD/2;
+  for(let i=0;i<roadLines.length;i++){
+    if(Math.abs(x-roadLines[i])<m||Math.abs(z-roadLines[i])<m) return true;
+  }
+  return false;
+}
+// Pick a point on a block's pavement — just inside one of its four kerbs,
+// clear of the carriageway and of any building footprint. Returns null if the
+// block has no room, so callers re-roll or skip rather than placing in a lane.
+//
+// This exists because both tree systems used to offset by BLOCK/2 + 1.6 with
+// the comment "sidewalk edge, not the street". It isn't: blocks are BLOCK wide
+// with ROAD *between* them, so the block edge and the kerb are the same line
+// and +1.6 puts the trunk 1.6u into the roadway. The corners were worse —
+// sweeping the along-edge coordinate over the full ±(BLOCK/2 + 1.6) ran past
+// the corner and out into the cross-street.
+function pavementSpot(b,clearance){
+  const half=BLOCK/2, inset=1.0, along=half-3.5;
+  for(let t=0;t<8;t++){
+    const s=rand(-along,along), side=pick([-1,1]);
+    const p=_rng()<0.5?{x:b.cx+s,z:b.cz+side*(half-inset)}
+                      :{x:b.cx+side*(half-inset),z:b.cz+s};
+    if(onRoadway(p.x,p.z,0.4)) continue;
+    if(buildingHit(p.x,p.z,clearance===undefined?0.6:clearance)) continue;
+    return p;
+  }
+  return null;
+}
 
 const buildings=[];
 const blockInfo=[];
@@ -1788,6 +2246,16 @@ for(let i=0;i<=WORLD.blocks;i++){
   VERT_H[i]=[];
   for(let j=0;j<=WORLD.blocks;j++) VERT_H[i][j]=cityRelief(roadLines[i],roadLines[j])+hillsAt(roadLines[i],roadLines[j]);
 }
+// PV4 shore shelf. Declared here because groundH reads them and terrainGeo()
+// calls groundH while building the ground and sand meshes further down.
+// SHORE_END sits past WATER_R so the waterline (y = -0.34) lands right about
+// where overWater() starts calling it swimming, leaving a shallow wading strip
+// instead of a mismatch between what you see and what the game thinks.
+// The face's steepest gradient is 1.5 * (drop / run) — smoothstep's peak slope.
+// A 5u drop over a 21u run gave a ~20deg face before the dune field was even
+// added on top; over 40u it is ~10deg, which walks like a beach. SHORE_START
+// sits at the sand edge so the Coast Highway keeps level ground under it.
+const SHORE_START=H+14, SHORE_END=H+54, SEA_FLOOR=-3.0;
 function groundH(x,z){
   const nb=WORLD.blocks;
   const ci=clamp(Math.floor((x-roadLines[0])/PITCH),0,nb-1);
@@ -1811,6 +2279,34 @@ function groundH(x,z){
     const t=clamp((m-H-16)/14,0,1);
     h+=(1.6+Math.sin(x*0.045+1.7)*Math.cos(z*0.05)*1.2+Math.sin((x+z)*0.03)*0.8)*t;
   }
+  // How far into the shore shelf we are, 0..1.
+  //
+  // Tried and rejected: fading the DUNES out across this band, on the theory
+  // that their gradient was stacking on the shelf's. It makes the face steeper,
+  // not gentler — dropping a positive dune to zero over the same span is one
+  // more downward slope in series with the shelf (measured 25.7deg -> 27.9deg).
+  // The lever that actually works is the length of the run, below.
+  let shelf=0;
+  if(m>SHORE_START){
+    const t=clamp((m-SHORE_START)/(SHORE_END-SHORE_START),0,1);
+    shelf=t*t*(3-2*t);   // smoothstep: no kink at either end
+  }
+  // PV4 — the shore shelves INTO the sea. The dunes above used to be the last
+  // word: the sand rose all the way to the mesh edge and the ocean was a flat
+  // plane butted against a wall of beach. Past the dune crest the ground now
+  // descends smoothly through the waterline to a sea floor, so wading out is a
+  // continuous walk down rather than a step off a shelf.
+  //
+  // Everything here is outside SHORE_START (H+22 = 360), i.e. beach only: no
+  // street, block or building footprint reaches this far, so TERRAIN.md's
+  // grade and no-ledge guardrails for the city are untouched. terrainGeo()
+  // samples groundH per vertex, so the drawn sand follows this automatically —
+  // which is the exact field-vs-mesh disagreement that sank the old terraced
+  // version (see TERRAIN.md's Tier 1 revision note).
+  //
+  // smoothstep, not a linear ramp: zero derivative at both ends means the sand
+  // rolls over the dune crest and flattens onto the sea floor with no kink.
+  if(shelf>0) h=lerp(h,SEA_FLOOR,shelf);
   return h;
 }
 // sewer manholes: rats live down there (see the rat system below)
@@ -1849,10 +2345,30 @@ function addBuilding(cx,cz,w,d,h){
   const minX=cx-w/2,maxX=cx+w/2,minZ=cz-d/2,maxZ=cz+d/2;
   buildings.push({minX,maxX,minZ,maxZ,h,baseY:footprintBaseY(minX,maxX,minZ,maxZ)});
 }
+// PV5 (partial) — give the skyline a centre instead of two concentric slabs.
+//
+// Height used to be a hard step at r=170: everything inside got rand(24,64),
+// everything outside rand(10,30). From the air that reads as a square of tall
+// boxes sitting inside a square of short ones — a board, not a place.
+//
+// It now falls off smoothly from a downtown core whose radius WANDERS with
+// bearing, so the crest of the skyline is an irregular ridge rather than a
+// ring, and the profile tapers all the way down to low-rise at the edges.
+//
+// Scope, deliberately: heights only. The road lattice is untouched, and so is
+// the number of buildings — `groundH` and every static's Y are built on that
+// lattice, and thinning blocks out would change collision, stairs, ladders and
+// the store/heist placement that reads them. Reshaping the city FOOTPRINT (an
+// irregular outer boundary dissolving into lots) is the rest of PV5 and is
+// still open in HANDOFF.md.
 blockInfo.forEach(b=>{
   if(b.type!=='bldg') return;
   const distC=Math.hypot(b.cx,b.cz);
-  const tall=distC<170 ? rand(24,64) : rand(10,30);
+  const bearing=Math.atan2(b.cz,b.cx);
+  const coreR=152+Math.sin(bearing*2+0.7)*40+Math.sin(bearing*3-1.2)*24;
+  const t=distC/Math.max(60,coreR);
+  const fall=Math.exp(-t*t*1.15);            // smooth crest, no ring
+  const tall=lerp(9,66,fall)*rand(0.8,1.2);
   const pattern=_rng();
   if(pattern<0.35){
     addBuilding(b.cx+rand(-3,3),b.cz+rand(-3,3),rand(26,40),rand(26,40),tall);
@@ -1914,12 +2430,41 @@ groundCanvas.width=groundCanvas.height=1024;
   // smear at walking/driving distance — see the world-scale dash geometry
   // built after groundTex below (OP2-A). Left off the texture entirely so
   // nothing shows through around the new geometry.
-  // the Coast Highway: one big curvy ring around the whole city
-  g.fillStyle='#2c2839';
-  g.beginPath(); g.arc(512,512,px(H+7)-512+(ROAD*0.85*S)/2,0,TAU);
-  g.arc(512,512,px(H+7)-512-(ROAD*0.85*S)/2,0,TAU,true); g.fill();
+  // PV6 — the Coast Highway.
+  //
+  // This was drawn as a CIRCLE of radius H+7 around a SQUARE city of half-width
+  // H, which is why it "conflicts with other roads and leads into buildings":
+  // a circle of that radius only clears the grid at the four cardinal points.
+  // At 15° it is already inside the outer blocks, and at 45° it runs 94u deep
+  // into the city — painted straight across streets and through building
+  // footprints.
+  //
+  // No circle can fix this. Clearing the corners of a square city needs radius
+  // H*sqrt(2) = 478, and the entire world is only 358 from centre. The road has
+  // to follow the city's shape, so it is a rounded rectangle threading the gap
+  // between the outermost kerb (±H = 338) and the sand (±(H+14) = 352).
+  const COAST_HALF=H+7, COAST_CORNER=30;
+  const coastPath=()=>{
+    const a=COAST_HALF-COAST_CORNER, r=COAST_CORNER*S;
+    g.beginPath();
+    g.moveTo(px(-a),px(-COAST_HALF));
+    g.lineTo(px(a),px(-COAST_HALF));
+    g.arcTo(px(COAST_HALF),px(-COAST_HALF),px(COAST_HALF),px(-a),r);
+    g.lineTo(px(COAST_HALF),px(a));
+    g.arcTo(px(COAST_HALF),px(COAST_HALF),px(a),px(COAST_HALF),r);
+    g.lineTo(px(-a),px(COAST_HALF));
+    g.arcTo(px(-COAST_HALF),px(COAST_HALF),px(-COAST_HALF),px(a),r);
+    g.lineTo(px(-COAST_HALF),px(-a));
+    g.arcTo(px(-COAST_HALF),px(-COAST_HALF),px(-a),px(-COAST_HALF),r);
+    g.closePath();
+  };
+  // stroked, not a filled annulus — a stroke centred on the path IS the
+  // carriageway, and it corners correctly without hand-built arc segments
+  g.lineJoin='round'; g.lineCap='butt';
+  g.strokeStyle='#2c2839'; g.lineWidth=ROAD*0.85*S;
+  coastPath(); g.stroke();
   g.strokeStyle='#e8c14a'; g.lineWidth=2; g.setLineDash([10,12]);
-  g.beginPath(); g.arc(512,512,px(H+7)-512,0,TAU); g.stroke();
+  coastPath(); g.stroke();
   g.setLineDash([]);
   // sewer manholes used to get a painted dot here too — same low-res problem
   // as the centre dashes above, and this texture-space dot was also drawn
@@ -2504,9 +3049,9 @@ blockInfo.forEach(b=>{
     }
   }
   if(b.type==='bldg'&&_rng()<0.65){
-    const per=BLOCK/2+1.6;   // sidewalk edge, not the street
-    treeSpots.push({x:b.cx+rand(-per,per),z:b.cz+pick([-1,1])*per});
-    if(_rng()<0.5) treeSpots.push({x:b.cx+pick([-1,1])*per,z:b.cz+rand(-per,per)});
+    // PV3: on the pavement, never in a lane — see pavementSpot() in §CITY.
+    const a=pavementSpot(b,1.9); if(a) treeSpots.push(a);
+    if(_rng()<0.5){ const c=pavementSpot(b,1.9); if(c) treeSpots.push(c); }
   }
 });
 (function(){
@@ -2840,10 +3385,15 @@ function addHideout(x,z,r,y){
     else if(side===2){ sx=cx-w/5; sz=b.minZ-1.3; ang=Math.PI/2; wallLen=w; }
     else { sx=cx+w/5; sz=b.maxZ+1.3; ang=-Math.PI/2; wallLen=w; }
     const roof=b.baseY+b.h;
+    // The flight stands on the ground OUTSIDE the wall, which on graded ground
+    // sits above the building's own baseY (that gap is what BUILDING_SKIRT
+    // hides). Starting the run at baseY buried the bottom steps in the hill and
+    // left the walkable strip below the terrain you actually land on.
+    const footH=Math.max(b.baseY,groundH(sx,sz));
     if(b.h>=25){
       // fire escape: two zigzag flights + a landing, dark steel
       const fl=Math.min(14,wallLen*0.55), half=b.baseY+b.h/2;
-      const r1={x:sx,z:sz,ang,len:fl,baseH:b.baseY,topH:half};
+      const r1={x:sx,z:sz,ang,len:fl,baseH:footH,topH:half};
       const lx=sx+Math.sin(ang)*fl, lz=sz+Math.cos(ang)*fl;
       const rLand={x:lx,z:lz,ang,len:2.4,baseH:half,topH:half};
       const fx=lx+Math.sin(ang)*2.4, fz=lz+Math.cos(ang)*2.4;
@@ -2855,7 +3405,7 @@ function addHideout(x,z,r,y){
     } else {
       // straight stair to the roof
       const len=Math.min(15,Math.max(8,b.h*1.15));
-      const r1={x:sx,z:sz,ang,len,baseH:b.baseY,topH:roof};
+      const r1={x:sx,z:sz,ang,len,baseH:footH,topH:roof};
       STAIR_RUNS.push(r1); stepsFor(r1,false);
     }
     // the roof of a climbable building makes a great hideout
@@ -3198,6 +3748,136 @@ const COL_SMOKE=[[0.5,0.5,0.55],[0.35,0.35,0.4]], COL_FIRE=[[1,0.6,0.1],[1,0.3,0
       COL_CASH=[[0.3,1,0.4],[0.8,1,0.3]], COL_SPARK=[[1,0.9,0.4],[1,1,1]],
       COL_NITRO=[[0.3,0.7,1],[0.6,0.9,1],[0.2,0.4,1]],
       COL_WATER=[[0.55,0.82,1],[0.85,0.95,1],[0.35,0.65,0.95]];
+// ================= CARNAGE: DEBRIS, SCORCH & CHAIN REACTIONS =================
+// The point particles above are sparks and smoke — they sell heat, but nothing
+// in an explosion had mass. This adds the physical half: chunks that get thrown,
+// arc, bounce, tumble and settle, a scorch left behind, and a car blowing up
+// taking its neighbours with it a beat later.
+//
+// Everything here is pooled and bounded. Both pools are fixed-size and reused,
+// so an explosion in heavy traffic can't allocate; the chain reaction is capped
+// per blast AND globally rate-limited, so a pile-up can't recurse the city into
+// a frame-rate hole.
+
+const DEBRIS_MAX=54;
+const debris=[];
+(function initDebris(){
+  const geo=new THREE.BoxGeometry(1,1,1);
+  for(let i=0;i<DEBRIS_MAX;i++){
+    // own material per chunk so shrapnel can take the colour of whatever it
+    // came off — a hot pink car throws hot pink wreckage
+    const m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0x2a2a33}));
+    m.visible=false; m.frustumCulled=false; m.castShadow=false;
+    scene.add(m);
+    debris.push({mesh:m,life:0,max:1,vx:0,vy:0,vz:0,
+                 spin:new THREE.Vector3(),base:new THREE.Vector3(1,1,1),bounced:0});
+  }
+})();
+function spawnDebris(x,y,z,n,color,power){
+  n=Math.max(1,Math.round(n*PARTICLE_SCALE));
+  let made=0;
+  for(let i=0;i<debris.length&&made<n;i++){
+    const d=debris[i];
+    if(d.life>0) continue;
+    const a=rand(0,TAU), s=rand(0.45,1)*power;
+    d.vx=Math.cos(a)*s; d.vz=Math.sin(a)*s; d.vy=rand(0.6,1.5)*power*0.8;
+    d.max=d.life=rand(1.6,3.2); d.bounced=0;
+    d.spin.set(rand(-11,11),rand(-11,11),rand(-11,11));
+    const sc=rand(0.16,0.46);
+    d.base.set(sc,sc*rand(0.5,1),sc*rand(0.6,1.3));
+    d.mesh.scale.copy(d.base);
+    d.mesh.position.set(x+rand(-0.6,0.6),y+rand(0,0.8),z+rand(-0.6,0.6));
+    d.mesh.rotation.set(rand(0,TAU),rand(0,TAU),rand(0,TAU));
+    d.mesh.material.color.setHex(color===undefined?0x2a2a33:color);
+    d.mesh.visible=true;
+    made++;
+  }
+}
+function updateDebris(dt){
+  for(let i=0;i<debris.length;i++){
+    const d=debris[i];
+    if(d.life<=0) continue;
+    d.life-=dt;
+    if(d.life<=0){ d.mesh.visible=false; continue; }
+    const m=d.mesh;
+    d.vy-=26*dt;
+    m.position.x+=d.vx*dt; m.position.y+=d.vy*dt; m.position.z+=d.vz*dt;
+    const floor=groundH(m.position.x,m.position.z)+d.base.y*0.5;
+    if(m.position.y<=floor){
+      m.position.y=floor;
+      if(d.bounced<2&&Math.abs(d.vy)>2.5){
+        d.vy=-d.vy*0.38; d.vx*=0.62; d.vz*=0.62; d.bounced++;
+        d.spin.multiplyScalar(0.55);
+      } else {
+        d.vy=0;
+        const k=Math.exp(-6*dt);
+        d.vx*=k; d.vz*=k; d.spin.multiplyScalar(Math.exp(-7*dt));
+      }
+    }
+    m.rotation.x+=d.spin.x*dt; m.rotation.y+=d.spin.y*dt; m.rotation.z+=d.spin.z*dt;
+    // shrink out over the last half second. Scale is recomputed from the stored
+    // base rather than multiplied down, so it can't compound frame to frame.
+    if(d.life<0.5) m.scale.copy(d.base).multiplyScalar(Math.max(0.02,d.life/0.5));
+  }
+}
+
+// --- scorch marks: a blast leaves the pavement burnt for a while ---
+const SCORCH_MAX=10;
+const scorches=[];
+(function initScorch(){
+  const geo=new THREE.CircleGeometry(1,16);
+  for(let i=0;i<SCORCH_MAX;i++){
+    const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({
+      color:0x120d10,transparent:true,opacity:0,depthWrite:false}));
+    m.rotation.x=-Math.PI/2; m.visible=false; scene.add(m);
+    scorches.push({mesh:m,life:0,max:1,r:1});
+  }
+})();
+let scorchNext=0;
+function addScorch(x,z,r){
+  const s=scorches[scorchNext%SCORCH_MAX]; scorchNext++;
+  s.r=r; s.max=s.life=14;
+  s.mesh.position.set(x,groundH(x,z)+0.045,z);
+  s.mesh.scale.set(r,r,1);
+  s.mesh.material.opacity=0.72;
+  s.mesh.visible=true;
+}
+function updateScorch(dt){
+  for(let i=0;i<scorches.length;i++){
+    const s=scorches[i];
+    if(s.life<=0) continue;
+    s.life-=dt;
+    if(s.life<=0){ s.mesh.visible=false; s.mesh.material.opacity=0; continue; }
+    const f=s.life/s.max;
+    s.mesh.material.opacity=0.72*Math.min(1,f*2.2);   // hold, then fade out
+  }
+}
+
+// --- chain reactions ---
+// A car cooking off next to other cars should take them with it. Rather than
+// detonating them on the spot (which reads as one big bang) each neighbour gets
+// a short random fuse through the burning path the game already has, so they go
+// off in a ragged sequence.
+//
+// Two independent limiters, because dense traffic could otherwise cascade the
+// whole map: at most CHAIN_MAX neighbours per blast, and a global budget that
+// refills over time so a pile-up can't chain indefinitely.
+const CHAIN_RADIUS=11, CHAIN_MAX=3, CHAIN_BUDGET_MAX=7;
+let chainBudget=CHAIN_BUDGET_MAX;
+function updateChainBudget(dt){ chainBudget=Math.min(CHAIN_BUDGET_MAX,chainBudget+dt*0.9); }
+function chainReact(x,z,exclude){
+  let lit=0;
+  for(const c of cars){
+    if(lit>=CHAIN_MAX||chainBudget<1) break;
+    if(c===exclude||c.dead||c.burning) continue;
+    if(c===player.car) continue;              // your own ride is your problem, not a domino
+    if(Math.hypot(c.x-x,c.z-z)>CHAIN_RADIUS) continue;
+    c.burning=true; c.burnT=rand(0.35,1.15);  // ragged sequence, not one bang
+    chainBudget--; lit++;
+  }
+  return lit;
+}
+
 // brake lights: dim cruising, bright on the pedal
 function setTail(car,on){
   const t=car.mesh.userData.tail; if(!t||car._tailOn===on) return;
@@ -3321,8 +4001,45 @@ function wedgeGeo(w,h,l){
   geo.computeVertexNormals();
   return geo;
 }
+// ---- PV7: motorcycle riders ----
+// `var` and function declarations, deliberately: parked motorcycles are built
+// at module level (see the blockInfo loop below makeCar), which is above where
+// a `const` here would finish initialising.
+// Where the rider's ORIGIN goes, which for a person.js rig is the soles of the
+// feet, not the hips. The rig puts the pelvis at y=0.95 and riders are scaled
+// 0.92, so the pelvis sits 0.874 above this offset; the bike's seat mesh is at
+// y=0.74 with a 0.09 box, so its top is ~0.785. -0.02 lands the pelvis just
+// above the leather instead of hovering a body-length over the tank.
+var BIKE_SEAT={x:0,y:-0.02,z:-0.20};
+// Sit a person.js rig on a bike: knees up over the pegs, arms out to the bars,
+// hunched over the tank. Applied to NPC riders at build time and to Turbo every
+// frame he's riding.
+function poseRider(g){
+  const u=g&&g.userData; if(!u||!u.legL) return;
+  // hip forward, knee folded back — feet land on pegs under the frame rather
+  // than stretched out past the front wheel
+  u.legL.rotation.x=-0.62; u.legR.rotation.x=-0.62;
+  if(u.kneeL) u.kneeL.rotation.x=1.42;
+  if(u.kneeR) u.kneeR.rotation.x=1.42;
+  u.armL.rotation.x=-1.08; u.armR.rotation.x=-1.08;
+  u.armL.rotation.z=0.22;  u.armR.rotation.z=-0.22;
+  if(u.torso) u.torso.rotation.x=0.30;
+  if(u.head)  u.head.rotation.x=-0.24;   // eyes up the road, not at the tank
+}
+// Undo it. Turbo shares one rig with the on-foot animation, so stepping off a
+// bike has to hand it back in a neutral pose or he walks away still crouched.
+function unposeRider(g){
+  const u=g&&g.userData; if(!u||!u.legL) return;
+  u.legL.rotation.set(0,0,0); u.legR.rotation.set(0,0,0);
+  if(u.kneeL) u.kneeL.rotation.x=0;
+  if(u.kneeR) u.kneeR.rotation.x=0;
+  u.armL.rotation.set(0,0,0); u.armR.rotation.set(0,0,0);
+  if(u.torso) u.torso.rotation.set(0,0,0);
+  if(u.head)  u.head.rotation.set(0,0,0);
+}
 function makeCarMesh(type,color){
   const t=CARTYPES[type], grp=new THREE.Group();
+  grp.userData.paint=color;   // §CARNAGE reads this so shrapnel matches the wreck
   const bodyMat=new THREE.MeshLambertMaterial({color});
   const darkMat=new THREE.MeshLambertMaterial({color:0x14141c});
   const hl=new THREE.MeshBasicMaterial({color:0xfff2b0});
@@ -3340,20 +4057,19 @@ function makeCarMesh(type,color){
     fork.rotation.x=0.35; fork.position.set(0,0.62,0.82); grp.add(fork);
     const bar=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.58,6),chrome);
     bar.rotation.z=Math.PI/2; bar.position.set(0,0.98,0.88); grp.add(bar);
-    // rider (leathers + helmet, hunched forward)
-    const leathers=new THREE.MeshLambertMaterial({color:pick([0x1c1c24,0x5c1a1a,0x1a3a5c])});
-    const rTorso=new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.17,0.5,8),leathers);
-    rTorso.rotation.x=-0.35; rTorso.position.set(0,1.12,-0.28); grp.add(rTorso);
-    const rHead=new THREE.Mesh(new THREE.SphereGeometry(0.13,10,8),
-      new THREE.MeshLambertMaterial({color:pick([0xd94f4f,0xe8e8e8,0x30303a,0xffd23e])}));
-    rHead.position.set(0,1.44,-0.12); grp.add(rHead);
-    const rArmG=new THREE.CylinderGeometry(0.045,0.05,0.5,6);
-    [-1,1].forEach(s=>{
-      const a=new THREE.Mesh(rArmG,leathers);
-      a.rotation.x=-1.0; a.position.set(s*0.18,1.14,0.15); grp.add(a);
-      const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.06,0.42,6),darkMat);
-      leg.rotation.x=-1.2; leg.position.set(s*0.16,0.82,-0.3); grp.add(leg);
-    });
+    // PV7 — a real guy on the bike. This used to be a welded primitive: a
+    // cylinder torso, a sphere helmet and four tubes, permanently part of the
+    // bike mesh, which is why jacking one still showed a faceless blob riding.
+    // Now it's the shared js/person.js rig, so bike riders get the same faces,
+    // hair, clothes and NPC variety as everyone else on the street — and
+    // because it's a separate child it can be hidden when Turbo takes over.
+    const rider=makePerson();
+    rider.position.set(BIKE_SEAT.x,BIKE_SEAT.y,BIKE_SEAT.z);
+    rider.scale.setScalar(0.92);           // hunched onto a small frame
+    poseRider(rider);
+    if(rider.userData.shadow) rider.userData.shadow.visible=false;   // the bike casts one
+    grp.add(rider);
+    grp.userData.rider=rider;
     const hl2=new THREE.Mesh(new THREE.SphereGeometry(0.08,8,6),hl);
     hl2.position.set(0,0.85,1.05); grp.add(hl2);
     const tl2=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.08,0.05),
@@ -5829,15 +6545,11 @@ const SIDEWALK_SEG_SAMPLES=[];
   blockInfo.forEach(b=>{
     const downtown=Math.hypot(b.cx,b.cz)<DOWNTOWN_R;
     const n=downtown?randi(2,5):(_rng()<0.4?randi(0,2):0);
-    const half=BLOCK/2;
+    // PV3: same fix as the collidable trees — these were also being planted
+    // 1.6u past the kerb, i.e. in the carriageway.
     for(let k=0;k<n;k++){
-      const t=rand(-half+4,half-4);
-      switch(randi(0,3)){
-        case 0: treeDressSpots.push({x:b.cx+t,z:b.cz-half-1.6}); break;
-        case 1: treeDressSpots.push({x:b.cx+t,z:b.cz+half+1.6}); break;
-        case 2: treeDressSpots.push({x:b.cx-half-1.6,z:b.cz+t}); break;
-        default: treeDressSpots.push({x:b.cx+half+1.6,z:b.cz+t});
-      }
+      const p=pavementSpot(b,1.2);
+      if(p) treeDressSpots.push(p);
     }
   });
   if(treeDressSpots.length){
@@ -6669,8 +7381,12 @@ function updateBail(dt){
   if(!p.chute&&p.y>6) $('btnChute').style.display='flex';
   const roofHere=roofAt(p.x,p.z);
   const sh=stairH(p.x,p.z);
+  // PV4: same hidden y>=0 floor as footGround() — see the note there. Off the
+  // stairs this must be the terrain itself, which the shore shelf takes below
+  // the waterline, or a chuted landing on the beach never touches down.
+  const onSt=sh>0&&p.y>sh-1.0;
   const ground=(roofHere>0&&p.y>roofHere-1.0)?roofHere:
-    Math.max(groundH(p.x,p.z),(sh>0&&p.y>sh-1.0)?sh:0);
+    (onSt?Math.max(groundH(p.x,p.z),sh):groundH(p.x,p.z));
   const term=p.chute?-6.5:-38;
   p.vy=Math.max(term,p.vy-(p.chute?26:30)*dt);
   if(p.chute){
@@ -6821,6 +7537,7 @@ function refreshButtons(){
   // Restore the complete mode layout FIRST so proximity returns below can never
   // leave the action cluster centered or labelled like the car controls.
   $('btnHorn').style.display=car?'flex':'none';
+  $('btnSlow').style.display='flex';   // PV9 — slow motion works on foot, in a car and in a heli
   $('pedals').style.display=(car||heli)?'flex':'none';
   $('btnGas').style.display=car?'flex':'none';
   $('btnBrake').style.display=car?'flex':'none';
@@ -7398,6 +8115,8 @@ function updateFireballs(dt){
 }
 function explode(x,y,z){
   sfx.rpgBoom(); shake(0.8); triggerHitStop(0.06); haptic([40,50,70]);
+  fxFlash(0.30,1.0,0.72,0.38); fxImpact(0.55);   // §POST FX
+  spawnDebris(x,y+0.4,z,7,0x2a2a33,10); addScorch(x,z,rand(2.2,3.1));   // §CARNAGE
   G.lastBoom={x,z,t:performance.now()};
   spawnFireball(x,Math.max(y,1),z,4.5);
   burst(x,y,z,42,COL_FIRE,8,1.1,4);
@@ -7412,6 +8131,7 @@ const CAR_BOOM_DUR=0.9;      // slowed from the shared 0.55s fireball default, e
 const CAR_BOOM_RADIUS=10;    // the one blast radius, used by both damage and tests
 function bigExplosion(x,y,z){
   sfx.carBoom(); shake(1.2); triggerHitStop(0.08); haptic([60,40,90,40,120]);
+  fxFlash(0.52,1.0,0.70,0.33); fxImpact(0.9);   // §POST FX
   spawnFireball(x,y+1,z,8.5,CAR_BOOM_DUR);
   burst(x,y,z,70,COL_FIRE,12,1.6,4);
   burst(x,y,z,40,COL_FIRE,6,2.2,1);
@@ -7426,7 +8146,16 @@ function bigExplosion(x,y,z){
   // remember where she blew — the camera only swings around if this wastes Turbo
   G.lastBoom={x,z,t:performance.now()};
   damageArea(x,z,CAR_BOOM_RADIUS,150);
+  // §CARNAGE — the physical half of the blast
+  spawnDebris(x,y+0.6,z,14,bigExplosionTint,13);
+  addScorch(x,z,rand(3.4,4.6));
+  chainReact(x,z,null);
+  slowmoBurst(playerNear(x,z,30)?0.75:0);   // the money shot, if you're close
 }
+// Cars set this to their paint colour before detonating so the shrapnel
+// matches the wreck it came off; anything else blows grey-black.
+let bigExplosionTint=0x2a2a33;
+function playerNear(x,z,r){ return Math.hypot(px0()-x,pz0()-z)<r; }
 function updateBoomFx(dt){
   updateFireballs(dt);
   if(shockwave&&shockwave.userData.t>0){
@@ -7460,7 +8189,7 @@ function damageArea(x,z,rad,dmg){
   addHeat(25);
 }
 
-const input={jx:0,jy:0,boost:false,sprint:false,drift:false,horn:false,gas:false,brake:false};
+const input={jx:0,jy:0,boost:false,sprint:false,drift:false,horn:false,gas:false,brake:false,slow:false};
 let joyTouch=null, joyCX=0, joyCY=0;
 const joyEl=$('joy'), knobEl=$('joyKnob');
 function joyStart(x,y,id){
@@ -7482,11 +8211,11 @@ function joyEnd(){
   knobEl.style.transform='translate(-50%,-50%)';
   joyEl.style.left='22px'; joyEl.style.top='auto'; joyEl.style.bottom='calc(26px + env(safe-area-inset-bottom))';
 }
-const btnHold={boost:false,sprint:false,drift:false,gas:false,brake:false};
+const btnHold={boost:false,sprint:false,drift:false,gas:false,brake:false,slow:false};
 // A vehicle boost must never become a sprint just because the player steps
 // out while still holding Shift.  Foot sprint is armed by a fresh press.
 let sprintArmed=true, sprintShiftWasDown=false;
-const btnMap={btnBoost:'boost',btnSprint:'sprint',btnDrift:'drift',btnHorn:'horn',btnGas:'gas',btnBrake:'brake'};
+const btnMap={btnBoost:'boost',btnSprint:'sprint',btnDrift:'drift',btnHorn:'horn',btnGas:'gas',btnBrake:'brake',btnSlow:'slow'};
 Object.keys(btnMap).forEach(id=>{
   const el=$(id), key=btnMap[id];
   const on=e=>{ e.preventDefault(); if(key==='sprint'&&G.mode==='foot') sprintArmed=true; input[key]=true; btnHold[key]=true; el.classList.add('on'); if(key==='horn')doHorn(); };
@@ -7500,8 +8229,13 @@ function footGround(p){
   const roofHere=roofAt(p.x,p.z);
   const st=stairHitRun(p.x,p.z), sh=st?st.h:0;
   const onStairs=sh>0&&p.y>sh-1.2;
+  // PV4: `Math.max(groundH, onStairs?sh:0)` used the 0 as a "no stair" sentinel,
+  // but off the stairs that made it a hidden y>=0 FLOOR. Harmless while the
+  // terrain was never negative — and fatal to the shore shelf, which goes below
+  // the waterline: Turbo would have stopped at y=0 and walked out across the top
+  // of the sea. Take the stair height only when he is actually on one.
   return (roofHere>0&&p.y>roofHere-1.0)?roofHere:
-    Math.max(groundH(p.x,p.z),onStairs?sh:0);
+    (onStairs?Math.max(groundH(p.x,p.z),sh):groundH(p.x,p.z));
 }
 // OP2-D: what is under Turbo's shoe right now, for the footstep voice. Read-only
 // against the city lattice and the terrain contract — it decides nothing but
@@ -7716,6 +8450,7 @@ function pollKeys(){
   input.drift=btnHold.drift||!!keys['Space'];
   input.gas=btnHold.gas||!!(keys['KeyW']||keys['ArrowUp']);
   input.brake=btnHold.brake||!!(keys['KeyS']||keys['ArrowDown']);
+  input.slow=btnHold.slow||!!keys['KeyX'];   // PV9 — hold for slow motion
 }
 
 // ================= WANTED =================
@@ -7730,9 +8465,8 @@ function addHeat(n){
     // session hits 3 stars, then it's the plain star toast from then on.
     if(s>=3&&!G.story.hardcastleShown){
       G.story.hardcastleShown=true; queueSave();
-      const line=pick(HARDCASTLE_LINES);
-      toast(line,'bad');
-      speak(line,'male',{pitch:0.6,rate:0.86,volume:0.85});
+      // PV2: Hardcastle has no recordings, so his cut-in is the toast alone.
+      toast(pick(HARDCASTLE_LINES),'bad');
     } else {
       toast(s+' STAR'+(s>1?'S':'')+'!','bad');
     }
@@ -8041,7 +8775,14 @@ function damageCar(car,amt,why){
 function killCar(car,boom){
   if(car.dead) return;
   car.dead=true;
-  if(boom) bigExplosion(car.x,1,car.z);
+  if(boom){
+    // §CARNAGE — shrapnel in this car's paint, then back to the default
+    const paint=car.mesh&&car.mesh.userData&&car.mesh.userData.paint;
+    bigExplosionTint=(paint===undefined||paint===null)?0x2a2a33:paint;
+    bigExplosion(car.x,1,car.z);
+    bigExplosionTint=0x2a2a33;
+    rampageHit();   // §RAMPAGE — this one counts toward the ladder
+  }
   else {
     burst(car.x,1,car.z,26,COL_FIRE,6,0.9,4);
     burst(car.x,1,car.z,16,COL_SMOKE,3,1.4,1);
@@ -8063,7 +8804,7 @@ function nearestCar(x,z,r){
   return best;
 }
 function canSprint(p,mag){
-  return G.mode==='foot'&&input.sprint&&mag>0.85&&!G.crouching&&!p.climb&&!p.bailing&&!p.stunT&&p.punchT<=0&&p.kickT<=0;
+  return G.mode==='foot'&&input.sprint&&mag>0.85&&!G.crouching&&!p.climb&&!p.bailing&&!p.dive&&!p.stunT&&p.punchT<=0&&p.kickT<=0;
 }
 const FALL_LETHAL_MULT=4;   // OP2-G: ~4x Turbo's own height is a lethal unsupported drop
 // called once, right as an unsupported drop lands on solid ground (ladders,
@@ -8098,6 +8839,7 @@ function updateFoot(dt){
   p.punchT=Math.max(0,p.punchT-dt);
   p.kickT=Math.max(0,p.kickT-dt);
   if(p.bailing){ clearSprint(); updateBail(dt); return; }
+  if(p.dive){ clearSprint(); updateBailDive(dt); return; }   // PV8 — thrown from a moving car
   if(p.stunT>0){   // clocked — flat on your back for a beat
     clearSprint();
     p.stunT-=dt;
@@ -8107,6 +8849,7 @@ function updateFoot(dt){
     return;
   }
   if(p.climb){ clearSprint(); updateClimb(dt); return; }   // on a wall ladder — vertical rules take over
+  const x0=p.x, z0=p.z;   // where this frame started — see the step-down note below
   const mx=input.jx, mz=input.jy;
   const mag=Math.min(1,Math.hypot(mx,mz));
   const sprinting=canSprint(p,mag);
@@ -8149,8 +8892,20 @@ function updateFoot(dt){
     const cs=Math.cos(st.r.ang), sn=Math.sin(st.r.ang), f=Math.min(1,8*dt);
     p.x-=cs*st.lx*f; p.z+=sn*st.lx*f;
   }
+  // PV4: same hidden y>=0 floor as footGround() — see the note there.
   const ground=(roofHere>0&&p.y>roofHere-1.0)?roofHere:
-    Math.max(groundH(p.x,p.z),onStairs?sh:0);
+    (onStairs?Math.max(groundH(p.x,p.z),sh):groundH(p.x,p.z));
+  // PV4: walking DOWN a grade is not a fall. On any slope the ground drops out
+  // from under a moving foot every frame, and 0.001 of it was enough to enter
+  // the fall path below — which lands again the same frame, re-thumping
+  // footLand() and resyncing the gait on EVERY frame of a downhill jog. So
+  // absorb a step-down first. It only counts if you actually travelled: the
+  // allowance is what the steepest walkable thing in the game (a staircase,
+  // ~1.5) could drop over this frame's distance, capped well under a real
+  // ledge so nothing that deserves a landing gets swallowed by a long frame.
+  const travelled=Math.hypot(p.x-x0,p.z-z0);
+  const stepDown=Math.min(0.6,travelled*2+0.02);
+  if(p.vy<=0&&p.fallPeakY==null&&p.y>ground&&p.y-ground<=stepDown){ p.y=ground; }
   // jump & gravity physics
   if(p.y>ground+0.001||p.vy>0){
     // track the highest point of this unsupported drop so a real fall (off a
@@ -8343,6 +9098,7 @@ function updateClimb(dt){
 }
 function doEnterExit(){
   if(!G.started||G.over) return;
+  if(player.dive) return;   // PV8 — finish the roll before you jack anything
   if(G.mode==='foot'){
     const n=nearestVehicle(player.x,player.z,3.6);
     if(!n) return;
@@ -8352,7 +9108,8 @@ function doEnterExit(){
       if(!claimJackableCar(c)) return;
       G.mode='car'; player.car=c;
       turboSay('car');
-      player.mesh.visible=false;
+      if(isBike(c)) mountBike(c);          // PV7 — you ride your own model
+      else player.mesh.visible=false;
       G.carHP=c.hp/c.maxhp*100;
       setEngineVoice(c.type);
       $('speedo').style.display='block';
@@ -8382,11 +9139,20 @@ function doEnterExit(){
 function exitCar(){
   const c=player.car;
   if(!c) return;
+  const bailing=Math.abs(c.speed)>BAIL_SPEED;   // PV8
   G.mode='foot'; c.driver=null;
-  player.x=c.x+Math.cos(c.heading)*2.2; player.z=c.z-Math.sin(c.heading)*2.2;
-  resolveFootCollision(player,0.5);
-  player.y=groundH(player.x,player.z); player.mesh.visible=true;
-  player.car=null; footCamYaw=player.heading; player.fallPeakY=null;
+  if(isBike(c)) dismountBike(c);   // PV7 — give the NPC his seat and Turbo his pose back
+  player.mesh.visible=true;
+  if(bailing){
+    startBailDive(c);          // sets player.x/z/y and the dive state itself
+    releaseRunaway(c,6);       // she keeps going without you
+  } else {
+    player.x=c.x+Math.cos(c.heading)*2.2; player.z=c.z-Math.sin(c.heading)*2.2;
+    resolveFootCollision(player,0.5);
+    player.y=groundH(player.x,player.z);
+    player.fallPeakY=null;
+  }
+  player.car=null; footCamYaw=player.heading;
   $('speedo').style.display='none';
   if(engineGain) engineGain.gain.value=0;
   if(skidGain) skidGain.gain.value=0;
@@ -8593,7 +9359,7 @@ let meleeCharge=null;
 function canMelee(){
   const p=player;
   return G.started&&!G.over&&G.mode==='foot'&&G.weapon==='fists'
-    &&!p.climb&&!p.bailing&&!p.stunT&&!p.meleeSpecial&&p.punchT<=0&&p.kickT<=0
+    &&!p.climb&&!p.bailing&&!p.dive&&!p.stunT&&!p.meleeSpecial&&p.punchT<=0&&p.kickT<=0
     &&!G.menuPaused&&!G.replay&&!activeCutscene;
 }
 // The extra conditions belong to the wind-up alone: you plant both feet to load
@@ -8802,6 +9568,212 @@ function knockPed(ped,byCar){
     showBubble(ped,pick(YELLS),1600);
     wahVoice(ped.mesh.userData.gender==='girl'?rand(230,280):rand(150,190),ped.x,ped.z);
   }
+}
+
+// ================= ACTION BAIL-OUT (PV8) =================
+// "When turbo bails out of cars while they're driving he needs to come flying
+//  out the side and roll on the ground for a bit. like an action movie."
+//
+// exitCar() used to place Turbo 2.2u to the side at any speed, so stepping out
+// of a car doing 90 looked exactly like stepping out of a parked one. Above
+// BAIL_SPEED he is thrown instead: a launch that inherits the car's momentum,
+// a short airborne arc, then a tumble that bleeds off along the ground before
+// he comes up on his feet. Below it, the old clean step-out is untouched.
+//
+// This is its own state rather than a reuse of p.stunT because stun is a POSE
+// — flat on your back, position pinned — while this is a TRAJECTORY: it has to
+// integrate, collide, and hand control back. It shares stun's shape in
+// updateFoot (an early return that owns the frame) so the two can never both
+// drive the body.
+const BAIL_SPEED=8;      // below this, exiting is still a clean step-out
+const BAIL_MAX_T=2.4;    // hard ceiling — the state must always terminate
+
+function startBailDive(c){
+  const p=player, sp=Math.abs(c.speed);
+  // car heading convention (see carPhysics/exitCar): forward is
+  // (sin h, cos h), the driver's side is (cos h, -sin h)
+  const fx=Math.sin(c.heading), fz=Math.cos(c.heading);
+  const sx=Math.cos(c.heading), sz=-Math.sin(c.heading);
+  const carry=Math.min(sp*0.72,26);
+  p.dive={ vx:fx*carry+sx*6.2, vz:fz*carry+sz*6.2, vy:3.6,
+           t:0, phase:'air', spin:0, yaw:Math.atan2(sx,sz) };
+  p.x=c.x+sx*1.6; p.z=c.z+sz*1.6;
+  p.y=Math.max(groundH(p.x,p.z),c.y||0)+0.7;
+  p.fallPeakY=null;        // a bail arc is not a lethal fall (OP2-G)
+  clearSprint(); endMelee();
+  sfx.crash(0.25); shake(clamp(sp*0.012,0.15,0.5)); fxImpact(0.4); haptic([25,40,60]);
+  // road rash scales with how fast you jumped, and goes through the normal
+  // damage path so the red pulse and low-health throb still apply
+  const rash=clamp((sp-BAIL_SPEED)*0.55,0,20);
+  if(rash>0.5) damagePlayer(rash);
+}
+
+function updateBailDive(dt){
+  const p=player, d=p.dive;
+  d.t+=dt;
+  const g=groundH(p.x,p.z);
+  if(d.phase==='air'){
+    d.vy-=24*dt;
+    p.y+=d.vy*dt;
+    if(p.y<=g){
+      p.y=g; d.vy=0; d.phase='roll';
+      burst(p.x,0.25,p.z,6,COL_SMOKE,1.6,0.5,0.4);
+      sfx.crash(0.18); haptic(35); fxImpact(0.25);
+    }
+  } else {
+    p.y=g;
+    const k=Math.exp(-3.2*dt);   // friction bleeds the roll off
+    d.vx*=k; d.vz*=k;
+  }
+  const bx=p.x, bz=p.z;
+  p.x+=d.vx*dt; p.z+=d.vz*dt;
+  const wantX=p.x, wantZ=p.z;
+  resolveFootCollision(p,0.5);
+  // shoved out of something solid: kill the slide instead of grinding along it
+  if(Math.hypot(p.x-wantX,p.z-wantZ)>0.01){ d.vx*=0.25; d.vz*=0.25; }
+  const speed=Math.hypot(d.vx,d.vz);
+  d.spin+=speed*dt*1.5;
+  // tumbling forward about the axis he is travelling along
+  p.mesh.position.set(p.x,p.y+0.45,p.z);
+  p.mesh.rotation.set(0,d.yaw,0);
+  p.mesh.rotateX(-d.spin);
+  if(d.phase==='roll'&&_rng()<dt*16) burst(p.x,0.2,p.z,1,COL_SMOKE,1,0.4,0.3);
+  if((d.phase==='roll'&&speed<1.6)||d.t>BAIL_MAX_T) endBailDive();
+  void bx; void bz;
+}
+
+// Every exit from the dive goes through here, so the rig can never be left
+// lying on its side (the rotation is applied to the shared person mesh).
+function endBailDive(){
+  const p=player;
+  if(!p.dive) return;
+  p.dive=null;
+  p.y=groundH(p.x,p.z);
+  p.mesh.rotation.set(0,p.heading,0);
+  p.mesh.position.set(p.x,p.y,p.z);
+  p.fallPeakY=null;
+}
+
+// ---- PV7: Turbo rides his own model ----
+// Entering a car hides player.mesh, which is right for a car (he's behind
+// glass) and wrong for a bike — you'd see a faceless NPC riding away with your
+// jacket on. On a bike the NPC rider is hidden instead and Turbo's actual rig
+// is posed onto the seat.
+//
+// The rig stays in the scene rather than being reparented to the bike: several
+// systems write player.mesh.position in world space, and handing ownership to a
+// vehicle group would make those silently wrong. Copying the bike's world seat
+// and orientation each frame gets the lean and pitch for free with no
+// ownership change.
+function isBike(c){ return !!c&&c.type==='moto'; }
+const _seatV=new THREE.Vector3();
+function mountBike(c){
+  const rider=c.mesh.userData.rider;
+  if(rider) rider.visible=false;            // his seat now
+  player.mesh.visible=true;
+  poseRider(player.mesh);
+  // the bike carries its own blob shadow; a second one under Turbo doubles up
+  if(player.mesh.userData.shadow) player.mesh.userData.shadow.visible=false;
+  seatTurboOnBike(c);
+}
+function seatTurboOnBike(c){
+  if(!c||!c.mesh) return;
+  _seatV.set(BIKE_SEAT.x,BIKE_SEAT.y,BIKE_SEAT.z);
+  c.mesh.localToWorld(_seatV);
+  player.mesh.position.copy(_seatV);
+  player.mesh.quaternion.copy(c.mesh.quaternion);   // heading + lean + pitch
+  poseRider(player.mesh);
+}
+function dismountBike(c){
+  if(c&&c.mesh&&c.mesh.userData.rider) c.mesh.userData.rider.visible=true;
+  unposeRider(player.mesh);
+  player.mesh.quaternion.set(0,0,0,1);
+  player.mesh.rotation.y=player.heading;
+  if(player.mesh.userData.shadow) player.mesh.userData.shadow.visible=true;
+}
+
+// ---- runaway cars ----
+// A car you abandon at speed is not in `traffic` (its driver is null, not
+// 'civ'), so nothing was ticking it and it simply froze mid-road the instant
+// you left. That is the one thing that would undercut the whole bail. These
+// coast on under carPhysics with no throttle — which already applies drag and
+// resolves collisions — until they run out of speed or the timer expires.
+const runaways=[];
+function releaseRunaway(c,seconds){
+  if(!c||c.dead||runaways.indexOf(c)>=0) return;
+  c.runawayT=seconds;
+  runaways.push(c);
+}
+function updateRunaways(dt){
+  for(let i=runaways.length-1;i>=0;i--){
+    const c=runaways[i];
+    if(c.dead||c===player.car||c.runawayT<=0||Math.abs(c.speed)<1.2){ runaways.splice(i,1); continue; }
+    c.runawayT-=dt;
+    carPhysics(c,dt,{steer:0,throttle:0,drift:false,boost:false});
+  }
+}
+
+// ================= RAMPAGE (PV11) =================
+// Chaos that only ever produced one toast at a time doesn't reward escalation.
+// This is the ladder: wreck vehicles inside a rolling window and the combo
+// climbs, each tier louder than the last — bigger callout, bigger flash, bigger
+// shake, bigger payout — and the top tier bends time for you.
+//
+// It scores VEHICLES, not people. Blowing up cars is the spectacle the ladder
+// is for, and it keeps this from becoming a system that pays out for running
+// pedestrians down. Cop cars count — outrunning the heat is the game.
+const RAMPAGE={ combo:0, t:0, tier:-1, best:0, WINDOW:4.2 };
+// Payouts are deliberately modest. Running the whole ladder pays 550 total,
+// which sits alongside a big heist ($250-500 + escape, see P2 economy tuning) —
+// for something far harder and far hotter. Paying thousands would make Deb's
+// $800 debt, the entire spine of Chapter 1, irrelevant after one good night.
+const RAMPAGE_TIERS=[
+  { n:2,  label:'DOUBLE',       col:'#7dff8a', flash:0.10, shake:0.10, cash:20,  pitch:520 },
+  { n:3,  label:'TRIPLE',       col:'#ffd23e', flash:0.14, shake:0.16, cash:40,  pitch:620 },
+  { n:5,  label:'RAMPAGE',      col:'#ff9d3e', flash:0.20, shake:0.26, cash:90,  pitch:740 },
+  { n:7,  label:'CARNAGE',      col:'#ff5a5a', flash:0.28, shake:0.34, cash:150, pitch:880 },
+  { n:10, label:'CITY ON FIRE', col:'#ff3ea0', flash:0.42, shake:0.46, cash:250, pitch:1040 },
+];
+const comboEl=$('combo'), comboMultEl=$('comboMult'), comboLblEl=$('comboLabel');
+
+function rampageHit(){
+  if(!G.started||G.over) return;
+  RAMPAGE.combo++;
+  RAMPAGE.t=RAMPAGE.WINDOW;
+  RAMPAGE.best=Math.max(RAMPAGE.best,RAMPAGE.combo);
+  // highest tier this combo has reached; only fire when we cross into a new one
+  let tier=-1;
+  for(let i=0;i<RAMPAGE_TIERS.length;i++) if(RAMPAGE.combo>=RAMPAGE_TIERS[i].n) tier=i;
+  if(tier>RAMPAGE.tier){
+    RAMPAGE.tier=tier;
+    const T=RAMPAGE_TIERS[tier];
+    fxFlash(T.flash,1,0.8,0.5); fxImpact(T.flash*1.4); shake(T.shake);
+    addMoney(T.cash,T.label);
+    haptic(tier>=3?[40,30,70]:35);
+    // a rising stinger — each rung is a step up the scale
+    blip(T.pitch,T.pitch*1.5,0.16,0.055,'square');
+    if(tier>=3) blip(T.pitch*0.5,T.pitch*0.75,0.3,0.04,'sawtooth');
+    if(tier>=RAMPAGE_TIERS.length-1) slowmoBurst(1.0);   // the top rung earns a beat
+    if(comboLblEl) comboLblEl.textContent=T.label;
+  }
+  if(comboEl){
+    if(comboMultEl) comboMultEl.textContent='×'+RAMPAGE.combo;
+    comboEl.style.display=RAMPAGE.combo>=2?'flex':'none';
+    if(RAMPAGE.combo>=2){   // restart the punch animation
+      comboEl.classList.remove('punch'); void comboEl.offsetWidth; comboEl.classList.add('punch');
+    }
+  }
+}
+function updateRampage(dt){
+  if(RAMPAGE.t<=0) return;
+  RAMPAGE.t-=dt;
+  if(comboEl&&RAMPAGE.combo>=2) comboEl.style.opacity=Math.min(1,RAMPAGE.t/0.7);
+  if(RAMPAGE.t<=0) endRampage();
+}
+function endRampage(){
+  if(RAMPAGE.combo>=RAMPAGE_TIERS[0].n&&comboLblEl) toast('COMBO ENDED ×'+RAMPAGE.combo,'gold');
+  RAMPAGE.combo=0; RAMPAGE.t=0; RAMPAGE.tier=-1;
+  if(comboEl){ comboEl.style.display='none'; comboEl.style.opacity=1; comboEl.classList.remove('punch'); }
 }
 
 // ================= HUD / TOASTS =================
@@ -9179,6 +10151,7 @@ function damagePlayer(amt){
   amt*=difficulty().dmgMult;
   G.hp-=amt; G.hpT=0;
   shake(clamp(amt*0.03,0.12,0.4));
+  fxDamage(clamp(amt*0.035,0.16,0.6));   // §POST FX — red edge pulse
   if(G.hp<=0){ G.hp=0; wasted(); }
 }
 // cheap building line-of-sight: sample the segment between two points
@@ -9682,6 +10655,7 @@ function bigEvent(text,color,sub){
   setTimeout(()=>{ $('bigEvent').style.display='none'; },2600);
 }
 function exitCarSoft(){
+  if(isBike(player.car)) dismountBike(player.car);   // PV7
   if(player.car){ player.car.driver=null; player.car=null; }
   if(player.heli){ player.heli.driver=null; player.heli=null; }
   G.mode='foot'; player.fallPeakY=null;
@@ -9716,6 +10690,9 @@ function respawn(spot){
 }
 function busted(){
   if(G.over) return;
+  resetSlowmo();   // PV9 — never carry a stretched clock through a respawn
+  endBailDive();   // PV8 — never respawn mid-tumble
+  endRampage();    // PV11 — the combo dies with you
   sfx.busted(); haptic(120);
   const fine=Math.floor(G.money*0.12);
   G.money-=fine; $('money').textContent='$'+G.money;
@@ -9730,6 +10707,9 @@ function busted(){
 }
 function wasted(spot){
   if(G.over) return;
+  resetSlowmo();   // PV9 — never carry a stretched clock through a respawn
+  endBailDive();   // PV8 — never respawn mid-tumble
+  endRampage();    // PV11 — the combo dies with you
   endBail();
   sfx.bigCrash(); haptic([80,60,150]);
   const c=player.car;
@@ -9817,7 +10797,7 @@ function updateCamera(dt){
     camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-followRate*dt));
     const sr=Math.abs(c.speed)/CARTYPES[c.type].top;
     const fovKick=SETTINGS.reduceMotion?0:(input.boost&&G.boost>0?5:0);
-    camera.fov=lerp(camera.fov,62+sr*13+fovKick,0.1);
+    camera.fov=lerp(camera.fov,62+sr*13+fovKick+slowmoFov(),0.1);
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
     camera.lookAt(c.x+Math.sin(c.heading)*6,c.y+1.5-camPitch*2,c.z+Math.cos(c.heading)*6);
@@ -9827,7 +10807,7 @@ function updateCamera(dt){
     const a=h.heading+camYawOff;
     const bx=-Math.sin(a), bz=-Math.cos(a);
     camPos.lerp(new THREE.Vector3(h.x+bx*13,h.y+6+camPitch*3,h.z+bz*13),1-Math.exp(-4*dt));
-    camera.fov=lerp(camera.fov,66,0.1);
+    camera.fov=lerp(camera.fov,66+slowmoFov(),0.1);
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
     camera.lookAt(h.x,h.y+1,h.z);
@@ -9857,7 +10837,7 @@ function updateCamera(dt){
     camPos.lerp(tgt,tgt.distanceTo(_camFrom)<camPos.distanceTo(_camFrom)?1:1-Math.exp(-4*dt));
     const camFloor=groundH(camPos.x,camPos.z)+0.45;
     if(camPos.y<camFloor) camPos.y=camFloor;   // looking down from below ground is a bad time
-    camera.fov=lerp(camera.fov,lerp(62,54,aim),1-Math.exp(-10*dt));
+    camera.fov=lerp(camera.fov,lerp(62,54,aim)+slowmoFov(),1-Math.exp(-10*dt));
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
     const lookX=lerp(p.x,p.x+fx*8,aim), lookZ=lerp(p.z,p.z+fz*8,aim);
@@ -9922,14 +10902,147 @@ function drawMinimap(){
   mm.restore();
 }
 
+// ================= SLOW MOTION (PV9) =================
+// "Add a slow motion mechanic. idk how, just make it rad."
+//
+// Held, not toggled, and metered — it has to feel bought rather than free.
+// The plumbing already existed as a dev tool: the main loop scales the sim by
+// TIME_SCALE while leaving UI, audio scheduling and recording on real time
+// (D5). This promotes that to a player mechanic and sells it with the systems
+// that now exist around it — §POST FX for the look, a master lowpass for the
+// sound, a wider lens for the framing.
+//
+// One authoritative time scale: the loop multiplies TIME_SCALE * SLOWMO.scale,
+// so the dev controls and this mechanic compose instead of fighting. Note that
+// slowing time makes the physics MORE stable, not less: the loop's substep
+// count is ceil(simDt/0.017) clamped to 4, so a smaller simDt just means one
+// short step.
+const SLOWMO={
+  scale:1,          // live multiplier applied to simDt, always eased
+  meter:100,        // 0..100, drains while held and refills when released
+  active:false,
+  SCALE:0.32,       // how slow "slow" is
+  MIN_START:18,     // needed in the tank to trigger, so it can't be stutter-spammed
+  DRAIN:34,         // per real second while active
+  REFILL:11,        // per real second while not
+  autoT:0,          // free cinematic window — see slowmoBurst()
+};
+// The money shot. A blast going off next to you bends time for a beat whether
+// or not you asked for it: bail out of a burning car and the explosion behind
+// you plays in slow motion for free. Deliberately does NOT touch the meter —
+// charging the player for a moment they didn't ask for would feel like a tax —
+// and it never re-triggers while one is already running.
+function slowmoBurst(seconds){
+  if(!(seconds>0)) return;
+  if(!slowmoAvailable()||SETTINGS_REDUCE_MOTION()) return;
+  SLOWMO.autoT=Math.max(SLOWMO.autoT,seconds);
+}
+// Base values §POST FX sits at when time is normal. updateSlowmo lerps away
+// from these and back, so letting go restores them exactly.
+const FX_BASE_SAT=FX.sat, FX_BASE_BLOOM=FX.bloom, FX_BASE_VIGNETTE=FX.vignette;
+
+function slowmoAvailable(){
+  return G.started&&!G.over&&!G.paused&&!G.intro&&!activeCutscene&&!G.replay;
+}
+// How deep we currently are, 0..1 — drives every presentation layer so they
+// all ramp together instead of switching at different moments.
+function slowmoDepth(){ return clamp((1-SLOWMO.scale)/(1-SLOWMO.SCALE),0,1); }
+
+// Master-bus lowpass. Created lazily on first use and left in the graph: the
+// world going quiet and muffled is most of what sells the effect, and it costs
+// nothing at 22kHz. masterGain's only output is AC.destination (see initAudio),
+// so re-routing it here is safe.
+let slowLP=null;
+function slowmoAudio(t){
+  if(!AC||!masterGain) return;
+  if(!slowLP){
+    try{
+      slowLP=AC.createBiquadFilter();
+      slowLP.type='lowpass'; slowLP.frequency.value=22050; slowLP.Q.value=0.4;
+      masterGain.disconnect();
+      masterGain.connect(slowLP); slowLP.connect(AC.destination);
+    }catch(e){ slowLP=null; return; }
+  }
+  // exponential in t so the first bit of the ramp is audible
+  const f=t>0.002?Math.max(380,22050*Math.pow(0.017,t)):22050;
+  try{ slowLP.frequency.setTargetAtTime(f,AC.currentTime,0.05); }catch(e){}
+}
+function slowmoWhoosh(entering){
+  if(!AC) return;
+  if(entering){ blip(760,190,0.45,0.05,'sawtooth'); noiseBurst(0.5,0.035,900,1.2); }
+  else        { blip(210,880,0.30,0.045,'sawtooth'); noiseBurst(0.28,0.028,1500,1.1); }
+}
+// Extra FOV the camera should take on while slowed. §CAMERA adds this to its
+// own lerp targets rather than having two writers fight over camera.fov.
+function slowmoFov(){ return slowmoDepth()*7; }
+
+const slowMeterEl=$('slowFill'), slowBtnEl=$('btnSlow');
+function updateSlowmo(dt){
+  if(SLOWMO.autoT>0){
+    SLOWMO.autoT-=dt;
+    if(!slowmoAvailable()) SLOWMO.autoT=0;   // a cutscene/death cancels the beat
+  }
+  const canHold=slowmoAvailable()&&(SLOWMO.active?SLOWMO.meter>0:SLOWMO.meter>=SLOWMO.MIN_START);
+  const held=!!input.slow&&canHold;
+  const want=held||SLOWMO.autoT>0;
+  if(want!==SLOWMO.active){
+    SLOWMO.active=want;
+    slowmoWhoosh(want);
+    if(want) haptic(30);
+  }
+  // Only a HELD activation costs meter — the free cinematic window doesn't.
+  if(held){
+    SLOWMO.meter=Math.max(0,SLOWMO.meter-SLOWMO.DRAIN*dt);
+    if(SLOWMO.meter<=0&&SLOWMO.autoT<=0){ SLOWMO.active=false; slowmoWhoosh(false); }
+  } else {
+    SLOWMO.meter=Math.min(100,SLOWMO.meter+SLOWMO.REFILL*dt);
+  }
+  // ramp in and out — snapping the time scale is what makes slow motion cheap
+  const target=SLOWMO.active?SLOWMO.SCALE:1;
+  SLOWMO.scale+=(target-SLOWMO.scale)*(1-Math.exp(-(SLOWMO.active?7:5)*dt));
+  if(Math.abs(SLOWMO.scale-target)<0.002) SLOWMO.scale=target;
+
+  const t=slowmoDepth();
+  // §POST FX. Owner direction: keep it vibrant — slow motion PUSHES colour
+  // rather than draining it. The usual film-school move here is to desaturate,
+  // but on a neon city that just makes the best thing about the picture go
+  // grey. Cranking saturation and bloom together reads as the world going
+  // hyper-real, and the lens strain + muffled audio carry the "time bent"
+  // half on their own.
+  FX.sat=lerp(FX_BASE_SAT,1.42,t);
+  FX.bloom=lerp(FX_BASE_BLOOM,0.78,t);
+  FX.vignette=lerp(FX_BASE_VIGNETTE,0.50,t);
+  FX.slowAberr=t*0.075;
+  slowmoAudio(t);
+
+  if(slowMeterEl) slowMeterEl.style.width=SLOWMO.meter+'%';
+  if(slowBtnEl){
+    slowBtnEl.classList.toggle('on',SLOWMO.active);
+    slowBtnEl.classList.toggle('spent',SLOWMO.meter<SLOWMO.MIN_START&&!SLOWMO.active);
+  }
+}
+// Hard reset — used by the paths that yank control away (WASTED/BUSTED, a new
+// game) so time can never stay stretched across a transition.
+function resetSlowmo(){
+  SLOWMO.active=false; SLOWMO.scale=1; SLOWMO.meter=100; SLOWMO.autoT=0;
+  input.slow=false; btnHold.slow=false;
+  FX.sat=FX_BASE_SAT; FX.bloom=FX_BASE_BLOOM; FX.vignette=FX_BASE_VIGNETTE; FX.slowAberr=0;
+  slowmoAudio(0);
+  if(slowBtnEl) slowBtnEl.classList.remove('on','spent');
+}
+
 // ================= MAIN LOOP =================
 let lastT=performance.now(), fpsAcc=0, fpsN=0, fpsT=0;
 function loop(){
   requestAnimationFrame(loop);
   const now=performance.now();
   const dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
-  // D5 — dev time controls: scale gameplay simulation dt, keep UI/recording on real time
-  let simDt=dt*TIME_SCALE;
+  // PV9 — runs on real dt, outside the started/paused gate, so the ramp always
+  // eases back to 1 when control is taken away instead of freezing mid-stretch
+  updateSlowmo(dt);
+  // D5 — dev time controls: scale gameplay simulation dt, keep UI/recording on
+  // real time. SLOWMO.scale is the player-facing half of the same product.
+  let simDt=dt*TIME_SCALE*SLOWMO.scale;
   let forceStep=false;
   if(DEV&&STEP_FRAMES>0){ STEP_FRAMES--; forceStep=true; simDt=0.017; }
   // J2 — hitstop: scale sim dt near-zero for a few frames on big impacts
@@ -9945,7 +11058,7 @@ function loop(){
     waterTex.offset.x+=dt*0.014; waterTex.offset.y+=dt*0.007;
     water.position.y=-0.34+Math.sin(now/1400)*0.05;
     updateClouds(dt); updateGulls(dt); updateParticles(dt); updateLights(dt); updateRadioTowers(now/1000);
-    renderer.render(scene,camera);
+    renderFrame();
     return;
   }
 
@@ -9953,7 +11066,7 @@ function loop(){
   // falls through to the normal sim loop so staged scenes actually play out.
   if(G.replay&&(!replay||!replay.live)){
     updateReplay(dt);
-    renderer.render(scene,camera);
+    renderFrame();
     return;
   }
 
@@ -9976,6 +11089,7 @@ function loop(){
           updateCopHeli(sdt);
           updatePilotlessHelis(sdt);
           updateTraffic(sdt);
+          updateRunaways(sdt);   // PV8 — abandoned cars coast on
           updatePizzaDrivers(sdt);
           updateChaosDrivers(sdt);
           updateGangMembers(sdt);
@@ -10010,6 +11124,7 @@ function loop(){
       }
       if(G.mode==='car'&&player.car){
         const c=player.car;
+        if(isBike(c)) seatTurboOnBike(c);   // PV7 — ride the bike, don't float beside it
         if(c.hp<35&&_rng()<0.3)
           burst(c.x,1.2,c.z,1,[[0.2,0.2,0.2],[0.35,0.35,0.35]],0.8,1.2,-1);
         drawDash(Math.abs(c.speed)/(CARTYPES[c.type].top*1.45),Math.abs(c.speed)*4.2,
@@ -10049,6 +11164,8 @@ function loop(){
       }
     }
     updateBoomFx(simDt);
+    updateDebris(simDt); updateScorch(simDt); updateChainBudget(simDt);   // §CARNAGE
+    updateRampage(simDt);   // §RAMPAGE
     // car alarms: bumped parked cars beep and flash for a few seconds
     for(const c of cars){
       if(c.alarmT>0){
@@ -10066,7 +11183,7 @@ function loop(){
     fpsAcc+=dt; fpsN++; fpsT+=dt;
     if(fpsT>2){ const fps=fpsN/fpsAcc; $('fpsWarn').textContent=Math.round(fps)+' fps'; autoQualityTick(fps); fpsAcc=0; fpsN=0; fpsT=0; }
   }
-  renderer.render(scene,camera);
+  renderFrame();
 }
 // deferred spawns: pizza place, chaos gang, gang members and guards all exist by now
 function bootSpawns(){
@@ -10674,8 +11791,11 @@ function updateStory(dt){
 function showStoryCard(){
   G.story.cardShown=true;
   $('storyCard').style.display='flex';
-  // Turbo narrates the setup instead of a deep-voiced announcer
-  speakLine("Okay, here's the deal. I'm Turbo Jones, fresh out of minimum security, and my ex Deb wants eight hundred bucks in child support by tonight. I pay up, or it's straight back to the slammer.",'male',{pitch:0.82,rate:0.92,volume:0.9});
+  // PV2: this used to be read by speech synthesis. The card already carries the
+  // same copy on screen, so it is now text only. voice/turbo/backstory_intro/
+  // holds 13 recorded lines, but TURBO_LINES.md documents them as the promo
+  // monologue rather than game dialogue — wiring them here is an owner call,
+  // not an implementation detail.
 }
 function dismissStoryCard(){
   $('storyCard').style.display='none';
@@ -11054,10 +12174,16 @@ $('cutsceneSkip').addEventListener('click',skipCutscene);
 $('cutsceneSkip').addEventListener('touchend',e=>{e.preventDefault();skipCutscene();});
 
 // Typewriter dialogue
-// Captions disabled for now — the box sits over the play area and blocks the
-// view. Voice lines still play (speak() below is untouched); this only stops
-// the on-screen text. Flip CAPTIONS_ENABLED back on to restore them.
-const CAPTIONS_ENABLED=false;
+// PV2 turned these back ON, and they have to stay on: with speech synthesis
+// gone, a caption is the only thing a character without a recording has left —
+// off, their dialogue would neither play nor appear, which silently deletes
+// scenes (Deb's whole part, most of the cutscene cast).
+//
+// The note this replaces disabled captions because "the box sits over the play
+// area and blocks the view". That reasoning doesn't reach this box: the ONLY
+// caller of showDialogue() is the cutscene shot player (§CUTSCENE SYSTEM), so
+// it is never on screen while you have control of Turbo.
+const CAPTIONS_ENABLED=true;
 function showDialogue(speaker, text, duration){
   if(!CAPTIONS_ENABLED) return;
   const box=$('dialogueBox'), nameEl=$('speakerName'), textEl=$('dialogueText');
@@ -11096,85 +12222,26 @@ function hideDialogue(){
 
 
 // ================= VOICEOVER SYSTEM =================
-let VO=null, VOQueue=[], VOCurrent=null;
-// Ref-counted radio duck: any active narration (TTS or mp3) dips the music.
+// PV2 — RECORDED AUDIO ONLY. There is no speech synthesis in this game and no
+// procedural "voice": the owner's rule is Turbo's mp3 or nothing. Everything
+// that speaks does so from a file under voice/<character>/ through
+// playVOFile()/playVOLine() below. A line with no recording is a caption, not
+// a sound — see CAPTIONS_ENABLED in §CUTSCENE SYSTEM.
+//
+// (What used to live here: initVoiceOver/getVoice/speakLine/processVOQueue on
+// window.speechSynthesis, plus procVoice(), a sawtooth word-blip fallback, and
+// a speak() dispatcher between them. All removed — do not reintroduce them.)
+// Ref-counted radio duck: any active narration dips the music.
 let voDuckN=0;
 function voDuckOn(){ voDuckN++; if(voDuckN===1) duckMusicForVO(true); }
 function voDuckOff(){ voDuckN=Math.max(0,voDuckN-1); if(voDuckN===0) duckMusicForVO(false); }
 function voDuckReset(){ voDuckN=0; duckMusicForVO(false); }
-function initVoiceOver(){
-  if(VO) return;
-  VO=window.speechSynthesis;
-  if(!VO) return;
-  VO.getVoices();
-}
-function getVoice(gender){
-  if(!VO) return null;
-  const voices=VO.getVoices();
-  if(!voices.length) return null;
-  const prefs={
-    female:['Samantha','Victoria','Karen','Google US English','Tessa','Moira','Fiona'],
-    male:['Alex','Daniel','Google US English','Fred','Tom','Bruce','Lee']
-  };
-  for(const name of prefs[gender]||prefs.male){
-    const v=voices.find(v=>v.name.includes(name));
-    if(v) return v;
-  }
-  const en=voices.filter(v=>v.lang.startsWith('en'));
-  return gender==='female'?en.find(v=>v.name.toLowerCase().includes('female'))||en[0]:en.find(v=>v.name.toLowerCase().includes('male'))||en[0];
-}
-function speakLine(text,gender,opts){
-  opts=opts||{};
-  if(!VO) return;
-  const u=new SpeechSynthesisUtterance(text);
-  const v=getVoice(gender);
-  if(v) u.voice=v;
-  u.pitch=opts.pitch||(gender==='female'?1.15:0.82);
-  u.rate=opts.rate||(gender==='female'?1.05:0.92);
-  u.volume=(opts.volume!==undefined?opts.volume:0.9)*SETTINGS.voice/100;
-  u.onend=()=>{ VOCurrent=null; voDuckOff(); processVOQueue(); };
-  VOQueue.push(u);
-  if(!VOCurrent) processVOQueue();
-}
-function processVOQueue(){
-  if(!VOQueue.length||VOCurrent) return;
-  VOCurrent=VOQueue.shift();
-  voDuckOn();
-  VO.speak(VOCurrent);
-}
+// Stops any narration in flight and rebalances the radio duck. Kept (and
+// still called from endCutscene/endIntro) now that it only has recorded audio
+// to stop.
 function stopVoiceOver(){
-  if(VO){ VO.cancel(); VOQueue=[]; VOCurrent=null; }
+  stopIntroVO();
   voDuckReset();
-}
-
-// Enhanced procedural voice fallback
-function procVoice(text,pitchBase,rate){
-  if(!AC) return;
-  rate=rate||0.12;
-  const words=text.split(/[\s,.!?]+/).filter(w=>w.length>0);
-  let t=AC.currentTime+0.05;
-  words.forEach((word,i)=>{
-    const dur=word.length*rate+0.08;
-    const o=AC.createOscillator(), g=AC.createGain(), f=AC.createBiquadFilter();
-    o.type='sawtooth';
-    const base=pitchBase*(1+(_rng()-0.5)*0.1);
-    o.frequency.setValueAtTime(base,t);
-    o.frequency.exponentialRampToValueAtTime(base*0.85,t+dur*0.7);
-    f.type='bandpass'; f.frequency.value=base*3.5; f.Q.value=2.8;
-    g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(0.08,t+0.03);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(f); f.connect(g); g.connect(voiceGain);
-    o.start(t); o.stop(t+dur+0.02);
-    t+=dur+0.05;
-  });
-}
-function speak(text,gender,opts){
-  if(window.speechSynthesis&&window.speechSynthesis.getVoices().length>0){
-    speakLine(text,gender,opts);
-  } else {
-    procVoice(text,gender==='female'?260:130,0.1);
-  }
 }
 
 // ================= INTRO NARRATION =================
@@ -11471,10 +12538,8 @@ showDialogue=function(speaker,text,duration,voice){
       return;
     }
   }
-  if(isTurbo) return;
-  const gender=speaker==='DEB'?'female':'male';
-  const opts=speaker==='DEB'?{pitch:1.18,rate:1.08,volume:0.95}:{pitch:0.82,rate:0.92,volume:0.9};
-  speak(text,gender,opts);
+  // PV2: no synthesized fallback. Everyone who lacks a recording is read from
+  // the caption box instead (_origShowDialogue above already put it there).
 };
 
 // ================= END VOICEOVER SYSTEM =================
@@ -11911,7 +12976,7 @@ function cinemaPlayScene(id){
 // so each sets its own flag and syncPause() is the only writer of G.paused.
 const SET_KEY='gtb4.settings';
 const SETTINGS=(function(){
-  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true, lookSens:100, invertY:false, difficulty:'normal', reduceMotion:false };
+  const d={ v:1, master:100, music:100, sfx:100, voice:100, quality:'auto', vibrate:true, lookSens:100, invertY:false, difficulty:'normal', reduceMotion:false, postFx:true };
   try{ const s=JSON.parse(localStorage.getItem(SET_KEY)); if(s&&s.v===1) Object.assign(d,s); }catch(e){}
   return d;
 })();
@@ -11999,6 +13064,7 @@ function applyQuality(tier){
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,cfg.pixelRatio));
   TRAFFIC_CAP=cfg.trafficCap; PED_CAP=cfg.pedCap; PARTICLE_SCALE=cfg.particleScale;
   if(scene.fog){ scene.fog.near=cfg.fogNear; scene.fog.far=cfg.fogFar; }
+  fxSetTier(tier);   // §POST FX — bloom chain follows the same tier
   trimToCaps();
 }
 function refreshQualityButtons(){
@@ -12067,6 +13133,24 @@ function setReduceMotion(on){ SETTINGS.reduceMotion=on; saveSettings(); refreshR
   });
 })();
 
+// ---- FILM FX toggle (§POST FX): bloom/grade/vignette/grain on or off ----
+// Off falls all the way back to the pre-post-FX `renderer.render(scene,camera)`
+// path, so this is also the escape hatch if a device hates render targets.
+function refreshPostFxButtons(){
+  const g=$('postFxGroup'); if(!g) return;
+  g.querySelectorAll('.qBtn').forEach(b=>b.classList.toggle('on',(b.dataset.v==='on')===!!SETTINGS.postFx));
+}
+function setPostFx(on){ SETTINGS.postFx=on; FX.enabled=on; saveSettings(); refreshPostFxButtons(); }
+(function initPostFxUI(){
+  FX.enabled=SETTINGS.postFx!==false;
+  const g=$('postFxGroup'); if(!g) return;
+  refreshPostFxButtons();
+  g.querySelectorAll('.qBtn').forEach(b=>{
+    b.addEventListener('click',()=>setPostFx(b.dataset.v==='on'));
+    b.addEventListener('touchend',e=>{ e.preventDefault(); setPostFx(b.dataset.v==='on'); });
+  });
+})();
+
 function syncPause(){ G.paused=G.started&&G.menuPaused; }
 function pauseGame(){
   if(G.menuPaused||!G.started||G.over||G.intro||activeCutscene||G.replay) return;
@@ -12078,7 +13162,6 @@ function pauseGame(){
   $('pauseMenu').style.display='flex';
   // suspending the context freezes the audio clock too, so the radio resumes seamlessly
   if(AC) AC.suspend();
-  try{ if(VO&&VO.speaking) VO.pause(); }catch(e){}
   saveGame(); // pausing is a natural checkpoint
 }
 function resumeGame(){

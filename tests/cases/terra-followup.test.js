@@ -10,26 +10,42 @@
 module.exports = {
   cases: [
     {
-      name: 'Turbo stays MP3-only while Deb and NPC dialogue retain generated speech',
+      // PV2 (2026-08-07) rewrote the second half of this case. It used to assert
+      // that Deb and NPC dialogue "retain generated speech" — the owner's
+      // direction was "no more synthesized voice, turbos mp3 voice or bust", so
+      // there is no speak() left to reach. What the case still guards is the
+      // part that did not change: an unrecorded line must never fall back to
+      // synthesis, and the intro must keep advancing when a recording is
+      // missing. Deb now gets a caption instead of a voice.
+      name: 'Turbo stays MP3-only, and nobody else synthesizes either (PV2)',
       query: '?dev=1&skipintro=1',
       run: async (page, { assert }) => {
         const r = await page.evaluate(() => {
-          const originalSpeak = speak, calls = [];
-          speak = (...args) => calls.push(args);
+          const spoke = [];
+          const U = window.SpeechSynthesisUtterance;
+          if (U) window.SpeechSynthesisUtterance = function (...a) { spoke.push('utterance'); return new U(...a); };
           try {
             G.started = true; G.intro = true; introT = INTRO_LINES[0].t;
             introLinesSpoken = []; voBuffers[0] = null;
-            updateIntroNarration(0); // unloaded Turbo MP3 must not synthesize
+            updateIntroNarration(0); // an unloaded Turbo MP3 must not synthesize
             showDialogue('TURBO', 'Unrecorded Turbo line.', 2);
-            showDialogue('DEB', 'Generated speech remains available.', 2);
-            return { calls, introSpoken: introLinesSpoken[0] === true };
+            showDialogue('DEB', 'Deb has no recording either.', 2);
+            const box = document.getElementById('dialogueBox');
+            return { spoke, introSpoken: introLinesSpoken[0] === true,
+                     speakGone: typeof window.speak === 'undefined',
+                     debCaptioned: box.style.display === 'block' &&
+                                   document.getElementById('speakerName').textContent === 'DEB' };
           } finally {
-            speak = originalSpeak; G.intro = false;
+            if (U) window.SpeechSynthesisUtterance = U;
+            G.intro = false;
           }
         });
         assert(r.introSpoken, 'intro narration should still advance when its recording is unavailable');
-        assert(r.calls.length === 1 && r.calls[0][1] === 'female',
-          'only non-Turbo dialogue should reach generated speech, got ' + JSON.stringify(r.calls));
+        assert(r.speakGone, 'speak() must not exist — PV2 removed every synthesized voice path');
+        assert(r.spoke.length === 0,
+          'nothing may reach speech synthesis, got ' + JSON.stringify(r.spoke));
+        assert(r.debCaptioned,
+          'a character with no recording should be captioned instead of voiced');
       },
     },
   ],
