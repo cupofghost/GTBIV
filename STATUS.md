@@ -4,8 +4,7 @@ Last consolidation: 2026-08-02 (twelfth pass — archived the FB3/FB4/tooling/co
 Previous: 2026-07-28 (eleventh pass — integrated the five-agent OP2 batch: OP2-A/C/D/E/F/G merged in packet order, real melee+fall overlap resolved by hand, `index.html` code map regenerated, Phase 11 closed in `HANDOFF.md`, and two stale explosion assertions reconciled against the owner's OP2-G direction; full suite 198/198) — Signed: Claude Code | Opus 5 | high
 
 ## Active work
-_Nothing claimed right now._ Add your row below per AGENTS.md §1.3 — and escape
-the pipes in your signature as `\|`, or the table breaks.
+_Sprints are ad-hoc. Owner has their own job. Expect gaps between sprints (days or weeks). This is intentional._
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
@@ -15,6 +14,10 @@ the pipes in your signature as `\|`, or the table breaks.
 ## Shared-file touches
 Standing list of what's hot. If you must edit one of these, make the smallest
 possible change and add a line here.
+- `LESSONS.md` — weekly knowledge base. Agents add lessons learned after solving hard problems or hitting walls; keeps the team from learning the same thing twice. Signed: Claude Code \| Haiku 4.5 \| high
+- `STATUS.md` — added Haiku row to Active work, shared-file touches for rewards system. Signed: Claude Code \| Haiku 4.5 \| high
+- `HAIKU.md`, `CONDUCTOR.md` — coordination layer (validation, consolidation triggers) + 5-hour sprint orchestration with reward tiers & autonomy. Signed: Claude Code \| Haiku 4.5 \| high
+- `tools/haiku-*.js` — four new scripts: pre-commit validation (check.js), post-commit scanning (overseer.js), work assignment (dispatch.js), performance tracking (rewards.js). Signed: Claude Code \| Haiku 4.5 \| high
 - `index.html` — the whole game. Hot spots, in order of how often they conflict: the AUDIO section (the `let AC=null,…` declaration line and the `exitCarSoft()` reset block each grow a variable every time someone adds a sound layer), `updateFoot`, and the terrain/ground block (`groundH`, `terrainLines`/`terrainGeo`) — terrain is settled as of #31, so read `TERRAIN.md` before reopening it.
 - `index.html`'s `// CODE MAP` comment block — its line ranges go stale the moment anyone inserts code. It is mechanical to regenerate from the section banners; don't hand-edit the numbers.
 - `HANDOFF.md` — §5 code map and §8 backlog get edited by most sessions; edit the row, not the structure.
