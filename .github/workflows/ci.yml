@@ -12,9 +12,12 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    # The suite grew to 215 cases and takes ~21 min locally; 15 was cutting it
-    # too fine to tell a real failure from a timeout.
-    timeout-minutes: 30
+    # The suite is 278 cases (2026-08-10) and the last full green run took
+    # 27m21s of the 30 min this used to allow — close enough that the next
+    # batch of cases would have started failing as timeouts instead of as
+    # tests. Raised to 45 with the same reasoning as the 15→30 bump: leave
+    # enough room to tell a real failure from a clock.
+    timeout-minutes: 45
 
     defaults:
       run:
