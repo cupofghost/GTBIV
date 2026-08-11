@@ -202,6 +202,7 @@ Sections, in file order, with what lives in each:
 | `AUDIO` | `initAudio` (+ `buildMusicRack`/`makeIR` FX rack), engine synth layers, heli rotor chop, `sfx` object, `WEAPON_SFX` voices |
 | `PROCEDURAL 80s SYNTHWAVE SOUNDTRACK` | `SW_SONGS`, `STATIONS`, `scheduleMusic`/`stepSong`, `sw*` instruments, hot-loop swap under heat |
 | `THREE SETUP` | `scene`, `camera`, `renderer`, sky/sun textures, lights |
+| `POST FX` (PV) | `renderFrame()` — the single render entry point that replaced the loop's bare `renderer.render()` calls — plus the effect chain and `fxSetTier`/`fxFlash`/`fxImpact`/`fxDamage` |
 | `CITY` | Procedural block/building/road generation, `intersections`, **terrain** (`VERT_H`, `groundH`, `terrainLines`/`terrainGeo` ground + beach meshes — see `TERRAIN.md`), water, ramps, street furniture, collision helpers (`buildingHit`, `rampHit`, `resolveFootCollision`) |
 | `RADIO TOWERS` (inside `CITY`) | One tall guyed mast on an open block + rooftop masts on the tallest buildings, `updateRadioTowers` blinking obstruction lamps. Decorative — never added to `buildings` |
 | `FOOTBALL FIELD` | Wildcats turf, goalposts, bleachers, scoreboard |
@@ -209,7 +210,8 @@ Sections, in file order, with what lives in each:
 | `STAIRS & FIRE ESCAPES` | `STAIR_RUNS`, `stairHitRun`/`stairH` — climbable runs the feet follow |
 | `WALL LADDERS` | `LADDERS`, `ladderGrab`, `mountLadder`, `updateClimb` |
 | `PARTICLES` | Fixed-size pool (`P_MAX=360`, `parts[]`), `spawnP`, `burst`, `updateParticles`, colour constants |
-| `BLOB SHADOWS` | `makeShadow` |
+| `CARNAGE: DEBRIS, SCORCH & CHAIN REACTIONS` (PV) | Bounded pools for physical wreckage: `debris`/`spawnDebris`/`updateDebris`, scorch decals (`addScorch`), the gore block (`COL_BLOOD`, `GIB_COLS`, `bloodPools`, `addBloodPool`, `updateBlood`, `gibTurbo`), and rate-limited `chainReact` |
+| `BLOB SHADOWS` | `makeShadow`, `updatePersonShadow`/`updatePersonShadows` |
 | `GPU RESOURCE CLEANUP` | `disposeMesh`, `_sharedGPU` (shared geometry/materials that must never be disposed) |
 | `CARS` | `CARTYPES`, `makeCarMesh`, `makeCar`, traffic spawn |
 | `PEDESTRIANS` | `makePerson` (rigged limbs, see `js/person.js` + `js/npc-types.js`), `spawnPed`, chatter |
@@ -233,7 +235,9 @@ Sections, in file order, with what lives in each:
 | input | `joyStart/Move/End`, `doJump`, `applyLook`, `pollKeys` |
 | `WANTED` | `addHeat`, `clearHeat`, `spawnCop`, `updateWanted` |
 | `CAR PHYSICS` | `carPhysics`, `damageCar` |
-| `PLAYER: FOOT & CAR` | `updateFoot`, `updateCarMode`, enter/exit, punch, horn |
+| `PLAYER: FOOT & CAR` | `updateFoot`, `updateCarMode`, enter/exit, punch, horn, `applyFallImpact` (a real drop routes into `wasted()` then `gibTurbo()`) |
+| `ACTION BAIL-OUT (PV8)` | `startBailDive`/`updateBailDive`/`endBailDive` — thrown from a moving car above `BAIL_SPEED`, an airborne arc then a tumble; also PV7's `mountBike`/`seatTurboOnBike`/`dismountBike` and the `runaways` list that keeps an abandoned car coasting |
+| `RAMPAGE (PV11)` | `rampageHit`/`updateRampage`/`endRampage` — the wreck-combo ladder and its HUD chip |
 | `HUD / TOASTS` | `toast`, `addMoney`, `updateStarsHUD`, `setMissionHUD`, `cycleRadio` |
 | `MISSIONS` | `startMission` (5 random types), `updateMission`, complete/fail, beacon |
 | `AI` | `updateTraffic`, `updateCops`, `updatePeds`, pickup visuals |
@@ -241,8 +245,9 @@ Sections, in file order, with what lives in each:
 | `SEWER RATS` | `RAT_POOL`, `spawnRats`, `updateRats`, manholes |
 | `MAMA RAT (rat vengeance)` | `spawnMamaRat`, `updateMamaRat`, her screech/bite/death voices |
 | `BUSTED / WASTED` | `bigEvent`, `respawn`, `busted`, `wasted` |
-| `CAMERA` | `updateCamera`, `cameraCollide`, `shake` |
+| `CAMERA` | `updateCamera`, `cameraCollide` (bisected occluder probe), `camFollow` (asymmetric follow: fast speed-capped pull-in, lazy push-out), `shake` |
 | `MINIMAP` | `drawMinimap` |
+| `SLOW MOTION (PV9)` | `SLOWMO`, `updateSlowmo`/`resetSlowmo`/`slowmoFov` and the `slowLP` master-bus lowpass — the player-facing half of the main loop's `simDt` product |
 | `MAIN LOOP` | `loop()` — the one `requestAnimationFrame` driver, `bootSpawns` |
 | `ORIENTATION` | `checkOrientation`, fullscreen |
 | `ANIMATED INTRO` | Fly-through intro camera |
