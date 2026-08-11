@@ -23,9 +23,48 @@ _(Lessons logged after first sprint closes)_
 
 ## Sprint 1 postscript — the PV batch and its follow-up (2026-08-07 → 08-10)
 
-Full write-up in **`LESSONS_PV.md`** (process findings from the batch itself).
-The follow-up session that took it to green added three more, and they are the
-ones that cost the most time:
+One branch, 16 commits: the post-FX stack, slow motion, the action bail-out,
+explosion carnage, rampage combos, mp3-only voice, bike riders, the coast
+highway, the beach shelf and half the skyline work. What shipped is in
+`HANDOFF.md` Phase 13 — below is only what the process taught, from the batch
+itself and from the follow-up session that took it to green.
+
+**1. Per-feature tests passed. The full suite found the real bug.** Eleven new
+test files, ~60 cases, all green. The cross-cutting run then caught a genuine
+defect: three ground-height lookups had a hidden "never below zero" floor left
+over from an era when terrain never went negative. With the new beach, Turbo
+would have walked across the top of the sea. The beach's own tests missed it
+because they measured the height *field* and never put a moving body through
+it — a test about *falling*, from another feature, caught it.
+
+**2. A test that only passes in isolation is worse than no test.** Two of the
+batch's own tests passed alone and failed in the full run: they set up state in
+one step and asserted in the next, while the live game loop kept running in
+between. The isolated pass is the one you look at, so it actively misleads.
+
+**3. Single-seed tests score the dice, not the code.** Any change to world
+generation re-rolls the world for every seed, so pinned-seed cases fail for
+reasons unrelated to the change — and were only passing by luck. Measured on
+untouched `main`, the traffic pile-up case fails on 4 of 16 seeds. It is still
+open in `STATUS.md` for exactly that reason: do not "fix" it by re-pinning to a
+seed that passes.
+
+**4. Performance could not be measured here at all.** This environment renders
+in software and reported the *cheap* graphics tier as 2.5× slower than the
+expensive one. Better to ship no number than a misleading one — but it means
+the visual work is unverified on real hardware. It has a quality tier and an
+off switch (**Settings → FILM FX**); a device playtest is the only real check,
+in this order: **the beach, then slow motion, then a car explosion**, which are
+newest and least covered.
+
+**5. Long-settled invariants are expensive to change.** The beach was one line
+of maths in one function, gated to the shoreline. It still broke four tests,
+because an unwritten assumption had been baked into three separate places over
+time. When a change touches a documented contract, the edit is the cheap part;
+finding everything that quietly depended on the old shape is the cost.
+
+The follow-up session added three more, and they are the ones that cost the
+most time:
 
 ### Claude Code
 - **Date:** 2026-08-10
@@ -88,4 +127,4 @@ _Things everyone should know:_
 
 ---
 
-**Last Updated:** 2026-08-10 by Claude Code (consolidation — folded in the PV batch's process findings; the long-form version stays in `LESSONS_PV.md`)
+**Last Updated:** 2026-08-10 by Claude Code (consolidation — folded the PV batch's process findings in here on the owner's call and retired `LESSONS_PV.md`, so there is one knowledge base rather than two)

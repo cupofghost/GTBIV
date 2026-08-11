@@ -28,7 +28,7 @@ remains is the live constraint on each file, not the history of who touched it.
 - `HANDOFF.md` §10 `NEXT:` marker — one authoritative line. Everything open is owner-triggered: PV5's city footprint, `RV2`/`RV3`, `TM`, `AF`, `X1`.
 - `TERRAIN.md` — the terrain contract. Read the Tier 1 revision note before touching `groundH`.
 - `STATUS.md` — this file. Claim rows go in Active work; anything merged belongs in Archive.
-- `LESSONS.md` — shared knowledge base; `LESSONS_PV.md` is the long-form PV write-up it links to. Signed: Claude Code \| Haiku 4.5 \| high
+- `LESSONS.md` — the single shared knowledge base. `LESSONS_PV.md` was folded into it and retired on 2026-08-10 (owner's call); don't start a second lessons file, add a section here. Signed: Claude Code \| Haiku 4.5 \| high
 - `HAIKU.md`, `CONDUCTOR.md`, `tools/haiku-*.js` — the coordination layer: pre-commit validation (`check.js`), post-commit scanning (`overseer.js`), work assignment (`dispatch.js`), performance tracking (`rewards.js`). Signed: Claude Code \| Haiku 4.5 \| high
 - `.github/workflows/ci.yml` — syntax check, then `node ../tools/codemap.js` (so a merge that scrambles the generated CODE MAP fails the PR instead of landing as a silently-wrong comment), then the full suite. Timeout raised 30→45 min on 2026-08-10: the last green run took 27m21s. Signed: Claude Code \| Opus 5 \| high
 
