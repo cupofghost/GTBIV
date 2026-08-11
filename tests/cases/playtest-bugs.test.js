@@ -245,6 +245,47 @@ module.exports={cases:[
     }
   },
 
+  {
+    name:'BUG6 — Turbo leans into a grade and never sideways, whichever way he walks it',
+    query:'?dev=1&skipintro=1&seed=424242',
+    run:async(page,{assert})=>{
+      const r=await page.evaluate((prep)=>{
+        eval(prep);
+        const p=player,dt=1/60,out=[];
+        // steepest spot the city has
+        let best=null,bg=0;
+        for(const s of intersections){
+          const g=Math.hypot(groundH(s.x+2,s.z)-groundH(s.x-2,s.z),
+                             groundH(s.x,s.z+2)-groundH(s.x,s.z-2));
+          if(g>bg){bg=g;best=s;}
+        }
+        for(const heading of [0,Math.PI/2,Math.PI,-Math.PI/2]){
+          p.x=best.x;p.z=best.z;p.y=groundH(p.x,p.z);p.heading=heading;p.vy=0;
+          p.mesh.rotation.set(0,heading,0);
+          // hold him on the spot but let the lean settle: no stick, so updateFoot
+          // poses him against the grade he is standing on
+          input.jx=0;input.jy=0;
+          for(let i=0;i<60;i++) updateFoot(dt);
+          const sFwd=groundH(p.x+Math.sin(heading)*1.2,p.z+Math.cos(heading)*1.2);
+          const sBack=groundH(p.x-Math.sin(heading)*1.2,p.z-Math.cos(heading)*1.2);
+          const grade=Math.atan2(sFwd-sBack,2.4);
+          const fwd=new THREE.Vector3(Math.sin(heading),0,Math.cos(heading));
+          const right=new THREE.Vector3(fwd.z,0,-fwd.x);
+          const up=new THREE.Vector3(0,1,0).applyQuaternion(p.mesh.quaternion);
+          out.push({heading:+heading.toFixed(2),grade:+grade.toFixed(4),
+                    lean:+up.dot(fwd).toFixed(4),roll:+up.dot(right).toFixed(4)});
+        }
+        return out;
+      },FOOT);
+      for(const s of r){
+        assert(Math.abs(s.roll)<0.02,'a grade must never tip Turbo sideways (heading '+s.heading+'): '+JSON.stringify(r));
+        if(Math.abs(s.grade)>0.02)
+          assert(Math.sign(s.lean)===Math.sign(s.grade),
+            'and he should lean into the slope, not away from it (heading '+s.heading+'): '+JSON.stringify(r));
+      }
+    }
+  },
+
   // ---------------------------------------------------------------- BUG4 ---
   {
     name:'BUG4 — a lethal fall gibs Turbo and leaves a blood pool that spreads then fades',

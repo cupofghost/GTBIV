@@ -144,7 +144,10 @@ module.exports={cases:[
       assert(r.stuck.length===0,'no attack should outlive its interruption: '+JSON.stringify(r.stuck));
       assert(r.canStillMelee&&r.canStillCharge,'melee should still be available at the end: '+JSON.stringify(r));
       const n=r.neutral;
-      assert(n.pitch===0&&n.order==='XYZ'&&n.armL===0&&n.armR===0&&n.legL===0&&n.legR===0,
+      // 'YXZ' is the player rig's standing order (see where player.mesh is
+      // built): yaw, then pitch about his own lateral axis, so a hill leans him
+      // into the slope instead of tipping him sideways.
+      assert(n.pitch===0&&n.order==='YXZ'&&n.armL===0&&n.armR===0&&n.legL===0&&n.legR===0,
         'the rig should be back at neutral: '+JSON.stringify(n));
     }
   },
