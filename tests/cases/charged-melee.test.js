@@ -12,10 +12,12 @@ module.exports={cases:[
           p.x=spot.x;p.z=spot.z;p.y=groundH(p.x,p.z);p.heading=0;p.climb=null;p.bailing=false;p.stunT=0;p.punchT=0;p.kickT=0;p.meleeSpecial=null;meleeCharge=null;
           p.mesh.rotation.set(0,0,0);u.armL.rotation.x=0;u.armR.rotation.x=0;u.legL.rotation.x=0;u.legR.rotation.x=0;
         };
-        prep(); meleePress('kick'); updateFoot(.99); const tap=!!p.meleeSpecial; meleeRelease('kick'); const ordinary=p.kickT>0;
+        // The ordinary strike lands on the PRESS (it used to wait for the
+        // release); a hold shorter than a second still never escalates.
+        prep(); meleePress('kick'); const ordinary=p.kickT>0; updateFoot(.99); const tap=!!p.meleeSpecial; meleeRelease('kick');
         prep(); meleePress('kick'); updateFoot(1.001); const kick=p.meleeSpecial; updateFoot(1.05);
         const kickDone=!p.meleeSpecial&&p.mesh.rotation.x===0&&u.armL.rotation.x===0&&u.legR.rotation.x===0;
-        prep(); meleePress('punch'); const punchCharged=!!meleeCharge, punchEligible=canChargeMelee(); updateFoot(1.001); const punch=p.meleeSpecial, punchChargeAfter=meleeCharge&&{t:meleeCharge.t,started:meleeCharge.started};
+        prep(); meleePress('punch'); const punchCharged=!!meleeCharge, punchEligible=!!(meleeCharge&&meleeCharge.charge); updateFoot(1.001); const punch=p.meleeSpecial, punchChargeAfter=meleeCharge&&{t:meleeCharge.t,started:meleeCharge.started};
         updateFoot(.84);
         const punchDone=!p.meleeSpecial&&p.mesh.rotation.x===0&&u.armL.rotation.x===0&&u.armR.rotation.x===0;
         return {tap,ordinary,punchCharged,punchEligible,punchChargeAfter,kickTurns:kick&&kick.dur===1.05,kickDone,punchTurns:punch&&punch.dur===.84,punchDone,
