@@ -39,4 +39,9 @@ jobs:
       # rewrite it, and a merge can land numbers that match neither side —
       # silently, since it is only a comment. Fail here instead.
       - run: node ../tools/codemap.js
+
+      # js/turbo-vo.js is generated from KIMI_TURBO_VO.md and also asserts that
+      # every take it indexes is a committed mp3. Same reasoning as the code
+      # map: a stale index is data, not a syntax error, so nothing else catches it.
+      - run: node ../tools/vo-manifest.js
       - run: npm test

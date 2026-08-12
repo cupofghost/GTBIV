@@ -8,7 +8,7 @@ _Sprints are ad-hoc. Owner has their own job. Expect gaps between sprints (days 
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-| 2026-08-12 | `voice/turbo/**`, `js/turbo-vo.js`, `tools/vo-manifest.js`, `index.html` §VOICEOVER + §DEV TOOLS | Kimi's 239-line turbo VO batch: land the audio at its committed paths, index every line in a generated manifest, wire the Chapter-1-valid pack, add a dev auditioner. **In progress.** | Claude Code \| Opus 5 \| high |
+| 2026-08-12 | `voice/turbo/**`, `js/turbo-vo.js`, `tools/vo-manifest.js`, `index.html` §VOICEOVER + §DEV TOOLS, `.github/workflows/ci.yml` | Kimi's 239-line turbo VO batch landed at its committed paths (239/239, no renames, no clashes with the 152 already shipping) and indexed in a generated manifest. One pack (§39 bus pass, #200–#202) wired into the idle rotation — the rest is staged against unbuilt chapters and auditionable from the dev panel. **Done.** | Claude Code \| Opus 5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot, by file. If you must edit one of these, make the
@@ -30,6 +30,7 @@ remains is the live constraint on each file, not the history of who touched it.
 - `STATUS.md` — this file. Claim rows go in Active work; anything merged belongs in Archive.
 - `LESSONS.md` — the single shared knowledge base. `LESSONS_PV.md` was folded into it and retired on 2026-08-10 (owner's call); don't start a second lessons file, add a section here. Signed: Claude Code \| Haiku 4.5 \| high
 - `HAIKU.md`, `CONDUCTOR.md`, `tools/haiku-*.js` — the coordination layer: pre-commit validation (`check.js`), post-commit scanning (`overseer.js`), work assignment (`dispatch.js`), performance tracking (`rewards.js`). Signed: Claude Code \| Haiku 4.5 \| high
+- `js/turbo-vo.js` — **generated**; the index of Kimi's 239 recorded takes. Regenerate with `node tools/vo-manifest.js --write` (source: `KIMI_TURBO_VO.md`), never hand-edit — CI fails on drift and on any indexed mp3 that isn't committed. The one human-owned line in it is `TURBO_VO.wired`, the list of packs the shipped game plays; the tool preserves it across regenerations. Signed: Claude Code \| Opus 5 \| high
 - `.github/workflows/ci.yml` — syntax check, then `node ../tools/codemap.js` (so a merge that scrambles the generated CODE MAP fails the PR instead of landing as a silently-wrong comment), then the full suite. Timeout raised 30→45 min on 2026-08-10: the last green run took 27m21s. Signed: Claude Code \| Opus 5 \| high
 
 ## Known issues

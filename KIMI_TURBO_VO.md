@@ -11,6 +11,21 @@
 >
 > Already recorded and **not** in here: the 4 intro-narration lines, the 7
 > run-over lines, the 6 firing lines, and the shipped `TURBO_LINES` barks.
+>
+> **Status — 2026-08-12: all 239 takes delivered and committed.** Every path in
+> the tables below now resolves to a real mp3 under `voice/turbo/`. This file is
+> also the *source of truth for the code*: `node tools/vo-manifest.js --write`
+> parses these tables into `js/turbo-vo.js`, the in-game index of the batch, and
+> CI fails if the two drift or if a take goes missing. Edit a line or a path here
+> and regenerate — never hand-edit `js/turbo-vo.js`.
+>
+> Recorded is not the same as wired. The batch is written against the full
+> five-chapter `SCRIPT.md`, and the shipped game is Chapter 1, so 44 of the 45
+> packs are staged rather than playing: they are indexed, auditionable from the
+> dev panel (`?dev=1` → **TURBO VO**), and waiting on their scenes. The one pack
+> live in the game today is §39, the bus pass — minus #203, which dates itself to
+> Chapter 2. `TURBO_VO.wired` in the generated file is the running list; add to it
+> as scenes land.
 
 ---
 
@@ -633,11 +648,19 @@ story branch. Record both versions; the game picks one at runtime. (#166 and
 
 ## Delivery checklist
 
-- [ ] 239 files, named exactly as listed, at the stated paths.
-- [ ] MP3, mono, matching the existing `voice/turbo/` settings.
-- [ ] Leading and trailing silence trimmed tight.
+- [x] 239 files, named exactly as listed, at the stated paths. *(Verified on
+      commit and on every CI run by `tools/vo-manifest.js`: 239/239 present, no
+      extras, no renames.)*
+- [x] MP3, mono, matching the existing `voice/turbo/` settings. *(Header-checked:
+      all 391 files under `voice/turbo/` — the 239 new and the 152 already
+      shipping — are MPEG-2 Layer III, 24 kHz, single channel. The batch is
+      byte-format identical to what was already playing.)*
+- [x] All three ALT lines (#61, #65, #159) recorded as well as their neighbours.
+- [ ] Leading and trailing silence trimmed tight. **Owner ear-check.** Nothing in
+      the toolchain can judge this; the game fades its own tails, so a long head
+      on a take reads as a late line rather than as a defect.
 - [ ] Delivery B throughout — slower, quieter, no button on the last word.
-- [ ] All three ALT lines (#61, #65, #159) recorded as well as their neighbours.
+      **Owner ear-check** — the dev panel's **TURBO VO** row walks every pack.
 - [ ] No take where Turbo sounds like he finds himself funny.
 
 Signed: <program> | <model> | <effort>
