@@ -210,8 +210,8 @@ Sections, in file order, with what lives in each:
 | `STAIRS & FIRE ESCAPES` | `STAIR_RUNS`, `stairHitRun`/`stairH` — climbable runs the feet follow |
 | `WALL LADDERS` | `LADDERS`, `ladderGrab`, `mountLadder`, `updateClimb` |
 | `PARTICLES` | Fixed-size pool (`P_MAX=360`, `parts[]`), `spawnP`, `burst`, `updateParticles`, colour constants |
-| `CARNAGE: DEBRIS, SCORCH & CHAIN REACTIONS` | Pooled debris in the wreck's own paint, ground scorch decals, bounded chain reactions (per-blast and global caps) |
-| `BLOB SHADOWS` | `makeShadow` |
+| `CARNAGE: DEBRIS, SCORCH & CHAIN REACTIONS` | Pooled debris in the wreck's own paint, ground scorch decals, bounded chain reactions (per-blast and global caps), and the gore block — `COL_BLOOD`, `GIB_COLS`, the `bloodPools` pool, `addBloodPool`/`updateBlood`/`gibTurbo` (chunks reuse the same bounded `debris` pool) |
+| `BLOB SHADOWS` | `makeShadow`, `updatePersonShadow`/`updatePersonShadows` |
 | `GPU RESOURCE CLEANUP` | `disposeMesh`, `_sharedGPU` (shared geometry/materials that must never be disposed) |
 | `CARS` | `CARTYPES`, `makeCarMesh`, `makeCar`, traffic spawn |
 | `PEDESTRIANS` | `makePerson` (rigged limbs, see `js/person.js` + `js/npc-types.js`), `spawnPed`, chatter |
@@ -226,7 +226,6 @@ Sections, in file order, with what lives in each:
 | `PIZZA PLACE & INTERIOR` | Pizza-place exterior/interior, robbery, enter/exit, heist funcs (`spawnGuards`, `updateGuards`, `updateSafeCrack`, `checkHeistTriggers`) |
 | `SIDEWALKS & STOREFRONT AWNINGS` | 3D kerb strips, sidewalk slabs, awnings |
 | `MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS` | Street trees (kerb-rejecting placement), planters, café tables, pole banners — cosmetic, all seated via `groundH` |
-| `MORE CITY BEAUTIFICATION` | Street trees, planters, cafe tables, pole banners |
 | `CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS` | `cityGlowDayNight`, facade night-window swap (`facadeMats`), instanced neon signs, streetlight glow pools |
 | `DAY/NIGHT & HEIST SYSTEM` | `toggleNight`, night sky, heist triggers |
 | `PICKUPS` | `pickups`, `pickupDefs`, `spawnPickup`, `scatterPickups`, `collectPickups`, `updatePickupVisuals` |
@@ -236,7 +235,7 @@ Sections, in file order, with what lives in each:
 | input | `joyStart/Move/End`, `doJump`, `applyLook`, `pollKeys` |
 | `WANTED` | `addHeat`, `clearHeat`, `spawnCop`, `updateWanted` |
 | `CAR PHYSICS` | `carPhysics`, `damageCar` |
-| `PLAYER: FOOT & CAR` | `updateFoot`, `updateCarMode`, enter/exit, punch, horn |
+| `PLAYER: FOOT & CAR` | `updateFoot`, `updateCarMode`, enter/exit, punch, horn, `applyFallImpact` (a lethal drop routes into `wasted()` then `gibTurbo()`) |
 | `ACTION BAIL-OUT (PV8)` | `startBailDive`/`updateBailDive`/`endBailDive` — the launch, arc and tumble when you exit above `BAIL_SPEED`, plus the abandoned car coasting on |
 | `RAMPAGE (PV11)` | `rampageHit`/`endRampage` — the DOUBLE → CITY ON FIRE ladder. Scores vehicles, not people; whole ladder pays 550 |
 | `HUD / TOASTS` | `toast`, `addMoney`, `updateStarsHUD`, `setMissionHUD`, `cycleRadio` |
@@ -245,9 +244,8 @@ Sections, in file order, with what lives in each:
 | `FOOT COPS` | `spawnFootCop`, foot-cop AI, baton/pistol drops |
 | `SEWER RATS` | `RAT_POOL`, `spawnRats`, `updateRats`, manholes |
 | `MAMA RAT (rat vengeance) — PLACEHOLDER` | `spawnMamaRat`/`updateMamaRat` — the oversized retaliation rat and her own voice pack. Model is a placeholder (`RV2`) |
-| `MAMA RAT (rat vengeance)` | `spawnMamaRat`, `updateMamaRat`, her screech/bite/death voices |
 | `BUSTED / WASTED` | `bigEvent`, `respawn`, `busted`, `wasted` |
-| `CAMERA` | `updateCamera`, `cameraCollide`, `shake` |
+| `CAMERA` | `updateCamera`, `cameraCollide` (bisected occluder probe), `camFollow` (asymmetric follow: fast speed-capped pull-in, lazy push-out), `shake` |
 | `MINIMAP` | `drawMinimap` |
 | `SLOW MOTION (PV9)` | `updateSlowmo`/`resetSlowmo` and `SLOWMO` — the held, metered, ramped time scale, its master-bus lowpass (`slowLP`) and the wider lens |
 | `MAIN LOOP` | `loop()` — the one `requestAnimationFrame` driver, `bootSpawns` |
