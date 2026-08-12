@@ -202,7 +202,7 @@ Sections, in file order, with what lives in each:
 | `AUDIO` | `initAudio` (+ `buildMusicRack`/`makeIR` FX rack), engine synth layers, heli rotor chop, `sfx` object, `WEAPON_SFX` voices |
 | `PROCEDURAL 80s SYNTHWAVE SOUNDTRACK` | `SW_SONGS`, `STATIONS`, `scheduleMusic`/`stepSong`, `sw*` instruments, hot-loop swap under heat |
 | `THREE SETUP` | `scene`, `camera`, `renderer`, sky/sun textures, lights |
-| `POST FX` (PV) | `renderFrame()` — the single render entry point that replaced the loop's bare `renderer.render()` calls — plus the effect chain and `fxSetTier`/`fxFlash`/`fxImpact`/`fxDamage` |
+| `POST FX` | `renderFrame()` — the whole screen-space finishing pass: bloom, synthwave grade, vignette, grain, scanlines, speed-scaled aberration. Driven by `fxFlash`/`fxDamage`/`fxImpact` impulses and `fxSetTier` from `applyQuality`; **Settings → FILM FX** is the off switch |
 | `CITY` | Procedural block/building/road generation, `intersections`, **terrain** (`VERT_H`, `groundH`, `terrainLines`/`terrainGeo` ground + beach meshes — see `TERRAIN.md`), water, ramps, street furniture, collision helpers (`buildingHit`, `rampHit`, `resolveFootCollision`) |
 | `RADIO TOWERS` (inside `CITY`) | One tall guyed mast on an open block + rooftop masts on the tallest buildings, `updateRadioTowers` blinking obstruction lamps. Decorative — never added to `buildings` |
 | `FOOTBALL FIELD` | Wildcats turf, goalposts, bleachers, scoreboard |
@@ -210,7 +210,7 @@ Sections, in file order, with what lives in each:
 | `STAIRS & FIRE ESCAPES` | `STAIR_RUNS`, `stairHitRun`/`stairH` — climbable runs the feet follow |
 | `WALL LADDERS` | `LADDERS`, `ladderGrab`, `mountLadder`, `updateClimb` |
 | `PARTICLES` | Fixed-size pool (`P_MAX=360`, `parts[]`), `spawnP`, `burst`, `updateParticles`, colour constants |
-| `CARNAGE: DEBRIS, SCORCH & CHAIN REACTIONS` (PV) | Bounded pools for physical wreckage: `debris`/`spawnDebris`/`updateDebris`, scorch decals (`addScorch`), the gore block (`COL_BLOOD`, `GIB_COLS`, `bloodPools`, `addBloodPool`, `updateBlood`, `gibTurbo`), and rate-limited `chainReact` |
+| `CARNAGE: DEBRIS, SCORCH & CHAIN REACTIONS` | Pooled debris in the wreck's own paint, ground scorch decals, bounded chain reactions (per-blast and global caps), and the gore block — `COL_BLOOD`, `GIB_COLS`, the `bloodPools` pool, `addBloodPool`/`updateBlood`/`gibTurbo` (chunks reuse the same bounded `debris` pool) |
 | `BLOB SHADOWS` | `makeShadow`, `updatePersonShadow`/`updatePersonShadows` |
 | `GPU RESOURCE CLEANUP` | `disposeMesh`, `_sharedGPU` (shared geometry/materials that must never be disposed) |
 | `CARS` | `CARTYPES`, `makeCarMesh`, `makeCar`, traffic spawn |
@@ -225,7 +225,7 @@ Sections, in file order, with what lives in each:
 | `PLAYER` | The `player` object and its initial state |
 | `PIZZA PLACE & INTERIOR` | Pizza-place exterior/interior, robbery, enter/exit, heist funcs (`spawnGuards`, `updateGuards`, `updateSafeCrack`, `checkHeistTriggers`) |
 | `SIDEWALKS & STOREFRONT AWNINGS` | 3D kerb strips, sidewalk slabs, awnings |
-| `MORE CITY BEAUTIFICATION` | Street trees, planters, cafe tables, pole banners |
+| `MORE CITY BEAUTIFICATION: TREES, CAFES, BANNERS` | Street trees (kerb-rejecting placement), planters, café tables, pole banners — cosmetic, all seated via `groundH` |
 | `CITY GLOW: NEON, LIT WINDOWS & LIGHT POOLS` | `cityGlowDayNight`, facade night-window swap (`facadeMats`), instanced neon signs, streetlight glow pools |
 | `DAY/NIGHT & HEIST SYSTEM` | `toggleNight`, night sky, heist triggers |
 | `PICKUPS` | `pickups`, `pickupDefs`, `spawnPickup`, `scatterPickups`, `collectPickups`, `updatePickupVisuals` |
@@ -235,19 +235,19 @@ Sections, in file order, with what lives in each:
 | input | `joyStart/Move/End`, `doJump`, `applyLook`, `pollKeys` |
 | `WANTED` | `addHeat`, `clearHeat`, `spawnCop`, `updateWanted` |
 | `CAR PHYSICS` | `carPhysics`, `damageCar` |
-| `PLAYER: FOOT & CAR` | `updateFoot`, `updateCarMode`, enter/exit, punch, horn, `applyFallImpact` (a real drop routes into `wasted()` then `gibTurbo()`) |
-| `ACTION BAIL-OUT (PV8)` | `startBailDive`/`updateBailDive`/`endBailDive` — thrown from a moving car above `BAIL_SPEED`, an airborne arc then a tumble; also PV7's `mountBike`/`seatTurboOnBike`/`dismountBike` and the `runaways` list that keeps an abandoned car coasting |
-| `RAMPAGE (PV11)` | `rampageHit`/`updateRampage`/`endRampage` — the wreck-combo ladder and its HUD chip |
+| `PLAYER: FOOT & CAR` | `updateFoot`, `updateCarMode`, enter/exit, punch, horn, `applyFallImpact` (a lethal drop routes into `wasted()` then `gibTurbo()`) |
+| `ACTION BAIL-OUT (PV8)` | `startBailDive`/`updateBailDive`/`endBailDive` — the launch, arc and tumble when you exit above `BAIL_SPEED`, plus the abandoned car coasting on |
+| `RAMPAGE (PV11)` | `rampageHit`/`endRampage` — the DOUBLE → CITY ON FIRE ladder. Scores vehicles, not people; whole ladder pays 550 |
 | `HUD / TOASTS` | `toast`, `addMoney`, `updateStarsHUD`, `setMissionHUD`, `cycleRadio` |
 | `MISSIONS` | `startMission` (5 random types), `updateMission`, complete/fail, beacon |
 | `AI` | `updateTraffic`, `updateCops`, `updatePeds`, pickup visuals |
 | `FOOT COPS` | `spawnFootCop`, foot-cop AI, baton/pistol drops |
 | `SEWER RATS` | `RAT_POOL`, `spawnRats`, `updateRats`, manholes |
-| `MAMA RAT (rat vengeance)` | `spawnMamaRat`, `updateMamaRat`, her screech/bite/death voices |
+| `MAMA RAT (rat vengeance) — PLACEHOLDER` | `spawnMamaRat`/`updateMamaRat` — the oversized retaliation rat and her own voice pack. Model is a placeholder (`RV2`) |
 | `BUSTED / WASTED` | `bigEvent`, `respawn`, `busted`, `wasted` |
 | `CAMERA` | `updateCamera`, `cameraCollide` (bisected occluder probe), `camFollow` (asymmetric follow: fast speed-capped pull-in, lazy push-out), `shake` |
 | `MINIMAP` | `drawMinimap` |
-| `SLOW MOTION (PV9)` | `SLOWMO`, `updateSlowmo`/`resetSlowmo`/`slowmoFov` and the `slowLP` master-bus lowpass — the player-facing half of the main loop's `simDt` product |
+| `SLOW MOTION (PV9)` | `updateSlowmo`/`resetSlowmo` and `SLOWMO` — the held, metered, ramped time scale, its master-bus lowpass (`slowLP`) and the wider lens |
 | `MAIN LOOP` | `loop()` — the one `requestAnimationFrame` driver, `bootSpawns` |
 | `ORIENTATION` | `checkOrientation`, fullscreen |
 | `ANIMATED INTRO` | Fly-through intro camera |
@@ -2336,11 +2336,17 @@ don't push/fast-forward `main` directly.
 
 ## 10. Suggested Order of Work
 
-**NEXT: (owner's call)** — the Football Saga is **complete**: FB1–FB5 all
-done as of 2026-08-02. Everything still open is owner-triggered — `RV2` (mama
-rat model), `RV3` (rat polish, unscoped), `TM` (Turbo Mode), `AF` (audit
-follow-up), `X1` (modular split). Nothing here should be picked up as "the next
-task" without you saying so first.
+**NEXT: (owner's call)** — the Football Saga is **complete** (FB1–FB5, as of
+2026-08-02) and Phase 13's production-value batch shipped 2026-08-07, merged as
+#48 on 2026-08-10. Everything still open is owner-triggered — `PV5`'s second
+half (the city footprint is still a square; the skyline half is done), `RV2`
+(mama rat model), `RV3` (rat polish, unscoped), `TM` (Turbo Mode), `AF` (audit
+follow-up), `X1` (modular split). Two things the PV batch left for you rather
+than for an agent: **post-FX cost has never been measured on real hardware**
+(this environment renders in software and its numbers are not trustworthy), and
+the full script landed as docs only (#47) — none of `SCRIPT*.md` is wired into
+the game yet. Nothing here should be picked up as "the next task" without you
+saying so first.
 
 A sensible sequence that front-loads leverage and keeps the game shippable
 throughout:

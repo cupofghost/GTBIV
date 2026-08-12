@@ -9,13 +9,13 @@ figure quoted elsewhere in the docs — the older markdown has stale numbers in 
 
 | Thing | Answer |
 |---|---|
-| Size of `index.html` | ~11,850 lines / ~565 KB. The game's `<script>` starts at line 715. It never fits in context — grep for a banner, then read a window. |
+| Size of `index.html` | ~13,330 lines / ~636 KB (2026-08-10, after the PV batch). The game's `<script>` starts at line 747. It never fits in context — grep for a banner, then read a window. |
 | Navigating `index.html` | Section banners are `// ====== NAME ======` at column 0. The `// CODE MAP` block near the top indexes them. |
 | Regenerating the code map | `node tools/codemap.js --write`. Never hand-edit the line numbers. `node tools/codemap.js` alone checks for drift and exits 1. |
 | Who else is working right now | `node tools/preflight.js` — run it before writing code. Another account shares this repo; see §2a. |
-| Test suite size | 207 cases across 44 files (`tests/cases/*.test.js`). Docs quoting 36/43/53/70/77/198 are historical — ignore them. |
+| Test suite size | 278 cases across 56 files (`tests/cases/*.test.js`), 2026-08-10. Docs quoting 36/43/53/70/77/198/207 are historical — ignore them. Recount with `node -e` over `tests/cases` rather than trusting any doc, this row included. |
 | Running tests | See §4a below. Do not default to the full suite. |
-| CI | `.github/workflows/ci.yml` — syntax check + full suite on every PR and push to main. |
+| CI | `.github/workflows/ci.yml` — syntax check + code-map drift check + full suite on every PR and push to main. The full run takes ~27 min of a 45 min timeout; if you add a lot of cases, check that headroom. |
 | Dev URL flags | `?dev=1` (dev panel), `?skipintro=1`, `?seed=<n>` (deterministic RNG — use this to reproduce a flaky test), `?scene=<name>`, `?cutscene=<id>`, `?mode=car\|heli`. |
 | Test viewport | 800×390 (phone landscape) — the project's testing convention. |
 | Serving the game locally | `python3 -m http.server 8099`, or just let `tests/run.js` do it (it starts its own server on a free port). |
