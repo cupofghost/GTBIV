@@ -139,10 +139,22 @@ module.exports = [
         // well away from Turbo and make him unkillable for the duration, so this
         // case measures the ladder rather than his luck. (It passed alone and
         // failed in a full-suite run for exactly this reason.)
+        //
+        // Two more things have to be true for the ladder to be what is measured,
+        // and both are about the neighbours. §CARNAGE chain-reacts any vehicle
+        // within CHAIN_RADIUS of a blast, and a chain-reacted car is a real
+        // wreck that scores like one — correct behaviour, but it means one
+        // civilian parked nearby turns the expected ×2 into a ×3. So: freeze the
+        // live loop, so nothing drives into the blast between the two kills, and
+        // pick a site with no other vehicle within reach. Measured before this:
+        // a bystander was in range on 1 run in 3 and the case failed on exactly
+        // those runs.
+        G.paused = true;
         endRampage();
         const wasGod = DEV_STATE.god;
         DEV_STATE.god = true; G.over = false;
-        const node = intersections[52];
+        const clear = (x, z) => cars.every(c => !c || Math.hypot(c.x - x, c.z - z) > CHAIN_RADIUS * 2);
+        const node = intersections.find(n => clear(n.x, n.z)) || intersections[52];
         player.x = node.x + 120; player.z = node.z + 120;
         const c = makeCar('sedan', node.x, node.z, 0, { parked: true });
         killCar(c, true);
