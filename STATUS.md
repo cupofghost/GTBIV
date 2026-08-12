@@ -8,7 +8,7 @@ _Sprints are ad-hoc. Owner has their own job. Expect gaps between sprints (days 
 
 | Date | Area / files | Task & state (≤3 lines) | Signature |
 |------|--------------|-------------------------|-----------|
-| — | — | _Nothing claimed. Add your row per AGENTS.md §1.3 — and escape the pipes in your signature as `\|`, or the table breaks._ | — |
+| 2026-08-12 | `voice/turbo/**`, `js/turbo-vo.js`, `tools/vo-manifest.js`, `index.html` §VOICEOVER + §DEV TOOLS | Kimi's 239-line turbo VO batch: land the audio at its committed paths, index every line in a generated manifest, wire the Chapter-1-valid pack, add a dev auditioner. **In progress.** | Claude Code \| Opus 5 \| high |
 
 ## Shared-file touches
 Standing list of what's hot, by file. If you must edit one of these, make the
